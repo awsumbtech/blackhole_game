@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Black Hole: Galaxy Eater</title>
+  <style>
+    :root {
+      --bg: #060812;
+      --panel: #121833;
+      --border: #2f3f84;
+      --text: #e9edff;
+      --accent: #8a8dff;
+      --ok: #60f3b1;
+      --warn: #ffd27b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 30%, #1e2450 0%, var(--bg) 56%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      display: grid;
+      gap: 12px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(100px, 1fr));
+      gap: 8px;
+    }
+
+    .card {
+      background: linear-gradient(165deg, #1b2042, var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .label { font-size: .76rem; opacity: .86; }
+    .value { font-size: 1.05rem; font-weight: 700; }
+
+    .canvas-wrap {
+      background: #060914;
+      border: 1px solid #2a3568;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 26px #0008;
+    }
+
+    canvas {
+      width: 100%;
+      height: min(74vh, 760px);
+      display: block;
+      background: radial-gradient(circle at 50% 45%, #10173b 0%, #05070f 62%);
+      cursor: crosshair;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      background: #2a3372;
+      border: 1px solid #4b5fc6;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover { filter: brightness(1.1); }
+
+    .hint { color: var(--warn); min-height: 1.1rem; }
+    .ok { color: var(--ok); }
+
+    @media (max-width: 920px) {
+      .hud { grid-template-columns: repeat(3, minmax(90px, 1fr)); }
+      canvas { height: min(66vh, 680px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hud">
+      <div class="card"><div class="label">Galaxy</div><div class="value" id="galaxy">1</div></div>
+      <div class="card"><div class="label">Mass</div><div class="value" id="mass">0</div></div>
+      <div class="card"><div class="label">Radius</div><div class="value" id="radius">10</div></div>
+      <div class="card"><div class="label">Consumed</div><div class="value" id="consumed">0</div></div>
+      <div class="card"><div class="label">Objects Left</div><div class="value" id="left">0</div></div>
+      <div class="card"><div class="label">Top Galaxy</div><div class="value" id="bestGalaxy">1</div></div>
+    </section>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="1100" height="720" aria-label="Black hole consume game"></canvas>
+    </div>
+
+    <section class="row">
+      <button id="spawnBtn">Repopulate Galaxy</button>
+      <button id="nextBtn">Force Next Galaxy</button>
+      <button id="resetBtn">Hard Reset</button>
+      <span class="hint" id="hint"></span>
+    </section>
+
+    <section class="card">
+      <strong>How to play</strong>
+      <div>Move with <span class="ok">WASD / Arrow Keys</span> or point your mouse. Get close enough to absorb objects.</div>
+      <div>Each color is a different object type (hidden stats now, easy to skin later with sprites).</div>
+      <div>Consume the full galaxy to advance. Your mass and unlock progress auto-save locally.</div>
+    </section>
+  </main>
+
+  <script>
+    const SAVE_KEY = "blackhole_consume_map_v1";
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const state = {
+      galaxy: 1,
+      bestGalaxy: 1,
+      mass: 80,
+      radius: 12,
+      consumed: 0,
+      totalConsumed: 0,
+      playerX: canvas.width / 2,
+      playerY: canvas.height / 2,
+      cameraX: 0,
+      cameraY: 0,
+      targetX: canvas.width / 2,
+      targetY: canvas.height / 2,
+      entities: []
+    };
+
+    const controls = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      mouseActive: false
+    };
+
+    const objectTypes = [
+      { id: "junk", color: "#8894b7", minR: 3, maxR: 6, density: 0.8, speed: 0.15 },
+      { id: "meteor", color: "#b8ac8c", minR: 5, maxR: 8, density: 1.2, speed: 0.25 },
+      { id: "comet", color: "#83d7ff", minR: 4, maxR: 7, density: 1.0, speed: 0.6 },
+      { id: "craft", color: "#c28eff", minR: 6, maxR: 10, density: 1.4, speed: 0.4 },
+      { id: "planet", color: "#62c38c", minR: 9, maxR: 14, density: 1.9, speed: 0.1 },
+      { id: "star", color: "#ffd86d", minR: 12, maxR: 18, density: 2.3, speed: 0.08 }
+    ];
+
+    function $(id) { return document.getElementById(id); }
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function updateRadius() {
+      state.radius = Math.max(10, Math.sqrt(state.mass) * 1.35);
+    }
+
+    function galaxyObjectCount() {
+      return Math.min(220, 34 + state.galaxy * 16);
+    }
+
+    function spawnGalaxy() {
+      state.entities = [];
+      const count = galaxyObjectCount();
+      const spread = 1300 + state.galaxy * 180;
+
+      for (let i = 0; i < count; i += 1) {
+        const type = pick(objectTypes);
+        const r = rand(type.minR, type.maxR);
+        state.entities.push({
+          type: type.id,
+          color: type.color,
+          radius: r,
+          density: type.density,
+          mass: Math.PI * r * r * type.density,
+          x: rand(-spread, spread),
+          y: rand(-spread, spread),
+          vx: rand(-type.speed, type.speed),
+          vy: rand(-type.speed, type.speed)
+        });
+      }
+
+      showHint(`Galaxy ${state.galaxy} loaded: ${count} objects.`);
+      syncHud();
+      save();
+    }
+
+    function save() {
+      const saveState = {
+        galaxy: state.galaxy,
+        bestGalaxy: state.bestGalaxy,
+        mass: state.mass,
+        consumed: state.consumed,
+        totalConsumed: state.totalConsumed,
+        playerX: state.playerX,
+        playerY: state.playerY,
+        entities: state.entities
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveState));
+    }
+
+    function load() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      try {
+        const parsed = JSON.parse(raw);
+        state.galaxy = parsed.galaxy || 1;
+        state.bestGalaxy = parsed.bestGalaxy || state.galaxy;
+        state.mass = parsed.mass || 80;
+        state.consumed = parsed.consumed || 0;
+        state.totalConsumed = parsed.totalConsumed || 0;
+        state.playerX = parsed.playerX || canvas.width / 2;
+        state.playerY = parsed.playerY || canvas.height / 2;
+        state.entities = Array.isArray(parsed.entities) ? parsed.entities : [];
+        updateRadius();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function showHint(message) {
+      const el = $("hint");
+      el.textContent = message;
+      clearTimeout(showHint.t);
+      showHint.t = setTimeout(() => {
+        if (el.textContent === message) el.textContent = "";
+      }, 2200);
+    }
+
+    function tryConsume() {
+      const keep = [];
+      let ate = 0;
+
+      for (const e of state.entities) {
+        const dx = e.x - state.playerX;
+        const dy = e.y - state.playerY;
+        const dist = Math.hypot(dx, dy);
+
+        const canConsume = state.radius > e.radius * 0.88;
+        const closeEnough = dist < state.radius + e.radius * 0.32;
+
+        if (canConsume && closeEnough) {
+          state.mass += e.mass;
+          ate += 1;
+        } else {
+          keep.push(e);
+        }
+      }
+
+      if (ate > 0) {
+        state.entities = keep;
+        state.consumed += ate;
+        state.totalConsumed += ate;
+        updateRadius();
+        syncHud();
+      }
+    }
+
+    function nextGalaxy() {
+      state.galaxy += 1;
+      state.bestGalaxy = Math.max(state.bestGalaxy, state.galaxy);
+      state.mass = Math.max(90, state.mass * 0.66);
+      updateRadius();
+      state.playerX = 0;
+      state.playerY = 0;
+      state.cameraX = 0;
+      state.cameraY = 0;
+      spawnGalaxy();
+      showHint(`Galaxy ${state.galaxy} reached.`);
+      syncHud();
+      save();
+    }
+
+    function syncHud() {
+      $("galaxy").textContent = state.galaxy;
+      $("mass").textContent = Math.floor(state.mass).toLocaleString();
+      $("radius").textContent = state.radius.toFixed(1);
+      $("consumed").textContent = state.totalConsumed.toLocaleString();
+      $("left").textContent = state.entities.length.toLocaleString();
+      $("bestGalaxy").textContent = state.bestGalaxy;
+    }
+
+    function worldToScreenX(x) { return x - state.cameraX + canvas.width / 2; }
+    function worldToScreenY(y) { return y - state.cameraY + canvas.height / 2; }
+
+    function drawStarfield() {
+      ctx.fillStyle = "#05070f";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const cell = 90;
+      const baseX = Math.floor((state.cameraX - canvas.width / 2) / cell) - 1;
+      const baseY = Math.floor((state.cameraY - canvas.height / 2) / cell) - 1;
+      for (let gx = 0; gx < Math.ceil(canvas.width / cell) + 3; gx += 1) {
+        for (let gy = 0; gy < Math.ceil(canvas.height / cell) + 3; gy += 1) {
+          const wx = baseX + gx;
+          const wy = baseY + gy;
+          const hash = Math.abs((wx * 73856093) ^ (wy * 19349663)) % 100;
+          if (hash < 22) {
+            const px = (wx * cell - state.cameraX) + canvas.width / 2 + (hash % 7) * 3;
+            const py = (wy * cell - state.cameraY) + canvas.height / 2 + (hash % 5) * 4;
+            const size = hash % 3 === 0 ? 2 : 1;
+            ctx.fillStyle = hash % 9 === 0 ? "#8ec8ff" : "#d7defe";
+            ctx.fillRect(px, py, size, size);
+          }
+        }
+      }
+    }
+
+    function drawEntities() {
+      for (const e of state.entities) {
+        const sx = worldToScreenX(e.x);
+        const sy = worldToScreenY(e.y);
+        if (sx < -30 || sx > canvas.width + 30 || sy < -30 || sy > canvas.height + 30) continue;
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, e.radius, 0, Math.PI * 2);
+        ctx.fillStyle = e.color;
+        ctx.fill();
+      }
+    }
+
+    function drawPlayer() {
+      const x = canvas.width / 2;
+      const y = canvas.height / 2;
+
+      const glow = Math.min(55, state.radius * 1.2);
+      const g = ctx.createRadialGradient(x, y, state.radius * 0.3, x, y, state.radius + glow);
+      g.addColorStop(0, "#222957");
+      g.addColorStop(0.42, "#101433");
+      g.addColorStop(0.75, "#5f66ff66");
+      g.addColorStop(1, "#5f66ff00");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius + glow, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#010204";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius * 0.95, 0, Math.PI * 2);
+      ctx.strokeStyle = "#7a80ff88";
+      ctx.lineWidth = Math.max(2, state.radius * 0.08);
+      ctx.stroke();
+    }
+
+    function updateEntities() {
+      const bound = 2600 + state.galaxy * 240;
+      for (const e of state.entities) {
+        e.x += e.vx;
+        e.y += e.vy;
+
+        const dx = state.playerX - e.x;
+        const dy = state.playerY - e.y;
+        const distSq = dx * dx + dy * dy;
+        const pull = clamp((state.radius * 0.008) / Math.max(60, distSq), 0, 0.0012);
+        e.vx += dx * pull;
+        e.vy += dy * pull;
+        e.vx *= 0.999;
+        e.vy *= 0.999;
+
+        if (e.x < -bound || e.x > bound) e.vx *= -1;
+        if (e.y < -bound || e.y > bound) e.vy *= -1;
+      }
+    }
+
+    function updatePlayer() {
+      let mx = 0;
+      let my = 0;
+
+      if (controls.left) mx -= 1;
+      if (controls.right) mx += 1;
+      if (controls.up) my -= 1;
+      if (controls.down) my += 1;
+
+      if (controls.mouseActive) {
+        const tx = state.targetX - canvas.width / 2;
+        const ty = state.targetY - canvas.height / 2;
+        const d = Math.hypot(tx, ty);
+        if (d > 6) {
+          mx += tx / d;
+          my += ty / d;
+        }
+      }
+
+      const m = Math.hypot(mx, my);
+      if (m > 0) {
+        mx /= m;
+        my /= m;
+        const speed = clamp(4.7 - state.radius * 0.03, 1.25, 4.7);
+        state.playerX += mx * speed;
+        state.playerY += my * speed;
+      }
+
+      state.cameraX += (state.playerX - state.cameraX) * 0.08;
+      state.cameraY += (state.playerY - state.cameraY) * 0.08;
+    }
+
+    function frame() {
+      updatePlayer();
+      updateEntities();
+      tryConsume();
+
+      if (state.entities.length === 0) {
+        nextGalaxy();
+      }
+
+      drawStarfield();
+      drawEntities();
+      drawPlayer();
+      requestAnimationFrame(frame);
+    }
+
+    function onKey(key, down) {
+      if (["ArrowUp", "w", "W"].includes(key)) controls.up = down;
+      if (["ArrowDown", "s", "S"].includes(key)) controls.down = down;
+      if (["ArrowLeft", "a", "A"].includes(key)) controls.left = down;
+      if (["ArrowRight", "d", "D"].includes(key)) controls.right = down;
+    }
+
+    window.addEventListener("keydown", e => onKey(e.key, true));
+    window.addEventListener("keyup", e => onKey(e.key, false));
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      state.targetX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      state.targetY = (e.clientY - rect.top) * (canvas.height / rect.height);
+      controls.mouseActive = true;
+    });
+    canvas.addEventListener("mouseleave", () => { controls.mouseActive = false; });
+
+    document.getElementById("spawnBtn").addEventListener("click", () => {
+      spawnGalaxy();
+      showHint("Galaxy repopulated.");
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      nextGalaxy();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Reset all local progress?")) return;
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    });
+
+    setInterval(save, 3500);
+
+    if (!load() || state.entities.length === 0) {
+      updateRadius();
+      spawnGalaxy();
+    } else {
+      showHint("Loaded saved galaxy.");
+      syncHud();
+    }
+
+    frame();
+  </script>
+</body>
+</html>
