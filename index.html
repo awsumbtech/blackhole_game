@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Black Hole: Galaxy Eater</title>
+  <style>
+    :root {
+      --bg: #060812;
+      --panel: #121833;
+      --border: #2f3f84;
+      --text: #e9edff;
+      --accent: #8a8dff;
+      --ok: #60f3b1;
+      --warn: #ffd27b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 30%, #1e2450 0%, var(--bg) 56%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      display: grid;
+      gap: 12px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(100px, 1fr));
+      gap: 8px;
+    }
+
+    .card {
+      background: linear-gradient(165deg, #1b2042, var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .label { font-size: .76rem; opacity: .86; }
+    .value { font-size: 1.05rem; font-weight: 700; }
+
+    .canvas-wrap {
+      background: #060914;
+      border: 1px solid #2a3568;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 26px #0008;
+    }
+
+    canvas {
+      width: 100%;
+      height: min(74vh, 760px);
+      display: block;
+      background: radial-gradient(circle at 50% 45%, #10173b 0%, #05070f 62%);
+      cursor: crosshair;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      background: #2a3372;
+      border: 1px solid #4b5fc6;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover { filter: brightness(1.1); }
+    .hint { color: var(--warn); min-height: 1.1rem; }
+    .ok { color: var(--ok); }
+
+    .control-pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      background: #0f1534;
+      border: 1px solid #303f81;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .86rem;
+    }
+
+    .control-pill input[type="range"] {
+      width: 90px;
+    }
+
+    @media (max-width: 920px) {
+      .hud { grid-template-columns: repeat(3, minmax(90px, 1fr)); }
+      canvas { height: min(66vh, 680px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hud">
+      <div class="card"><div class="label">Galaxy</div><div class="value" id="galaxy">1</div></div>
+      <div class="card"><div class="label">Mass</div><div class="value" id="mass">0</div></div>
+      <div class="card"><div class="label">Radius</div><div class="value" id="radius">10</div></div>
+      <div class="card"><div class="label">Consumed</div><div class="value" id="consumed">0</div></div>
+      <div class="card"><div class="label">Objects Left</div><div class="value" id="left">0</div></div>
+      <div class="card"><div class="label">Top Galaxy</div><div class="value" id="bestGalaxy">1</div></div>
+    </section>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="1100" height="720" aria-label="Black hole consume game"></canvas>
+    </div>
+
+    <section class="row">
+      <button id="spawnBtn">Repopulate Galaxy</button>
+      <button id="nextBtn">Force Next Galaxy</button>
+      <button id="resetBtn">Hard Reset</button>
+      <label class="control-pill"><input type="checkbox" id="audioToggle" checked /> Audio</label>
+      <label class="control-pill">Volume <input type="range" id="volume" min="0" max="100" value="40" /></label>
+      <span class="hint" id="hint"></span>
+    </section>
+
+    <section class="card">
+      <strong>How to play</strong>
+      <div>Move with <span class="ok">WASD / Arrow Keys</span> or point your mouse. Get close enough to absorb objects.</div>
+      <div>Objects are color blocks now, each with hidden properties (density, speed, response, tone) so visuals can be swapped later.</div>
+      <div>Consume the full galaxy to advance. Every 25% consumed triggers a calm milestone event.</div>
+    </section>
+  </main>
+
+  <script>
+    const SAVE_KEY = "blackhole_consume_map_v2";
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const state = {
+      galaxy: 1,
+      bestGalaxy: 1,
+      mass: 80,
+      radius: 12,
+      totalConsumed: 0,
+      playerX: canvas.width / 2,
+      playerY: canvas.height / 2,
+      cameraX: 0,
+      cameraY: 0,
+      targetX: canvas.width / 2,
+      targetY: canvas.height / 2,
+      entities: [],
+      effects: [],
+      trails: [],
+      milestoneFlags: {},
+      eventUntil: 0,
+      eventType: "",
+      audioEnabled: true,
+      volume: 0.4,
+      tint: "#10173b"
+    };
+
+    const controls = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      mouseActive: false
+    };
+
+    const objectTypes = [
+      { id: "junk", color: "#8894b7", minR: 3, maxR: 6, density: 0.8, speed: 0.15, tone: 160, trail: "#aab6de55" },
+      { id: "meteor", color: "#b8ac8c", minR: 5, maxR: 8, density: 1.2, speed: 0.25, tone: 180, trail: "#ddd0b355" },
+      { id: "comet", color: "#83d7ff", minR: 4, maxR: 7, density: 1.0, speed: 0.7, tone: 240, trail: "#9de6ff66" },
+      { id: "craft", color: "#c28eff", minR: 6, maxR: 10, density: 1.4, speed: 0.42, tone: 210, trail: "#d4a9ff66" },
+      { id: "planet", color: "#62c38c", minR: 9, maxR: 14, density: 1.9, speed: 0.1, tone: 140, trail: "#9ce5b866" },
+      { id: "star", color: "#ffd86d", minR: 12, maxR: 18, density: 2.3, speed: 0.08, tone: 120, trail: "#ffe9a666" }
+    ];
+
+    const biomeCatalog = [
+      { name: "Debris Reef", tint: "#1a2044", weights: { junk: 5, meteor: 3, comet: 1, craft: 1, planet: 1, star: 0.5 } },
+      { name: "Comet Current", tint: "#12344c", weights: { junk: 1, meteor: 1, comet: 6, craft: 1, planet: 1, star: 1 } },
+      { name: "Ruined Armada", tint: "#2e1c45", weights: { junk: 2, meteor: 2, comet: 1, craft: 6, planet: 1, star: 1 } },
+      { name: "Planet Nursery", tint: "#193b2e", weights: { junk: 1, meteor: 1, comet: 1, craft: 1, planet: 5, star: 2 } },
+      { name: "Star Meadow", tint: "#3f2e11", weights: { junk: 1, meteor: 1, comet: 1, craft: 1, planet: 2, star: 5 } }
+    ];
+
+    let audioCtx;
+
+    function $(id) { return document.getElementById(id); }
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function weightedType(weights) {
+      const total = objectTypes.reduce((sum, t) => sum + (weights[t.id] || 0), 0);
+      let r = Math.random() * total;
+      for (const type of objectTypes) {
+        r -= weights[type.id] || 0;
+        if (r <= 0) return type;
+      }
+      return objectTypes[0];
+    }
+
+    function updateRadius() {
+      state.radius = Math.max(10, Math.sqrt(state.mass) * 1.35);
+    }
+
+    function galaxyObjectCount() {
+      return Math.min(260, 44 + state.galaxy * 18);
+    }
+
+    function resetMilestones() {
+      state.milestoneFlags = { 25: false, 50: false, 75: false };
+    }
+
+    function spawnCluster(cx, cy, count, biome) {
+      for (let i = 0; i < count; i += 1) {
+        const type = weightedType(biome.weights);
+        const r = rand(type.minR, type.maxR);
+        const spread = rand(80, 420);
+        const a = rand(0, Math.PI * 2);
+        const x = cx + Math.cos(a) * spread;
+        const y = cy + Math.sin(a) * spread;
+
+        state.entities.push({
+          type: type.id,
+          color: type.color,
+          trailColor: type.trail,
+          radius: r,
+          density: type.density,
+          mass: Math.PI * r * r * type.density,
+          x,
+          y,
+          vx: rand(-type.speed, type.speed),
+          vy: rand(-type.speed, type.speed),
+          history: [],
+          tone: type.tone
+        });
+      }
+    }
+
+    function spawnGalaxy() {
+      state.entities = [];
+      state.effects = [];
+      resetMilestones();
+      const count = galaxyObjectCount();
+      const spread = 1450 + state.galaxy * 200;
+      const clusters = 4 + Math.floor(state.galaxy / 2);
+      const per = Math.floor(count / clusters);
+      const biome = biomeCatalog[state.galaxy % biomeCatalog.length];
+      state.tint = biome.tint;
+
+      for (let i = 0; i < clusters; i += 1) {
+        spawnCluster(rand(-spread, spread), rand(-spread, spread), per, biome);
+      }
+      while (state.entities.length < count) {
+        spawnCluster(rand(-spread, spread), rand(-spread, spread), 1, biome);
+      }
+
+      showHint(`Galaxy ${state.galaxy}: ${biome.name} · ${count} objects`);
+      syncHud();
+      save();
+    }
+
+    function save() {
+      const saveState = {
+        galaxy: state.galaxy,
+        bestGalaxy: state.bestGalaxy,
+        mass: state.mass,
+        totalConsumed: state.totalConsumed,
+        playerX: state.playerX,
+        playerY: state.playerY,
+        entities: state.entities,
+        audioEnabled: state.audioEnabled,
+        volume: state.volume,
+        milestoneFlags: state.milestoneFlags,
+        eventUntil: state.eventUntil,
+        eventType: state.eventType,
+        tint: state.tint
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveState));
+    }
+
+    function load() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      try {
+        const parsed = JSON.parse(raw);
+        state.galaxy = parsed.galaxy || 1;
+        state.bestGalaxy = parsed.bestGalaxy || state.galaxy;
+        state.mass = parsed.mass || 80;
+        state.totalConsumed = parsed.totalConsumed || 0;
+        state.playerX = parsed.playerX || canvas.width / 2;
+        state.playerY = parsed.playerY || canvas.height / 2;
+        state.entities = Array.isArray(parsed.entities) ? parsed.entities : [];
+        state.audioEnabled = parsed.audioEnabled ?? true;
+        state.volume = parsed.volume ?? 0.4;
+        state.milestoneFlags = parsed.milestoneFlags || { 25: false, 50: false, 75: false };
+        state.eventUntil = parsed.eventUntil || 0;
+        state.eventType = parsed.eventType || "";
+        state.tint = parsed.tint || "#10173b";
+
+        for (const e of state.entities) {
+          if (!e.history) e.history = [];
+          if (!e.trailColor) e.trailColor = "#aab6de44";
+          if (!e.tone) e.tone = 150;
+        }
+
+        $("audioToggle").checked = state.audioEnabled;
+        $("volume").value = Math.round(state.volume * 100);
+        updateRadius();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function showHint(message) {
+      const el = $("hint");
+      el.textContent = message;
+      clearTimeout(showHint.t);
+      showHint.t = setTimeout(() => {
+        if (el.textContent === message) el.textContent = "";
+      }, 2400);
+    }
+
+    function ensureAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function playConsumeSound(tone, intensity = 1) {
+      if (!state.audioEnabled) return;
+      try {
+        ensureAudioCtx();
+      } catch {
+        return;
+      }
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = "sine";
+      osc2.type = "triangle";
+      osc.frequency.value = tone;
+      osc2.frequency.value = tone * 1.5;
+      filter.type = "lowpass";
+      filter.frequency.value = 1300;
+
+      const vol = clamp(state.volume * 0.12 * intensity, 0, 0.2);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(vol, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc2.start(now);
+      osc.stop(now + 0.28);
+      osc2.stop(now + 0.24);
+    }
+
+    function addConsumeEffect(x, y, radius, color) {
+      state.effects.push({ x, y, r: Math.max(10, radius), age: 0, color });
+    }
+
+    function triggerMilestoneEvent(percent) {
+      let eventType = "resonance";
+      if (percent === 25) eventType = "nebula";
+      if (percent === 50) eventType = "silence";
+      if (percent === 75) eventType = "resonance";
+
+      state.eventType = eventType;
+      state.eventUntil = Date.now() + 9000;
+
+      if (eventType === "nebula") {
+        showHint("Milestone: Nebula Drift 🌫️ (calmer movement)");
+      } else if (eventType === "silence") {
+        showHint("Milestone: Time Dilation 🫧 (slower world, richer pull)");
+      } else {
+        showHint("Milestone: Resonance ✨ (boosted attraction)");
+      }
+    }
+
+    function eventEffects() {
+      if (Date.now() > state.eventUntil) return { worldSpeed: 1, pullBoost: 1, tintMix: null };
+      if (state.eventType === "nebula") return { worldSpeed: 0.75, pullBoost: 1.15, tintMix: "#41698a33" };
+      if (state.eventType === "silence") return { worldSpeed: 0.62, pullBoost: 1.28, tintMix: "#5f90ac33" };
+      return { worldSpeed: 1.05, pullBoost: 1.45, tintMix: "#b793ff22" };
+    }
+
+    function tryConsume() {
+      const keep = [];
+      let ate = 0;
+      let toneTotal = 0;
+      let massGained = 0;
+
+      for (const e of state.entities) {
+        const dx = e.x - state.playerX;
+        const dy = e.y - state.playerY;
+        const dist = Math.hypot(dx, dy);
+
+        const canConsume = state.radius > e.radius * 0.88;
+        const closeEnough = dist < state.radius + e.radius * 0.42;
+
+        if (canConsume && closeEnough) {
+          state.mass += e.mass;
+          massGained += e.mass;
+          toneTotal += e.tone;
+          ate += 1;
+          addConsumeEffect(e.x, e.y, e.radius, e.color);
+        } else {
+          keep.push(e);
+        }
+      }
+
+      if (ate > 0) {
+        state.entities = keep;
+        state.totalConsumed += ate;
+        updateRadius();
+        syncHud();
+
+        const avgTone = toneTotal / ate;
+        const intensity = clamp((massGained / 260) + 0.4, 0.3, 1.2);
+        playConsumeSound(avgTone, intensity);
+
+        const initialTotal = galaxyObjectCount();
+        const consumedInCurrent = initialTotal - state.entities.length;
+        const percent = Math.floor((consumedInCurrent / initialTotal) * 100);
+        [25, 50, 75].forEach(mark => {
+          if (percent >= mark && !state.milestoneFlags[mark]) {
+            state.milestoneFlags[mark] = true;
+            triggerMilestoneEvent(mark);
+          }
+        });
+      }
+    }
+
+    function nextGalaxy() {
+      state.galaxy += 1;
+      state.bestGalaxy = Math.max(state.bestGalaxy, state.galaxy);
+      state.mass = Math.max(90, state.mass * 0.7);
+      updateRadius();
+      state.playerX = 0;
+      state.playerY = 0;
+      state.cameraX = 0;
+      state.cameraY = 0;
+      state.eventUntil = 0;
+      state.eventType = "";
+      spawnGalaxy();
+      showHint(`Galaxy ${state.galaxy} reached.`);
+      syncHud();
+      save();
+    }
+
+    function syncHud() {
+      $("galaxy").textContent = state.galaxy;
+      $("mass").textContent = Math.floor(state.mass).toLocaleString();
+      $("radius").textContent = state.radius.toFixed(1);
+      $("consumed").textContent = state.totalConsumed.toLocaleString();
+      $("left").textContent = state.entities.length.toLocaleString();
+      $("bestGalaxy").textContent = state.bestGalaxy;
+    }
+
+    function worldToScreenX(x) { return x - state.cameraX + canvas.width / 2; }
+    function worldToScreenY(y) { return y - state.cameraY + canvas.height / 2; }
+
+    function drawStarfield() {
+      ctx.fillStyle = "#05070f";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const radial = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 80, canvas.width / 2, canvas.height / 2, canvas.width * 0.66);
+      radial.addColorStop(0, state.tint + "88");
+      radial.addColorStop(1, "#00000000");
+      ctx.fillStyle = radial;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cell = 90;
+      const baseX = Math.floor((state.cameraX - canvas.width / 2) / cell) - 1;
+      const baseY = Math.floor((state.cameraY - canvas.height / 2) / cell) - 1;
+      for (let gx = 0; gx < Math.ceil(canvas.width / cell) + 3; gx += 1) {
+        for (let gy = 0; gy < Math.ceil(canvas.height / cell) + 3; gy += 1) {
+          const wx = baseX + gx;
+          const wy = baseY + gy;
+          const hash = Math.abs((wx * 73856093) ^ (wy * 19349663)) % 100;
+          if (hash < 22) {
+            const px = (wx * cell - state.cameraX) + canvas.width / 2 + (hash % 7) * 3;
+            const py = (wy * cell - state.cameraY) + canvas.height / 2 + (hash % 5) * 4;
+            const size = hash % 3 === 0 ? 2 : 1;
+            ctx.fillStyle = hash % 9 === 0 ? "#8ec8ff" : "#d7defe";
+            ctx.fillRect(px, py, size, size);
+          }
+        }
+      }
+
+      const liveEvent = eventEffects();
+      if (liveEvent.tintMix) {
+        ctx.fillStyle = liveEvent.tintMix;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function drawEntityTrails() {
+      for (const e of state.entities) {
+        if (!e.history || e.history.length < 2) continue;
+        ctx.beginPath();
+        for (let i = 0; i < e.history.length; i += 1) {
+          const p = e.history[i];
+          const sx = worldToScreenX(p.x);
+          const sy = worldToScreenY(p.y);
+          if (i === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = e.trailColor;
+        ctx.lineWidth = Math.max(1, e.radius * 0.22);
+        ctx.stroke();
+      }
+    }
+
+    function drawEntities() {
+      drawEntityTrails();
+      for (const e of state.entities) {
+        const sx = worldToScreenX(e.x);
+        const sy = worldToScreenY(e.y);
+        if (sx < -30 || sx > canvas.width + 30 || sy < -30 || sy > canvas.height + 30) continue;
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, e.radius, 0, Math.PI * 2);
+        ctx.fillStyle = e.color;
+        ctx.fill();
+      }
+    }
+
+    function drawEffects() {
+      const keep = [];
+      for (const fx of state.effects) {
+        fx.age += 1;
+        const progress = fx.age / 26;
+        if (progress >= 1) continue;
+
+        const sx = worldToScreenX(fx.x);
+        const sy = worldToScreenY(fx.y);
+        ctx.beginPath();
+        ctx.arc(sx, sy, fx.r + progress * 20, 0, Math.PI * 2);
+        ctx.strokeStyle = `${fx.color}${Math.floor((1 - progress) * 130).toString(16).padStart(2, "0")}`;
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+        keep.push(fx);
+      }
+      state.effects = keep;
+    }
+
+    function drawPlayer() {
+      const x = canvas.width / 2;
+      const y = canvas.height / 2;
+
+      const pulse = 1 + Math.sin(Date.now() / 380) * 0.06;
+      const glow = Math.min(55, state.radius * 1.2) * pulse;
+      const g = ctx.createRadialGradient(x, y, state.radius * 0.3, x, y, state.radius + glow);
+      g.addColorStop(0, "#222957");
+      g.addColorStop(0.42, "#101433");
+      g.addColorStop(0.75, "#5f66ff66");
+      g.addColorStop(1, "#5f66ff00");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius + glow, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#010204";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, state.radius * 0.95, 0, Math.PI * 2);
+      ctx.strokeStyle = "#7a80ff88";
+      ctx.lineWidth = Math.max(2, state.radius * 0.08);
+      ctx.stroke();
+    }
+
+    function updateEntities() {
+      const liveEvent = eventEffects();
+      const bound = 2600 + state.galaxy * 240;
+      for (const e of state.entities) {
+        e.x += e.vx * liveEvent.worldSpeed;
+        e.y += e.vy * liveEvent.worldSpeed;
+
+        const dx = state.playerX - e.x;
+        const dy = state.playerY - e.y;
+        const distSq = dx * dx + dy * dy;
+        const pull = clamp((state.radius * 0.01 * liveEvent.pullBoost) / Math.max(70, distSq), 0, 0.0022);
+        e.vx += dx * pull;
+        e.vy += dy * pull;
+        e.vx *= 0.998;
+        e.vy *= 0.998;
+
+        e.history.push({ x: e.x, y: e.y });
+        if (e.history.length > 9) e.history.shift();
+
+        if (e.x < -bound || e.x > bound) e.vx *= -1;
+        if (e.y < -bound || e.y > bound) e.vy *= -1;
+      }
+    }
+
+    function updatePlayer() {
+      let mx = 0;
+      let my = 0;
+
+      if (controls.left) mx -= 1;
+      if (controls.right) mx += 1;
+      if (controls.up) my -= 1;
+      if (controls.down) my += 1;
+
+      if (controls.mouseActive) {
+        const tx = state.targetX - canvas.width / 2;
+        const ty = state.targetY - canvas.height / 2;
+        const d = Math.hypot(tx, ty);
+        if (d > 6) {
+          mx += tx / d;
+          my += ty / d;
+        }
+      }
+
+      const m = Math.hypot(mx, my);
+      if (m > 0) {
+        mx /= m;
+        my /= m;
+        const speed = clamp(4.7 - state.radius * 0.03, 1.25, 4.7);
+        state.playerX += mx * speed;
+        state.playerY += my * speed;
+      }
+
+      state.cameraX += (state.playerX - state.cameraX) * 0.08;
+      state.cameraY += (state.playerY - state.cameraY) * 0.08;
+    }
+
+    function frame() {
+      updatePlayer();
+      updateEntities();
+      tryConsume();
+
+      if (state.entities.length === 0) {
+        nextGalaxy();
+      }
+
+      drawStarfield();
+      drawEntities();
+      drawEffects();
+      drawPlayer();
+      requestAnimationFrame(frame);
+    }
+
+    function onKey(key, down) {
+      if (["ArrowUp", "w", "W"].includes(key)) controls.up = down;
+      if (["ArrowDown", "s", "S"].includes(key)) controls.down = down;
+      if (["ArrowLeft", "a", "A"].includes(key)) controls.left = down;
+      if (["ArrowRight", "d", "D"].includes(key)) controls.right = down;
+      if (state.audioEnabled && down) ensureAudioCtx();
+    }
+
+    window.addEventListener("keydown", e => onKey(e.key, true));
+    window.addEventListener("keyup", e => onKey(e.key, false));
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      state.targetX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      state.targetY = (e.clientY - rect.top) * (canvas.height / rect.height);
+      controls.mouseActive = true;
+      if (state.audioEnabled) ensureAudioCtx();
+    });
+    canvas.addEventListener("mouseleave", () => { controls.mouseActive = false; });
+
+    $("audioToggle").addEventListener("change", e => {
+      state.audioEnabled = e.target.checked;
+      if (state.audioEnabled) ensureAudioCtx();
+      save();
+    });
+
+    $("volume").addEventListener("input", e => {
+      state.volume = Number(e.target.value) / 100;
+      save();
+    });
+
+    document.getElementById("spawnBtn").addEventListener("click", () => {
+      spawnGalaxy();
+      showHint("Galaxy repopulated.");
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      nextGalaxy();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Reset all local progress?")) return;
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    });
+
+    setInterval(save, 3500);
+
+    if (!load() || state.entities.length === 0) {
+      updateRadius();
+      spawnGalaxy();
+    } else {
+      showHint("Loaded saved galaxy.");
+      syncHud();
+    }
+
+    frame();
+  </script>
+</body>
+</html>
