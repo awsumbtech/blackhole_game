@@ -24,3 +24,11 @@ Open: `http://localhost:4173`
 - Satisfying consume effects: suction trails, ripple bursts, milestone events
 - Milestone events trigger at 25/50/75% consumed in a galaxy
 - Radius scales with mass and progress auto-saves to `localStorage`
+- Goal: consume every object in the current galaxy to advance to the next one
+
+## Current gameplay model
+
+- Objects are circles with hidden type properties (density, size, drift speed)
+- Different colors represent different future object categories (planet, star, junk, etc.)
+- Your black hole radius scales with mass
+- Progress auto-saves to `localStorage`

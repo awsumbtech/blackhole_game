@@ -102,6 +102,10 @@
       width: 90px;
     }
 
+
+    .hint { color: var(--warn); min-height: 1.1rem; }
+    .ok { color: var(--ok); }
+
     @media (max-width: 920px) {
       .hud { grid-template-columns: repeat(3, minmax(90px, 1fr)); }
       canvas { height: min(66vh, 680px); }
@@ -137,11 +141,14 @@
       <div>Move with <span class="ok">WASD / Arrow Keys</span> or point your mouse. Get close enough to absorb objects.</div>
       <div>Objects are color blocks now, each with hidden properties (density, speed, response, tone) so visuals can be swapped later.</div>
       <div>Consume the full galaxy to advance. Every 25% consumed triggers a calm milestone event.</div>
+      <div>Each color is a different object type (hidden stats now, easy to skin later with sprites).</div>
+      <div>Consume the full galaxy to advance. Your mass and unlock progress auto-save locally.</div>
     </section>
   </main>
 
   <script>
     const SAVE_KEY = "blackhole_consume_map_v2";
+    const SAVE_KEY = "blackhole_consume_map_v1";
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
@@ -150,6 +157,7 @@
       bestGalaxy: 1,
       mass: 80,
       radius: 12,
+      consumed: 0,
       totalConsumed: 0,
       playerX: canvas.width / 2,
       playerY: canvas.height / 2,
@@ -166,6 +174,7 @@
       audioEnabled: true,
       volume: 0.4,
       tint: "#10173b"
+      entities: []
     };
 
     const controls = {
@@ -208,6 +217,18 @@
       }
       return objectTypes[0];
     }
+      { id: "junk", color: "#8894b7", minR: 3, maxR: 6, density: 0.8, speed: 0.15 },
+      { id: "meteor", color: "#b8ac8c", minR: 5, maxR: 8, density: 1.2, speed: 0.25 },
+      { id: "comet", color: "#83d7ff", minR: 4, maxR: 7, density: 1.0, speed: 0.6 },
+      { id: "craft", color: "#c28eff", minR: 6, maxR: 10, density: 1.4, speed: 0.4 },
+      { id: "planet", color: "#62c38c", minR: 9, maxR: 14, density: 1.9, speed: 0.1 },
+      { id: "star", color: "#ffd86d", minR: 12, maxR: 18, density: 2.3, speed: 0.08 }
+    ];
+
+    function $(id) { return document.getElementById(id); }
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
     function updateRadius() {
       state.radius = Math.max(10, Math.sqrt(state.mass) * 1.35);
@@ -266,6 +287,31 @@
       }
 
       showHint(`Galaxy ${state.galaxy}: ${biome.name} · ${count} objects`);
+      return Math.min(220, 34 + state.galaxy * 16);
+    }
+
+    function spawnGalaxy() {
+      state.entities = [];
+      const count = galaxyObjectCount();
+      const spread = 1300 + state.galaxy * 180;
+
+      for (let i = 0; i < count; i += 1) {
+        const type = pick(objectTypes);
+        const r = rand(type.minR, type.maxR);
+        state.entities.push({
+          type: type.id,
+          color: type.color,
+          radius: r,
+          density: type.density,
+          mass: Math.PI * r * r * type.density,
+          x: rand(-spread, spread),
+          y: rand(-spread, spread),
+          vx: rand(-type.speed, type.speed),
+          vy: rand(-type.speed, type.speed)
+        });
+      }
+
+      showHint(`Galaxy ${state.galaxy} loaded: ${count} objects.`);
       syncHud();
       save();
     }
@@ -285,6 +331,11 @@
         eventUntil: state.eventUntil,
         eventType: state.eventType,
         tint: state.tint
+        consumed: state.consumed,
+        totalConsumed: state.totalConsumed,
+        playerX: state.playerX,
+        playerY: state.playerY,
+        entities: state.entities
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveState));
     }
@@ -297,6 +348,7 @@
         state.galaxy = parsed.galaxy || 1;
         state.bestGalaxy = parsed.bestGalaxy || state.galaxy;
         state.mass = parsed.mass || 80;
+        state.consumed = parsed.consumed || 0;
         state.totalConsumed = parsed.totalConsumed || 0;
         state.playerX = parsed.playerX || canvas.width / 2;
         state.playerY = parsed.playerY || canvas.height / 2;
@@ -401,6 +453,7 @@
       if (state.eventType === "nebula") return { worldSpeed: 0.75, pullBoost: 1.15, tintMix: "#41698a33" };
       if (state.eventType === "silence") return { worldSpeed: 0.62, pullBoost: 1.28, tintMix: "#5f90ac33" };
       return { worldSpeed: 1.05, pullBoost: 1.45, tintMix: "#b793ff22" };
+      }, 2200);
     }
 
     function tryConsume() {
@@ -423,6 +476,11 @@
           toneTotal += e.tone;
           ate += 1;
           addConsumeEffect(e.x, e.y, e.radius, e.color);
+        const closeEnough = dist < state.radius + e.radius * 0.32;
+
+        if (canConsume && closeEnough) {
+          state.mass += e.mass;
+          ate += 1;
         } else {
           keep.push(e);
         }
@@ -447,6 +505,10 @@
             triggerMilestoneEvent(mark);
           }
         });
+        state.consumed += ate;
+        state.totalConsumed += ate;
+        updateRadius();
+        syncHud();
       }
     }
 
@@ -454,6 +516,7 @@
       state.galaxy += 1;
       state.bestGalaxy = Math.max(state.bestGalaxy, state.galaxy);
       state.mass = Math.max(90, state.mass * 0.7);
+      state.mass = Math.max(90, state.mass * 0.66);
       updateRadius();
       state.playerX = 0;
       state.playerY = 0;
@@ -533,6 +596,9 @@
 
     function drawEntities() {
       drawEntityTrails();
+    }
+
+    function drawEntities() {
       for (const e of state.entities) {
         const sx = worldToScreenX(e.x);
         const sy = worldToScreenY(e.y);
@@ -570,6 +636,7 @@
 
       const pulse = 1 + Math.sin(Date.now() / 380) * 0.06;
       const glow = Math.min(55, state.radius * 1.2) * pulse;
+      const glow = Math.min(55, state.radius * 1.2);
       const g = ctx.createRadialGradient(x, y, state.radius * 0.3, x, y, state.radius + glow);
       g.addColorStop(0, "#222957");
       g.addColorStop(0.42, "#101433");
@@ -598,6 +665,10 @@
       for (const e of state.entities) {
         e.x += e.vx * liveEvent.worldSpeed;
         e.y += e.vy * liveEvent.worldSpeed;
+      const bound = 2600 + state.galaxy * 240;
+      for (const e of state.entities) {
+        e.x += e.vx;
+        e.y += e.vy;
 
         const dx = state.playerX - e.x;
         const dy = state.playerY - e.y;
@@ -610,6 +681,11 @@
 
         e.history.push({ x: e.x, y: e.y });
         if (e.history.length > 9) e.history.shift();
+        const pull = clamp((state.radius * 0.008) / Math.max(60, distSq), 0, 0.0012);
+        e.vx += dx * pull;
+        e.vy += dy * pull;
+        e.vx *= 0.999;
+        e.vy *= 0.999;
 
         if (e.x < -bound || e.x > bound) e.vx *= -1;
         if (e.y < -bound || e.y > bound) e.vy *= -1;
@@ -694,6 +770,9 @@
       state.volume = Number(e.target.value) / 100;
       save();
     });
+
+    });
+    canvas.addEventListener("mouseleave", () => { controls.mouseActive = false; });
 
     document.getElementById("spawnBtn").addEventListener("click", () => {
       spawnGalaxy();
