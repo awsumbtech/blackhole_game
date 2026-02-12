@@ -1,0 +1,22 @@
+{
+  "name": "Black Hole: Galaxy Eater",
+  "short_name": "Galaxy Eater",
+  "description": "Consume the galaxy as an ever-growing black hole",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#060812",
+  "theme_color": "#060812",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Development
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.swp
+*~
+
+# Dependencies (if you add them later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output (if you add build process)
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# Claude Code
+.claude/
