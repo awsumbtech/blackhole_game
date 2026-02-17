@@ -10,6 +10,7 @@ let droneOscs = [];
 let enabled = true;
 let volume = 0.4;
 let initialized = false;
+let noiseBuffer = null;
 
 function ensureCtx() {
   if (ctx) return true;
@@ -38,6 +39,14 @@ function ensureCtx() {
     sfxGain = ctx.createGain();
     sfxGain.gain.value = 0.8;
     sfxGain.connect(masterGain);
+
+    // Pre-generate noise buffer for consume sounds
+    const bufferSize = ctx.sampleRate * 0.15;
+    noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+    }
 
     initialized = true;
     return true;
@@ -173,15 +182,9 @@ export function playConsume(tone, massRatio, comboCount) {
     sub.stop(now + 0.35);
   }
 
-  // Layer 3: Noise "fwoomp" for suction feel
-  const bufferSize = ctx.sampleRate * 0.15;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
-  }
+  // Layer 3: Noise "fwoomp" for suction feel — reuse pre-generated buffer
   const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
+  noise.buffer = noiseBuffer;
 
   const noiseFilter = ctx.createBiquadFilter();
   noiseFilter.type = "bandpass";
@@ -280,4 +283,138 @@ export function playBounce() {
   gain.connect(sfxGain);
   osc.start(now);
   osc.stop(now + 0.2);
+}
+
+// ─── EVENT CUES ───
+// Short procedural audio signatures for living-world events
+
+export function playEventCue(eventType) {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+
+  const now = ctx.currentTime;
+
+  switch (eventType) {
+    case "meteorShower": {
+      // Filtered sawtooth sweep 60→200Hz
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(60, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
+      filter.type = "lowpass";
+      filter.frequency.value = 400;
+      filter.Q.value = 2;
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.5);
+      break;
+    }
+
+    case "cometStream": {
+      // High sine with fast tremolo
+      const osc = ctx.createOscillator();
+      const tremolo = ctx.createOscillator();
+      const tremoloGain = ctx.createGain();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 800;
+      tremolo.type = "sine";
+      tremolo.frequency.value = 12;
+      tremoloGain.gain.value = 0.04;
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      tremolo.connect(tremoloGain);
+      tremoloGain.connect(gain.gain);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      tremolo.start(now);
+      osc.start(now);
+      tremolo.stop(now + 0.45);
+      osc.stop(now + 0.45);
+      break;
+    }
+
+    case "voidPulse": {
+      // Sub-bass thump at 30Hz
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(30, now);
+      osc.frequency.exponentialRampToValueAtTime(18, now + 0.3);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.45);
+      break;
+    }
+
+    case "derelictFlotilla": {
+      // Low resonant hum at 50Hz
+      const osc = ctx.createOscillator();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = 50;
+      filter.type = "bandpass";
+      filter.frequency.value = 50;
+      filter.Q.value = 8;
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.55);
+      break;
+    }
+
+    case "stellarBirth": {
+      // Ascending sine arpeggio
+      const notes = [330, 440, 550, 660];
+      for (let i = 0; i < notes.length; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = notes[i];
+        const t = now + i * 0.08;
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.exponentialRampToValueAtTime(0.04, t + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        osc.start(t);
+        osc.stop(t + 0.25);
+      }
+      break;
+    }
+
+    case "gravitationalWave": {
+      // Slow frequency sweep 100→40Hz
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(100, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.55);
+      break;
+    }
+  }
 }

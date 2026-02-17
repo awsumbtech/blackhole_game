@@ -8,15 +8,38 @@ A browser-based space game where you control a growing black hole consuming obje
 
 ## 🎮 Play Now
 
-Simply open `index.html` in a modern browser. No build process or dependencies required!
+Serve the game over HTTP (ES modules require it — `file://` won't work):
+
+```bash
+# With Node.js installed:
+npx serve
+
+# Or with Python:
+python -m http.server 8080
+```
+
+Then open **http://localhost:8080** (or the port shown) in your browser.
 
 ## ✨ Features
 
 ### Core Gameplay
 - **Size-Based Consumption**: Eat objects smaller than you to grow larger
-- **Progressive Difficulty**: 7+ galaxies with increasing object counts and sizes
+- **Mass-Based Progression**: Reach a mass threshold to advance — galaxies are never empty
+- **Progressive Difficulty**: Quadratic scaling (`10000 + 5000g + 1000g²`) makes each galaxy harder
 - **Combo System**: Chain rapid consumption for ascending audio feedback
 - **Smooth Physics**: Momentum-based movement with boundary collision
+
+### Living World System
+- **Gravity Well**: Objects near the black hole curve toward you — dust streams in, heavy objects barely budge
+- **Dynamic Spawning**: New objects continuously fade in from galaxy edges, maintaining a living population
+- **Procedural Events**: 6 event types triggered by game state metrics:
+  - *Meteor Shower* — fast rocks from a single direction
+  - *Comet Stream* — curved trails of ice and light
+  - *Void Pulse* — expanding shockwave rings that push entities outward
+  - *Derelict Flotilla* — formation of ancient craft drifting inward
+  - *Stellar Birth* — gathering light → flash → explosion spawning a star
+  - *Gravitational Wave* — sinusoidal displacement sweeping across the galaxy
+- **Ambient Background**: Shooting stars, distant supernova flashes, and faint energy waves
 
 ### Biomes (7 Unique Environments)
 1. **Debris Reef** - Dense wreckage fields
@@ -42,6 +65,7 @@ Simply open `index.html` in a modern browser. No build process or dependencies r
 - **Adaptive Ambient Drone**: Shifts based on biome color palette
 - **Dynamic Consumption Sounds**: Pitch and tone adapt to object properties
 - **Combo Chimes**: Ascending arpeggios for rapid consumption chains
+- **Event Audio Cues**: Each living-world event has a distinct procedural sound signature
 - **Milestone Events**: Satisfying chord progressions for galaxy completion
 
 ### Technical Features
@@ -75,6 +99,7 @@ blackhole_game/
 ├── js/
 │   ├── game.js        # Main game loop and state management
 │   ├── entities.js    # Object types, biomes, and spawning
+│   ├── living-world.js # Gravity, dynamic spawning, events, ambient effects
 │   ├── audio.js       # Procedural audio engine
 │   ├── render.js      # Canvas drawing functions
 │   ├── input.js       # Keyboard and mouse input handling
@@ -89,11 +114,10 @@ blackhole_game/
 
 ### Quick Start
 ```bash
-# No build process needed! Just open index.html
-# Or use a local server:
-python -m http.server 8000
+# ES modules require HTTP — serve locally:
+npx serve        # Node.js (easiest)
 # or
-npx serve
+python -m http.server 8080   # Python
 ```
 
 ### Code Organization
@@ -106,8 +130,9 @@ npx serve
 
 **Game Loop** (`js/game.js`)
 - 60 FPS main loop with delta time
-- State management
-- Galaxy transitions
+- State management with cached DOM references
+- In-place array cleanup (reverse-splice, guarded by dirty flags)
+- Galaxy transitions with starfield cache invalidation
 - HUD synchronization
 
 **Entity System** (`js/entities.js`)
@@ -116,19 +141,26 @@ npx serve
 - Procedural galaxy generation
 - Cluster-based spawning for density variation
 
+**Living World** (`js/living-world.js`)
+- Gravity well with distance-based attraction and speed capping
+- Depletion spawner + ambient trickle with population cap
+- Hazard-function event probability with per-event and global cooldowns
+- Screen-space ambient effects (shooting stars, flashes, energy waves)
+
 **Audio Engine** (`js/audio.js`)
 - 3-oscillator ambient drone
-- Multi-layered consumption sounds
-- Combo chime system
+- Multi-layered consumption sounds with pre-generated noise buffer
+- Combo chime system with event audio cues
 - Dynamic compression and filtering
 
 **Rendering** (`js/render.js`)
-- Starfield parallax background
-- Entity drawing with glow effects
-- Particle system for consumption
-- Ripple effects
-- Edge indicators
-- Minimap
+- Offscreen-cached starfield and nebula (only redrawn when camera exceeds buffer threshold)
+- Pre-rendered entity sprites for planets and derelicts (baked at spawn time)
+- Cached glow canvas shared across all glowing entities
+- Black hole gradients cached and rebuilt only on radius change
+- Alpha-segmented comet tails and speed trails (no per-frame gradient allocation)
+- Mathematically computed edge indicator arrows (no save/translate/rotate/restore)
+- Particle system, ripple effects, minimap
 
 ## 🎨 Customization
 
@@ -164,6 +196,12 @@ Edit `js/entities.js` and add to `biomeCatalog`:
 ```
 
 ### Adjusting Difficulty
+In `js/game.js`:
+```javascript
+// Mass threshold to complete a galaxy (quadratic scaling)
+state.targetMass = 10000 + galaxyNum * 5000 + galaxyNum * galaxyNum * 1000;
+```
+
 In `js/entities.js`:
 ```javascript
 // Object count per galaxy
@@ -176,6 +214,8 @@ export function galaxyBounds(galaxy) {
   return 800 + galaxy * 120;  // Adjust growth rate
 }
 ```
+
+In `js/living-world.js` — tune the `CFG` object for gravity strength, spawn rates, event probabilities, and cooldowns.
 
 ## 🌐 Browser Support
 

@@ -158,15 +158,15 @@ export const biomeCatalog = [
   }
 ];
 
-function rand(min, max) {
+export function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function pickRandom(arr) {
+export function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function weightedType(weights, galaxy) {
+export function weightedType(weights, galaxy) {
   const available = objectTypes.filter(t => {
     if (t.minGalaxy && galaxy < t.minGalaxy) return false;
     return (weights[t.id] || 0) > 0;
@@ -190,7 +190,7 @@ export function galaxyBounds(galaxy) {
   return 800 + galaxy * 120;
 }
 
-function createEntity(type, x, y) {
+export function createEntity(type, x, y) {
   const r = rand(type.minR, type.maxR);
   const color = pickRandom(type.colors);
   const angle = rand(0, Math.PI * 2);

@@ -5,14 +5,24 @@ import { createInput } from "./input.js";
 import { spawnGalaxy, updateEntities, galaxyObjectCount, galaxyBounds, getBiome } from "./entities.js";
 import {
   drawStarfield, drawBoundary, drawEntities, drawBlackHole,
-  drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor
+  drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
+  invalidateStarfield, prerenderEntitySprite
 } from "./render.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats } from "./save.js";
+import { initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG } from "./living-world.js";
 
 // ─── CANVAS SETUP ───
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
+// ─── CACHED DOM REFERENCES ───
+const hudGalaxy = document.getElementById("hud-galaxy");
+const hudLeft = document.getElementById("hud-left");
+const hudMass = document.getElementById("hud-mass");
+const hudBest = document.getElementById("hud-best");
+const hudBiome = document.getElementById("hud-biome");
+const hudProgressBar = document.getElementById("hud-progress-bar");
 
 function resizeCanvas() {
   const container = document.getElementById("game-container");
@@ -55,6 +65,9 @@ const state = {
   bounds: 800,
   biome: null,
   initialCount: 0,
+
+  // Mass-based galaxy progression
+  targetMass: 16000,
 
   // Effects
   particles: [],
@@ -99,6 +112,20 @@ function initGalaxy(galaxyNum) {
   state.biome = biome;
   state.bounds = bounds;
   state.initialCount = entities.length;
+
+  // Pre-render complex entity shapes (planets, derelicts) to offscreen sprites
+  for (const e of entities) {
+    prerenderEntitySprite(e);
+  }
+
+  // Force starfield cache rebuild for new biome/camera position
+  invalidateStarfield();
+
+  // Mass-based galaxy progression
+  state.targetMass = 10000 + galaxyNum * 5000 + galaxyNum * galaxyNum * 1000;
+
+  // Initialize living world systems
+  initLivingWorld(state);
 
   // Fresh start — small black hole
   state.mass = 20;
@@ -184,6 +211,7 @@ function tryConsume(dt) {
   let ateThisFrame = 0;
   let totalTone = 0;
   let totalMassGained = 0;
+  let hasConsumed = false;
 
   // Decay combo
   if (state.comboTimer > 0) {
@@ -198,6 +226,7 @@ function tryConsume(dt) {
       e.consumeProgress += 0.06 * dt;
       if (e.consumeProgress >= 1) {
         e.consumed = true;
+        hasConsumed = true;
       }
       continue;
     }
@@ -228,8 +257,14 @@ function tryConsume(dt) {
     }
   }
 
-  // Remove consumed
-  state.entities = state.entities.filter(e => !e.consumed);
+  // Remove consumed — only splice when something actually finished
+  if (hasConsumed) {
+    for (let i = state.entities.length - 1; i >= 0; i--) {
+      if (state.entities[i].consumed) {
+        state.entities.splice(i, 1);
+      }
+    }
+  }
 
   // Audio
   if (ateThisFrame > 0) {
@@ -249,8 +284,8 @@ function tryConsume(dt) {
     syncHud();
   }
 
-  // Galaxy complete?
-  if (state.entities.length === 0 && !state.transitioning) {
+  // Galaxy complete? Mass-based threshold
+  if (state.mass >= state.targetMass && !state.transitioning) {
     galaxyComplete();
   }
 }
@@ -290,7 +325,8 @@ function spawnRipple(entity) {
 }
 
 function updateParticles(dt) {
-  for (const p of state.particles) {
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
     const dx = state.playerX - p.x;
     const dy = state.playerY - p.y;
     const dist = Math.hypot(dx, dy);
@@ -303,16 +339,20 @@ function updateParticles(dt) {
     p.vx *= 0.97;
     p.vy *= 0.97;
     p.age += dt;
+    if (p.age >= p.maxAge) {
+      state.particles.splice(i, 1);
+    }
   }
-  state.particles = state.particles.filter(p => p.age < p.maxAge);
 
-  for (const r of state.ripples) {
-    r.age += dt;
+  for (let i = state.ripples.length - 1; i >= 0; i--) {
+    state.ripples[i].age += dt;
+    if (state.ripples[i].age >= state.ripples[i].maxAge) {
+      state.ripples.splice(i, 1);
+    }
   }
-  state.ripples = state.ripples.filter(r => r.age < r.maxAge);
 
   if (state.particles.length > 300) {
-    state.particles = state.particles.slice(-300);
+    state.particles.splice(0, state.particles.length - 300);
   }
 }
 
@@ -368,15 +408,18 @@ function updateTransition(dt) {
 // ─── HUD ───
 
 function syncHud() {
-  const consumed = state.initialCount - state.entities.length;
-  const progress = state.initialCount > 0 ? consumed / state.initialCount : 0;
+  // Mass-based progress toward galaxy completion
+  const startMass = 20; // initial mass each galaxy
+  const progress = state.targetMass > startMass
+    ? Math.min(1, (state.mass - startMass) / (state.targetMass - startMass))
+    : 0;
 
-  document.getElementById("hud-galaxy").textContent = state.galaxy;
-  document.getElementById("hud-left").textContent = state.entities.length;
-  document.getElementById("hud-mass").textContent = Math.floor(state.mass);
-  document.getElementById("hud-best").textContent = state.bestGalaxy;
-  document.getElementById("hud-biome").textContent = state.biome ? state.biome.name : "";
-  document.getElementById("hud-progress-bar").style.width = (progress * 100) + "%";
+  hudGalaxy.textContent = state.galaxy;
+  hudLeft.textContent = state.entities.length;
+  hudMass.textContent = Math.floor(state.mass) + " / " + state.targetMass;
+  hudBest.textContent = state.bestGalaxy;
+  hudBiome.textContent = state.biome ? state.biome.name : "";
+  hudProgressBar.style.width = (progress * 100) + "%";
 }
 
 function showHint(msg) {
@@ -418,6 +461,7 @@ function frame(now) {
 
   if (!state.transitioning || state.transitionPhase === "fadein") {
     updatePlayer(dt);
+    updateLivingWorld(state, dt);
     updateEntities(state.entities, state.bounds, dt);
     tryConsume(dt);
     updateParticles(dt);
@@ -428,10 +472,12 @@ function frame(now) {
   const h = screenH;
 
   drawStarfield(ctx, w, h, state.camX, state.camY, state.biome ? state.biome.tint : "#0d1633");
+  drawLivingWorldBG(ctx, state, w, h);
   drawBoundary(ctx, w, h, state.camX, state.camY, state.bounds, state.biome ? state.biome.borderColor : "#1a2e6a", now);
   drawEntities(ctx, state.entities, w, h, state.camX, state.camY, state.radius, now);
   drawParticles(ctx, state.particles, w, h, state.camX, state.camY);
   drawRipples(ctx, state.ripples, w, h, state.camX, state.camY);
+  drawLivingWorldFG(ctx, state, w, h);
   drawBlackHole(ctx, w, h, state.radius, now, { vx: state.playerVX, vy: state.playerVY });
   drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius);
   drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds);

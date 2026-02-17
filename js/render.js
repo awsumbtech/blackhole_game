@@ -3,27 +3,57 @@
 
 const TAU = Math.PI * 2;
 
-// ─── STARFIELD ───
-// Procedural infinite starfield via spatial hashing
+// ─── STARFIELD OFFSCREEN CACHE ───
 
-export function drawStarfield(ctx, w, h, camX, camY, tint) {
-  // Dark background
-  ctx.fillStyle = "#04060c";
-  ctx.fillRect(0, 0, w, h);
+let starCanvas = null;
+let starCtx = null;
+let nebulaCanvas = null;
+let nebulaCtx = null;
+let starCachedCamX = null;
+let starCachedCamY = null;
+let starCachedW = 0;
+let starCachedH = 0;
+const STAR_BUFFER = 200; // px buffer around viewport
+const STAR_REDRAW_THRESHOLD = 150; // redraw when camera drifts this far
 
-  // Biome tint glow in center
-  const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.6);
-  grad.addColorStop(0, tint + "55");
-  grad.addColorStop(1, "#00000000");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
+let nebulaCachedCamX = null;
+let nebulaCachedCamY = null;
 
-  // Stars via hash grid
+function ensureStarCanvases(w, h) {
+  const bw = w + STAR_BUFFER * 2;
+  const bh = h + STAR_BUFFER * 2;
+  if (starCanvas && starCachedW === w && starCachedH === h) return;
+
+  starCanvas = document.createElement("canvas");
+  starCanvas.width = bw;
+  starCanvas.height = bh;
+  starCtx = starCanvas.getContext("2d");
+
+  nebulaCanvas = document.createElement("canvas");
+  nebulaCanvas.width = bw;
+  nebulaCanvas.height = bh;
+  nebulaCtx = nebulaCanvas.getContext("2d");
+
+  starCachedW = w;
+  starCachedH = h;
+  // Force redraw
+  starCachedCamX = null;
+  nebulaCachedCamX = null;
+}
+
+function renderStarsToCache(w, h, camX, camY) {
+  const bw = w + STAR_BUFFER * 2;
+  const bh = h + STAR_BUFFER * 2;
+  const offX = -STAR_BUFFER;
+  const offY = -STAR_BUFFER;
+
+  starCtx.clearRect(0, 0, bw, bh);
+
   const cell = 80;
-  const baseX = Math.floor((camX - w / 2) / cell) - 1;
-  const baseY = Math.floor((camY - h / 2) / cell) - 1;
-  const cols = Math.ceil(w / cell) + 3;
-  const rows = Math.ceil(h / cell) + 3;
+  const baseX = Math.floor((camX - w / 2 + offX) / cell) - 1;
+  const baseY = Math.floor((camY - h / 2 + offY) / cell) - 1;
+  const cols = Math.ceil(bw / cell) + 3;
+  const rows = Math.ceil(bh / cell) + 3;
 
   for (let gx = 0; gx < cols; gx++) {
     for (let gy = 0; gy < rows; gy++) {
@@ -32,41 +62,51 @@ export function drawStarfield(ctx, w, h, camX, camY, tint) {
       const hash = Math.abs((wx * 73856093) ^ (wy * 19349663)) % 1000;
 
       if (hash < 180) {
-        const px = (wx * cell - camX) + w / 2 + (hash % 11) * 5;
-        const py = (wy * cell - camY) + h / 2 + (hash % 7) * 6;
+        const px = (wx * cell - camX) + w / 2 - offX + (hash % 11) * 5;
+        const py = (wy * cell - camY) + h / 2 - offY + (hash % 7) * 6;
         const brightness = 0.15 + (hash % 50) / 100;
         const size = hash % 17 === 0 ? 2 : 1;
 
         if (hash % 23 === 0) {
-          ctx.fillStyle = `rgba(140, 200, 255, ${brightness})`;
+          starCtx.fillStyle = `rgba(140, 200, 255, ${brightness})`;
         } else if (hash % 31 === 0) {
-          ctx.fillStyle = `rgba(255, 220, 140, ${brightness * 0.8})`;
+          starCtx.fillStyle = `rgba(255, 220, 140, ${brightness * 0.8})`;
         } else {
-          ctx.fillStyle = `rgba(200, 210, 240, ${brightness * 0.6})`;
+          starCtx.fillStyle = `rgba(200, 210, 240, ${brightness * 0.6})`;
         }
-        ctx.fillRect(px, py, size, size);
+        starCtx.fillRect(px, py, size, size);
       }
     }
   }
 
-  // Subtle parallax nebula — second star layer at 0.3x speed
+  starCachedCamX = camX;
+  starCachedCamY = camY;
+}
+
+function renderNebulaToCache(w, h, camX, camY) {
+  const bw = w + STAR_BUFFER * 2;
+  const bh = h + STAR_BUFFER * 2;
+  const offX = -STAR_BUFFER;
+  const offY = -STAR_BUFFER;
+
+  nebulaCtx.clearRect(0, 0, bw, bh);
+
   const slowCamX = camX * 0.3;
   const slowCamY = camY * 0.3;
-  const bx2 = Math.floor((slowCamX - w / 2) / 200) - 1;
-  const by2 = Math.floor((slowCamY - h / 2) / 200) - 1;
+  const bx2 = Math.floor((slowCamX - w / 2 + offX) / 200) - 1;
+  const by2 = Math.floor((slowCamY - h / 2 + offY) / 200) - 1;
 
-  for (let gx = 0; gx < Math.ceil(w / 200) + 3; gx++) {
-    for (let gy = 0; gy < Math.ceil(h / 200) + 3; gy++) {
+  for (let gx = 0; gx < Math.ceil(bw / 200) + 3; gx++) {
+    for (let gy = 0; gy < Math.ceil(bh / 200) + 3; gy++) {
       const wx = bx2 + gx;
       const wy = by2 + gy;
       const hash = Math.abs((wx * 48611) ^ (wy * 96769)) % 1000;
 
       if (hash < 30) {
-        const px = (wx * 200 - slowCamX) + w / 2 + (hash % 13) * 8;
-        const py = (wy * 200 - slowCamY) + h / 2 + (hash % 9) * 10;
+        const px = (wx * 200 - slowCamX) + w / 2 - offX + (hash % 13) * 8;
+        const py = (wy * 200 - slowCamY) + h / 2 - offY + (hash % 9) * 10;
 
-        // Faint nebula blobs
-        const ng = ctx.createRadialGradient(px, py, 0, px, py, 30 + hash % 40);
+        const ng = nebulaCtx.createRadialGradient(px, py, 0, px, py, 30 + hash % 40);
         const alpha = 0.015 + (hash % 20) * 0.001;
         if (hash % 3 === 0) {
           ng.addColorStop(0, `rgba(100, 120, 255, ${alpha})`);
@@ -76,11 +116,64 @@ export function drawStarfield(ctx, w, h, camX, camY, tint) {
           ng.addColorStop(0, `rgba(140, 255, 200, ${alpha})`);
         }
         ng.addColorStop(1, "transparent");
-        ctx.fillStyle = ng;
-        ctx.fillRect(px - 60, py - 60, 120, 120);
+        nebulaCtx.fillStyle = ng;
+        nebulaCtx.fillRect(px - 60, py - 60, 120, 120);
       }
     }
   }
+
+  nebulaCachedCamX = camX;
+  nebulaCachedCamY = camY;
+}
+
+export function invalidateStarfield() {
+  starCachedCamX = null;
+  nebulaCachedCamX = null;
+}
+
+export function drawStarfield(ctx, w, h, camX, camY, tint) {
+  // Dark background
+  ctx.fillStyle = "#04060c";
+  ctx.fillRect(0, 0, w, h);
+
+  // Biome tint glow in center (cheap — one gradient, drawn every frame)
+  const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.6);
+  grad.addColorStop(0, tint + "55");
+  grad.addColorStop(1, "#00000000");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Ensure offscreen canvases
+  ensureStarCanvases(w, h);
+
+  // Stars: redraw to cache if camera drifted too far
+  if (
+    starCachedCamX === null ||
+    Math.abs(camX - starCachedCamX) > STAR_REDRAW_THRESHOLD ||
+    Math.abs(camY - starCachedCamY) > STAR_REDRAW_THRESHOLD
+  ) {
+    renderStarsToCache(w, h, camX, camY);
+  }
+
+  // Blit stars with offset
+  const sdx = (starCachedCamX - camX);
+  const sdy = (starCachedCamY - camY);
+  ctx.drawImage(starCanvas, sdx - STAR_BUFFER, sdy - STAR_BUFFER);
+
+  // Nebula: parallax moves slower, so threshold can be higher
+  const nebulaThreshold = STAR_REDRAW_THRESHOLD / 0.3; // ~500px world movement
+  if (
+    nebulaCachedCamX === null ||
+    Math.abs(camX - nebulaCachedCamX) > nebulaThreshold ||
+    Math.abs(camY - nebulaCachedCamY) > nebulaThreshold
+  ) {
+    renderNebulaToCache(w, h, camX, camY);
+  }
+
+  // Nebula cache was rendered relative to nebulaCachedCamX at 0.3x parallax
+  const nebShiftX = -(camX - nebulaCachedCamX) * 0.3;
+  const nebShiftY = -(camY - nebulaCachedCamY) * 0.3;
+  ctx.drawImage(nebulaCanvas, nebShiftX - STAR_BUFFER, nebShiftY - STAR_BUFFER);
 }
 
 // ─── GALAXY BOUNDARY ───
@@ -116,10 +209,39 @@ export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time) {
   ctx.restore();
 }
 
+// ─── ENTITY GLOW CACHE ───
+
+let glowCanvas = null;
+let glowCtx = null;
+const GLOW_SIZE = 64;
+
+function ensureGlowCanvas() {
+  if (glowCanvas) return;
+  glowCanvas = document.createElement("canvas");
+  glowCanvas.width = GLOW_SIZE;
+  glowCanvas.height = GLOW_SIZE;
+  glowCtx = glowCanvas.getContext("2d");
+
+  const half = GLOW_SIZE / 2;
+  const gg = glowCtx.createRadialGradient(half, half, half * 0.25, half, half, half);
+  gg.addColorStop(0, "rgba(255, 255, 255, 0.19)");
+  gg.addColorStop(1, "transparent");
+  glowCtx.fillStyle = gg;
+  glowCtx.fillRect(0, 0, GLOW_SIZE, GLOW_SIZE);
+}
+
+// ─── BLACK HOLE GRADIENT CACHE ───
+
+let bhCachedRadius = -1;
+let bhOuterGlow = null;
+let bhEdgeGrad = null;
+let bhInnerGrad = null;
+
 // ─── ENTITIES ───
 
 export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time) {
   const margin = 40;
+  ensureGlowCanvas();
 
   for (const e of entities) {
     const sx = e.x - camX + w / 2;
@@ -128,14 +250,18 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     // Culling
     if (sx < -margin || sx > w + margin || sy < -margin || sy > h + margin) continue;
 
-    // Size comparison to player — can we eat this?
-    const canEat = playerRadius > e.radius * 0.88;
+    // Spawn fade-in alpha
+    const spawnAlpha = e._spawnAlpha ?? 1;
+    if (spawnAlpha < 1) {
+      ctx.globalAlpha = spawnAlpha;
+    }
+
+    // Size comparison to player
     const tooSmall = e.radius > playerRadius * 1.2;
 
-    ctx.save();
-
-    // Consuming animation — shrink + spiral toward player
+    // Only save/restore when consuming (the only case that modifies transform)
     if (e.consuming) {
+      ctx.save();
       const p = e.consumeProgress;
       const scale = 1 - p;
       ctx.globalAlpha = 1 - p * p;
@@ -145,47 +271,48 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.translate(-sx, -sy);
     }
 
-    // Glow for glowing objects
+    // Glow for glowing objects — use cached glow canvas
     if (e.glow > 0) {
       const glowSize = e.radius * (2 + e.glow);
-      const gg = ctx.createRadialGradient(sx, sy, e.radius * 0.5, sx, sy, glowSize);
-      gg.addColorStop(0, e.color + "30");
-      gg.addColorStop(1, "transparent");
-      ctx.fillStyle = gg;
-      ctx.beginPath();
-      ctx.arc(sx, sy, glowSize, 0, TAU);
-      ctx.fill();
+      const diameter = glowSize * 2;
+      ctx.globalAlpha = e.consuming ? ctx.globalAlpha : spawnAlpha;
+      ctx.drawImage(glowCanvas, sx - glowSize, sy - glowSize, diameter, diameter);
+      ctx.globalAlpha = e.consuming ? (1 - e.consumeProgress * e.consumeProgress) : spawnAlpha;
     }
 
-    // Comet tail
+    // Comet tail — simple alpha-faded strokes instead of gradient
     if (e.hasTail) {
       const speed = Math.hypot(e.vx, e.vy);
       const tailLen = Math.max(15, speed * 50);
       const angle = Math.atan2(-e.vy, -e.vx);
+      const segments = 4;
 
-      const tg = ctx.createLinearGradient(
-        sx, sy,
-        sx + Math.cos(angle) * tailLen,
-        sy + Math.sin(angle) * tailLen
-      );
-      tg.addColorStop(0, e.color + "60");
-      tg.addColorStop(1, "transparent");
-
-      ctx.strokeStyle = tg;
-      ctx.lineWidth = e.radius * 1.2;
       ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + Math.cos(angle) * tailLen, sy + Math.sin(angle) * tailLen);
-      ctx.stroke();
+      for (let i = 0; i < segments; i++) {
+        const t0 = i / segments;
+        const t1 = (i + 1) / segments;
+        const x0 = sx + Math.cos(angle) * tailLen * t0;
+        const y0 = sy + Math.sin(angle) * tailLen * t0;
+        const x1 = sx + Math.cos(angle) * tailLen * t1;
+        const y1 = sy + Math.sin(angle) * tailLen * t1;
+        ctx.globalAlpha = (1 - t0) * 0.35 * spawnAlpha;
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = e.radius * 1.2 * (1 - t0 * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = e.consuming ? (1 - e.consumeProgress * e.consumeProgress) : spawnAlpha;
     }
 
-    // Main body
-    if (e.shape === "polygon") {
-      // Irregular polygon for craft/derelicts
+    // Main body — use pre-rendered sprite if available
+    if (e._sprite) {
+      const d = e._sprite.width;
+      ctx.drawImage(e._sprite, sx - d / 2, sy - d / 2);
+    } else if (e.shape === "polygon") {
       drawPolygon(ctx, sx, sy, e.radius, 6, e.rotation, e.color);
     } else if (e.bands) {
-      // Banded planet
       drawBandedCircle(ctx, sx, sy, e.radius, e.bands, e.rotation);
     } else {
       // Simple circle
@@ -195,7 +322,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.fill();
     }
 
-    // "Too big to eat" indicator — subtle red tint ring
+    // "Too big to eat" indicator
     if (tooSmall && !e.consuming) {
       ctx.beginPath();
       ctx.arc(sx, sy, e.radius + 3, 0, TAU);
@@ -212,7 +339,14 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.fill();
     }
 
-    ctx.restore();
+    if (e.consuming) {
+      ctx.restore();
+    }
+
+    // Restore alpha after spawn fade-in
+    if (spawnAlpha < 1) {
+      ctx.globalAlpha = 1;
+    }
   }
 }
 
@@ -220,7 +354,7 @@ function drawPolygon(ctx, x, y, r, sides, rotation, color) {
   ctx.beginPath();
   for (let i = 0; i < sides; i++) {
     const angle = rotation + (i / sides) * TAU;
-    const wobble = 0.85 + Math.sin(i * 2.7) * 0.15; // Irregular shape
+    const wobble = 0.85 + Math.sin(i * 2.7) * 0.15;
     const px = x + Math.cos(angle) * r * wobble;
     const py = y + Math.sin(angle) * r * wobble;
     if (i === 0) ctx.moveTo(px, py);
@@ -232,13 +366,11 @@ function drawPolygon(ctx, x, y, r, sides, rotation, color) {
 }
 
 function drawBandedCircle(ctx, x, y, r, bands, rotation) {
-  // Base circle
   ctx.beginPath();
   ctx.arc(x, y, r, 0, TAU);
   ctx.fillStyle = bands[0];
   ctx.fill();
 
-  // Bands as clipped horizontal stripes
   ctx.save();
   ctx.beginPath();
   ctx.arc(x, y, r, 0, TAU);
@@ -253,6 +385,68 @@ function drawBandedCircle(ctx, x, y, r, bands, rotation) {
   ctx.restore();
 }
 
+// ─── ENTITY SPRITE PRE-RENDERING ───
+
+export function prerenderEntitySprite(e) {
+  if (e.bands) {
+    const padding = 2;
+    const size = Math.ceil(e.radius * 2) + padding * 2;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const sCtx = c.getContext("2d");
+    const cx = size / 2;
+    const cy = size / 2;
+
+    // Base circle
+    sCtx.beginPath();
+    sCtx.arc(cx, cy, e.radius, 0, TAU);
+    sCtx.fillStyle = e.bands[0];
+    sCtx.fill();
+
+    // Bands
+    sCtx.save();
+    sCtx.beginPath();
+    sCtx.arc(cx, cy, e.radius, 0, TAU);
+    sCtx.clip();
+
+    const bandH = (e.radius * 2) / e.bands.length;
+    for (let i = 0; i < e.bands.length; i++) {
+      sCtx.fillStyle = e.bands[i];
+      const by = cy - e.radius + i * bandH + Math.sin(e.rotation + i) * 2;
+      sCtx.fillRect(cx - e.radius, by, e.radius * 2, bandH);
+    }
+    sCtx.restore();
+
+    e._sprite = c;
+  } else if (e.shape === "polygon") {
+    const padding = 4;
+    const size = Math.ceil(e.radius * 2) + padding * 2;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const sCtx = c.getContext("2d");
+    const cx = size / 2;
+    const cy = size / 2;
+
+    sCtx.beginPath();
+    const sides = 6;
+    for (let i = 0; i < sides; i++) {
+      const angle = e.rotation + (i / sides) * TAU;
+      const wobble = 0.85 + Math.sin(i * 2.7) * 0.15;
+      const px = cx + Math.cos(angle) * e.radius * wobble;
+      const py = cy + Math.sin(angle) * e.radius * wobble;
+      if (i === 0) sCtx.moveTo(px, py);
+      else sCtx.lineTo(px, py);
+    }
+    sCtx.closePath();
+    sCtx.fillStyle = e.color;
+    sCtx.fill();
+
+    e._sprite = c;
+  }
+}
+
 // ─── BLACK HOLE (PLAYER) ───
 
 export function drawBlackHole(ctx, w, h, radius, time, velocity) {
@@ -261,7 +455,6 @@ export function drawBlackHole(ctx, w, h, radius, time, velocity) {
   const speed = Math.hypot(velocity.vx, velocity.vy);
 
   // Accretion disk — rotating particles
-  const diskRadius = radius * 2.5;
   const rotAngle = time * 0.0008;
   const particleCount = Math.floor(12 + radius * 0.5);
 
@@ -273,7 +466,7 @@ export function drawBlackHole(ctx, w, h, radius, time, velocity) {
     const angle = (i / particleCount) * TAU;
     const dist = radius * 1.1 + Math.sin(angle * 3 + time * 0.002) * radius * 0.3;
     const px = Math.cos(angle) * dist;
-    const py = Math.sin(angle) * dist * 0.45; // Elliptical
+    const py = Math.sin(angle) * dist * 0.45;
     const size = 1 + Math.sin(angle * 2 + time * 0.003) * 0.8;
     const alpha = 0.15 + Math.sin(angle + time * 0.002) * 0.1;
 
@@ -283,7 +476,7 @@ export function drawBlackHole(ctx, w, h, radius, time, velocity) {
     ctx.fill();
   }
 
-  // Second disk layer — warmer, faster
+  // Second disk layer
   ctx.rotate(rotAngle * -1.7);
   for (let i = 0; i < Math.floor(particleCount * 0.6); i++) {
     const angle = (i / (particleCount * 0.6)) * TAU;
@@ -300,14 +493,32 @@ export function drawBlackHole(ctx, w, h, radius, time, velocity) {
 
   ctx.restore();
 
+  // Rebuild cached gradients only when radius changes significantly
+  if (Math.abs(radius - bhCachedRadius) > 1) {
+    const pulse = 1 + Math.sin(time * 0.002) * 0.04;
+    const glowR = (radius + 20) * pulse;
+
+    bhOuterGlow = ctx.createRadialGradient(x, y, radius * 0.8, x, y, glowR);
+    bhOuterGlow.addColorStop(0, "rgba(90, 100, 220, 0.08)");
+    bhOuterGlow.addColorStop(0.5, "rgba(70, 80, 200, 0.04)");
+    bhOuterGlow.addColorStop(1, "transparent");
+    bhOuterGlow._glowR = glowR;
+
+    bhEdgeGrad = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius * 1.05);
+    bhEdgeGrad.addColorStop(0, "transparent");
+    bhEdgeGrad.addColorStop(0.7, "rgba(110, 120, 255, 0.25)");
+    bhEdgeGrad.addColorStop(1, "transparent");
+
+    bhInnerGrad = ctx.createRadialGradient(x - radius * 0.2, y - radius * 0.2, 0, x, y, radius * 0.7);
+    bhInnerGrad.addColorStop(0, "rgba(60, 70, 140, 0.06)");
+    bhInnerGrad.addColorStop(1, "transparent");
+
+    bhCachedRadius = radius;
+  }
+
   // Outer glow
-  const pulse = 1 + Math.sin(time * 0.002) * 0.04;
-  const glowR = (radius + 20) * pulse;
-  const outerGlow = ctx.createRadialGradient(x, y, radius * 0.8, x, y, glowR);
-  outerGlow.addColorStop(0, "rgba(90, 100, 220, 0.08)");
-  outerGlow.addColorStop(0.5, "rgba(70, 80, 200, 0.04)");
-  outerGlow.addColorStop(1, "transparent");
-  ctx.fillStyle = outerGlow;
+  const glowR = bhOuterGlow._glowR;
+  ctx.fillStyle = bhOuterGlow;
   ctx.beginPath();
   ctx.arc(x, y, glowR, 0, TAU);
   ctx.fill();
@@ -321,40 +532,34 @@ export function drawBlackHole(ctx, w, h, radius, time, velocity) {
   // Edge ring
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, TAU);
-  const edgeGrad = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius * 1.05);
-  edgeGrad.addColorStop(0, "transparent");
-  edgeGrad.addColorStop(0.7, "rgba(110, 120, 255, 0.25)");
-  edgeGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = edgeGrad;
+  ctx.fillStyle = bhEdgeGrad;
   ctx.fill();
 
-  // Inner subtle highlight — gives depth
-  const innerGrad = ctx.createRadialGradient(x - radius * 0.2, y - radius * 0.2, 0, x, y, radius * 0.7);
-  innerGrad.addColorStop(0, "rgba(60, 70, 140, 0.06)");
-  innerGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = innerGrad;
+  // Inner subtle highlight
+  ctx.fillStyle = bhInnerGrad;
   ctx.beginPath();
   ctx.arc(x, y, radius * 0.7, 0, TAU);
   ctx.fill();
 
-  // Speed trail behind the black hole
+  // Speed trail — simple alpha strokes instead of gradient
   if (speed > 0.5) {
     const trailAngle = Math.atan2(-velocity.vy, -velocity.vx);
     const trailLen = Math.min(40, speed * 8);
-    const tg = ctx.createLinearGradient(
-      x, y,
-      x + Math.cos(trailAngle) * trailLen,
-      y + Math.sin(trailAngle) * trailLen
-    );
-    tg.addColorStop(0, "rgba(90, 100, 220, 0.12)");
-    tg.addColorStop(1, "transparent");
-    ctx.strokeStyle = tg;
-    ctx.lineWidth = radius * 1.5;
+
     ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + Math.cos(trailAngle) * trailLen, y + Math.sin(trailAngle) * trailLen);
-    ctx.stroke();
+    ctx.lineWidth = radius * 1.5;
+    const segments = 3;
+    for (let i = 0; i < segments; i++) {
+      const t0 = i / segments;
+      const t1 = (i + 1) / segments;
+      ctx.globalAlpha = (1 - t0) * 0.12;
+      ctx.strokeStyle = "rgba(90, 100, 220, 1)";
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(trailAngle) * trailLen * t0, y + Math.sin(trailAngle) * trailLen * t0);
+      ctx.lineTo(x + Math.cos(trailAngle) * trailLen * t1, y + Math.sin(trailAngle) * trailLen * t1);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -443,12 +648,12 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds) {
 
 // ─── EDGE INDICATORS ───
 // Arrows at screen edges pointing toward off-screen objects
+// Uses math instead of save/translate/rotate/restore
 
 export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius) {
   const margin = 20;
   const arrowSize = 5;
 
-  // Group nearby off-screen entities into clusters
   for (const e of entities) {
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
@@ -464,24 +669,28 @@ export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius
     const edgeX = w / 2 + Math.cos(angle) * (w / 2 - margin);
     const edgeY = h / 2 + Math.sin(angle) * (h / 2 - margin);
 
-    ctx.save();
-    ctx.translate(edgeX, edgeY);
-    ctx.rotate(angle);
+    // Compute arrow vertices mathematically (no translate/rotate)
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    const tipX = edgeX + cosA * arrowSize;
+    const tipY = edgeY + sinA * arrowSize;
+    const leftX = edgeX - cosA * arrowSize - sinA * arrowSize * 0.6;
+    const leftY = edgeY - sinA * arrowSize + cosA * arrowSize * 0.6;
+    const rightX = edgeX - cosA * arrowSize + sinA * arrowSize * 0.6;
+    const rightY = edgeY - sinA * arrowSize - cosA * arrowSize * 0.6;
 
     ctx.beginPath();
-    ctx.moveTo(arrowSize, 0);
-    ctx.lineTo(-arrowSize, -arrowSize * 0.6);
-    ctx.lineTo(-arrowSize, arrowSize * 0.6);
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(leftX, leftY);
+    ctx.lineTo(rightX, rightY);
     ctx.closePath();
     ctx.fillStyle = e.color + "40";
     ctx.fill();
-
-    ctx.restore();
   }
 }
 
 // ─── CURSOR ───
-// Custom crosshair cursor drawn on canvas
 
 export function drawCursor(ctx, mouseX, mouseY, w, h) {
   if (mouseX < 0 || mouseX > w || mouseY < 0 || mouseY > h) return;
@@ -490,7 +699,6 @@ export function drawCursor(ctx, mouseX, mouseY, w, h) {
   ctx.strokeStyle = "rgba(200, 210, 255, 0.3)";
   ctx.lineWidth = 1;
 
-  // Cross
   ctx.beginPath();
   ctx.moveTo(mouseX - size, mouseY);
   ctx.lineTo(mouseX + size, mouseY);
@@ -501,7 +709,6 @@ export function drawCursor(ctx, mouseX, mouseY, w, h) {
   ctx.lineTo(mouseX, mouseY + size);
   ctx.stroke();
 
-  // Center dot
   ctx.beginPath();
   ctx.arc(mouseX, mouseY, 2, 0, TAU);
   ctx.fillStyle = "rgba(200, 210, 255, 0.4)";
