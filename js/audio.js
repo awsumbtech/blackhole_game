@@ -12,8 +12,13 @@ let volume = 0.4;
 let initialized = false;
 let noiseBuffer = null;
 
+// Browsers only allow audio after a user gesture; until then every sound is a no-op
+// (avoids "AudioContext was not allowed to start" warnings).
+let unlocked = false;
+
 function ensureCtx() {
   if (ctx) return true;
+  if (!unlocked) return false;
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -55,8 +60,11 @@ function ensureCtx() {
   }
 }
 
+/** Call from a user gesture (tap/click/key). */
 export function init() {
+  unlocked = true;
   ensureCtx();
+  resume();
 }
 
 export function resume() {
@@ -417,4 +425,87 @@ export function playEventCue(eventType) {
       break;
     }
   }
+}
+
+// ─── v2 SOUNDS ───
+
+function tone(freq, { type = "sine", start = 0, attack = 0.02, decay = 0.25, vol = 0.05, slideTo = null } = {}) {
+  const now = ctx.currentTime + start;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, now + attack + decay);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(vol, now + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay);
+  osc.connect(gain);
+  gain.connect(sfxGain);
+  osc.start(now);
+  osc.stop(now + attack + decay + 0.05);
+}
+
+/** Power-up collected: bright rising sparkle in the power-up's key. */
+export function playPowerup(kind) {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  const base = kind === "slow" ? 392 : kind === "double" ? 523.3 : 440;
+  [0, 4, 7, 12, 19].forEach((st, i) => {
+    tone(base * Math.pow(2, st / 12), { start: i * 0.05, decay: 0.3, vol: 0.045, type: i % 2 ? "triangle" : "sine" });
+  });
+}
+
+export function playPowerupSpawn() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(880, { decay: 0.35, vol: 0.03 });
+  tone(1318.5, { start: 0.08, decay: 0.4, vol: 0.025 });
+}
+
+export function playPowerupEnd() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(660, { decay: 0.25, vol: 0.03, slideTo: 330 });
+}
+
+/** Bumped into something too big. */
+export function playBump() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(140, { type: "triangle", attack: 0.005, decay: 0.22, vol: 0.1, slideTo: 55 });
+  tone(90, { type: "sine", attack: 0.005, decay: 0.3, vol: 0.08, slideTo: 40 });
+}
+
+/** Swallowed a former "bigger fish". */
+export function playBigCatch() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(55, { attack: 0.02, decay: 0.7, vol: 0.12, slideTo: 35 });
+  [261.6, 392, 523.3, 784].forEach((f, i) => tone(f, { start: 0.04 + i * 0.07, decay: 0.45, vol: 0.04 }));
+}
+
+export function playPurchase() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(659.3, { decay: 0.15, vol: 0.05, type: "triangle" });
+  tone(987.8, { start: 0.07, decay: 0.3, vol: 0.05, type: "triangle" });
+}
+
+export function playDenied() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(196, { type: "square", decay: 0.12, vol: 0.02 });
+}
+
+export function playClick() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(520, { decay: 0.06, vol: 0.025 });
+}
+
+/** Rising "almost there" shimmer when a galaxy is 90% done. */
+export function playNearGoal() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, { start: i * 0.09, decay: 0.5, vol: 0.03 }));
 }

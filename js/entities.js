@@ -1,6 +1,11 @@
 // ─── ENTITY SYSTEM ───
-// Object types, biomes, spawning, galaxy shapes
-// Objects drift naturally within boundaries. NO pull toward the black hole.
+// Object types, biomes, spawning, galaxy shapes.
+// Objects drift naturally within boundaries; the gravity well in living-world.js
+// pulls edible objects toward the black hole.
+
+// You can swallow an object when your radius > its radius * eatRatio.
+// The base ratio lives here so the render "too big" ring and tryConsume agree.
+export const BASE_EAT_RATIO = 0.88;
 
 export const objectTypes = [
   {
@@ -190,11 +195,29 @@ export function galaxyBounds(galaxy) {
   return 800 + galaxy * 120;
 }
 
-export function createEntity(type, x, y) {
-  const r = rand(type.minR, type.maxR);
+export function typeAvgRadius(type) {
+  return (type.minR + type.maxR) / 2;
+}
+
+export function typeById(id) {
+  return objectTypes.find(t => t.id === id) || objectTypes[0];
+}
+
+/** True when a black hole of radius playerR can swallow entity e. */
+export function canEat(playerR, e, eatRatio = BASE_EAT_RATIO) {
+  if (e.powerup) return true;
+  return playerR > e.radius * eatRatio;
+}
+
+/**
+ * scale > 1 makes a bigger copy of the type (used so food and "bigger fish"
+ * keep pace with the player as it grows).
+ */
+export function createEntity(type, x, y, scale = 1) {
+  const r = rand(type.minR, type.maxR) * scale;
   const color = pickRandom(type.colors);
   const angle = rand(0, Math.PI * 2);
-  const speed = rand(type.speed * 0.4, type.speed);
+  const speed = rand(type.speed * 0.4, type.speed) * Math.min(3, Math.sqrt(scale));
   const bandSet = type.bands ? pickRandom(type.bands) : null;
 
   return {
@@ -220,14 +243,15 @@ export function createEntity(type, x, y) {
     // Consume animation state
     consuming: false,
     consumeProgress: 0,
-    consumeTarget: null
+    bigFish: false
   };
 }
 
 export function getBiome(galaxy) {
   // Filter to available biomes, then pick based on galaxy number
+  // (galaxy - 1) so Galaxy 1 starts in Debris Reef, the intended first biome.
   const available = biomeCatalog.filter(b => !b.minGalaxy || galaxy >= b.minGalaxy);
-  return available[galaxy % available.length];
+  return available[(galaxy - 1) % available.length];
 }
 
 export function spawnGalaxy(galaxy) {
@@ -309,12 +333,15 @@ export function updateEntities(entities, bounds, dt) {
     e.vx += rand(-0.003, 0.003) * dt;
     e.vy += rand(-0.003, 0.003) * dt;
 
-    // Speed cap to base speed
+    // Speed cap: base speed, or the gravity well's higher cap while being pulled.
+    // Ease back down instead of snapping so objects leaving the pull glide.
     const speed = Math.hypot(e.vx, e.vy);
-    const maxSpeed = e.baseSpeed * 1.5;
+    const maxSpeed = Math.max(e.baseSpeed * 1.5, e._pullCap || 0);
+    e._pullCap = 0;
     if (speed > maxSpeed) {
-      e.vx = (e.vx / speed) * maxSpeed;
-      e.vy = (e.vy / speed) * maxSpeed;
+      const f = Math.max(maxSpeed / speed, Math.pow(0.95, dt));
+      e.vx *= f;
+      e.vy *= f;
     }
   }
 }

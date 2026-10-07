@@ -1,33 +1,49 @@
 // ─── LIVING WORLD SYSTEM ───
-// Gravity well, dynamic spawning, procedural events, ambient background life.
-// Makes the galaxy feel alive, reactive, and surprising.
+// Gravity well, dynamic spawning (food + "bigger fish" that scale with you),
+// procedural events, ambient background life.
 
-import { weightedType, createEntity, rand, getBiome, objectTypes } from "./entities.js";
+import { weightedType, createEntity, rand, typeAvgRadius, typeById } from "./entities.js";
 import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
+import { foodScaleFor } from "./progression.js";
+
+const TAU = Math.PI * 2;
 
 // ─── CONFIG ───
 
-const CFG = {
-  // Gravity well
-  GRAVITY_G: 0.0004,
-  GRAVITY_ATTRACT_BASE: 60,
-  GRAVITY_ATTRACT_MULT: 12,
+export const CFG = {
+  // Gravity well: strength = PULL_K * speedScale * (R / dist)^2 inside R * PULL_RANGE
+  PULL_K: 0.06,
+  PULL_RANGE: 6,
+  PULL_CAP: 2.5,
 
-  // Dynamic spawning
-  SPAWN_CAP_RATIO: 1.5,
-  AMBIENT_SPAWN_MIN: 300,
-  AMBIENT_SPAWN_RANGE: 200,
+  // Food is sized relative to the player (fraction of player radius)
+  FOOD_RATIO_MIN: 0.08,
+  FOOD_RATIO_MAX: 0.22,
+  NEAR_SPAWN_CHANCE: 0.7,
+
+  // Bigger fish: always keep a few things on the field you can't eat yet
+  BIG_RATIO_MIN: 1.4,
+  BIG_RATIO_MAX: 2.6,
+  BIG_CHECK_INTERVAL: 30,
+
+  // Population
+  POP_RATIO: 0.75,
+  SPAWN_CAP_RATIO: 1.6,
+  AMBIENT_SPAWN_MIN: 240,
+  AMBIENT_SPAWN_RANGE: 180,
 
   // Event system
   EVENT_EVAL_INTERVAL: 120,
   EVENT_GLOBAL_COOLDOWN: 180,
-  EVENT_GRACE_PERIOD: 300,
-
-  // Mass-based progression
-  TARGET_MASS_BASE: 10000,
-  TARGET_MASS_PER_GALAXY: "5000*g + 1000*g²"
+  EVENT_GRACE_PERIOD: 300
 };
+
+const BIG_TYPES = ["planet", "star", "craft", "meteor"];
+
+export function minBigFish(galaxy) {
+  return 3 + Math.min(2, Math.floor(galaxy / 3));
+}
 
 // ─── MODULE STATE ───
 
@@ -35,21 +51,20 @@ let world = null;
 
 function freshWorldState() {
   return {
-    // Spawning
     initialCount: 0,
     depletionTimer: 0,
     ambientTimer: 0,
+    ambientNext: CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE),
+    bigTimer: 0,
+    bigCount: 0,
 
-    // Events
     eventEvalTimer: 0,
     globalCooldown: 0,
     graceTimer: CFG.EVENT_GRACE_PERIOD,
     eventCooldowns: {},
     activeEvents: [],
     galaxyTime: 0,
-    totalConsumedAtStart: 0,
 
-    // Ambient background
     shootingStars: [],
     shootingStarTimer: 0,
     distantFlashes: [],
@@ -62,20 +77,23 @@ function freshWorldState() {
 export function initLivingWorld(state) {
   world = freshWorldState();
   world.initialCount = state.initialCount;
-  world.totalConsumedAtStart = state.totalConsumed || 0;
 }
 
-export function updateLivingWorld(state, dt) {
+export function getBigFishCount() {
+  return world ? world.bigCount : 0;
+}
+
+/** dt = real frame step, worldDt = slowed step while Slow-Mo is active. */
+export function updateLivingWorld(state, dt, worldDt = dt) {
   if (!world) return;
 
   world.galaxyTime += dt;
 
   updateGravityWell(state, dt);
   updateDynamicSpawning(state, dt);
-  updateEventSystem(state, dt);
+  updateEventSystem(state, worldDt);
   updateAmbientBackground(state, dt);
 
-  // Advance spawn fade-in for all entities
   for (const e of state.entities) {
     if (e._spawnAge != null && e._spawnAge < 60) {
       e._spawnAge += dt;
@@ -91,6 +109,7 @@ export function drawLivingWorldBG(ctx, state, w, h) {
   drawEnergyWaves(ctx, w, h);
 }
 
+/** Drawn inside the zoomed world transform; w/h are the zoomed (world) viewport. */
 export function drawLivingWorldFG(ctx, state, w, h) {
   if (!world) return;
   for (const ev of world.activeEvents) {
@@ -98,106 +117,172 @@ export function drawLivingWorldFG(ctx, state, w, h) {
   }
 }
 
-// ─── 2A: GRAVITY WELL ───
+// ─── GRAVITY WELL ───
+// Only pulls things you can actually eat; bigger fish don't budge.
+
+export function pullRange(state) {
+  const magnet = state.active.magnet > 0;
+  return state.radius * CFG.PULL_RANGE * state.mods.pullRange * (magnet ? 2.2 : 1);
+}
 
 function updateGravityWell(state, dt) {
-  const attractRadius = state.radius * CFG.GRAVITY_ATTRACT_MULT + CFG.GRAVITY_ATTRACT_BASE;
-  const playerMass = state.mass;
+  const magnet = state.active.magnet > 0;
+  const R = state.radius;
+  const range = pullRange(state);
+  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (magnet ? 3 : 1);
+  const cap = CFG.PULL_CAP * state.speedScale * (magnet ? 2.2 : 1);
   const px = state.playerX;
   const py = state.playerY;
-  const minDist = state.radius * 2;
 
   for (const e of state.entities) {
     if (e.consuming) continue;
+    if (!e.powerup && R <= e.radius * state.eatRatio) continue;
 
     const dx = px - e.x;
     const dy = py - e.y;
     const dist = Math.hypot(dx, dy);
+    if (dist > range || dist < 1) continue;
 
-    if (dist > attractRadius || dist < 1) continue;
-
-    const effectiveDist = Math.max(dist, minDist);
-    let strength = CFG.GRAVITY_G * playerMass / (effectiveDist * effectiveDist);
-    strength = Math.min(strength, e.baseSpeed * 0.8);
-
-    const nx = dx / dist;
-    const ny = dy / dist;
-    e.vx += nx * strength * dt;
-    e.vy += ny * strength * dt;
-    e._attracted = true;
+    const ed = Math.max(dist, R * 1.2);
+    const strength = k * (R / ed) * (R / ed);
+    e.vx += (dx / dist) * strength * dt;
+    e.vy += (dy / dist) * strength * dt;
+    e._pullCap = cap;
   }
 }
 
-// ─── 2B: DYNAMIC SPAWNING ───
+// ─── SPAWNING ───
 
-function spawnEdgeEntity(state) {
-  const biome = state.biome;
-  if (!biome) return null;
+function viewRadius(state) {
+  return Math.hypot(state.viewW || 800, state.viewH || 600) / 2;
+}
 
-  const type = weightedType(biome.weights, state.galaxy);
-  const angle = rand(0, Math.PI * 2);
-  const bounds = state.bounds;
+function clampInBounds(state, x, y, radius) {
+  const lim = Math.max(10, state.bounds - radius - 4);
+  const d = Math.hypot(x, y);
+  if (d > lim) return { x: x * lim / d, y: y * lim / d };
+  return { x, y };
+}
 
-  // Position on the boundary circle
-  const x = Math.cos(angle) * (bounds - 5);
-  const y = Math.sin(angle) * (bounds - 5);
+function pickSpawnPos(state, near, radius) {
+  let x, y;
+  if (near) {
+    // Just outside the visible area, so things drift in rather than pop in
+    const a = rand(0, TAU);
+    const d = viewRadius(state) * rand(1.0, 1.4) + radius;
+    x = state.playerX + Math.cos(a) * d;
+    y = state.playerY + Math.sin(a) * d;
+  } else {
+    const a = rand(0, TAU);
+    const d = Math.sqrt(Math.random()) * state.bounds * 0.92;
+    x = Math.cos(a) * d;
+    y = Math.sin(a) * d;
+  }
+  return clampInBounds(state, x, y, radius);
+}
 
-  const entity = createEntity(type, x, y);
+function finishSpawn(e) {
+  e._spawnAge = 0;
+  e._spawnAlpha = 0;
+  prerenderEntitySprite(e);
+  return e;
+}
 
-  // Aim inward with spread
-  const inwardAngle = angle + Math.PI + rand(-0.6, 0.6);
-  const speed = entity.baseSpeed;
-  entity.vx = Math.cos(inwardAngle) * speed;
-  entity.vy = Math.sin(inwardAngle) * speed;
+/** Aim an entity roughly toward the player so near spawns cross the view. */
+function aimAtPlayer(state, e, spread, speed) {
+  const a = Math.atan2(state.playerY - e.y, state.playerX - e.x) + rand(-spread, spread);
+  e.vx = Math.cos(a) * speed;
+  e.vy = Math.sin(a) * speed;
+}
 
-  // Fade-in properties
-  entity._spawnAge = 0;
-  entity._spawnAlpha = 0;
+/**
+ * Create an entity sized as a fraction of the player's radius.
+ * forceScale lets bigger fish shrink below the type's natural size early on.
+ */
+export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
+  const desired = rand(ratioMin, ratioMax) * state.radius;
+  const raw = desired / typeAvgRadius(type);
+  const scale = opts.forceScale ? raw : Math.max(1, raw);
+  const e = createEntity(type, 0, 0, scale);
+  const pos = opts.pos || pickSpawnPos(state, opts.near ?? true, e.radius);
+  e.x = pos.x;
+  e.y = pos.y;
+  if (opts.near ?? true) aimAtPlayer(state, e, 1.0, e.baseSpeed);
+  return finishSpawn(e);
+}
 
-  prerenderEntitySprite(entity);
-  return entity;
+function spawnFood(state, near) {
+  const type = weightedType(state.biome.weights, state.galaxy);
+  const fs = foodScaleFor(state.galaxy);
+  return spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, { near });
+}
+
+function spawnBigFish(state) {
+  const weights = {};
+  for (const id of BIG_TYPES) weights[id] = state.biome.weights[id] || 0;
+  if (!Object.values(weights).some(v => v > 0)) weights.planet = 1;
+  const type = weightedType(weights, state.galaxy);
+  const e = spawnScaled(state, type, CFG.BIG_RATIO_MIN, CFG.BIG_RATIO_MAX, { near: true, forceScale: true });
+  // Start at the edge of the view (fading in) so there's usually one on screen
+  const a = rand(0, TAU);
+  const d = Math.min(state.viewW, state.viewH) * rand(0.45, 0.75) + e.radius * 0.5;
+  const pos = clampInBounds(state, state.playerX + Math.cos(a) * d, state.playerY + Math.sin(a) * d, e.radius);
+  e.x = pos.x;
+  e.y = pos.y;
+  e.bigFish = true;
+  e.baseSpeed = rand(0.2, 0.45) * Math.sqrt(state.speedScale);
+  aimAtPlayer(state, e, 0.9, e.baseSpeed);
+  return e;
 }
 
 function updateDynamicSpawning(state, dt) {
-  const objectCap = Math.floor(world.initialCount * CFG.SPAWN_CAP_RATIO);
+  const cap = Math.floor(world.initialCount * CFG.SPAWN_CAP_RATIO) + 10;
+  const popTarget = Math.max(24, Math.floor(world.initialCount * CFG.POP_RATIO));
+  const n = state.entities.length;
 
-  // Depletion spawner
-  const targetPop = Math.max(20, Math.floor(world.initialCount * 0.35));
-  const deficit = targetPop - state.entities.length;
-
+  // Refill when the field thins out
+  const deficit = popTarget - n;
   if (deficit > 0) {
-    const interval = Math.max(30, 120 - deficit * 5);
+    const interval = Math.max(8, 45 - deficit * 2);
     world.depletionTimer += dt;
     if (world.depletionTimer >= interval) {
       world.depletionTimer = 0;
-      if (state.entities.length < objectCap) {
-        const e = spawnEdgeEntity(state);
-        if (e) state.entities.push(e);
-      }
+      if (n < cap) state.entities.push(spawnFood(state, Math.random() < CFG.NEAR_SPAWN_CHANCE));
     }
   } else {
     world.depletionTimer = 0;
   }
 
   // Ambient trickle
-  const ambientInterval = CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE);
   world.ambientTimer += dt;
-  if (world.ambientTimer >= ambientInterval) {
+  if (world.ambientTimer >= world.ambientNext) {
     world.ambientTimer = 0;
-    if (state.entities.length < objectCap) {
-      const e = spawnEdgeEntity(state);
-      if (e) state.entities.push(e);
+    world.ambientNext = CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE);
+    if (state.entities.length < cap) state.entities.push(spawnFood(state, true));
+  }
+
+  // Bigger fish: keep a minimum number of things you can't eat yet
+  world.bigTimer += dt;
+  if (world.bigTimer >= CFG.BIG_CHECK_INTERVAL) {
+    world.bigTimer = 0;
+    let big = 0;
+    for (const e of state.entities) {
+      if (!e.powerup && !e.consuming && state.radius <= e.radius * state.eatRatio) big++;
+    }
+    world.bigCount = big;
+    const want = minBigFish(state.galaxy) - big;
+    for (let i = 0; i < Math.min(2, want) && state.entities.length < cap + 8; i++) {
+      state.entities.push(spawnBigFish(state));
+      world.bigCount++;
     }
   }
 }
 
-// ─── 2C: PROCEDURAL EVENT SYSTEM ───
+// ─── PROCEDURAL EVENT SYSTEM ───
 
 function getMetrics(state) {
   const targetMass = state.targetMass || 400;
-  const consumeRatio = world.initialCount > 0
-    ? 1 - (state.entities.length / world.initialCount)
-    : 0;
+  const consumeRatio = world.initialCount > 0 ? 1 - (state.entities.length / world.initialCount) : 0;
   const entityDensity = state.entities.length / Math.max(1, world.initialCount);
   const massRatio = state.mass / targetMass;
 
@@ -218,125 +303,64 @@ function getMetrics(state) {
 
 const EVENT_DEFS = [
   {
-    id: "meteorShower",
-    cooldown: 900,   // 15 sec
-    minGalaxy: 1,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.08;
-      if (m.entityDensity < 0.5) p += 0.03;
-      if (m.comboActivity) p += 0.03;
-      return p;
-    },
+    id: "meteorShower", cooldown: 900, minGalaxy: 1, minMass: 0,
+    hazard(m) { let p = 0.08; if (m.entityDensity < 0.5) p += 0.03; if (m.comboActivity) p += 0.03; return p; },
     fire: fireMeteorShower
   },
   {
-    id: "cometStream",
-    cooldown: 1200,  // 20 sec
-    minGalaxy: 1,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.06;
-      if (m.entityDensity < 0.5) p += 0.04;
-      if (m.galaxyTime > 1800) p += 0.04; // 30 sec
-      return p;
-    },
+    id: "cometStream", cooldown: 1200, minGalaxy: 1, minMass: 0,
+    hazard(m) { let p = 0.06; if (m.entityDensity < 0.5) p += 0.04; if (m.galaxyTime > 1800) p += 0.04; return p; },
     fire: fireCometStream
   },
   {
-    id: "voidPulse",
-    cooldown: 1500,  // 25 sec
-    minGalaxy: 2,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.04;
-      if (!m.comboActivity) p += 0.04;
-      if (m.isLateGame) p += 0.06;
-      return p;
-    },
+    id: "voidPulse", cooldown: 1500, minGalaxy: 2, minMass: 0,
+    hazard(m) { let p = 0.04; if (!m.comboActivity) p += 0.04; if (m.isLateGame) p += 0.06; return p; },
     fire: fireVoidPulse
   },
   {
-    id: "derelictFlotilla",
-    cooldown: 1800,  // 30 sec
-    minGalaxy: 2,
-    minMass: 40,
-    hazard(m) {
-      let p = 0.04;
-      if (m.isMidGame) p += 0.03;
-      if (m.isLateGame) p += 0.04;
-      return p;
-    },
+    id: "derelictFlotilla", cooldown: 1800, minGalaxy: 2, minMass: 40,
+    hazard(m) { let p = 0.04; if (m.isMidGame) p += 0.03; if (m.isLateGame) p += 0.04; return p; },
     fire: fireDerelictFlotilla
   },
   {
-    id: "stellarBirth",
-    cooldown: 2400,  // 40 sec
-    minGalaxy: 3,
-    minMass: 80,
-    hazard(m) {
-      let p = 0.03;
-      if (m.isLateGame) p += 0.04;
-      if (m.consumeRatio > 0.5) p += 0.05;
-      return p;
-    },
+    id: "stellarBirth", cooldown: 2400, minGalaxy: 1, minMass: 80,
+    hazard(m) { let p = 0.03; if (m.isLateGame) p += 0.04; if (m.consumeRatio > 0.5) p += 0.05; return p; },
     fire: fireStellarBirth
   },
   {
-    id: "gravitationalWave",
-    cooldown: 1980,  // 33 sec
-    minGalaxy: 3,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.03;
-      if (m.galaxyTime > 1500) p += 0.03; // 25 sec
-      if (m.consumeRatio > 0.4) p += 0.04;
-      return p;
-    },
+    id: "gravitationalWave", cooldown: 1980, minGalaxy: 3, minMass: 0,
+    hazard(m) { let p = 0.03; if (m.galaxyTime > 1500) p += 0.03; if (m.consumeRatio > 0.4) p += 0.04; return p; },
     fire: fireGravitationalWave
   }
 ];
 
 function updateEventSystem(state, dt) {
-  // Tick grace period
   if (world.graceTimer > 0) {
     world.graceTimer -= dt;
-    // Still update active events during grace
     updateActiveEvents(state, dt);
     return;
   }
 
-  // Tick global cooldown
-  if (world.globalCooldown > 0) {
-    world.globalCooldown -= dt;
-  }
-
-  // Tick per-event cooldowns
+  if (world.globalCooldown > 0) world.globalCooldown -= dt;
   for (const key in world.eventCooldowns) {
-    if (world.eventCooldowns[key] > 0) {
-      world.eventCooldowns[key] -= dt;
-    }
+    if (world.eventCooldowns[key] > 0) world.eventCooldowns[key] -= dt;
   }
 
-  // Evaluate events on interval
   world.eventEvalTimer += dt;
   if (world.eventEvalTimer >= CFG.EVENT_EVAL_INTERVAL) {
     world.eventEvalTimer = 0;
-
     if (world.globalCooldown <= 0) {
       const metrics = getMetrics(state);
-
       for (const def of EVENT_DEFS) {
         if (state.galaxy < def.minGalaxy) continue;
         if (state.mass < def.minMass) continue;
         if ((world.eventCooldowns[def.id] || 0) > 0) continue;
-
-        const prob = def.hazard(metrics);
-        if (Math.random() < prob) {
+        if (Math.random() < def.hazard(metrics)) {
           def.fire(state);
           world.eventCooldowns[def.id] = def.cooldown;
           world.globalCooldown = CFG.EVENT_GLOBAL_COOLDOWN;
-          break; // Only one event per evaluation
+          state.onEvent?.(def.id);
+          break;
         }
       }
     }
@@ -350,140 +374,75 @@ function updateActiveEvents(state, dt) {
     const ev = world.activeEvents[i];
     ev.age += dt;
     if (ev.update) ev.update(state, dt);
-    if (ev.age >= ev.duration) {
-      world.activeEvents.splice(i, 1);
-    }
+    if (ev.age >= ev.duration) world.activeEvents.splice(i, 1);
   }
 }
 
-// ─── EVENT: METEOR SHOWER ───
-
-function fireMeteorShower(state) {
-  const angle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(5, 9));
-  const bounds = state.bounds;
-
+// Streams enter from just outside the view and sweep across the player's area.
+function streamEvent(state, opts) {
+  const angle = rand(0, TAU);
   const ev = {
-    id: "meteorShower",
-    age: 0,
-    duration: 90,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    angle,
-    bounds,
+    id: opts.id, age: 0, duration: opts.duration, spawnTimer: 0, spawned: 0,
+    count: opts.count, angle,
     update(st, dt) {
       this.spawnTimer += dt;
-      const interval = 60 / this.count;
+      const interval = opts.window / this.count;
       while (this.spawnTimer >= interval && this.spawned < this.count) {
         this.spawnTimer -= interval;
         this.spawned++;
-
-        const meteorType = objectTypes.find(t => t.id === "meteor") || objectTypes[0];
-        const spread = rand(-0.3, 0.3);
-        const spawnAngle = this.angle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(meteorType, x, y);
-        // Override speed for meteors — fast
-        const speed = rand(0.8, 1.4);
-        const inward = spawnAngle + Math.PI + rand(-0.4, 0.4);
+        const type = typeById(opts.typeId);
+        const a = this.angle + rand(-opts.spread, opts.spread);
+        const d = viewRadius(st) * 1.1;
+        const pos = clampInBounds(st, st.playerX + Math.cos(a) * d, st.playerY + Math.sin(a) * d, 10);
+        const e = spawnScaled(st, type, opts.ratioMin, opts.ratioMax, { pos, near: false });
+        const speed = rand(opts.speedMin, opts.speedMax) * st.speedScale;
+        const inward = Math.atan2(st.playerY - pos.y, st.playerX - pos.x) + rand(-opts.aimJitter, opts.aimJitter);
         e.vx = Math.cos(inward) * speed;
         e.vy = Math.sin(inward) * speed;
         e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
         st.entities.push(e);
       }
     }
   };
-
   world.activeEvents.push(ev);
-  playEventCue("meteorShower");
+  playEventCue(opts.id);
 }
 
-// ─── EVENT: COMET STREAM ───
+function fireMeteorShower(state) {
+  streamEvent(state, {
+    id: "meteorShower", typeId: "meteor", count: Math.floor(rand(6, 10)), duration: 90, window: 60,
+    spread: 0.3, aimJitter: 0.35, ratioMin: 0.12, ratioMax: 0.28, speedMin: 0.9, speedMax: 1.5
+  });
+}
 
 function fireCometStream(state) {
-  const entryAngle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(4, 8));
-  const bounds = state.bounds;
+  streamEvent(state, {
+    id: "cometStream", typeId: "comet", count: Math.floor(rand(5, 9)), duration: 120, window: 90,
+    spread: 0.2, aimJitter: 0.7, ratioMin: 0.12, ratioMax: 0.24, speedMin: 0.7, speedMax: 1.1
+  });
+}
 
-  const ev = {
-    id: "cometStream",
-    age: 0,
-    duration: 120,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    entryAngle,
-    bounds,
-    update(st, dt) {
-      this.spawnTimer += dt;
-      const interval = 90 / this.count;
-      while (this.spawnTimer >= interval && this.spawned < this.count) {
-        this.spawnTimer -= interval;
-        this.spawned++;
-
-        const cometType = objectTypes.find(t => t.id === "comet") || objectTypes[0];
-        const spread = rand(-0.2, 0.2);
-        const spawnAngle = this.entryAngle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(cometType, x, y);
-        // Aim toward a midpoint for curved path
-        const midAngle = spawnAngle + Math.PI + rand(-0.8, 0.8);
-        const speed = rand(0.6, 1.0);
-        e.vx = Math.cos(midAngle) * speed;
-        e.vy = Math.sin(midAngle) * speed;
-        e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
-        st.entities.push(e);
-      }
-    }
-  };
-
-  world.activeEvents.push(ev);
-  playEventCue("cometStream");
+function fireDerelictFlotilla(state) {
+  streamEvent(state, {
+    id: "derelictFlotilla", typeId: "craft", count: Math.floor(rand(4, 7)), duration: 60, window: 30,
+    spread: 0.15, aimJitter: 0.2, ratioMin: 0.2, ratioMax: 0.4, speedMin: 0.2, speedMax: 0.35
+  });
 }
 
 // ─── EVENT: VOID PULSE ───
 
 function fireVoidPulse(state) {
-  // Epicenter away from player
-  const angle = rand(0, Math.PI * 2);
-  const dist = rand(200, state.bounds * 0.6);
-  const cx = state.playerX + Math.cos(angle) * dist;
-  const cy = state.playerY + Math.sin(angle) * dist;
-
-  const rings = [
-    { delay: 0, radius: 0 },
-    { delay: 15, radius: 0 },
-    { delay: 30, radius: 0 }
-  ];
-
+  const angle = rand(0, TAU);
+  const dist = viewRadius(state) * rand(0.3, 0.7);
+  const ss = state.speedScale;
   const ev = {
-    id: "voidPulse",
-    age: 0,
-    duration: 90,
-    cx, cy,
-    rings,
-    speed: 3.5,
-    pushStrength: 0.4,
-    waveBand: 40,
+    id: "voidPulse", age: 0, duration: 90,
+    cx: state.playerX + Math.cos(angle) * dist,
+    cy: state.playerY + Math.sin(angle) * dist,
+    rings: [{ delay: 0, radius: 0 }, { delay: 15, radius: 0 }, { delay: 30, radius: 0 }],
+    speed: 3.5 * ss, pushStrength: 0.4 * ss, waveBand: 40 * ss,
     update(st, dt) {
-      for (const ring of this.rings) {
-        if (this.age >= ring.delay) {
-          ring.radius += this.speed * dt;
-        }
-      }
-
-      // Push entities in the wave band
+      for (const ring of this.rings) if (this.age >= ring.delay) ring.radius += this.speed * dt;
       const mainRadius = this.rings[0].radius;
       for (const e of st.entities) {
         if (e.consuming) continue;
@@ -491,99 +450,42 @@ function fireVoidPulse(state) {
         const dy = e.y - this.cy;
         const d = Math.hypot(dx, dy);
         if (d < 1) continue;
-
         if (Math.abs(d - mainRadius) < this.waveBand) {
-          const nx = dx / d;
-          const ny = dy / d;
-          e.vx += nx * this.pushStrength * dt;
-          e.vy += ny * this.pushStrength * dt;
+          e.vx += (dx / d) * this.pushStrength * dt;
+          e.vy += (dy / d) * this.pushStrength * dt;
         }
       }
     },
     draw(ctx, st, w, h) {
       const sx = this.cx - st.camX + w / 2;
       const sy = this.cy - st.camY + h / 2;
-
       for (const ring of this.rings) {
         if (ring.radius <= 0) continue;
-        const progress = this.age / this.duration;
-        const alpha = (1 - progress) * 0.25;
+        const alpha = (1 - this.age / this.duration) * 0.3;
         ctx.beginPath();
-        ctx.arc(sx, sy, ring.radius, 0, Math.PI * 2);
+        ctx.arc(sx, sy, ring.radius, 0, TAU);
         ctx.strokeStyle = `rgba(120, 100, 220, ${alpha})`;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 / st.zoom;
         ctx.stroke();
       }
     }
   };
-
   world.activeEvents.push(ev);
   playEventCue("voidPulse");
 }
 
-// ─── EVENT: DERELICT FLOTILLA ───
-
-function fireDerelictFlotilla(state) {
-  const angle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(3, 7));
-  const bounds = state.bounds;
-
-  const ev = {
-    id: "derelictFlotilla",
-    age: 0,
-    duration: 60,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    angle,
-    bounds,
-    update(st, dt) {
-      this.spawnTimer += dt;
-      const interval = 30 / this.count;
-      while (this.spawnTimer >= interval && this.spawned < this.count) {
-        this.spawnTimer -= interval;
-        this.spawned++;
-
-        const craftType = objectTypes.find(t => t.id === "craft") || objectTypes[0];
-        const spread = rand(-0.15, 0.15);
-        const spawnAngle = this.angle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(craftType, x, y);
-        const inward = spawnAngle + Math.PI + rand(-0.2, 0.2);
-        const speed = rand(0.12, 0.22);
-        e.vx = Math.cos(inward) * speed;
-        e.vy = Math.sin(inward) * speed;
-        e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
-        st.entities.push(e);
-      }
-    }
-  };
-
-  world.activeEvents.push(ev);
-  playEventCue("derelictFlotilla");
-}
-
 // ─── EVENT: STELLAR BIRTH ───
+// A new star ignites near you: a bigger fish to grow into, plus food fragments.
 
 function fireStellarBirth(state) {
-  // Point in space away from player
-  const angle = rand(0, Math.PI * 2);
-  const dist = rand(150, state.bounds * 0.5);
-  const cx = state.playerX + Math.cos(angle) * dist;
-  const cy = state.playerY + Math.sin(angle) * dist;
-
+  const angle = rand(0, TAU);
+  const dist = viewRadius(state) * rand(0.35, 0.6);
+  const sf = Math.max(1, state.radius / 12);
   const ev = {
-    id: "stellarBirth",
-    age: 0,
-    duration: 165, // 90 gathering + 15 flash + 60 explode
-    cx, cy,
-    phase: "gathering",
-    spawned: false,
+    id: "stellarBirth", age: 0, duration: 165,
+    cx: state.playerX + Math.cos(angle) * dist,
+    cy: state.playerY + Math.sin(angle) * dist,
+    phase: "gathering", spawned: false,
     update(st, dt) {
       if (this.age < 90) {
         this.phase = "gathering";
@@ -591,31 +493,24 @@ function fireStellarBirth(state) {
         this.phase = "flash";
         if (!this.spawned) {
           this.spawned = true;
-          // Spawn a star or planet
-          const type = Math.random() > 0.5
-            ? objectTypes.find(t => t.id === "star")
-            : objectTypes.find(t => t.id === "planet");
-          if (type) {
-            const star = createEntity(type, this.cx, this.cy);
-            star._spawnAge = 0;
-            star._spawnAlpha = 0;
-            prerenderEntitySprite(star);
-            st.entities.push(star);
-          }
+          const pos = clampInBounds(st, this.cx, this.cy, st.radius * 1.5);
+          this.cx = pos.x; this.cy = pos.y;
+          const star = spawnScaled(st, typeById("star"), 0.95, 1.4, { pos, near: false, forceScale: true });
+          star.vx = star.vy = 0;
+          star.baseSpeed = 0.1;
+          star.bigFish = true;
+          st.entities.push(star);
 
-          // Eject dust fragments
-          const fragCount = Math.floor(rand(3, 8));
-          const dustType = objectTypes.find(t => t.id === "dust") || objectTypes[0];
+          const fragCount = Math.floor(rand(5, 10));
           for (let i = 0; i < fragCount; i++) {
-            const fragAngle = rand(0, Math.PI * 2);
-            const frag = createEntity(dustType, this.cx, this.cy);
-            const speed = rand(0.4, 1.0);
-            frag.vx = Math.cos(fragAngle) * speed;
-            frag.vy = Math.sin(fragAngle) * speed;
+            const frag = spawnScaled(st, typeById("dust"), 0.08, 0.2, { pos: { x: this.cx, y: this.cy }, near: false });
+            const a = rand(0, TAU);
+            const speed = rand(0.6, 1.4) * st.speedScale;
+            frag.vx = Math.cos(a) * speed;
+            frag.vy = Math.sin(a) * speed;
             frag.baseSpeed = speed;
-            frag._spawnAge = 30; // Partial fade-in (born from explosion)
+            frag._spawnAge = 30;
             frag._spawnAlpha = 0.5;
-            prerenderEntitySprite(frag);
             st.entities.push(frag);
           }
         }
@@ -626,43 +521,38 @@ function fireStellarBirth(state) {
     draw(ctx, st, w, h) {
       const sx = this.cx - st.camX + w / 2;
       const sy = this.cy - st.camY + h / 2;
-
       if (this.phase === "gathering") {
-        const brightness = this.age / 90;
-        const r = 3 + brightness * 5;
+        const b = this.age / 90;
+        const r = (3 + b * 5) * sf;
         const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-        grad.addColorStop(0, `rgba(255, 240, 200, ${brightness * 0.6})`);
-        grad.addColorStop(1, "transparent");
+        grad.addColorStop(0, `rgba(255, 240, 200, ${b * 0.7})`);
+        grad.addColorStop(1, "rgba(255, 240, 200, 0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.arc(sx, sy, r, 0, TAU);
         ctx.fill();
       } else if (this.phase === "flash") {
-        const flashProgress = (this.age - 90) / 15;
-        const alpha = (1 - flashProgress) * 0.8;
-        const r = 20 + flashProgress * 40;
+        const fp = (this.age - 90) / 15;
+        const alpha = (1 - fp) * 0.8;
+        const r = (20 + fp * 40) * sf;
         const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
         grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
         grad.addColorStop(0.3, `rgba(255, 240, 180, ${alpha * 0.5})`);
-        grad.addColorStop(1, "transparent");
+        grad.addColorStop(1, "rgba(255, 240, 180, 0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.arc(sx, sy, r, 0, TAU);
         ctx.fill();
       } else {
-        // Explode: expanding ripple
-        const explodeProgress = (this.age - 105) / 60;
-        const alpha = (1 - explodeProgress) * 0.3;
-        const r = 30 + explodeProgress * 80;
+        const ep = (this.age - 105) / 60;
         ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 220, 120, ${alpha})`;
-        ctx.lineWidth = 2;
+        ctx.arc(sx, sy, (30 + ep * 80) * sf, 0, TAU);
+        ctx.strokeStyle = `rgba(255, 220, 120, ${(1 - ep) * 0.3})`;
+        ctx.lineWidth = 2 / st.zoom;
         ctx.stroke();
       }
     }
   };
-
   world.activeEvents.push(ev);
   playEventCue("stellarBirth");
 }
@@ -670,80 +560,46 @@ function fireStellarBirth(state) {
 // ─── EVENT: GRAVITATIONAL WAVE ───
 
 function fireGravitationalWave(state) {
-  const dirAngle = rand(0, Math.PI * 2);
+  const dirAngle = rand(0, TAU);
   const bounds = state.bounds;
-  const speed = 2.5;
-  const duration = Math.floor((bounds * 2) / speed + 60);
-  const wavelength = 120;
-
+  const ss = state.speedScale;
+  const speed = 2.5 * ss;
   const ev = {
-    id: "gravitationalWave",
-    age: 0,
-    duration,
-    dirAngle,
-    waveFront: -bounds,
-    speed,
-    wavelength,
-    bounds,
-    sineStrength: 0.3,
+    id: "gravitationalWave", age: 0,
+    duration: Math.floor((bounds * 2) / speed + 60),
+    dirAngle, waveFront: -bounds, speed, wavelength: 120 * ss, bounds, sineStrength: 0.3 * ss,
     update(st, dt) {
       this.waveFront += this.speed * dt;
-
-      const dirX = Math.cos(this.dirAngle);
-      const dirY = Math.sin(this.dirAngle);
-      // Perpendicular direction
-      const perpX = -dirY;
-      const perpY = dirX;
-
+      const dirX = Math.cos(this.dirAngle), dirY = Math.sin(this.dirAngle);
+      const perpX = -dirY, perpY = dirX;
       for (const e of st.entities) {
         if (e.consuming) continue;
-        // Project entity onto wave direction
-        const proj = e.x * dirX + e.y * dirY;
-        const distToFront = proj - this.waveFront;
-
+        const distToFront = e.x * dirX + e.y * dirY - this.waveFront;
         if (Math.abs(distToFront) < this.wavelength) {
-          // Sinusoidal displacement perpendicular to wave
-          const sineForce = Math.sin((distToFront / this.wavelength) * Math.PI * 2) * this.sineStrength;
-          e.vx += perpX * sineForce * dt;
-          e.vy += perpY * sineForce * dt;
+          const f = Math.sin((distToFront / this.wavelength) * TAU) * this.sineStrength;
+          e.vx += perpX * f * dt;
+          e.vy += perpY * f * dt;
         }
       }
     },
     draw(ctx, st, w, h) {
-      const dirX = Math.cos(this.dirAngle);
-      const dirY = Math.sin(this.dirAngle);
-      const perpX = -dirY;
-      const perpY = dirX;
-
-      const progress = this.age / this.duration;
-      const alpha = Math.min(0.12, (1 - progress) * 0.15);
-
-      // Draw a few parallel lines perpendicular to wave direction
-      const lineCount = 5;
-      for (let i = 0; i < lineCount; i++) {
+      const dirX = Math.cos(this.dirAngle), dirY = Math.sin(this.dirAngle);
+      const perpX = -dirY, perpY = dirX;
+      const alpha = Math.min(0.12, (1 - this.age / this.duration) * 0.15);
+      for (let i = 0; i < 5; i++) {
         const offset = (i - 2) * (this.wavelength / 3);
-        const lineCenterX = dirX * (this.waveFront + offset);
-        const lineCenterY = dirY * (this.waveFront + offset);
-
-        const sx = lineCenterX - st.camX + w / 2;
-        const sy = lineCenterY - st.camY + h / 2;
-
+        const sx = dirX * (this.waveFront + offset) - st.camX + w / 2;
+        const sy = dirY * (this.waveFront + offset) - st.camY + h / 2;
         const halfLen = this.bounds * 1.5;
-        const x1 = sx + perpX * halfLen;
-        const y1 = sy + perpY * halfLen;
-        const x2 = sx - perpX * halfLen;
-        const y2 = sy - perpY * halfLen;
-
         ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        ctx.moveTo(sx + perpX * halfLen, sy + perpY * halfLen);
+        ctx.lineTo(sx - perpX * halfLen, sy - perpY * halfLen);
         ctx.strokeStyle = `rgba(100, 140, 255, ${alpha})`;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1 / st.zoom;
         ctx.stroke();
       }
     }
   };
-
   world.activeEvents.push(ev);
   playEventCue("gravitationalWave");
 }

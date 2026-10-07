@@ -178,7 +178,7 @@ export function drawStarfield(ctx, w, h, camX, camY, tint) {
 
 // ─── GALAXY BOUNDARY ───
 
-export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time) {
+export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time, zoom = 1) {
   const cx = w / 2 - camX;
   const cy = h / 2 - camY;
 
@@ -189,21 +189,21 @@ export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time) {
   ctx.beginPath();
   ctx.arc(cx, cy, bounds * pulse, 0, TAU);
   ctx.strokeStyle = borderColor + "18";
-  ctx.lineWidth = 40;
+  ctx.lineWidth = 40 / zoom;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.arc(cx, cy, bounds, 0, TAU);
-  ctx.strokeStyle = borderColor + "40";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = borderColor + "60";
+  ctx.lineWidth = 2 / zoom;
   ctx.stroke();
 
   // Dashed inner warning ring
-  ctx.setLineDash([8, 16]);
+  ctx.setLineDash([8 / zoom, 16 / zoom]);
   ctx.beginPath();
-  ctx.arc(cx, cy, bounds - 30, 0, TAU);
-  ctx.strokeStyle = borderColor + "20";
-  ctx.lineWidth = 1;
+  ctx.arc(cx, cy, bounds - 30 / zoom, 0, TAU);
+  ctx.strokeStyle = borderColor + "30";
+  ctx.lineWidth = 1 / zoom;
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
@@ -239,16 +239,22 @@ let bhInnerGrad = null;
 
 // ─── ENTITIES ───
 
-export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time) {
-  const margin = 40;
+// w/h are the zoomed (world-unit) viewport; the caller applies ctx.scale(zoom).
+export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1) {
   ensureGlowCanvas();
 
   for (const e of entities) {
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
 
-    // Culling
+    // Culling (margin covers glow and comet tails)
+    const margin = e.radius * 3.5 + 20;
     if (sx < -margin || sx > w + margin || sy < -margin || sy > h + margin) continue;
+
+    if (e.powerup) {
+      drawPowerupPickup(ctx, e, sx, sy, time, zoom);
+      continue;
+    }
 
     // Spawn fade-in alpha
     const spawnAlpha = e._spawnAlpha ?? 1;
@@ -256,8 +262,8 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.globalAlpha = spawnAlpha;
     }
 
-    // Size comparison to player
-    const tooSmall = e.radius > playerRadius * 1.2;
+    // Same rule as tryConsume: too big unless playerRadius > radius * eatRatio
+    const tooBig = playerRadius <= e.radius * eatRatio;
 
     // Only save/restore when consuming (the only case that modifies transform)
     if (e.consuming) {
@@ -283,7 +289,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     // Comet tail — simple alpha-faded strokes instead of gradient
     if (e.hasTail) {
       const speed = Math.hypot(e.vx, e.vy);
-      const tailLen = Math.max(15, speed * 50);
+      const tailLen = Math.max(e.radius * 2.5, speed * 50);
       const angle = Math.atan2(-e.vy, -e.vx);
       const segments = 4;
 
@@ -322,12 +328,13 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.fill();
     }
 
-    // "Too big to eat" indicator
-    if (tooSmall && !e.consuming) {
+    // "Too big to eat" indicator: pulsing red ring
+    if (tooBig && !e.consuming) {
+      const pulse = 0.28 + Math.sin(time * 0.005 + e.rotation * 3) * 0.1;
       ctx.beginPath();
-      ctx.arc(sx, sy, e.radius + 3, 0, TAU);
-      ctx.strokeStyle = "rgba(255, 80, 80, 0.15)";
-      ctx.lineWidth = 1.5;
+      ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
+      ctx.strokeStyle = `rgba(255, 80, 80, ${pulse})`;
+      ctx.lineWidth = 1.8 / zoom;
       ctx.stroke();
     }
 
@@ -348,6 +355,61 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.globalAlpha = 1;
     }
   }
+}
+
+const PU_STYLE = {
+  magnet: { rgb: "255, 209, 102", glyph: "M" },
+  slow: { rgb: "127, 219, 255", glyph: "S" },
+  double: { rgb: "255, 122, 217", glyph: "x2" }
+};
+
+function drawPowerupPickup(ctx, e, sx, sy, time, zoom) {
+  const st = PU_STYLE[e.powerup] || PU_STYLE.magnet;
+  const spawnAlpha = e._spawnAlpha ?? 1;
+  // Blink during the last 4 seconds
+  let alpha = spawnAlpha;
+  if (!e.consuming && e.life < 240 && Math.floor(time / 120) % 2 === 0) alpha *= 0.35;
+  let r = e.radius;
+  if (e.consuming) {
+    alpha *= 1 - e.consumeProgress;
+    r *= 1 + e.consumeProgress * 1.5;
+  }
+  const pulse = 1 + Math.sin(time * 0.006) * 0.12;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const glowR = r * 2.6 * pulse;
+  const g = ctx.createRadialGradient(sx, sy, r * 0.3, sx, sy, glowR);
+  g.addColorStop(0, `rgba(${st.rgb}, 0.55)`);
+  g.addColorStop(1, `rgba(${st.rgb}, 0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(sx, sy, glowR, 0, TAU);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(sx, sy, r, 0, TAU);
+  ctx.fillStyle = "rgba(10, 12, 30, 0.85)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(1.5 / zoom, r * 0.16);
+  ctx.strokeStyle = `rgba(${st.rgb}, 0.95)`;
+  ctx.stroke();
+
+  // Rotating orbit dashes
+  ctx.setLineDash([r * 0.5, r * 0.4]);
+  ctx.lineDashOffset = -time * 0.02 * r * 0.1;
+  ctx.beginPath();
+  ctx.arc(sx, sy, r * 1.45 * pulse, 0, TAU);
+  ctx.lineWidth = Math.max(1 / zoom, r * 0.08);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = `rgba(${st.rgb}, 1)`;
+  ctx.font = `700 ${Math.round(r * (st.glyph.length > 1 ? 0.9 : 1.15))}px 'Outfit', sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(st.glyph, sx, sy + r * 0.05);
+  ctx.restore();
 }
 
 function drawPolygon(ctx, x, y, r, sides, rotation, color) {
@@ -448,119 +510,125 @@ export function prerenderEntitySprite(e) {
 }
 
 // ─── BLACK HOLE (PLAYER) ───
+// Drawn at (x, y) inside the zoomed world transform. Gradients are built around
+// the origin and drawn with translate(), so screen resizes can't misplace them.
 
-export function drawBlackHole(ctx, w, h, radius, time, velocity) {
-  const x = w / 2;
-  const y = h / 2;
+export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
   const speed = Math.hypot(velocity.vx, velocity.vy);
-
-  // Accretion disk — rotating particles
-  const rotAngle = time * 0.0008;
-  const particleCount = Math.floor(12 + radius * 0.5);
+  const zoom = fx.zoom || 1;
+  const pScale = Math.max(1, radius * 0.05);
+  const disk = fx.double ? "255, 120, 220" : "130, 140, 255";
+  const disk2 = fx.double ? "255, 190, 240" : "200, 160, 255";
 
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(rotAngle);
+  if (fx.invuln && Math.floor(time / 90) % 2 === 0) ctx.globalAlpha = 0.5;
 
+  // Magnet: golden ring showing the pull range
+  if (fx.magnet && fx.pullRange) {
+    ctx.save();
+    ctx.rotate(time * 0.0006);
+    ctx.setLineDash([fx.pullRange * 0.08, fx.pullRange * 0.06]);
+    ctx.beginPath();
+    ctx.arc(0, 0, fx.pullRange, 0, TAU);
+    ctx.strokeStyle = `rgba(255, 209, 102, ${0.18 + Math.sin(time * 0.006) * 0.06})`;
+    ctx.lineWidth = 2 / zoom;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Accretion disk — rotating particles
+  const rotAngle = time * 0.0008;
+  const particleCount = Math.floor(14 + Math.min(40, radius * 0.4));
+  ctx.save();
+  ctx.rotate(rotAngle);
   for (let i = 0; i < particleCount; i++) {
     const angle = (i / particleCount) * TAU;
     const dist = radius * 1.1 + Math.sin(angle * 3 + time * 0.002) * radius * 0.3;
-    const px = Math.cos(angle) * dist;
-    const py = Math.sin(angle) * dist * 0.45;
-    const size = 1 + Math.sin(angle * 2 + time * 0.003) * 0.8;
-    const alpha = 0.15 + Math.sin(angle + time * 0.002) * 0.1;
-
+    const size = (1 + Math.sin(angle * 2 + time * 0.003) * 0.8) * pScale;
+    const alpha = (fx.double ? 0.3 : 0.15) + Math.sin(angle + time * 0.002) * 0.1;
     ctx.beginPath();
-    ctx.arc(px, py, Math.max(0.5, size), 0, TAU);
-    ctx.fillStyle = `rgba(130, 140, 255, ${alpha})`;
+    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist * 0.45, Math.max(0.5, size), 0, TAU);
+    ctx.fillStyle = `rgba(${disk}, ${alpha})`;
     ctx.fill();
   }
-
-  // Second disk layer
   ctx.rotate(rotAngle * -1.7);
-  for (let i = 0; i < Math.floor(particleCount * 0.6); i++) {
-    const angle = (i / (particleCount * 0.6)) * TAU;
+  const n2 = Math.floor(particleCount * 0.6);
+  for (let i = 0; i < n2; i++) {
+    const angle = (i / n2) * TAU;
     const dist = radius * 1.3 + Math.sin(angle * 2 + time * 0.003) * radius * 0.2;
-    const px = Math.cos(angle) * dist;
-    const py = Math.sin(angle) * dist * 0.35;
     const alpha = 0.08 + Math.sin(angle * 3 + time * 0.004) * 0.05;
-
     ctx.beginPath();
-    ctx.arc(px, py, 0.8, 0, TAU);
-    ctx.fillStyle = `rgba(200, 160, 255, ${alpha})`;
+    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist * 0.35, 0.8 * pScale, 0, TAU);
+    ctx.fillStyle = `rgba(${disk2}, ${alpha})`;
     ctx.fill();
   }
-
   ctx.restore();
 
-  // Rebuild cached gradients only when radius changes significantly
-  if (Math.abs(radius - bhCachedRadius) > 1) {
-    const pulse = 1 + Math.sin(time * 0.002) * 0.04;
-    const glowR = (radius + 20) * pulse;
-
-    bhOuterGlow = ctx.createRadialGradient(x, y, radius * 0.8, x, y, glowR);
-    bhOuterGlow.addColorStop(0, "rgba(90, 100, 220, 0.08)");
-    bhOuterGlow.addColorStop(0.5, "rgba(70, 80, 200, 0.04)");
-    bhOuterGlow.addColorStop(1, "transparent");
+  if (Math.abs(radius - bhCachedRadius) > Math.max(1, radius * 0.02)) {
+    const glowR = radius + Math.max(20, radius * 0.6);
+    bhOuterGlow = ctx.createRadialGradient(0, 0, radius * 0.8, 0, 0, glowR);
+    bhOuterGlow.addColorStop(0, "rgba(90, 100, 220, 0.1)");
+    bhOuterGlow.addColorStop(0.5, "rgba(70, 80, 200, 0.045)");
+    bhOuterGlow.addColorStop(1, "rgba(70, 80, 200, 0)");
     bhOuterGlow._glowR = glowR;
 
-    bhEdgeGrad = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius * 1.05);
-    bhEdgeGrad.addColorStop(0, "transparent");
-    bhEdgeGrad.addColorStop(0.7, "rgba(110, 120, 255, 0.25)");
-    bhEdgeGrad.addColorStop(1, "transparent");
+    bhEdgeGrad = ctx.createRadialGradient(0, 0, radius * 0.85, 0, 0, radius * 1.05);
+    bhEdgeGrad.addColorStop(0, "rgba(110, 120, 255, 0)");
+    bhEdgeGrad.addColorStop(0.7, "rgba(110, 120, 255, 0.3)");
+    bhEdgeGrad.addColorStop(1, "rgba(110, 120, 255, 0)");
 
-    bhInnerGrad = ctx.createRadialGradient(x - radius * 0.2, y - radius * 0.2, 0, x, y, radius * 0.7);
+    bhInnerGrad = ctx.createRadialGradient(-radius * 0.2, -radius * 0.2, 0, 0, 0, radius * 0.7);
     bhInnerGrad.addColorStop(0, "rgba(60, 70, 140, 0.06)");
-    bhInnerGrad.addColorStop(1, "transparent");
-
+    bhInnerGrad.addColorStop(1, "rgba(60, 70, 140, 0)");
     bhCachedRadius = radius;
   }
 
-  // Outer glow
-  const glowR = bhOuterGlow._glowR;
+  // Outer glow (pulse animates by scaling the cached gradient)
+  const pulse = 1 + Math.sin(time * 0.002) * 0.05 + (fx.gulp || 0) * 0.12;
+  ctx.save();
+  ctx.scale(pulse, pulse);
   ctx.fillStyle = bhOuterGlow;
   ctx.beginPath();
-  ctx.arc(x, y, glowR, 0, TAU);
+  ctx.arc(0, 0, bhOuterGlow._glowR, 0, TAU);
   ctx.fill();
+  ctx.restore();
 
-  // Event horizon (main black circle)
+  const r = radius * (1 + (fx.gulp || 0) * 0.06);
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, TAU);
+  ctx.arc(0, 0, r, 0, TAU);
   ctx.fillStyle = "#020308";
   ctx.fill();
 
-  // Edge ring
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, TAU);
   ctx.fillStyle = bhEdgeGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, TAU);
   ctx.fill();
 
-  // Inner subtle highlight
   ctx.fillStyle = bhInnerGrad;
   ctx.beginPath();
-  ctx.arc(x, y, radius * 0.7, 0, TAU);
+  ctx.arc(0, 0, radius * 0.7, 0, TAU);
   ctx.fill();
 
-  // Speed trail — simple alpha strokes instead of gradient
-  if (speed > 0.5) {
+  // Speed trail
+  const trailSpeed = speed / Math.max(1, fx.speedScale || 1);
+  if (trailSpeed > 0.5) {
     const trailAngle = Math.atan2(-velocity.vy, -velocity.vx);
-    const trailLen = Math.min(40, speed * 8);
-
+    const trailLen = Math.min(radius * 1.4, trailSpeed * 8 * Math.max(1, radius * 0.08));
     ctx.lineCap = "round";
     ctx.lineWidth = radius * 1.5;
-    const segments = 3;
-    for (let i = 0; i < segments; i++) {
-      const t0 = i / segments;
-      const t1 = (i + 1) / segments;
-      ctx.globalAlpha = (1 - t0) * 0.12;
-      ctx.strokeStyle = "rgba(90, 100, 220, 1)";
+    const baseAlpha = ctx.globalAlpha;
+    for (let i = 0; i < 3; i++) {
+      const t0 = i / 3, t1 = (i + 1) / 3;
+      ctx.globalAlpha = baseAlpha * (1 - t0) * 0.12;
+      ctx.strokeStyle = `rgba(${fx.double ? "220, 100, 200" : "90, 100, 220"}, 1)`;
       ctx.beginPath();
-      ctx.moveTo(x + Math.cos(trailAngle) * trailLen * t0, y + Math.sin(trailAngle) * trailLen * t0);
-      ctx.lineTo(x + Math.cos(trailAngle) * trailLen * t1, y + Math.sin(trailAngle) * trailLen * t1);
+      ctx.moveTo(Math.cos(trailAngle) * trailLen * t0, Math.sin(trailAngle) * trailLen * t0);
+      ctx.lineTo(Math.cos(trailAngle) * trailLen * t1, Math.sin(trailAngle) * trailLen * t1);
       ctx.stroke();
     }
-    ctx.globalAlpha = 1;
   }
+  ctx.restore();
 }
 
 // ─── PARTICLES ───
@@ -583,7 +651,7 @@ export function drawParticles(ctx, particles, w, h, camX, camY) {
 
 // ─── CONSUME RIPPLE ───
 
-export function drawRipples(ctx, ripples, w, h, camX, camY) {
+export function drawRipples(ctx, ripples, w, h, camX, camY, zoom = 1) {
   for (const r of ripples) {
     const sx = r.x - camX + w / 2;
     const sy = r.y - camY + h / 2;
@@ -595,7 +663,7 @@ export function drawRipples(ctx, ripples, w, h, camX, camY) {
     ctx.arc(sx, sy, radius, 0, TAU);
     ctx.strokeStyle = r.color;
     ctx.globalAlpha = alpha;
-    ctx.lineWidth = 1.5 * (1 - progress);
+    ctx.lineWidth = (1.5 / zoom) * (1 - progress);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -603,7 +671,7 @@ export function drawRipples(ctx, ripples, w, h, camX, camY) {
 
 // ─── MINIMAP ───
 
-export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds) {
+export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playerRadius = 0, eatRatio = 0.88) {
   const mapSize = 90;
   const mapX = w - mapSize - 16;
   const mapY = h - mapSize - 16;
@@ -627,12 +695,21 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Entities as dots
+  // Entities as dots: red = too big, gold = power-up
   for (const e of entities) {
     const ex = mapX + mapSize / 2 + e.x * scale;
     const ey = mapY + mapSize / 2 + e.y * scale;
-    ctx.fillStyle = e.color + "88";
-    ctx.fillRect(ex - 0.5, ey - 0.5, 1.5, 1.5);
+    if (e.powerup) {
+      ctx.fillStyle = e.color;
+      ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
+    } else if (playerRadius <= e.radius * eatRatio) {
+      ctx.fillStyle = "rgba(255, 90, 90, 0.8)";
+      const s2 = Math.min(4, 1.5 + e.radius * scale);
+      ctx.fillRect(ex - s2 / 2, ey - s2 / 2, s2, s2);
+    } else {
+      ctx.fillStyle = e.color + "88";
+      ctx.fillRect(ex - 0.5, ey - 0.5, 1.5, 1.5);
+    }
   }
 
   // Player
@@ -650,42 +727,34 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds) {
 // Arrows at screen edges pointing toward off-screen objects
 // Uses math instead of save/translate/rotate/restore
 
-export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius) {
+// Screen-space. Shows the nearest few off-screen edible objects, plus power-ups.
+export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius, zoom = 1, eatRatio = 0.88) {
   const margin = 20;
-  const arrowSize = 5;
-
+  const picks = [];
   for (const e of entities) {
-    const sx = e.x - camX + w / 2;
-    const sy = e.y - camY + h / 2;
-
-    // Only for off-screen entities
+    if (e.consuming) continue;
+    const sx = (e.x - camX) * zoom + w / 2;
+    const sy = (e.y - camY) * zoom + h / 2;
     if (sx > -10 && sx < w + 10 && sy > -10 && sy < h + 10) continue;
+    if (!e.powerup && playerRadius <= e.radius * eatRatio) continue;
+    const d = Math.hypot(sx - w / 2, sy - h / 2);
+    picks.push({ e, sx, sy, d: e.powerup ? -1 : d });
+  }
+  picks.sort((a, b) => a.d - b.d);
 
-    // Only show for eatable objects
-    if (e.radius > playerRadius * 1.2) continue;
-
-    // Clamp to screen edge
+  for (let i = 0; i < picks.length && i < 6; i++) {
+    const { e, sx, sy } = picks[i];
+    const arrowSize = e.powerup ? 8 : 5;
     const angle = Math.atan2(sy - h / 2, sx - w / 2);
     const edgeX = w / 2 + Math.cos(angle) * (w / 2 - margin);
     const edgeY = h / 2 + Math.sin(angle) * (h / 2 - margin);
-
-    // Compute arrow vertices mathematically (no translate/rotate)
-    const cosA = Math.cos(angle);
-    const sinA = Math.sin(angle);
-
-    const tipX = edgeX + cosA * arrowSize;
-    const tipY = edgeY + sinA * arrowSize;
-    const leftX = edgeX - cosA * arrowSize - sinA * arrowSize * 0.6;
-    const leftY = edgeY - sinA * arrowSize + cosA * arrowSize * 0.6;
-    const rightX = edgeX - cosA * arrowSize + sinA * arrowSize * 0.6;
-    const rightY = edgeY - sinA * arrowSize - cosA * arrowSize * 0.6;
-
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
     ctx.beginPath();
-    ctx.moveTo(tipX, tipY);
-    ctx.lineTo(leftX, leftY);
-    ctx.lineTo(rightX, rightY);
+    ctx.moveTo(edgeX + cosA * arrowSize, edgeY + sinA * arrowSize);
+    ctx.lineTo(edgeX - cosA * arrowSize - sinA * arrowSize * 0.6, edgeY - sinA * arrowSize + cosA * arrowSize * 0.6);
+    ctx.lineTo(edgeX - cosA * arrowSize + sinA * arrowSize * 0.6, edgeY - sinA * arrowSize - cosA * arrowSize * 0.6);
     ctx.closePath();
-    ctx.fillStyle = e.color + "40";
+    ctx.fillStyle = e.powerup ? e.color : e.color + "55";
     ctx.fill();
   }
 }
