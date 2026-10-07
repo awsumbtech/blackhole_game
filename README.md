@@ -20,13 +20,26 @@ python -m http.server 8080
 
 Then open **http://localhost:8080** (or the port shown) in your browser.
 
+## 🆕 What's new in v2
+
+- **Upgrade shop + stardust**: every cleared galaxy pays out stardust (galaxy bonus, objects eaten, best combo, big catches, speed bonus, new records). Spend it on 6 permanent upgrades x 5 levels: Seed Mass, Thrusters, Event Horizon, Gravity Well, Momentum and Power Surge.
+- **Galaxy summary screen**: clear time, best combo, objects eaten, big catches, "NEW BEST" badges and a stardust breakdown, with the shop and a Continue button.
+- **Stats & Records view** (trophy button): totals, records, fastest clear per galaxy, upgrade levels.
+- **Bigger fish**: food and threats now scale with your size. There are always a few red-ringed objects you can't eat yet. Bump into one and you lose a little mass. Outgrow it and swallow it for a **BIG CATCH**.
+- **Power-ups**: rare glowing orbs that are always edible. **Magnet** pulls food in, **Slow-Mo** slows the galaxy (not you), **Double Mass** doubles every bite. Active timers show under the HUD.
+- **Zoom-out camera** that scales with your size, so the hole stays a sensible size on a phone screen.
+- **Real combos**: a 1.25s combo window, and combos add up to +40% mass.
+- **Juice**: screen shake, floating text, slurp animation, new sounds for power-ups, bumps, big catches and purchases.
+- **Saves mid-galaxy** (mass + run stats), also when the phone backgrounds the app. v1 saves migrate automatically, plus a stardust legacy bonus for galaxies already cleared.
+- **PWA fixes**: relative paths (works from a subfolder like GitHub Pages), network-first service worker so edits show up right away, `100dvh` + safe-area layout for phones.
+
 ## ✨ Features
 
 ### Core Gameplay
 - **Size-Based Consumption**: Eat objects smaller than you to grow larger
 - **Mass-Based Progression**: Reach a mass threshold to advance — galaxies are never empty
-- **Progressive Difficulty**: Quadratic scaling (`10000 + 5000g + 1000g²`) makes each galaxy harder
-- **Combo System**: Chain rapid consumption for ascending audio feedback
+- **Progressive Difficulty**: Quadratic targets (`9000 + 4000g + 2000g²`, see `js/progression.js`)
+- **Combo System**: Chain bites within the combo window for bonus mass and ascending audio
 - **Smooth Physics**: Momentum-based movement with boundary collision
 
 ### Living World System
@@ -72,16 +85,18 @@ Then open **http://localhost:8080** (or the port shown) in your browser.
 - 🎯 **Zero Dependencies**: Pure vanilla JavaScript with ES6 modules
 - 📱 **PWA Ready**: Installable with offline support
 - 🎨 **Canvas Rendering**: Smooth 60 FPS gameplay
-- 💾 **Auto-Save**: LocalStorage persistence every 5 seconds
-- 🎮 **Multiple Controls**: WASD, Arrow Keys, or Mouse movement
+- 💾 **Auto-Save**: LocalStorage every 5 seconds and when the app is backgrounded, including mid-galaxy progress
+- 🎮 **Multiple Controls**: Touch, WASD, Arrow Keys, or Mouse movement
 - 🔊 **WebAudio Engine**: Fully procedural audio generation
 
 ## 🎯 Controls
 
 | Input | Action |
 |-------|--------|
+| **Touch (hold)** | Drift toward your finger (farther from center = faster) |
 | **WASD** / **Arrow Keys** | Move black hole |
 | **Mouse Movement** | Direct control |
+| **Trophy button** | Stats & records |
 | **P** / **Escape** | Pause game |
 | **Volume Slider** | Adjust audio level |
 | **Restart Button** | Restart current galaxy |
@@ -102,8 +117,11 @@ blackhole_game/
 │   ├── living-world.js # Gravity, dynamic spawning, events, ambient effects
 │   ├── audio.js       # Procedural audio engine
 │   ├── render.js      # Canvas drawing functions
-│   ├── input.js       # Keyboard and mouse input handling
-│   └── save.js        # LocalStorage save/load system
+│   ├── input.js       # Keyboard, mouse and touch input
+│   ├── save.js        # LocalStorage save/load + migration
+│   ├── progression.js # Stardust, upgrades, galaxy targets, records
+│   ├── powerups.js    # Magnet / Slow-Mo / Double Mass pickups
+│   └── ui.js          # Summary + shop, stats view, power-up timers
 └── icons/
     ├── icon.svg       # App icon (vector)
     ├── icon-192.png   # PWA icon (192x192)
@@ -196,11 +214,10 @@ Edit `js/entities.js` and add to `biomeCatalog`:
 ```
 
 ### Adjusting Difficulty
-In `js/game.js`:
-```javascript
-// Mass threshold to complete a galaxy (quadratic scaling)
-state.targetMass = 10000 + galaxyNum * 5000 + galaxyNum * galaxyNum * 1000;
-```
+- `js/progression.js`: `targetMassFor()` (galaxy goal), upgrade costs and effects, stardust payout.
+- `js/living-world.js` `CFG`: food size (`FOOD_RATIO_*`, the main pacing knob), bigger fish size/count, pull strength, spawn rates.
+- `js/game.js`: `MAX_BITE` (largest single bite as a share of your mass), bump penalty in `bump()`.
+- `js/powerups.js`: power-up durations and spawn timing.
 
 In `js/entities.js`:
 ```javascript
