@@ -74,7 +74,7 @@ export function foodScaleFor(galaxy) {
 
 /** Par time (seconds) for the speed bonus. */
 export function parTimeFor(galaxy) {
-  return 170 + galaxy * 10;
+  return 200 + galaxy * 10;
 }
 
 export function freshRun(stats) {

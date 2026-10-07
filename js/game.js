@@ -90,8 +90,8 @@ const state = {
 const input = createInput(canvas);
 
 // Largest single bite as a share of your mass. Growth is exponential, so this
-// (more than the galaxy target) sets the pace: ~5% => roughly 2-4 min per galaxy.
-const MAX_BITE = 0.05;
+// (more than the galaxy target) sets the pace: ~6% => roughly 2.5-4 min per galaxy for a person.
+const MAX_BITE = 0.06;
 const MAX_BIG_BITE = 0.08;   // outgrown "bigger fish" are a slightly bigger treat
 const MIN_BITE_CAP = 6;
 
