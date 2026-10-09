@@ -294,137 +294,45 @@ export function playBounce() {
 }
 
 // ─── EVENT CUES ───
-// Short procedural audio signatures for living-world events
+// v3: soft, slow-swelling pads that play at the start of each event's 2.5s
+// warning. No buzz, no sharp attacks.
+
+const EVENT_PADS = {
+  meteorShower: [196, 293.7, 392],          // G3 D4 G4
+  cometStream: [329.6, 493.9, 659.3],       // E4 B4 E5 (icy)
+  derelictFlotilla: [146.8, 220, 293.7],    // low D
+  voidPulse: [174.6, 261.6, 349.2],         // F (warm, open)
+  stellarBirth: [261.6, 329.6, 392, 523.3], // C major bloom
+  gravitationalWave: [110, 164.8, 220]      // low A, very soft
+};
+
+function pad(freqs, { attack = 1.2, hold = 0.6, release = 1.6, vol = 0.03 } = {}) {
+  const now = ctx.currentTime;
+  const end = now + attack + hold + release;
+  freqs.forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.type = i === 0 ? "sine" : "triangle";
+    osc.frequency.value = f * (1 + (i - 1) * 0.002);
+    filter.type = "lowpass";
+    filter.frequency.value = 900;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(vol / (1 + i * 0.4), now + attack);
+    gain.gain.setValueAtTime(vol / (1 + i * 0.4), now + attack + hold);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(sfxGain);
+    osc.start(now);
+    osc.stop(end + 0.05);
+  });
+}
 
 export function playEventCue(eventType) {
   if (!enabled || !ensureCtx()) return;
   resume();
-
-  const now = ctx.currentTime;
-
-  switch (eventType) {
-    case "meteorShower": {
-      // Filtered sawtooth sweep 60→200Hz
-      const osc = ctx.createOscillator();
-      const filter = ctx.createBiquadFilter();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(60, now);
-      osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
-      filter.type = "lowpass";
-      filter.frequency.value = 400;
-      filter.Q.value = 2;
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(sfxGain);
-      osc.start(now);
-      osc.stop(now + 0.5);
-      break;
-    }
-
-    case "cometStream": {
-      // High sine with fast tremolo
-      const osc = ctx.createOscillator();
-      const tremolo = ctx.createOscillator();
-      const tremoloGain = ctx.createGain();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 800;
-      tremolo.type = "sine";
-      tremolo.frequency.value = 12;
-      tremoloGain.gain.value = 0.04;
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      tremolo.connect(tremoloGain);
-      tremoloGain.connect(gain.gain);
-      osc.connect(gain);
-      gain.connect(sfxGain);
-      tremolo.start(now);
-      osc.start(now);
-      tremolo.stop(now + 0.45);
-      osc.stop(now + 0.45);
-      break;
-    }
-
-    case "voidPulse": {
-      // Sub-bass thump at 30Hz
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(30, now);
-      osc.frequency.exponentialRampToValueAtTime(18, now + 0.3);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      osc.connect(gain);
-      gain.connect(sfxGain);
-      osc.start(now);
-      osc.stop(now + 0.45);
-      break;
-    }
-
-    case "derelictFlotilla": {
-      // Low resonant hum at 50Hz
-      const osc = ctx.createOscillator();
-      const filter = ctx.createBiquadFilter();
-      const gain = ctx.createGain();
-      osc.type = "triangle";
-      osc.frequency.value = 50;
-      filter.type = "bandpass";
-      filter.frequency.value = 50;
-      filter.Q.value = 8;
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(sfxGain);
-      osc.start(now);
-      osc.stop(now + 0.55);
-      break;
-    }
-
-    case "stellarBirth": {
-      // Ascending sine arpeggio
-      const notes = [330, 440, 550, 660];
-      for (let i = 0; i < notes.length; i++) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = notes[i];
-        const t = now + i * 0.08;
-        gain.gain.setValueAtTime(0.001, t);
-        gain.gain.exponentialRampToValueAtTime(0.04, t + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        osc.connect(gain);
-        gain.connect(sfxGain);
-        osc.start(t);
-        osc.stop(t + 0.25);
-      }
-      break;
-    }
-
-    case "gravitationalWave": {
-      // Slow frequency sweep 100→40Hz
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(100, now);
-      osc.frequency.exponentialRampToValueAtTime(40, now + 0.5);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.05, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-      osc.connect(gain);
-      gain.connect(sfxGain);
-      osc.start(now);
-      osc.stop(now + 0.55);
-      break;
-    }
-  }
+  pad(EVENT_PADS[eventType] || EVENT_PADS.meteorShower);
 }
 
 // ─── v2 SOUNDS ───

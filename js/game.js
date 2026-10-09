@@ -10,7 +10,10 @@ import {
 } from "./render.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
-import { initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, pullRange } from "./living-world.js";
+import {
+  initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
+  pullRange, fireEvent, activeEventInfo, EVENT_INFO
+} from "./living-world.js";
 import { computeMods, targetMassFor, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fmtMass } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
@@ -429,6 +432,19 @@ function collectPowerup(e) {
   hint("pu_" + e.powerup, tips[e.powerup], 3000);
 }
 
+// Every event starts with a 2.5s warning: explain it calmly the first time,
+// afterwards just name it.
+state.onEventWarn = id => {
+  const info = EVENT_INFO[id];
+  if (!info) return;
+  if (!state.seenHints["ev_" + id]) {
+    state.seenHints["ev_" + id] = true;
+    showHint(info.first, 4800);
+  } else {
+    showHint(info.name, 2000);
+  }
+};
+
 // Power-ups fade out over their last 3 seconds, so no end sound is needed
 state.onPowerupEnd = () => {};
 
@@ -699,6 +715,7 @@ function frame(now) {
     ctx.fillRect(0, 0, w, h);
   }
 
+  drawLivingWorldOverlay(ctx, state, w, h);
   drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
   drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio);
   drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
@@ -955,4 +972,4 @@ save(state);
 requestAnimationFrame(frame);
 
 // Debug/automation hook (harmless; lets a test bot read state)
-window.__bh = { state, input };
+window.__bh = { state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo };
