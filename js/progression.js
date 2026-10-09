@@ -93,8 +93,10 @@ export function finishGalaxy(state) {
   const rec = state.records;
   const time = Math.round(run.time * 10) / 10;
 
+  // Zen mode: no clock pressure, so no speed bonus or time records
+  const zen = !!(state.settings && state.settings.zen);
   const prevFast = rec.fastest[g] ?? null;
-  const newFast = prevFast == null || time < prevFast;
+  const newFast = !zen && (prevFast == null || time < prevFast);
   if (newFast) rec.fastest[g] = time;
 
   const newCombo = run.bestCombo > run.startBestCombo && run.bestCombo > 0;
@@ -109,8 +111,9 @@ export function finishGalaxy(state) {
     ["Objects eaten", Math.floor(run.eaten / 4)],
     ["Best combo", Math.floor(run.bestCombo / 2)],
     ["Big catches", run.bigFish],
-    ["Speed bonus", time < par ? Math.round((par - time) / 5) : 0],
-    ["New record", newFast && prevFast != null ? 10 : 0]
+    ["Speed bonus", !zen && time < par ? Math.round((par - time) / 5) : 0],
+    ["New record", newFast && prevFast != null ? 10 : 0],
+    ["Zen bonus", zen ? 10 : 0]
   ].filter(p => p[1] > 0);
   const earned = parts.reduce((s, p) => s + p[1], 0);
 
@@ -121,7 +124,8 @@ export function finishGalaxy(state) {
   return {
     galaxy: g,
     biome: state.biome ? state.biome.name : "",
-    time, prevFast, newFast, par,
+    time, prevFast, newFast, par, zen, mass: state.mass,
+    breather: !!(state.biome && state.biome.breather),
     eaten: run.eaten, newEaten,
     bestCombo: run.bestCombo, newCombo,
     bigFish: run.bigFish, newBig,

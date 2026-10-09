@@ -3,6 +3,8 @@
 
 import { UPGRADES, MAX_LEVEL, upgradeCost, fmtTime, fmtMass } from "./progression.js";
 import { POWERUPS, POWERUP_KINDS } from "./powerups.js";
+import { EVENT_INFO } from "./living-world.js";
+import { biomeCatalog } from "./entities.js";
 
 const $ = id => document.getElementById(id);
 
@@ -56,7 +58,9 @@ export function showSummary(summary, state, { onBuy, onContinue }) {
     ? (summary.newFast ? `was ${fmtTime(summary.prevFast)}` : `best ${fmtTime(summary.prevFast)}`)
     : `par ${fmtTime(summary.par)}`;
   $("sum-grid").innerHTML = [
-    tile("Clear time", fmtTime(summary.time), timeSub, summary.newFast && summary.prevFast != null),
+    summary.zen
+      ? tile("Mass reached", fmtMass(summary.mass), summary.breather ? "a breather galaxy" : "at your own pace", false)
+      : tile("Clear time", fmtTime(summary.time), timeSub, summary.newFast && summary.prevFast != null),
     tile("Best combo", `×${summary.bestCombo}`, `record ×${state.stats.bestCombo}`, summary.newCombo),
     tile("Objects eaten", summary.eaten, `record ${state.records.mostEaten}`, summary.newEaten),
     tile("Big catches", summary.bigFish, summary.powerups ? `${summary.powerups} power-up${summary.powerups > 1 ? "s" : ""}` : "", summary.newBig)
@@ -103,7 +107,31 @@ export function showStats(state, onClose) {
     .slice(0, 10);
   const upg = UPGRADES.map(u => row(u.name, `${state.upgrades[u.id] || 0} / ${MAX_LEVEL}`)).join("");
 
+  const seg = (key, opts) => `<span class="seg" data-set="${key}">${opts.map(([v, label]) =>
+    `<button data-val="${v}" class="${String(state.settings[key]) === String(v) ? "on" : ""}">${esc(label)}</button>`).join("")}</span>`;
+  const onOff = key => seg(key, [[true, "On"], [false, "Off"]]);
+  const setRow = (label, sub, control) => `<div class="set-row"><span>${esc(label)}<small>${esc(sub)}</small></span>${control}</div>`;
+  const evItems = Object.entries(EVENT_INFO).map(([id, info]) => {
+    const seen = state.seenHints["ev_" + id];
+    return `<div class="codex-item${seen ? "" : " unseen"}"><b><i class="dot" style="background:rgb(${info.rgb})"></i>${seen ? esc(info.name) : "???"}</b>
+      <p>${seen ? esc(info.codex) : "Not seen yet. Keep drifting."}</p></div>`;
+  }).join("");
+  const biomeItems = biomeCatalog.map(b => {
+    const seen = state.seenHints["biome_" + b.name];
+    return `<div class="codex-item${seen ? "" : " unseen"}"><b><i class="dot" style="background:${b.borderColor}"></i>${seen ? esc(b.name) : "???"}</b>
+      <p>${seen ? esc(b.codex) : "Not visited yet."}</p></div>`;
+  }).join("");
+
   $("stats-body").innerHTML = `
+    <div class="stats-section"><h3>Settings</h3>
+      ${setRow("Zen mode", "No clock or par, bumps cost nothing", onOff("zen"))}
+      ${setRow("Breathing guide", "A faint ring that grows as you breathe in (10s cycle)", onOff("breathGuide"))}
+      ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
+      ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}
+      ${setRow("Touch controls", "Thumbstick, or drift toward your finger", seg("touchMode", [["joystick", "Joystick"], ["follow", "Follow"]]))}
+    </div>
+    <div class="stats-section"><h3>What's that? (events)</h3>${evItems}</div>
+    <div class="stats-section"><h3>Galaxies</h3>${biomeItems}</div>
     <div class="stats-section"><h3>Progress</h3>
       ${row("Current galaxy", state.galaxy)}
       ${row("Highest galaxy", state.bestGalaxy)}
@@ -123,19 +151,15 @@ export function showStats(state, onClose) {
     <div class="stats-section"><h3>Fastest clears</h3>
       ${fastest.length ? fastest.map(([g, t]) => row(`Galaxy ${g}`, fmtTime(t))).join("") : '<div class="stat-empty">Clear a galaxy to set a time.</div>'}
     </div>
-    <div class="stats-section"><h3>Upgrades</h3>${upg}</div>
-    <div class="stats-section"><h3>Settings</h3>
-      <div class="stat-row"><span>Touch controls</span>
-        <span class="seg" id="touch-mode">
-          <button data-mode="joystick" class="${state.settings.touchMode !== "follow" ? "on" : ""}">Joystick</button>
-          <button data-mode="follow" class="${state.settings.touchMode === "follow" ? "on" : ""}">Follow finger</button>
-        </span>
-      </div>
-    </div>`;
-  $("touch-mode").querySelectorAll("button").forEach(b => {
-    b.addEventListener("click", () => {
-      state.setTouchMode?.(b.dataset.mode);
-      $("touch-mode").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    <div class="stats-section"><h3>Upgrades</h3>${upg}</div>`;
+  $("stats-body").querySelectorAll(".seg[data-set]").forEach(segEl => {
+    segEl.querySelectorAll("button").forEach(b => {
+      b.addEventListener("click", () => {
+        const raw = b.dataset.val;
+        const val = raw === "true" ? true : raw === "false" ? false : raw;
+        state.setSetting?.(segEl.dataset.set, val);
+        segEl.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      });
     });
   });
 

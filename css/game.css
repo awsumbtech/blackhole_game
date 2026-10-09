@@ -619,3 +619,21 @@ canvas {
   font-family: var(--font); font-size: 0.75rem; font-weight: 600; padding: 6px 10px; cursor: pointer;
 }
 .seg button.on { background: rgba(110, 114, 255, 0.25); color: var(--text-bright); opacity: 1; }
+
+/* ─── v3: Zen + settings + codex ─── */
+body.zen .timer-stat { display: none; }
+.zen-btn { width: auto; padding: 0 10px; font-family: var(--font); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; opacity: 0.55; }
+.zen-btn.on { opacity: 1; color: #bfe8d4; border-color: rgba(120, 220, 170, 0.45); background: rgba(80, 180, 130, 0.14); }
+#game { transition: filter 0.6s ease; }
+body.soft-palette #game { filter: saturate(0.72) brightness(0.96); }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 2px; border-bottom: 1px solid rgba(110, 114, 255, 0.08); font-size: 0.82rem; }
+.set-row small { display: block; opacity: 0.55; font-size: 0.7rem; margin-top: 2px; }
+.codex-item { padding: 7px 2px; border-bottom: 1px solid rgba(110, 114, 255, 0.08); font-size: 0.8rem; line-height: 1.35; }
+.codex-item b { color: var(--text-bright); font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.codex-item .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.codex-item p { margin: 3px 0 0; opacity: 0.7; }
+.codex-item.unseen { opacity: 0.4; }
+@media (max-width: 420px) {
+  .volume-slider { width: 64px; }
+  .zen-btn { padding: 0 8px; }
+}

@@ -418,8 +418,9 @@ function collectPowerup(e) {
   state.stats.powerupsCollected += 1;
   audio.playPowerup(e.powerup);
   floater(e.x, e.y, def.label, def.color, 18);
-  for (let i = 0; i < 20; i++) {
-    const a = (i / 20) * Math.PI * 2;
+  const pn = state.settings.reduceMotion ? 10 : 20;
+  for (let i = 0; i < pn; i++) {
+    const a = (i / pn) * Math.PI * 2;
     const sp = rand(0.8, 2) * state.speedScale;
     state.particles.push({
       x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
@@ -948,12 +949,32 @@ if (savedData) {
   if (!state.audioEnabled) document.getElementById("btn-audio").classList.add("audio-off");
 }
 
-input.setTouchMode(state.settings.touchMode);
-state.setTouchMode = mode => {
-  state.settings.touchMode = mode;
-  input.setTouchMode(mode);
+// ─── SETTINGS ───
+function applySettings() {
+  const st = state.settings;
+  input.setTouchMode(st.touchMode);
+  document.body.classList.toggle("zen", !!st.zen);
+  document.body.classList.toggle("soft-palette", !!st.softPalette);
+  setSoftPalette(!!st.softPalette);
+  document.getElementById("btn-zen").classList.toggle("on", !!st.zen);
+  if (st.reduceMotion) state.shake = 0;
+}
+
+state.setSetting = (key, val) => {
+  state.settings[key] = val;
+  applySettings();
+  syncHud(true);
   save(state);
 };
+state.setTouchMode = mode => state.setSetting("touchMode", mode);
+applySettings();
+
+document.getElementById("btn-zen").addEventListener("click", () => {
+  const on = !state.settings.zen;
+  state.setSetting("zen", on);
+  audio.playClick();
+  showHint(on ? "Zen mode on: no clock, no penalties. Just drift." : "Zen mode off: clock, par bonus and records are back", 3200);
+});
 
 audio.setVolume(state.volume);
 audio.setEnabled(state.audioEnabled);
@@ -980,6 +1001,10 @@ if (state.legacyBonusPending) {
 } else if (!savedData) {
   const touch = matchMedia("(pointer: coarse)").matches;
   setTimeout(() => showHint(touch ? "Touch anywhere and drag to steer. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 3000);
+}
+if (savedData && !state.seenHints.v3_zen) {
+  state.seenHints.v3_zen = true;
+  setTimeout(() => showHint("New: Zen mode is on (no clock, no penalties). Tap Zen below to switch it off.", 5000), 7000);
 }
 save(state);
 
