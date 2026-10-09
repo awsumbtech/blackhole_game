@@ -31,6 +31,7 @@ html, body {
 
 /* ─── Game Container ─── */
 #game-container {
+  touch-action: none;
   position: relative;
   width: 100vw;
   height: calc(100vh - var(--bar-h));
@@ -41,6 +42,7 @@ html, body {
 }
 
 canvas {
+  touch-action: none;   /* no browser scroll/zoom while steering */
   display: block;
   width: 100%;
   height: 100%;
@@ -609,3 +611,11 @@ canvas {
   .sum-title { font-size: 1.25rem; }
   .sum-value { font-size: 1.1rem; }
 }
+
+/* Segmented toggle (settings) */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.seg button {
+  background: transparent; border: none; color: var(--text); opacity: 0.6;
+  font-family: var(--font); font-size: 0.75rem; font-weight: 600; padding: 6px 10px; cursor: pointer;
+}
+.seg button.on { background: rgba(110, 114, 255, 0.25); color: var(--text-bright); opacity: 1; }

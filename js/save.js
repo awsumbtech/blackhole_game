@@ -50,6 +50,7 @@ export function save(state) {
       stardust: state.stardust,
       upgrades: state.upgrades,
       seenHints: state.seenHints,
+      settings: state.settings,
       legacyPending: state.legacyBonusPending || 0,
       run: (!credited && inPlay && state.run) ? {
         galaxy: state.galaxy,
@@ -93,6 +94,7 @@ export function load() {
     stardust: raw.stardust || 0,
     upgrades: { ...defaultUpgrades(), ...(raw.upgrades || {}) },
     seenHints: raw.seenHints || {},
+    settings: raw.settings || {},
     run: raw.run || null,
     legacyBonus: raw.legacyPending || 0   // only used for the one-time summary note
   };

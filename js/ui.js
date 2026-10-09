@@ -123,7 +123,21 @@ export function showStats(state, onClose) {
     <div class="stats-section"><h3>Fastest clears</h3>
       ${fastest.length ? fastest.map(([g, t]) => row(`Galaxy ${g}`, fmtTime(t))).join("") : '<div class="stat-empty">Clear a galaxy to set a time.</div>'}
     </div>
-    <div class="stats-section"><h3>Upgrades</h3>${upg}</div>`;
+    <div class="stats-section"><h3>Upgrades</h3>${upg}</div>
+    <div class="stats-section"><h3>Settings</h3>
+      <div class="stat-row"><span>Touch controls</span>
+        <span class="seg" id="touch-mode">
+          <button data-mode="joystick" class="${state.settings.touchMode !== "follow" ? "on" : ""}">Joystick</button>
+          <button data-mode="follow" class="${state.settings.touchMode === "follow" ? "on" : ""}">Follow finger</button>
+        </span>
+      </div>
+    </div>`;
+  $("touch-mode").querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      state.setTouchMode?.(b.dataset.mode);
+      $("touch-mode").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    });
+  });
 
   const el = $("stats");
   el.classList.remove("hidden");

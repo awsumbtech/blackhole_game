@@ -77,6 +77,7 @@ const state = {
   upgrades: defaultUpgrades(),
   stardust: 0,
   seenHints: {},
+  settings: { touchMode: "joystick" },
   legacyBonusPending: 0,
 
   mods: computeMods(defaultUpgrades()),
@@ -513,6 +514,7 @@ function updateTransition(dt) {
     if (state.transitionTimer > 60) {
       state.transitionPhase = "summary";
       state.transitionTimer = 0;
+      input.setEnabled(false);
       ui.showSummary(state.summary, state, {
         onBuy: buyUpgrade,
         onContinue: startWarp
@@ -539,6 +541,7 @@ function updateTransition(dt) {
 
 function startWarp() {
   audio.playClick();
+  input.setEnabled(true);
   state.transitionPhase = "warp";
   state.transitionTimer = 0;
   const nextGalaxy = state.galaxy + 1;
@@ -684,6 +687,7 @@ function frame(now) {
   drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
   drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio);
   drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
+  drawThumbstick(input.getStick());
   drawFloaters(w, h, z);
 
   if (state.transitioning) {
@@ -734,6 +738,39 @@ function frame(now) {
   }
 }
 
+// Floating thumbstick: faint base ring + knob, drawn in screen space
+function drawThumbstick(st) {
+  if (!st) return;
+  const dx = st.kx - st.bx;
+  const dy = st.ky - st.by;
+  const d = Math.hypot(dx, dy);
+  const kx = d > st.maxR ? st.bx + (dx / d) * st.maxR : st.kx;
+  const ky = d > st.maxR ? st.by + (dy / d) * st.maxR : st.ky;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(st.bx, st.by, st.maxR, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(138, 141, 255, 0.07)";
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(170, 175, 255, 0.28)";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(st.bx, st.by, 3, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(200, 205, 255, 0.25)";
+  ctx.fill();
+  const g = ctx.createRadialGradient(kx, ky, 2, kx, ky, 24);
+  g.addColorStop(0, "rgba(220, 224, 255, 0.45)");
+  g.addColorStop(1, "rgba(138, 141, 255, 0.18)");
+  ctx.beginPath();
+  ctx.arc(kx, ky, 22, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(220, 224, 255, 0.5)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawFloaters(w, h, z) {
   for (const f of state.floaters) {
     const t = f.age / f.maxAge;
@@ -761,6 +798,7 @@ const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentC
 function setPaused(p) {
   if (state.transitioning && state.transitionPhase === "summary") return;
   state.paused = p;
+  input.setEnabled(!p);
   const btn = document.getElementById("btn-pause");
   btn.innerHTML = p ? PLAY_SVG : PAUSE_SVG;
   if (p) {
@@ -804,8 +842,10 @@ document.getElementById("btn-stats").addEventListener("click", () => {
   if (ui.isStatsOpen()) { ui.closeStats(); return; }
   if (state.transitioning && state.transitionPhase === "summary") return;
   state.menuOpen = true;
+  input.setEnabled(false);
   ui.showStats(state, () => {
     state.menuOpen = false;
+    input.setEnabled(!state.paused);
     lastTime = performance.now();
   });
 });
@@ -854,12 +894,20 @@ if (savedData) {
   state.upgrades = savedData.upgrades;
   state.stardust = savedData.stardust;
   state.seenHints = savedData.seenHints;
+  state.settings = { ...state.settings, ...(savedData.settings || {}) };
   state.legacyBonusPending = savedData.legacyBonus || 0;
   if (savedData.run && savedData.run.galaxy === state.galaxy) resumeRun = savedData.run;
 
   document.getElementById("volume-slider").value = Math.round(state.volume * 100);
   if (!state.audioEnabled) document.getElementById("btn-audio").classList.add("audio-off");
 }
+
+input.setTouchMode(state.settings.touchMode);
+state.setTouchMode = mode => {
+  state.settings.touchMode = mode;
+  input.setTouchMode(mode);
+  save(state);
+};
 
 audio.setVolume(state.volume);
 audio.setEnabled(state.audioEnabled);
@@ -885,11 +933,11 @@ if (state.legacyBonusPending) {
   setTimeout(() => showHint(`+${state.legacyBonusPending} stardust legacy bonus! Spend it after this galaxy`, 4000), 3000);
 } else if (!savedData) {
   const touch = matchMedia("(pointer: coarse)").matches;
-  setTimeout(() => showHint(touch ? "Hold a finger where you want to drift. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 3000);
+  setTimeout(() => showHint(touch ? "Touch anywhere and drag to steer. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 3000);
 }
 save(state);
 
 requestAnimationFrame(frame);
 
 // Debug/automation hook (harmless; lets a test bot read state)
-window.__bh = { state };
+window.__bh = { state, input };

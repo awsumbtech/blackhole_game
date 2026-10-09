@@ -1,7 +1,8 @@
 // Network-first service worker: when online you always get the latest files
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
-const CACHE_NAME = "blackhole-runtime";
+// Bump on each release so phones drop the old offline copy.
+const CACHE_NAME = "blackhole-v2.1-joystick";
 const ASSETS = [
   "./",
   "./index.html",
