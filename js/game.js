@@ -98,7 +98,7 @@ const input = createInput(canvas);
 // (more than the galaxy target) sets the pace: ~6% => roughly 2.5-4 min per galaxy for a person.
 const MAX_BITE = 0.06;
 const MAX_BIG_BITE = 0.08;   // outgrown "bigger fish" are a slightly bigger treat
-const BREATHER_BITE = 0.1;   // breather galaxies: bigger, quicker bites
+const BREATHER_BITE = 0.055; // breathers: food is big and everywhere, so a smaller cap keeps it ~1-1.5 min
 const MIN_BITE_CAP = 6;
 
 // ─── HELPERS ───

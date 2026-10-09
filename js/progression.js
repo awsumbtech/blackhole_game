@@ -65,7 +65,7 @@ export function computeMods(upgrades) {
 /** Mass needed to clear a galaxy. Growth is roughly exponential, so time per
  *  galaxy scales with log(target / startMass); targets rise ~75% per galaxy
  *  to keep pace with upgrades. */
-export const BREATHER_TARGET = 0.4;   // breather galaxies need 40% of the usual mass
+export const BREATHER_TARGET = 0.55;  // breather galaxies need 55% of the usual mass
 
 export function targetMassFor(galaxy) {
   const k = isBreather(galaxy) ? BREATHER_TARGET : 1;

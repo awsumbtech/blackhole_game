@@ -20,6 +20,20 @@ python -m http.server 8080
 
 Then open **http://localhost:8080** (or the port shown) in your browser.
 
+## 🌙 What's new in v3: Calm & Themed
+
+Built to be a calm, centring time-waster: no startling events, no punishing fail states.
+
+- **Zen mode (on by default):** no clock, no par or time records, bumping costs nothing. Toggle with the **Zen** button or in Stats → Settings.
+- **Every event is telegraphed:** a 2.5s soft warning (edge glow, a breathing ring, or gathering light) plus a calm caption the first time. Events are spaced 25-40s apart, never in the first 30s, max 5 per galaxy (3 in breathers).
+- **Void Gift:** the old Void Pulse now gently draws nearby food *toward* you.
+- **Themed galaxies with a rhythm:** Debris Reef → Comet Current → *Planet Nursery* → Ruined Armada → Void Rift → *Star Meadow* → Neutron Forge → … Every 3rd galaxy is a short "breather" (~1-1.5 min) full of big, easy food. Each biome has its own palette, drone chord, eat-sound key (major pentatonic) and signature event.
+- **Breathing pulse:** the drone, biome glow and hole halo swell on a slow 10s cycle (~6 breaths/min). Optional breathing guide ring.
+- **Softer everything:** eased bumps (no screen shake; combo pauses instead of resetting), bloom instead of a white flash, soft pad cues, power-ups rarer/longer and fading out instead of ending abruptly.
+- **Settings:** Zen, breathing guide, soft palette, reduce motion, touch controls. **"What's that?" codex** in Stats explains every event and galaxy you've seen.
+
+Tuning knobs: `CFG` event spacing in `js/living-world.js`, power-up timings in `js/powerups.js`, `BREATHER_TARGET` in `js/progression.js`, `MAX_BITE` / `BREATHER_BITE` / bump constants in `js/game.js`.
+
 ## 🆕 What's new in v2
 
 - **Upgrade shop + stardust**: every cleared galaxy pays out stardust (galaxy bonus, objects eaten, best combo, big catches, speed bonus, new records). Spend it on 6 permanent upgrades x 5 levels: Seed Mass, Thrusters, Event Horizon, Gravity Well, Momentum and Power Surge.
