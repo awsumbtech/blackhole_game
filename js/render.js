@@ -114,13 +114,8 @@ function renderNebulaToCache(w, h, camX, camY) {
 
         const ng = nebulaCtx.createRadialGradient(px, py, 0, px, py, 30 + hash % 40);
         const alpha = 0.015 + (hash % 20) * 0.001;
-        if (hash % 3 === 0) {
-          ng.addColorStop(0, `rgba(100, 120, 255, ${alpha})`);
-        } else if (hash % 3 === 1) {
-          ng.addColorStop(0, `rgba(255, 140, 200, ${alpha})`);
-        } else {
-          ng.addColorStop(0, `rgba(140, 255, 200, ${alpha})`);
-        }
+        const c = NEBULA[hash % 3];
+        ng.addColorStop(0, `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha * 1.6})`);
         ng.addColorStop(1, "transparent");
         nebulaCtx.fillStyle = ng;
         nebulaCtx.fillRect(px - 60, py - 60, 120, 120);
@@ -132,19 +127,28 @@ function renderNebulaToCache(w, h, camX, camY) {
   nebulaCachedCamY = camY;
 }
 
+// Biome nebula palette (three RGB triples)
+let NEBULA = [[100, 120, 255], [255, 140, 200], [140, 255, 200]];
+export function setNebulaPalette(p) {
+  if (p && p.length >= 3) NEBULA = p;
+  nebulaCachedCamX = null;
+}
+
 export function invalidateStarfield() {
   starCachedCamX = null;
   nebulaCachedCamX = null;
 }
 
-export function drawStarfield(ctx, w, h, camX, camY, tint) {
+export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5) {
   // Dark background
   ctx.fillStyle = "#04060c";
   ctx.fillRect(0, 0, w, h);
 
   // Biome tint glow in center (cheap — one gradient, drawn every frame)
-  const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, w * 0.6);
-  grad.addColorStop(0, tint + "55");
+  // Breathing: the biome glow swells and settles on a slow 10s cycle
+  const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, Math.max(w, h) * (0.55 + breath * 0.08));
+  const a = Math.round(0x48 + breath * 0x26).toString(16).padStart(2, "0");
+  grad.addColorStop(0, tint + a);
   grad.addColorStop(1, "#00000000");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
@@ -542,6 +546,16 @@ export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
     ctx.restore();
   }
 
+  // Optional breathing guide: a faint ring that grows on the in-breath
+  if (fx.breathGuide) {
+    const gr = radius * (1.9 + breath * 1.1) + 14 / zoom;
+    ctx.beginPath();
+    ctx.arc(0, 0, gr, 0, TAU);
+    ctx.strokeStyle = `rgba(180, 200, 255, ${0.1 + breath * 0.12})`;
+    ctx.lineWidth = 2 / zoom;
+    ctx.stroke();
+  }
+
   // Accretion disk — rotating particles
   const rotAngle = time * 0.0008;
   const particleCount = Math.floor(14 + Math.min(40, radius * 0.4));
@@ -590,7 +604,8 @@ export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
   }
 
   // Outer glow (pulse animates by scaling the cached gradient)
-  const pulse = 1 + Math.sin(time * 0.002) * 0.05 + (fx.gulp || 0) * 0.12;
+  const breath = fx.breath ?? 0.5;
+  const pulse = 1 + (breath - 0.5) * 0.14 + (fx.gulp || 0) * 0.12;
   ctx.save();
   ctx.scale(pulse, pulse);
   ctx.fillStyle = bhOuterGlow;

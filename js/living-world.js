@@ -2,7 +2,7 @@
 // Gravity well, dynamic spawning (food + "bigger fish" that scale with you),
 // procedural events, ambient background life.
 
-import { weightedType, createEntity, rand, typeAvgRadius, typeById } from "./entities.js";
+import { weightedType, createEntity, rand, typeAvgRadius, typeById, isBreather } from "./entities.js";
 import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
@@ -22,6 +22,10 @@ export const CFG = {
   FOOD_RATIO_MIN: 0.08,
   FOOD_RATIO_MAX: 0.22,
   NEAR_SPAWN_CHANCE: 0.7,
+
+  // Breathers: big, easy food (fraction of player radius)
+  BREATHER_FOOD_MIN: 0.25,
+  BREATHER_FOOD_MAX: 0.45,
 
   // Bigger fish: always keep a few things on the field you can't eat yet
   BIG_RATIO_MIN: 1.4,
@@ -47,6 +51,7 @@ export const CFG = {
 const BIG_TYPES = ["planet", "star", "craft", "meteor"];
 
 export function minBigFish(galaxy) {
+  if (isBreather(galaxy)) return galaxy >= 9 ? 2 : 1;
   return 3 + Math.min(2, Math.floor(galaxy / 3));
 }
 
@@ -218,7 +223,10 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
 
 function spawnFood(state, near) {
   const type = weightedType(state.biome.weights, state.galaxy);
-  const fs = foodScaleFor(state.galaxy);
+  if (state.biome.breather) {
+    return spawnScaled(state, type, CFG.BREATHER_FOOD_MIN, CFG.BREATHER_FOOD_MAX, { near });
+  }
+  const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1);
   return spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, { near });
 }
 

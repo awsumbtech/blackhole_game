@@ -86,45 +86,63 @@ export function setVolume(v) {
 
 let droneActive = false;
 
-export function startDrone(biomeTintRGB) {
+// v3: each biome has its own chord + filter; the whole bed swells gently with
+// the breathing cycle (setBreath, driven from the game loop).
+let breathTarget = 0.5;
+let lastBreathSet = 0;
+
+export function startDrone(biome) {
   if (!enabled || !ensureCtx()) return;
   stopDrone();
-
   resume();
   droneActive = true;
 
-  // Map biome color to base frequency — darker = lower
-  const brightness = (biomeTintRGB[0] + biomeTintRGB[1] + biomeTintRGB[2]) / 3;
-  const baseFreq = 40 + brightness * 0.6;
-
+  const snd = (biome && biome.sound) || { root: 60, chord: [1, 1.5, 2], cutoff: 400 };
   const now = ctx.currentTime;
-
-  // 3 detuned oscillators for richness
-  for (let i = 0; i < 3; i++) {
+  snd.chord.forEach((ratio, i) => {
     const osc = ctx.createOscillator();
     const oscGain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
-
     osc.type = i === 0 ? "sine" : "triangle";
-    osc.frequency.value = baseFreq * (1 + i * 0.005);
-
-    // Slow LFO-like frequency modulation
-    osc.frequency.setValueAtTime(baseFreq * (1 + i * 0.005), now);
-
+    osc.frequency.value = snd.root * ratio * (1 + i * 0.003);
     filter.type = "lowpass";
-    filter.frequency.value = 200 + brightness * 3;
-    filter.Q.value = 1;
-
+    filter.frequency.value = snd.cutoff;
+    filter.Q.value = 0.7;
     oscGain.gain.setValueAtTime(0.001, now);
-    oscGain.gain.exponentialRampToValueAtTime(i === 0 ? 0.08 : 0.03, now + 3);
-
+    oscGain.gain.exponentialRampToValueAtTime(i === 0 ? 0.08 : 0.03 / (1 + i * 0.3), now + 4);
     osc.connect(filter);
     filter.connect(oscGain);
     oscGain.connect(droneGain);
     osc.start(now);
-
     droneOscs.push({ osc, gain: oscGain, filter });
+  });
+  if (snd.scale) setScale(snd.scale);
+}
+
+/** b in 0..1 (0 = out-breath, 1 = in-breath). Throttled, smoothed. */
+export function setBreath(b) {
+  if (!ctx || !droneGain) return;
+  const t = ctx.currentTime;
+  if (t - lastBreathSet < 0.2) return;
+  lastBreathSet = t;
+  breathTarget = b;
+  droneGain.gain.setTargetAtTime(0.09 + b * 0.07, t, 0.4);
+}
+
+// Eating sounds snap to a major-pentatonic scale in the biome's key, so
+// nothing ever clashes with the drone.
+let scaleRoot = 293.7;
+const PENTA = [0, 2, 4, 7, 9];
+export function setScale(root) { scaleRoot = root; }
+function snapToScale(freq) {
+  const semis = 12 * Math.log2(freq / scaleRoot);
+  const oct = Math.floor(semis / 12);
+  let best = PENTA[0], bd = Infinity;
+  for (const p of [...PENTA, 12]) {
+    const d = Math.abs(semis - oct * 12 - p);
+    if (d < bd) { bd = d; best = p; }
   }
+  return scaleRoot * Math.pow(2, (oct * 12 + best) / 12);
 }
 
 export function stopDrone() {
@@ -155,7 +173,7 @@ export function playConsume(tone, massRatio, comboCount) {
 
   osc.type = "sine";
   // Higher combo = ascending pitch
-  const pitch = tone * (1 + comboCount * 0.04);
+  const pitch = snapToScale(tone * (1 + Math.min(comboCount, 20) * 0.04));
   osc.frequency.value = pitch;
 
   filter.type = "lowpass";

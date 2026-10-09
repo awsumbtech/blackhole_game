@@ -102,66 +102,91 @@ export const objectTypes = [
   }
 ];
 
+// v3: every biome has its own palette, object mix, drone chord, eat-sound key
+// and signature event. Planet Nursery and Star Meadow are "breathers": every
+// 3rd galaxy, big easy food, a short ~1-1.5 min clear.
 export const biomeCatalog = [
   {
     name: "Debris Reef",
-    tint: "#0d1633",
-    tintRGB: [13, 22, 51],
-    borderColor: "#1a2e6a",
-    weights: { dust: 6, junk: 5, meteor: 3, comet: 1, craft: 1, planet: 0.5, star: 0.2, neutron: 0 },
-    description: "Dense fields of drifting wreckage"
+    tint: "#103040", tintRGB: [16, 48, 64], borderColor: "#2a6a7e",
+    nebula: [[90, 170, 200], [110, 140, 210], [80, 200, 175]],
+    weights: { dust: 6, junk: 5, meteor: 3, comet: 0.5, craft: 0.5, planet: 0.3, star: 0.1, neutron: 0 },
+    events: { meteorShower: 3, derelictFlotilla: 1 },
+    sound: { root: 73.4, chord: [1, 1.5, 2.01], cutoff: 420, scale: 293.7 },
+    description: "Drifting reefs of wreckage and stone",
+    codex: "Slate-blue reefs of junk and pebbles. Graze the clusters; meteor showers drift through."
   },
   {
     name: "Comet Current",
-    tint: "#0a2238",
-    tintRGB: [10, 34, 56],
-    borderColor: "#164a6e",
-    weights: { dust: 3, junk: 1, meteor: 1, comet: 7, craft: 1, planet: 1, star: 0.5, neutron: 0 },
-    description: "Rivers of ice and light"
+    tint: "#0b3048", tintRGB: [11, 48, 72], borderColor: "#3a8ab0",
+    nebula: [[160, 225, 255], [205, 240, 255], [120, 205, 235]],
+    weights: { dust: 3, junk: 0.5, meteor: 0.5, comet: 8, craft: 0.5, planet: 0.5, star: 0.3, neutron: 0 },
+    events: { cometStream: 3, meteorShower: 1 },
+    sound: { root: 82.4, chord: [1, 1.5, 2.25], cutoff: 700, scale: 329.6 },
+    description: "Rivers of ice and light",
+    codex: "Icy cyan space full of comets. Comet streams glide across your path."
+  },
+  {
+    name: "Planet Nursery", breather: true,
+    tint: "#0f3424", tintRGB: [15, 52, 36], borderColor: "#3a9a6a",
+    nebula: [[120, 230, 170], [90, 205, 205], [180, 240, 150]],
+    weights: { dust: 2, junk: 0.5, meteor: 0.5, comet: 0.5, craft: 0.3, planet: 7, star: 1, neutron: 0 },
+    events: { stellarBirth: 3, cometStream: 1 },
+    sound: { root: 65.4, chord: [1, 1.25, 1.5], cutoff: 600, scale: 261.6 },
+    description: "A breather: young worlds, big and easy",
+    codex: "A breather galaxy. Soft green space full of young planets. Big, easy bites and a short clear."
   },
   {
     name: "Ruined Armada",
-    tint: "#1a0e30",
-    tintRGB: [26, 14, 48],
-    borderColor: "#4a2a7a",
-    weights: { dust: 2, junk: 3, meteor: 2, comet: 1, craft: 6, planet: 1, star: 0.5, neutron: 0 },
-    description: "Graveyard of ancient vessels"
-  },
-  {
-    name: "Planet Nursery",
-    tint: "#0e2218",
-    tintRGB: [14, 34, 24],
-    borderColor: "#1e5a3a",
-    weights: { dust: 2, junk: 1, meteor: 1, comet: 1, craft: 1, planet: 6, star: 2, neutron: 0 },
-    description: "Worlds forming in the dust"
-  },
-  {
-    name: "Star Meadow",
-    tint: "#221a08",
-    tintRGB: [34, 26, 8],
-    borderColor: "#6a5a1e",
-    weights: { dust: 2, junk: 1, meteor: 1, comet: 1, craft: 1, planet: 2, star: 6, neutron: 0 },
-    description: "Brilliant fields of burning suns"
+    tint: "#24163a", tintRGB: [36, 22, 58], borderColor: "#7a5aa0",
+    nebula: [[175, 125, 225], [210, 160, 110], [140, 105, 185]],
+    weights: { dust: 2, junk: 4, meteor: 1, comet: 0.5, craft: 7, planet: 0.5, star: 0.3, neutron: 0 },
+    events: { derelictFlotilla: 3, meteorShower: 1 },
+    sound: { root: 55, chord: [1, 1.498, 1.189], cutoff: 300, scale: 220 },
+    description: "Graveyard of ancient vessels",
+    codex: "Dusky violet and bronze. Old ships and pods; slow flotillas of wrecks drift by."
   },
   {
     name: "Void Rift",
-    tint: "#0a0a1e",
-    tintRGB: [10, 10, 30],
-    borderColor: "#2a2a5a",
+    tint: "#0c0c2c", tintRGB: [12, 12, 44], borderColor: "#4a4a9a",
+    nebula: [[95, 85, 210], [60, 170, 175], [135, 95, 225]],
     weights: { dust: 4, junk: 2, meteor: 2, comet: 2, craft: 2, planet: 2, star: 2, neutron: 1 },
-    description: "The space between spaces",
-    minGalaxy: 3
+    density: 0.7, foodBoost: 1.15,
+    events: { voidPulse: 3, gravitationalWave: 1 },
+    sound: { root: 49, chord: [1, 1.5], cutoff: 220, scale: 196 },
+    description: "Quiet, sparse, and generous",
+    codex: "Deep indigo with faint aurora. Fewer, larger bites, and the void sometimes gives food to you."
+  },
+  {
+    name: "Star Meadow", breather: true,
+    tint: "#33260a", tintRGB: [51, 38, 10], borderColor: "#a08a3a",
+    nebula: [[255, 205, 115], [255, 175, 95], [255, 232, 165]],
+    weights: { dust: 2, junk: 0.5, meteor: 0.5, comet: 0.5, craft: 0.3, planet: 1, star: 7, neutron: 0 },
+    events: { stellarBirth: 3, voidPulse: 1 },
+    sound: { root: 87.3, chord: [1, 1.25, 1.5, 2], cutoff: 800, scale: 349.2 },
+    description: "A breather: fields of gentle suns",
+    codex: "A breather galaxy. Warm gold fields of little suns. Big, easy bites and a short clear."
   },
   {
     name: "Neutron Forge",
-    tint: "#14101e",
-    tintRGB: [20, 16, 30],
-    borderColor: "#5040aa",
-    weights: { dust: 3, junk: 2, meteor: 2, comet: 2, craft: 2, planet: 2, star: 3, neutron: 4 },
+    tint: "#1c1430", tintRGB: [28, 20, 48], borderColor: "#7a64c8",
+    nebula: [[200, 182, 255], [255, 155, 95], [160, 142, 255]],
+    weights: { dust: 3, junk: 2, meteor: 2, comet: 1, craft: 1, planet: 2, star: 3, neutron: 4 },
+    events: { gravitationalWave: 3, stellarBirth: 1 },
+    sound: { root: 58.3, chord: [1, 1.5, 2], cutoff: 380, scale: 233.1 },
     description: "Where dead stars are born again",
-    minGalaxy: 5
+    codex: "Cool violet with ember sparks. Dense neutron stars; slow gravity waves roll through."
   }
 ];
+
+const BREATHERS = ["Planet Nursery", "Star Meadow"];
+const REGULARS = ["Debris Reef", "Comet Current", "Ruined Armada", "Void Rift", "Neutron Forge"];
+const byName = n => biomeCatalog.find(b => b.name === n);
+
+/** Every 3rd galaxy is a breather (alternating Nursery / Meadow). */
+export function isBreather(galaxy) {
+  return galaxy % 3 === 0;
+}
 
 export function rand(min, max) {
   return Math.random() * (max - min) + min;
@@ -248,16 +273,16 @@ export function createEntity(type, x, y, scale = 1) {
 }
 
 export function getBiome(galaxy) {
-  // Filter to available biomes, then pick based on galaxy number
-  // (galaxy - 1) so Galaxy 1 starts in Debris Reef, the intended first biome.
-  const available = biomeCatalog.filter(b => !b.minGalaxy || galaxy >= b.minGalaxy);
-  return available[(galaxy - 1) % available.length];
+  // 1 Debris, 2 Comet, 3 Nursery*, 4 Armada, 5 Void, 6 Meadow*, 7 Forge, 8 Debris...
+  if (isBreather(galaxy)) return byName(BREATHERS[(galaxy / 3 - 1) % 2]);
+  const regularIndex = galaxy - 1 - Math.floor(galaxy / 3);
+  return byName(REGULARS[regularIndex % REGULARS.length]);
 }
 
 export function spawnGalaxy(galaxy) {
-  const count = galaxyObjectCount(galaxy);
-  const bounds = galaxyBounds(galaxy);
   const biome = getBiome(galaxy);
+  const count = Math.round(galaxyObjectCount(galaxy) * (biome.density || 1));
+  const bounds = galaxyBounds(galaxy);
   const entities = [];
 
   // Spawn in clusters for interesting density variation

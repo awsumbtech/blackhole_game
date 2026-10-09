@@ -1,6 +1,8 @@
 // ─── PROGRESSION ───
 // Stardust economy, permanent upgrades, galaxy targets and personal records.
 
+import { isBreather } from "./entities.js";
+
 export const MAX_LEVEL = 5;
 
 // Stardust cost to buy level 1..5 (scaled per upgrade by costMult).
@@ -63,13 +65,16 @@ export function computeMods(upgrades) {
 /** Mass needed to clear a galaxy. Growth is roughly exponential, so time per
  *  galaxy scales with log(target / startMass); targets rise ~75% per galaxy
  *  to keep pace with upgrades. */
+export const BREATHER_TARGET = 0.4;   // breather galaxies need 40% of the usual mass
+
 export function targetMassFor(galaxy) {
-  return Math.round((15000 * Math.pow(1.75, galaxy - 1)) / 500) * 500;
+  const k = isBreather(galaxy) ? BREATHER_TARGET : 1;
+  return Math.round((15000 * Math.pow(1.75, galaxy - 1) * k) / 500) * 500;
 }
 
-/** Food shrinks a little each galaxy (relative to you), down to 70%. */
+/** Food shrinks a little each galaxy (relative to you), down to 85% (was 70%). */
 export function foodScaleFor(galaxy) {
-  return Math.max(0.7, 1 - 0.03 * (galaxy - 1));
+  return Math.max(0.85, 1 - 0.03 * (galaxy - 1));
 }
 
 /** Par time (seconds) for the speed bonus. */

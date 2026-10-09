@@ -6,7 +6,7 @@ import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand } from "
 import {
   drawStarfield, drawBoundary, drawEntities, drawBlackHole,
   drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
-  invalidateStarfield, prerenderEntitySprite
+  invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette
 } from "./render.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
@@ -98,6 +98,7 @@ const input = createInput(canvas);
 // (more than the galaxy target) sets the pace: ~6% => roughly 2.5-4 min per galaxy for a person.
 const MAX_BITE = 0.06;
 const MAX_BIG_BITE = 0.08;   // outgrown "bigger fish" are a slightly bigger treat
+const BREATHER_BITE = 0.1;   // breather galaxies: bigger, quicker bites
 const MIN_BITE_CAP = 6;
 
 // ─── HELPERS ───
@@ -151,7 +152,9 @@ function initGalaxy(galaxyNum, resume = null) {
   state.targetMass = targetMassFor(galaxyNum);
 
   for (const e of entities) prerenderEntitySprite(e);
+  setNebulaPalette(biome.nebula);
   invalidateStarfield();
+  if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 
   state.mass = resume ? clamp(resume.mass, state.startMass, state.targetMass * 0.97) : state.startMass;
   updateRadius();
@@ -188,7 +191,7 @@ function initGalaxy(galaxyNum, resume = null) {
   initPowerups();
   ui.updatePowerupBar(state);
 
-  audio.startDrone(biome.tintRGB);
+  audio.startDrone(biome);
   syncHud(true);
 }
 
@@ -293,7 +296,8 @@ function tryConsume(dt) {
       const comboBonus = 1 + Math.min(state.comboCount, 25) * 0.01;
       const dbl = state.active.double > 0 ? 2 : 1;
       // Small absolute floor keeps the opening seconds snappy
-      const cap = Math.max(MIN_BITE_CAP, state.mass * (e.bigFish ? MAX_BIG_BITE : MAX_BITE));
+      const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
+      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK);
       const gain = Math.min(e.mass * 0.5 * comboBonus, cap) * dbl;
       state.mass += gain;
       updateRadius();
@@ -579,8 +583,7 @@ function startWarp() {
   const biome = getBiome(nextGalaxy);
   document.getElementById("transition-galaxy").textContent = `Galaxy ${nextGalaxy}`;
   document.getElementById("transition-biome").textContent = biome.name;
-  document.getElementById("transition-count").textContent =
-    `${galaxyObjectCount(nextGalaxy)} objects · goal ${fmtMass(targetMassFor(nextGalaxy))} mass`;
+  document.getElementById("transition-count").textContent = biome.description;
   document.getElementById("transition-overlay").classList.remove("hidden");
   lastTime = performance.now();
 }
@@ -614,6 +617,14 @@ function showHint(msg, ms = 2800) {
   el.classList.remove("hidden");
   clearTimeout(showHint._t);
   showHint._t = setTimeout(() => el.classList.add("hidden"), ms);
+}
+
+// ─── BREATHING ───
+// ~6 breaths per minute: 5s in, 5s out. Drives the drone swell, the biome
+// glow and the hole's halo (plus the optional guide ring).
+const BREATH_MS = 10000;
+function breathPhase(now) {
+  return 0.5 - 0.5 * Math.cos((now % BREATH_MS) / BREATH_MS * Math.PI * 2);
 }
 
 // ─── MAIN LOOP ───
@@ -679,7 +690,9 @@ function frame(now) {
   const vw = state.viewW;
   const vh = state.viewH;
 
-  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633");
+  const breath = breathPhase(now);
+  audio.setBreath(breath);
+  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath);
   drawLivingWorldBG(ctx, state, w, h);
 
   const shakeX = state.shake ? (Math.random() - 0.5) * state.shake : 0;
@@ -700,8 +713,9 @@ function frame(now) {
       magnet: state.active.magnet > 0,
       pullRange: pullRange(state),
       double: state.active.double > 0,
-      invuln: state.invuln > 0,
-      gulp: state.gulp
+      gulp: state.gulp,
+      breath,
+      breathGuide: state.settings.breathGuide
     });
   ctx.restore();
 
@@ -859,7 +873,7 @@ document.getElementById("btn-audio").addEventListener("click", () => {
   document.getElementById("btn-audio").classList.toggle("audio-off", !state.audioEnabled);
   if (state.audioEnabled) {
     audio.init();
-    audio.startDrone(state.biome ? state.biome.tintRGB : [13, 22, 51]);
+    audio.startDrone(state.biome);
   }
   save(state);
 });
@@ -949,7 +963,7 @@ const UNLOCK_EVENTS = ["pointerup", "touchend", "click", "keydown"];
 const initAudio = () => {
   if (state.audioEnabled) {
     audio.init();
-    audio.startDrone(state.biome ? state.biome.tintRGB : [13, 22, 51]);
+    audio.startDrone(state.biome);
   }
   for (const ev of UNLOCK_EVENTS) window.removeEventListener(ev, initAudio, true);
 };
