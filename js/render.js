@@ -147,7 +147,7 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5) {
   // Biome tint glow in center (cheap — one gradient, drawn every frame)
   // Breathing: the biome glow swells and settles on a slow 10s cycle
   const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, Math.max(w, h) * (0.55 + breath * 0.08));
-  const a = Math.round(0x48 + breath * 0x26).toString(16).padStart(2, "0");
+  const a = Math.round(0x70 + breath * 0x30).toString(16).padStart(2, "0");
   grad.addColorStop(0, tint + a);
   grad.addColorStop(1, "#00000000");
   ctx.fillStyle = grad;
@@ -526,6 +526,7 @@ export function prerenderEntitySprite(e) {
 export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
   const speed = Math.hypot(velocity.vx, velocity.vy);
   const zoom = fx.zoom || 1;
+  const breath = fx.breath ?? 0.5;
   const pScale = Math.max(1, radius * 0.05);
   const disk = fx.double ? "255, 120, 220" : "130, 140, 255";
   const disk2 = fx.double ? "255, 190, 240" : "200, 160, 255";
@@ -604,7 +605,6 @@ export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
   }
 
   // Outer glow (pulse animates by scaling the cached gradient)
-  const breath = fx.breath ?? 0.5;
   const pulse = 1 + (breath - 0.5) * 0.14 + (fx.gulp || 0) * 0.12;
   ctx.save();
   ctx.scale(pulse, pulse);

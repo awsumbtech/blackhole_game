@@ -637,3 +637,5 @@ body.soft-palette #game { filter: saturate(0.72) brightness(0.96); }
   .volume-slider { width: 64px; }
   .zen-btn { padding: 0 8px; }
 }
+.ctrl-btn.ctrl-danger { white-space: nowrap; }
+@media (max-width: 420px) { .ctrl-btn.ctrl-danger { font-size: 0.68rem; padding: 0 8px; } }

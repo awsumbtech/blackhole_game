@@ -422,8 +422,8 @@ function drawEdgeGlow(ctx, state, w, h, angle, rgb, a) {
   const breathe = 0.85 + 0.15 * Math.sin(performance.now() * 0.0025);
   const r = Math.min(w, h) * 0.32;
   const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, r);
-  g.addColorStop(0, `rgba(${rgb}, ${0.32 * a * breathe})`);
-  g.addColorStop(0.5, `rgba(${rgb}, ${0.1 * a * breathe})`);
+  g.addColorStop(0, `rgba(${rgb}, ${0.45 * a * breathe})`);
+  g.addColorStop(0.5, `rgba(${rgb}, ${0.15 * a * breathe})`);
   g.addColorStop(1, `rgba(${rgb}, 0)`);
   ctx.fillStyle = g;
   ctx.fillRect(ex - r, ey - r, r * 2, r * 2);

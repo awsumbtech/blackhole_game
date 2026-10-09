@@ -322,9 +322,6 @@ function tryConsume(dt) {
         shakeBy(1.5);
         audio.playBigCatch();
       }
-      if (state.comboCount >= 5 && state.comboCount % 5 === 0) {
-        floater(state.playerX, state.playerY - R * 1.6, `Combo ×${state.comboCount}!`, "#ffe08a", 15 + Math.min(10, state.comboCount / 3));
-      }
     } else if (!edible && state.invuln <= 0 && (e._spawnAlpha ?? 1) > 0.6 && dist < R + e.radius * 0.85) {
       bump(e, dx, dy, dist);
     }
