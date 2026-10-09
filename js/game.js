@@ -12,7 +12,7 @@ import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
 import { initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, pullRange } from "./living-world.js";
 import { computeMods, targetMassFor, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fmtMass } from "./progression.js";
-import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS } from "./powerups.js";
+import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 
 // ─── CANVAS SETUP ───
@@ -77,7 +77,8 @@ const state = {
   upgrades: defaultUpgrades(),
   stardust: 0,
   seenHints: {},
-  settings: { touchMode: "joystick" },
+  // Zen is on by default: no clock/par, bumps cost nothing
+  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false },
   legacyBonusPending: 0,
 
   mods: computeMods(defaultUpgrades()),
@@ -310,8 +311,8 @@ function tryConsume(dt) {
       if (e.bigFish) {
         state.run.bigFish += 1;
         state.stats.bigFishEaten += 1;
-        floater(e.x, e.y, "BIG CATCH!", "#ffcf6e", 20);
-        state.shake = Math.max(state.shake, 6);
+        floater(e.x, e.y, "Big catch", "#ffcf6e", 19);
+        shakeBy(1.5);
         audio.playBigCatch();
       }
       if (state.comboCount >= 5 && state.comboCount % 5 === 0) {
@@ -350,41 +351,57 @@ function tryConsume(dt) {
   if (state.mass >= state.targetMass && !state.transitioning) galaxyComplete();
 }
 
+// Calm bump: a soft, eased nudge away from something too big. No shake, the
+// combo just pauses, and Zen mode costs nothing (otherwise a tiny 1%).
+const BUMP_PUSH = 2.4;          // was a hard 7x speed kick
+const BUMP_LOSS = 0.01;         // was 5% of mass (0 in Zen)
+const COMBO_PAUSE = 120;        // combo holds for 2s instead of resetting
+
 function bump(e, dx, dy, dist) {
-  // Knocked back by something too big: lose a little mass, break the combo
   const d = Math.max(1, dist);
   const nx = -dx / d;
   const ny = -dy / d;
-  const kick = 7 * state.speedScale;
-  state.playerVX = nx * kick;
-  state.playerVY = ny * kick;
-  e.vx -= nx * 0.3 * e.baseSpeed;
-  e.vy -= ny * 0.3 * e.baseSpeed;
+  const ss = state.speedScale;
+  // Blend toward the push instead of overwriting velocity, so it glides
+  const into = state.playerVX * -nx + state.playerVY * -ny;
+  if (into > 0) {
+    state.playerVX += nx * into;
+    state.playerVY += ny * into;
+  }
+  state.playerVX += nx * BUMP_PUSH * ss;
+  state.playerVY += ny * BUMP_PUSH * ss;
+  e.vx -= nx * 0.15 * e.baseSpeed;
+  e.vy -= ny * 0.15 * e.baseSpeed;
 
-  const loss = Math.min(state.mass * 0.05, Math.max(0, state.mass - state.startMass));
-  state.mass -= loss;
-  updateRadius();
+  const loss = state.settings.zen ? 0 : Math.min(state.mass * BUMP_LOSS, Math.max(0, state.mass - state.startMass));
+  if (loss > 0) {
+    state.mass -= loss;
+    updateRadius();
+  }
   state.invuln = 60;
-  state.comboCount = 0;
-  state.comboTimer = 0;
-  state.shake = Math.max(state.shake, 9);
+  if (state.comboCount > 0) state.comboTimer = Math.max(state.comboTimer, COMBO_PAUSE);
   state.run.bumps += 1;
   state.stats.bumps += 1;
 
   const bx = state.playerX - nx * state.radius;
   const by = state.playerY - ny * state.radius;
-  for (let i = 0; i < 14; i++) {
+  const n = state.settings.reduceMotion ? 4 : 8;
+  for (let i = 0; i < n; i++) {
     const a = Math.atan2(-ny, -nx) + rand(-1.2, 1.2);
-    const sp = rand(1, 3) * state.speedScale;
+    const sp = rand(0.4, 1.2) * ss;
     state.particles.push({
       x: bx, y: by, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-      size: (1 + Math.random() * 2) * Math.max(1, state.radius * 0.06),
-      color: "#ff6b6b", alpha: 0.8, age: 0, maxAge: 35, gravity: 0
+      size: (1 + Math.random() * 1.5) * Math.max(1, state.radius * 0.05),
+      color: "#cdd8ff", alpha: 0.5, age: 0, maxAge: 40, gravity: 0
     });
   }
-  if (loss > 1) floater(state.playerX, state.playerY - state.radius * 1.4, `-${fmtMass(loss)}`, "#ff8080", 14);
   audio.playBump();
-  hint("bump", "Red-ringed objects are too big. Grow first, then come back for them!", 3800);
+  hint("bump", "Ringed objects are still too big. Grow a little, then come back for them.", 3800);
+}
+
+function shakeBy(amount) {
+  if (state.settings.reduceMotion) return;
+  state.shake = Math.max(state.shake, amount);
 }
 
 function collectPowerup(e) {
@@ -393,11 +410,10 @@ function collectPowerup(e) {
   state.run.powerups += 1;
   state.stats.powerupsCollected += 1;
   audio.playPowerup(e.powerup);
-  floater(e.x, e.y, def.label.toUpperCase() + "!", def.color, 19);
-  state.shake = Math.max(state.shake, 3);
-  for (let i = 0; i < 28; i++) {
-    const a = (i / 28) * Math.PI * 2;
-    const sp = rand(1.5, 3.5) * state.speedScale;
+  floater(e.x, e.y, def.label, def.color, 18);
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    const sp = rand(0.8, 2) * state.speedScale;
     state.particles.push({
       x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
       size: (1.5 + Math.random() * 2) * Math.max(1, state.radius * 0.06),
@@ -406,16 +422,15 @@ function collectPowerup(e) {
   }
   ui.updatePowerupBar(state);
   const tips = {
-    magnet: "Magnet: everything edible nearby gets pulled in",
+    magnet: "Magnet: nearby food drifts toward you",
     slow: "Slow-Mo: the galaxy slows down, you don't",
     double: "Double Mass: every bite counts twice"
   };
   hint("pu_" + e.powerup, tips[e.powerup], 3000);
 }
 
-state.onPowerupEnd = () => {
-  audio.playPowerupEnd();
-};
+// Power-ups fade out over their last 3 seconds, so no end sound is needed
+state.onPowerupEnd = () => {};
 
 // ─── PARTICLES ───
 
@@ -617,7 +632,7 @@ function frame(now) {
   if (state.transitioning) updateTransition(dt);
 
   const playing = !state.transitioning || state.transitionPhase === "fadein";
-  const worldDt = state.active.slow > 0 ? dt * 0.35 : dt;
+  const worldDt = dt * slowFactor(state);
 
   if (playing) {
     state.run.time += dt / 60;
@@ -676,7 +691,7 @@ function frame(now) {
 
   // Slow-Mo tint
   if (state.active.slow > 0) {
-    const a = Math.min(1, state.active.slow / 30) * 0.22;
+    const a = powerupFade(state, "slow") * 0.16;
     const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
     g.addColorStop(0, "rgba(80, 180, 255, 0)");
     g.addColorStop(1, `rgba(80, 180, 255, ${a})`);

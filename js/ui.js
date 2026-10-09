@@ -173,7 +173,7 @@ export function updatePowerupBar(state) {
       const frac = Math.max(0, left / (state.activeMax[k] || 1));
       pill.querySelector(".pu-fill").style.width = (frac * 100).toFixed(1) + "%";
       pill.querySelector(".pu-secs").textContent = Math.ceil(left / 60) + "s";
-      pill.classList.toggle("ending", left < 120);
+      pill.classList.toggle("ending", left < 180);
     } else if (pill) {
       pill.remove();
       delete pills[k];

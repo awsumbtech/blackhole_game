@@ -3,6 +3,12 @@
 
 const TAU = Math.PI * 2;
 
+// "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
+let TOO_BIG_RGB = "240, 130, 140";
+export function setSoftPalette(on) {
+  TOO_BIG_RGB = on ? "235, 185, 110" : "240, 130, 140";
+}
+
 // ─── STARFIELD OFFSCREEN CACHE ───
 
 let starCanvas = null;
@@ -330,10 +336,10 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
     // "Too big to eat" indicator: pulsing red ring
     if (tooBig && !e.consuming) {
-      const pulse = 0.28 + Math.sin(time * 0.005 + e.rotation * 3) * 0.1;
+      const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
       ctx.beginPath();
       ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
-      ctx.strokeStyle = `rgba(255, 80, 80, ${pulse})`;
+      ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
       ctx.lineWidth = 1.8 / zoom;
       ctx.stroke();
     }
@@ -366,9 +372,9 @@ const PU_STYLE = {
 function drawPowerupPickup(ctx, e, sx, sy, time, zoom) {
   const st = PU_STYLE[e.powerup] || PU_STYLE.magnet;
   const spawnAlpha = e._spawnAlpha ?? 1;
-  // Blink during the last 4 seconds
   let alpha = spawnAlpha;
-  if (!e.consuming && e.life < 240 && Math.floor(time / 120) % 2 === 0) alpha *= 0.35;
+  // Gently fade during the last 4 seconds (no blinking)
+  if (!e.consuming && e.life < 240) alpha *= 0.25 + 0.75 * (e.life / 240);
   let r = e.radius;
   if (e.consuming) {
     alpha *= 1 - e.consumeProgress;
@@ -522,7 +528,6 @@ export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
 
   ctx.save();
   ctx.translate(x, y);
-  if (fx.invuln && Math.floor(time / 90) % 2 === 0) ctx.globalAlpha = 0.5;
 
   // Magnet: golden ring showing the pull range
   if (fx.magnet && fx.pullRange) {
@@ -703,7 +708,7 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playe
       ctx.fillStyle = e.color;
       ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
     } else if (playerRadius <= e.radius * eatRatio) {
-      ctx.fillStyle = "rgba(255, 90, 90, 0.8)";
+      ctx.fillStyle = `rgba(${TOO_BIG_RGB}, 0.8)`;
       const s2 = Math.min(4, 1.5 + e.radius * scale);
       ctx.fillRect(ex - s2 / 2, ey - s2 / 2, s2, s2);
     } else {

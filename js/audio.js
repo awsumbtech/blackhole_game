@@ -472,16 +472,16 @@ export function playPowerupEnd() {
 export function playBump() {
   if (!enabled || !ensureCtx()) return;
   resume();
-  tone(140, { type: "triangle", attack: 0.005, decay: 0.22, vol: 0.1, slideTo: 55 });
-  tone(90, { type: "sine", attack: 0.005, decay: 0.3, vol: 0.08, slideTo: 40 });
+  // Soft, low "boop" (was a hard triangle thud)
+  tone(196, { type: "sine", attack: 0.03, decay: 0.35, vol: 0.035, slideTo: 165 });
 }
 
 /** Swallowed a former "bigger fish". */
 export function playBigCatch() {
   if (!enabled || !ensureCtx()) return;
   resume();
-  tone(55, { attack: 0.02, decay: 0.7, vol: 0.12, slideTo: 35 });
-  [261.6, 392, 523.3, 784].forEach((f, i) => tone(f, { start: 0.04 + i * 0.07, decay: 0.45, vol: 0.04 }));
+  tone(65.4, { attack: 0.08, decay: 0.9, vol: 0.06 });
+  [261.6, 392, 523.3, 784].forEach((f, i) => tone(f, { start: 0.05 + i * 0.09, attack: 0.04, decay: 0.6, vol: 0.03 }));
 }
 
 export function playPurchase() {

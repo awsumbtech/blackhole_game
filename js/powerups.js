@@ -4,16 +4,34 @@
 import { rand } from "./entities.js";
 
 export const POWERUPS = {
-  magnet: { label: "Magnet", color: "#ffd166", rgb: "255, 209, 102", glyph: "M", duration: 600, tone: 660 },
-  slow: { label: "Slow-Mo", color: "#7fdbff", rgb: "127, 219, 255", glyph: "S", duration: 480, tone: 520 },
-  double: { label: "Double Mass", color: "#ff7ad9", rgb: "255, 122, 217", glyph: "x2", duration: 600, tone: 780 }
+  magnet: { label: "Magnet", color: "#ffd166", rgb: "255, 209, 102", glyph: "M", duration: 900, tone: 660 },
+  slow: { label: "Slow-Mo", color: "#7fdbff", rgb: "127, 219, 255", glyph: "S", duration: 720, tone: 520 },
+  double: { label: "Double Mass", color: "#ff7ad9", rgb: "255, 122, 217", glyph: "x2", duration: 720, tone: 780 }
 };
+
+// v3 calm tuning (frames @60fps): fewer, longer, gentler power-ups
+export const MAGNET_RANGE = 1.8;   // pull range multiplier (was 2.2)
+export const MAGNET_PULL = 2;      // pull strength multiplier (was 3)
+export const SLOW_WORLD = 0.55;    // world speed during Slow-Mo (was 0.35)
+const FADE_FRAMES = 180;           // effects ease out over the last 3s
+
+/** 0..1 strength of an active power-up, easing out over its last 3s. */
+export function powerupFade(state, kind) {
+  const left = state.active[kind];
+  if (!(left > 0)) return 0;
+  const t = Math.min(1, left / FADE_FRAMES);
+  return t * t * (3 - 2 * t);
+}
+
+export function slowFactor(state) {
+  return 1 - (1 - SLOW_WORLD) * powerupFade(state, "slow");
+}
 export const POWERUP_KINDS = Object.keys(POWERUPS);
 
-const FIRST_SPAWN = 900;        // ~15s into a galaxy
-const SPAWN_MIN = 1500;         // then every ~25-40s
-const SPAWN_RANGE = 900;
-const PICKUP_LIFE = 1200;       // 20s on the field before it fades
+const FIRST_SPAWN = 2400;       // ~40s into a galaxy
+const SPAWN_MIN = 3000;         // then every ~50-75s (about 3 per galaxy)
+const SPAWN_RANGE = 1500;
+const PICKUP_LIFE = 1800;       // 30s on the field before it fades
 
 let timer = 0;
 let nextAt = FIRST_SPAWN;

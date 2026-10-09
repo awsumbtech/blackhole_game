@@ -6,6 +6,7 @@ import { weightedType, createEntity, rand, typeAvgRadius, typeById } from "./ent
 import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
+import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
 
 const TAU = Math.PI * 2;
 
@@ -121,16 +122,16 @@ export function drawLivingWorldFG(ctx, state, w, h) {
 // Only pulls things you can actually eat; bigger fish don't budge.
 
 export function pullRange(state) {
-  const magnet = state.active.magnet > 0;
-  return state.radius * CFG.PULL_RANGE * state.mods.pullRange * (magnet ? 2.2 : 1);
+  const m = powerupFade(state, "magnet");
+  return state.radius * CFG.PULL_RANGE * state.mods.pullRange * (1 + (MAGNET_RANGE - 1) * m);
 }
 
 function updateGravityWell(state, dt) {
-  const magnet = state.active.magnet > 0;
+  const m = powerupFade(state, "magnet");
   const R = state.radius;
   const range = pullRange(state);
-  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (magnet ? 3 : 1);
-  const cap = CFG.PULL_CAP * state.speedScale * (magnet ? 2.2 : 1);
+  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (1 + (MAGNET_PULL - 1) * m);
+  const cap = CFG.PULL_CAP * state.speedScale * (1 + (MAGNET_RANGE - 1) * m);
   const px = state.playerX;
   const py = state.playerY;
 
