@@ -170,6 +170,7 @@ export const biomeCatalog = [
     nebula: [[175, 125, 225], [210, 160, 110], [140, 105, 185]],
     weights: { dust: 2, junk: 4, meteor: 1, comet: 0.5, craft: 7, planet: 0.5, star: 0.3, neutron: 0 },
     events: { derelictFlotilla: 3, meteorShower: 1 },
+    gainK: 1.15,           // v5.1: hulls are mostly too big to eat, so bites elsewhere count a bit more
     sound: { root: 55, chord: [1, 1.498, 1.189], cutoff: 300, scale: 220 },
     description: "Graveyard of ancient vessels",
     codex: "Dusky violet and bronze. Old ships and pods; slow flotillas of wrecks drift by."
@@ -181,7 +182,7 @@ export const biomeCatalog = [
     weights: { dust: 4, junk: 2, meteor: 2, comet: 2, craft: 2, planet: 2, star: 2, neutron: 1 },
     density: 0.7, foodBoost: 1.15,
     events: { voidPulse: 3, gravitationalWave: 1 },
-    gainK: 1.2,            // v5: the aurora only feeds near you now
+    gainK: 0.85,           // v5.1: the aurora follows you now, so it feeds a lot
     sound: { root: 49, chord: [1, 1.5], cutoff: 220, scale: 196 },
     description: "Quiet, sparse, and generous",
     codex: "Deep indigo with faint aurora. Fewer, larger bites, and the void sometimes gives food to you."
