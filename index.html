@@ -110,6 +110,16 @@
   </div>
 
   <!-- Title screen (the live game is the backdrop) -->
+  <div id="starmap" class="hidden" role="dialog" aria-label="Star map">
+    <canvas id="starmap-canvas"></canvas>
+    <div class="starmap-top">
+      <button id="btn-starmap-back" class="soft-btn">Back</button>
+      <div><h2>Star Map</h2><p id="starmap-count"></p></div>
+    </div>
+    <p id="starmap-empty" class="starmap-empty hidden">Your sky is still empty.<br>Clear a galaxy and its star will appear here.</p>
+    <div id="starmap-card" class="starmap-card hidden"></div>
+  </div>
+
   <div id="title-screen" class="screen hidden" aria-label="Title">
     <div class="title-top">
       <div class="title-name">Black Hole</div>
@@ -118,6 +128,7 @@
     <div class="title-menu">
       <button id="btn-title-continue" class="title-btn primary">Continue<small id="title-continue-sub">Galaxy 1 · Debris Reef</small></button>
       <button id="btn-title-new" class="title-btn">New Game</button>
+      <button id="btn-title-starmap" class="title-btn">Star Map</button>
       <button id="btn-title-settings" class="title-btn">Settings</button>
       <div id="newgame-confirm" class="confirm hidden">
         <p>Start a new journey from Galaxy 1?</p>

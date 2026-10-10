@@ -2,7 +2,7 @@
 // State, main loop, consume logic, zoom camera, galaxy transitions + summary.
 
 import { createInput } from "./input.js";
-import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand } from "./entities.js";
+import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand, biomeCatalog } from "./entities.js";
 import {
   drawStarfield, drawBoundary, drawEntities, drawBlackHole,
   drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
@@ -12,7 +12,9 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
-import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
+import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
+import { resetWisp, updateWisp, drawWisp, wispInfo } from "./wisp.js";
+import { openStarMap } from "./starmap.js";
 import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
@@ -21,7 +23,9 @@ import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fm
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
-import { R0, START_R, tier, tierIndexForR, tierName, massForR, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
+import { R0, START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
+
+const VERSION = "5.2";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 // ─── CANVAS SETUP ───
@@ -94,7 +98,7 @@ const state = {
   stardust: 0,
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
-  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto" },
+  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
 
   // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
   screen: "play", camMul: 1, drift: null,
@@ -294,6 +298,7 @@ function initGalaxy(galaxyNum, resume = null) {
   initLivingWorld(state);
   initWorlds(state);
   fillAround(state, Math.max(20, (biome.breather ? DENSITY.breather : DENSITY.regular) - state.entities.length));
+  resetWisp(state);
   initPowerups();
   ui.updatePowerupBar(state);
 
@@ -656,6 +661,8 @@ function galaxyComplete() {
   state.summary = finishGalaxy(state);
   // v5: the next galaxy starts at the most you reached here
   state.floorMass = Math.max(state.floorMass, state.mass);
+  // v5.2: a star for the star map
+  state.records.galaxyLog[state.galaxy] = { b: state.biome.name, d: Date.now(), t: Math.max(state.tier, tierIndexForR(rForMass(state.mass))) };
   state.galaxyCredited = true;
   save(state);
 }
@@ -1007,6 +1014,10 @@ function frame(now) {
     updateLivingWorld(state, dt, worldDt);
     updateWorlds(state, dt, worldDt);
     updateEntities(state.entities, state.bounds, worldDt);
+    updateWisp(state, dt, state.settings.reduceMotion);
+    if (!state.seenHints.wisp_intro && state.run.time > 25 && !state.tierBanner) {
+      hint("wisp_intro", `A little light has found you. ${state.settings.wispName || "Wisp"} will drift along, and now and then point out something tasty.`, 6000);
+    }
     if (updatePowerups(state, dt)) {
       audio.playPowerupSpawn();
       hint("pu_first", "A power-up appeared! Grab the glowing orb", 2600);
@@ -1052,6 +1063,7 @@ function frame(now) {
   ctx.scale(z, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
+  if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
@@ -1362,6 +1374,51 @@ state.setSetting = (key, val) => {
   save(state);
 };
 state.setTouchMode = mode => state.setSetting("touchMode", mode);
+
+// ─── v5.2: STAR MAP + SAVE BACKUP ───
+state.version = VERSION;
+function backfillStarLog() {
+  const log = state.records.galaxyLog || (state.records.galaxyLog = {});
+  const cleared = state.galaxy - 1 + (state.galaxyCredited ? 1 : 0);
+  for (let g = 1; g <= cleared; g++) {
+    if (log[g]) continue;
+    // Cleared before the star map existed: no date, scale estimated from the ladder
+    const t = Math.min(state.bestTier || state.tier || 0, Math.round(g * 0.6));
+    log[g] = { b: getBiome(g).name, d: 0, t, est: true };
+  }
+}
+function starEntries() {
+  backfillStarLog();
+  return Object.keys(state.records.galaxyLog).map(Number).filter(g => g >= 1).sort((a, b) => a - b).map(g => {
+    const e = state.records.galaxyLog[g];
+    const b = biomeCatalog.find(x => x.name === e.b) || getBiome(g);
+    const c = b.nebula[0];
+    const rgb = c.map(v => Math.round(v + (255 - v) * 0.3)).join(", ");
+    const f = state.records.fastest[g];
+    return { g, biome: b.name, rgb, date: e.d || 0, tier: e.t || 0, tierName: tierName(e.t || 0), est: !!e.est,
+      time: f ? fmtTime(f) : "", breather: !!b.breather };
+  });
+}
+state.openStarMap = () => {
+  audio.playClick();
+  openStarMap(starEntries(), { reduceMotion: state.settings.reduceMotion });
+};
+document.getElementById("btn-title-starmap").addEventListener("click", () => state.openStarMap());
+
+const backupLabel = d => `Galaxy ${d.galaxy} · ${tierName(tierIndexForR(rForMass(d.floorMass)))} · ${Math.floor(d.stardust)} stardust`;
+state.exportSave = () => exportCode(state);
+state.checkBackup = code => {
+  const r = parseCode(code);
+  if (!r.ok) return r;
+  return { ok: true, label: backupLabel(r.data), current: `Galaxy ${state.galaxy} · ${tierName(state.tier)}` };
+};
+state.applyBackup = code => {
+  const r = parseCode(code);
+  if (!r.ok) return;
+  resetting = true;           // don't let the unload save overwrite it
+  writeBackup(r.json);
+  location.reload();
+};
 applySettings();
 applyQuality(state.settings.quality === "balanced" ? "balanced" : "high");
 
@@ -1408,7 +1465,7 @@ requestAnimationFrame(frame);
 const DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("debug");
 if (DEV) window.__bh = {
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
-  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats,
+  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo,
   density: densityInfo, music: audio.musicInfo, feature: () => worldsFeature(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),

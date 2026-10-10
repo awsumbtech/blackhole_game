@@ -703,3 +703,27 @@ body.reduce-motion .title-top, body.reduce-motion .title-menu { animation: none;
 .codex-item p.mech { margin-top: 4px; color: rgba(220, 226, 255, 0.85); }
 .codex-item p.mech b { color: var(--accent-glow); font-weight: 600; }
 .hud-value.hud-tier { font-size: 13px; letter-spacing: 0.02em; white-space: nowrap; }
+
+/* ─── v5.2 Star map ─── */
+#starmap { position: fixed; inset: 0; z-index: 400; background: #03040b; touch-action: none; }
+#starmap.hidden { display: none; }
+#starmap-canvas { position: absolute; inset: 0; display: block; }
+.starmap-top { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 14px; right: 14px; display: flex; gap: 14px; align-items: center; pointer-events: none; }
+.starmap-top button { pointer-events: auto; width: auto; flex: 0 0 auto; padding: 8px 16px; }
+.starmap-top h2 { margin: 0; font: 300 20px Outfit, system-ui, sans-serif; letter-spacing: 3px; color: #e9edff; }
+.starmap-top p { margin: 2px 0 0; font: 400 12px Outfit, system-ui, sans-serif; color: rgba(200, 206, 255, 0.6); }
+.starmap-empty { position: absolute; left: 0; right: 0; top: 44%; text-align: center; color: rgba(210, 214, 255, 0.65); font: 300 15px/1.6 Outfit, system-ui, sans-serif; }
+.starmap-empty.hidden, .starmap-card.hidden { display: none; }
+.starmap-card { position: absolute; left: 16px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); padding: 14px 16px; border-radius: 16px;
+  background: rgba(10, 13, 30, 0.82); border: 1px solid rgba(160, 170, 255, 0.18); box-shadow: 0 0 30px -10px var(--star, #8a8dff);
+  display: flex; flex-direction: column; gap: 4px; font: 400 13px Outfit, system-ui, sans-serif; color: rgba(220, 224, 255, 0.8); }
+.starmap-card b { font-weight: 600; font-size: 15px; color: #f1f3ff; }
+.stats-link { display: block; width: 100%; margin: 0 0 12px; }
+.set-row input.name-input { width: 120px; padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(160, 170, 255, 0.25); background: rgba(8, 10, 24, 0.8); color: #e9edff; font: 400 14px Outfit, system-ui, sans-serif; }
+.backup { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.backup .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.backup textarea { width: 100%; box-sizing: border-box; min-height: 64px; padding: 8px; border-radius: 10px; border: 1px solid rgba(160, 170, 255, 0.2); background: rgba(6, 8, 20, 0.85); color: #cfd4ff; font: 400 11px "Space Mono", monospace; word-break: break-all; }
+.backup .msg { font: 400 12px Outfit, system-ui, sans-serif; color: rgba(210, 214, 255, 0.75); min-height: 1em; }
+.backup .msg.err { color: #ffb4a8; }
+.backup .hidden { display: none; }
+.app-version { margin-top: 10px; text-align: center; font: 400 11px Outfit, system-ui, sans-serif; color: rgba(200, 206, 255, 0.4); }
