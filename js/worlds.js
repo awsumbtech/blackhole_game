@@ -823,7 +823,7 @@ const DRAW = {
       }
     }
     // A warm halo on the hole while you're in a beam
-    if (W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.4, 0.22 * W.beamA);
+    if (W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.6, 0.38 * W.beamA);
   }
 };
 

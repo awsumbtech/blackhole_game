@@ -20,6 +20,24 @@ python -m http.server 8080
 
 Then open **http://localhost:8080** (or the port shown) in your browser.
 
+## 🪐 What's new in v4.1: Worlds
+
+Every galaxy now has its own gentle mechanic and a few named landmarks (names fade in softly when you arrive, icons on the minimap, and a faint edge hint points to the nearest one when food runs thin). Each galaxy's signature event feeds its mechanic. All of it is in the Stats codex.
+
+| Galaxy | Mechanic | Paired event |
+|---|---|---|
+| Debris Reef | Teal reefs hold rock clusters and regrow after you graze them (The Shoals, Pebble Reach, Old Reef, Driftstone) | Meteor Shower reseeds the reefs faster |
+| Comet Current | Two rivers of light carry you and their comets along (The Long River, Glacier Run) | Comet Stream pours comets in upstream |
+| Planet Nursery | A young sun, The Cradle, with planets on slow orbits; they leave orbit when you come close | Stellar Birth adds new worlds to a ring |
+| Ruined Armada | Brittle hulls crumble softly when bumped, shedding edible pieces and shrinking (The Flagship, The Broken Line) | Derelict Flotilla brings brittle hulls |
+| Void Rift | An aurora ribbon where small food keeps appearing and drifting along (The Aurora, Stillwater) | Void Gift makes it glow and feed faster |
+| Star Meadow | Star buds bloom over ~30s; patient bites are bigger (Goldfield, Sunpatch, The Orchard) | Stellar Birth makes the nearest meadow bloom |
+| Neutron Forge | Slow pulsar beams sweep the forge; inside one, food gives +50% mass (The Lighthouse, Ember Pulsar) | Gravity Wave makes the beams flare wider |
+
+Landmarks are seeded by galaxy number (same layout after a reload) and scale with the galaxy as you grow.
+
+**Pacing (bot):** regular galaxies keep 26% of a bite's mass (breathers 50%), bite caps 4.2% / 5.6% of your mass, plus a per-galaxy `gainK` (Comet 0.85, Forge 0.8, Meadow 1.15). The greedy bot clears regular galaxies in about 2.5 to 3.8 min and breathers in about 1 to 1.5 min.
+
 ## 🌌 What's new in v4: Feels Finished
 
 - **Title screen**: the live game is the backdrop, with a slow close-up of your black hole. Continue (shows your galaxy), New Game (asks first; keeps settings, records and codex) and Settings. Shown when the app opens after more than 10 minutes away; otherwise you drop straight back in.
