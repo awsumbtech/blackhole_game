@@ -20,6 +20,33 @@ python -m http.server 8080
 
 Then open **http://localhost:8080** (or the port shown) in your browser.
 
+## 🌌 What's new in v5: Vast
+
+The universe now opens up as you grow instead of feeling like a fishbowl.
+
+- **One long journey of scales.** You start as a speck among space dust and climb a ladder:
+  Space Dust → Grit & Pebbles → Asteroids → Comets & Ice → Moons → Planets → Giant Worlds →
+  Stars → Star Systems → Nebulae → Star Clusters → Galaxies → Galaxy Groups → Cosmic Web (and on).
+  Each step is 2.6× in size. The HUD's top-right shows your current scale.
+- **Your size carries over.** Each galaxy starts where the last one ended, with fresh fine dust
+  around you, and grows you a little further (about one scale step per regular galaxy, half a step
+  in a breather). Growth is slower and finer than before: lots of small bites.
+- **A wider view.** When you cross into a new scale the camera slowly pulls back (about 2.5s) while
+  you keep moving, a soft chime plays, and a quiet line names the new scale. Bigger kinds of
+  objects start drifting in.
+- **No edge.** Space goes on forever: things appear just outside your view and quietly recycle
+  once they're far behind, keeping a steady ~60 objects around you.
+- **Layered sky.** Four parallax layers (distant galaxies, nebula clouds, stars, near dust) each
+  react to zoom differently, so a pull-back feels deep rather than flat.
+- **Landmarks per scale.** Each galaxy's landmarks and mechanic (reefs, rivers, the Cradle, hulls,
+  aurora, meadows, pulsars) are rebuilt at every new scale. The old ones stay where they were
+  and shrink away behind you.
+- **Local radar.** The minimap is now centred on you with a faint trail of where you've been.
+- **Smaller disk.** The black hole's glow and accretion disk take up less of the screen.
+- **Music grows with you.** Each scale adds one soft layer to the drone (shimmer, low bass, slow
+  plucks, air, an open fifth, distant bells), up to six.
+- Older saves start at a scale that matches how far they'd got; a half-played galaxy restarts.
+
 ## 🪐 What's new in v4.1: Worlds
 
 Every galaxy now has its own gentle mechanic and a few named landmarks (names fade in softly when you arrive, icons on the minimap, and a faint edge hint points to the nearest one when food runs thin). Each galaxy's signature event feeds its mechanic. All of it is in the Stats codex.

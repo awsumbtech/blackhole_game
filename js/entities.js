@@ -149,7 +149,7 @@ export const biomeCatalog = [
     nebula: [[160, 225, 255], [205, 240, 255], [120, 205, 235]],
     weights: { dust: 3, junk: 0.5, meteor: 0.5, comet: 8, craft: 0.5, planet: 0.5, star: 0.3, neutron: 0 },
     events: { cometStream: 3, meteorShower: 1 },
-    gainK: 0.85,           // v4.1: the rivers bring a lot of food
+    gainK: 1.3,            // v5: rivers only feed what's near you now, and the current pulls you along
     sound: { root: 82.4, chord: [1, 1.5, 2.25], cutoff: 700, scale: 329.6 },
     description: "Rivers of ice and light",
     codex: "Icy cyan space full of comets. Comet streams glide across your path."
@@ -181,6 +181,7 @@ export const biomeCatalog = [
     weights: { dust: 4, junk: 2, meteor: 2, comet: 2, craft: 2, planet: 2, star: 2, neutron: 1 },
     density: 0.7, foodBoost: 1.15,
     events: { voidPulse: 3, gravitationalWave: 1 },
+    gainK: 1.2,            // v5: the aurora only feeds near you now
     sound: { root: 49, chord: [1, 1.5], cutoff: 220, scale: 196 },
     description: "Quiet, sparse, and generous",
     codex: "Deep indigo with faint aurora. Fewer, larger bites, and the void sometimes gives food to you."

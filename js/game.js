@@ -21,7 +21,7 @@ import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fm
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
-import { R0, tier, tierIndexForR, tierName, massForR, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
+import { R0, START_R, tier, tierIndexForR, tierName, massForR, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 // ─── CANVAS SETUP ───
@@ -119,8 +119,8 @@ const MIN_BITE_CAP = 6;
 const REGULAR_GAIN = 0.26;   // v4.1: share of a bite's mass you keep in regular galaxies (breathers 0.5)
 // v5: each galaxy now climbs only ~1 tier (instead of ~14x in size), so every
 // bite counts for less: "very small increments". These scale all of the above.
-const PACE = 0.34;
-const BREATHER_PACE = 0.2;
+const PACE = 0.25;
+const BREATHER_PACE = 0.16;
 
 // ─── HELPERS ───
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -241,7 +241,7 @@ function initGalaxy(galaxyNum, resume = null) {
   state.mods = computeMods(state.upgrades);
   state.eatRatio = state.mods.eatRatio;
   // v5: start where the last galaxy ended (your floor), plus Seed Mass
-  state.floorMass = Math.max(massForR(R0), state.floorMass || 0);
+  state.floorMass = Math.max(massForR(START_R), state.floorMass || 0);
   state.startMass = state.floorMass * (1 + (state.mods.startBonus || 0));
   state.targetMass = targetMassFrom(state.floorMass, !!biome.breather);
   state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
@@ -891,7 +891,7 @@ document.getElementById("btn-newgame-yes").addEventListener("click", () => {
   document.getElementById("newgame-confirm").classList.add("hidden");
   // Fresh journey: galaxy 1, no stardust or upgrades. Settings, records, codex stay.
   state.galaxy = 1;
-  state.floorMass = massForR(R0);
+  state.floorMass = massForR(START_R);
   state.bestTier = 0;
   state.stardust = 0;
   state.upgrades = defaultUpgrades();

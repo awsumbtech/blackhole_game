@@ -1,4 +1,5 @@
 import { MECHANICS } from "./worlds.js";
+import { tierName } from "./tiers.js";
 // ─── UI ───
 // Between-galaxy summary + upgrade shop, stats view, power-up timers.
 
@@ -141,6 +142,9 @@ export function showStats(state, onClose, opts = {}) {
     <div class="stats-section"><h3>Progress</h3>
       ${row("Current galaxy", state.galaxy)}
       ${row("Highest galaxy", state.bestGalaxy)}
+      ${row("Scale now", tierName(state.tier || 0))}
+      ${row("Largest scale reached", tierName(state.bestTier || 0))}
+      ${row("Wider views (tier reveals)", s.tierReveals || 0)}
       ${row("Galaxies cleared", s.galaxiesCleared)}
       ${row("Time played", fmtTime(s.timePlayed))}
       ${row("Stardust", `${Math.floor(state.stardust)} (earned ${s.stardustEarned})`)}

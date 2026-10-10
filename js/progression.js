@@ -74,7 +74,8 @@ export function targetMassFor(galaxy) {
 
 /** Food shrinks a little each galaxy (relative to you), down to 85% (was 70%). */
 export function foodScaleFor(galaxy) {
-  return Math.max(0.85, 1 - 0.03 * (galaxy - 1));
+  // v5: the scale ladder is the progression now, so food only shrinks a touch
+  return Math.max(0.92, 1 - 0.01 * (galaxy - 1));
 }
 
 /** Par time (seconds) for the speed bonus. */

@@ -4,7 +4,9 @@
 // one (your "floor"), with fine dust around you, and climbs a little further.
 
 export const TIER_STEP = 2.6;      // hole radius ratio per tier
-export const R0 = 8;               // starting radius (tier 0)
+export const R0 = 5.3;             // tier grid origin (tier 1 begins at ~13.8)
+export const START_R = 8;          // a brand-new hole starts here, partway into tier 0,
+                                   // so the very first galaxy reveals a tier mid-way
 
 // food / big: type weights for what drifts around at this tier
 export const TIERS = [
@@ -54,6 +56,7 @@ export function tierName(i) { return tier(i).name; }
 export function rForTier(i) { return R0 * Math.pow(TIER_STEP, i); }
 
 // Must match updateRadius() in game.js: R = 4 + sqrt(mass) * 0.9
+export function startMass() { return massForR(START_R); }
 export function massForR(r) { const s = Math.max(0, (r - 4) / 0.9); return s * s; }
 export function rForMass(m) { return Math.max(6, 4 + Math.sqrt(m) * 0.9); }
 
