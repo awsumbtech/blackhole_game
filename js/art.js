@@ -7,9 +7,11 @@ const TAU = Math.PI * 2;
 
 // ─── Quality ───
 let quality = "high";             // "high" | "balanced"
+let cacheGen = 0;
 export function setArtQuality(q) {
   if (q === quality) return;
   quality = q;
+  cacheGen++;
   cache.clear();
   baseIndex.clear();
   diskCache.clear();
@@ -65,6 +67,7 @@ const cache = new Map();          // key -> { c, size, ext, used }
 const baseIndex = new Map();      // baseKey -> Set(bucket) for fallbacks
 let frameNo = 0;
 let genBudget = 0;
+let genMs = 0;                    // time spent painting this frame
 let generated = 0;
 const MAX_SPRITES = 600;
 
@@ -72,6 +75,7 @@ const MAX_SPRITES = 600;
 export function beginArtFrame() {
   frameNo++;
   genBudget = quality === "high" ? 6 : 3;
+  genMs = 0;
   if (cache.size > MAX_SPRITES && frameNo % 30 === 0) evict();
 }
 export function artStats() { return { sprites: cache.size, generated, quality }; }
@@ -105,13 +109,17 @@ function baseKeyFor(e) {
 
 /** Returns { c, size } where size is the drawn width in entity radii*2 units. */
 export function spriteFor(e, rpx) {
+  // Hysteresis: keep the current sprite while the on-screen size stays close,
+  // so a slowly zooming camera doesn't repaint everything every few frames.
+  const cur = e._sp;
+  if (cur && cur.g === cacheGen && e._artBase && rpx <= cur.b * 1.05 && rpx >= cur.b * 0.62) { cur.used = frameNo; return cur; }
   const b = bucketFor(rpx);
   const base = e._artBase || (e._artBase = baseKeyFor(e));
   const key = base + "|" + b;
   let s = cache.get(key);
   if (!s) {
     const have = baseIndex.get(base);
-    if (genBudget <= 0 && have && have.size) {
+    if ((genBudget <= 0 || genMs > 2.5) && have && have.size) {
       // Over this frame's budget: use the closest size we already have
       let best = null, bd = Infinity;
       for (const hb of have) { const d = Math.abs(Math.log(hb / b)); if (d < bd) { bd = d; best = hb; } }
@@ -119,12 +127,15 @@ export function spriteFor(e, rpx) {
     }
     if (!s) {
       genBudget--;
+      const t0 = performance.now();
       s = paint(e, b);
+      genMs += performance.now() - t0;
       cache.set(key, s);
       if (!have) baseIndex.set(base, new Set([b])); else have.add(b);
     }
   }
   s.used = frameNo;
+  e._sp = s;
   return s;
 }
 
@@ -146,7 +157,7 @@ function paint(e, b) {
   const painter = PAINTERS[e.type] || PAINTERS.dust;
   painter(g, b, e, r, variant);
   // `scale` converts canvas px to entity radii: drawn width = size / b * radius
-  return { c, k: size / b, used: frameNo };
+  return { c, k: size / b, b, g: cacheGen, used: frameNo };
 }
 
 // ─── Painters (g is centred; R = radius in canvas px) ───
@@ -218,7 +229,11 @@ const PAINTERS = {
       for (let i = 0; i < craters; i++) {
         const a = r() * TAU, d = r() * R * 0.55, cr = R * (0.12 + r() * 0.14);
         const cx = Math.cos(a) * d, cy = Math.sin(a) * d;
-        g.fillStyle = dark(e.color, 0.4, 0.4);
+        const cg = g.createRadialGradient(cx - cr * 0.2, cy - cr * 0.2, 0, cx, cy, cr);
+        cg.addColorStop(0, dark(e.color, 0.45, 0.45));
+        cg.addColorStop(0.7, dark(e.color, 0.3, 0.25));
+        cg.addColorStop(1, dark(e.color, 0.2, 0));
+        g.fillStyle = cg;
         g.beginPath(); g.arc(cx, cy, cr, 0, TAU); g.fill();
         g.strokeStyle = light(e.color, 0.4, 0.25);
         g.lineWidth = Math.max(0.5, cr * 0.3);
@@ -244,10 +259,12 @@ const PAINTERS = {
     const pts = [[L, 0], [L * 0.35, -W], [-L * 0.55, -W * 0.95], [-L * 0.8, -W * 1.5], [-L, -W * 0.7],
       [-L, W * 0.7], [-L * 0.8, W * 1.5], [-L * 0.55, W * 0.95], [L * 0.35, W]];
     path(g, pts);
+    // Weathered, muted hull (the base colour is only a tint)
+    const hull = mix(e.color, [70, 74, 96], 0.6);
     const lg = g.createLinearGradient(0, -W * 1.4, 0, W * 1.4);
-    lg.addColorStop(0, light(e.color, 0.35));
-    lg.addColorStop(0.5, rgba(e.color, 1));
-    lg.addColorStop(1, dark(e.color, 0.55));
+    lg.addColorStop(0, light(e.color, 0.12, 1));
+    lg.addColorStop(0.45, hull);
+    lg.addColorStop(1, dark(e.color, 0.65));
     g.fillStyle = lg;
     g.fill();
     g.strokeStyle = light(e.color, 0.55, 0.3);

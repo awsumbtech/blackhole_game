@@ -788,13 +788,21 @@ document.getElementById("btn-title-settings").addEventListener("click", () => {
 // ─── PERFORMANCE + AUTO QUALITY ───
 // Work time per frame (not the vsync interval). At 120Hz the budget is 8.3ms;
 // on Auto, if the average stays above ~6.5ms for 2s we drop to Lite.
-const perf = { ema: 0, ring: new Float32Array(240), n: 0, over: 0, drops: 0 };
-function trackPerf(ms, dt) {
+// Also watches the real frame interval against the display's own vsync (the
+// fastest interval seen lately) to catch GPU-bound slowdowns JS timing misses.
+const perf = { ema: 0, ring: new Float32Array(240), n: 0, over: 0, drops: 0, vsync: 0, iEma: 0, slow: 0 };
+function trackPerf(ms, dt, interval) {
   perf.ring[perf.n++ % perf.ring.length] = ms;
   perf.ema = perf.ema ? perf.ema * 0.95 + ms * 0.05 : ms;
-  if (state.settings.quality !== "auto" || getArtQuality() !== "high" || state.screen !== "play") return;
+  if (interval > 2 && interval < 100) {
+    perf.vsync = perf.vsync ? Math.min(perf.vsync * 1.0015, interval) : interval;
+    perf.iEma = perf.iEma ? perf.iEma * 0.95 + interval * 0.05 : interval;
+  }
+  if (state.settings.quality !== "auto" || getArtQuality() !== "high" || state.screen !== "play" || state.drift) return;
   perf.over = perf.ema > 6.5 ? perf.over + dt : 0;
-  if (perf.over > 120) {
+  perf.slow = perf.iEma > perf.vsync * 1.45 ? perf.slow + dt : 0;
+  if (perf.over > 120 || perf.slow > 240) {
+    perf.slow = 0;
     perf.drops++;
     applyQuality("balanced");
   }
@@ -804,7 +812,7 @@ function perfReport() {
   const a = Array.from(perf.ring.slice(0, n)).sort((x, y) => x - y);
   const q = f => a.length ? +a[Math.min(a.length - 1, Math.floor(a.length * f))].toFixed(2) : 0;
   return { avg: +(a.reduce((s, v) => s + v, 0) / (a.length || 1)).toFixed(2), p50: q(0.5), p95: q(0.95), max: q(0.999),
-    quality: getArtQuality(), autoDrops: perf.drops, entities: state.entities.length, ...artStats() };
+    quality: getArtQuality(), autoDrops: perf.drops, vsyncMs: +perf.vsync.toFixed(2), frameMs: +perf.iEma.toFixed(2), entities: state.entities.length, ...artStats() };
 }
 function applyQuality(q) {
   setArtQuality(q);
@@ -980,7 +988,7 @@ function frame(now) {
     ctx.fillRect(0, 0, w, h);
   }
 
-  trackPerf(performance.now() - t0, dt);
+  trackPerf(performance.now() - t0, dt, rawDt * 16.67);
 
   // Combo counter + bonus
   if (inPlay && state.comboCount >= 3 && !state.transitioning) {
