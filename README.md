@@ -20,6 +20,18 @@ python -m http.server 8080
 
 Then open **http://localhost:8080** (or the port shown) in your browser.
 
+## 🌌 What's new in v4: Feels Finished
+
+- **Title screen**: the live game is the backdrop, with a slow close-up of your black hole. Continue (shows your galaxy), New Game (asks first; keeps settings, records and codex) and Settings. Shown when the app opens after more than 10 minutes away; otherwise you drop straight back in.
+- **First-launch intro**: three quiet lines ("Drift. / Eat what's smaller. / Grow.") over the hole, about 11 seconds, with Skip. Shown once, never again (not even after New Game).
+- **Drift-in**: Continue eases the camera into the hole, a breath of dark, then play.
+- **Pause menu**: Resume / Settings / Title screen.
+- **Painterly art (all code-drawn)**: lit planets with soft cloud bands, atmospheres, rings and moons; stars with coronas and gentle twinkle; cratered meteors; muted wreck hulls with warm windows; comet heads with tapered tails; soft dust.
+- **New black hole**: tilted accretion disk that swirls (inner faster than outer), spins up a little when you eat, a photon ring, light bent over the top (lensed arc) and background stars magnified around the edge.
+- **Particles**: soft glowing streaks that swirl and spiral into the hole. Reduce Motion keeps them short and fewer.
+- **Backgrounds**: two layers of big soft nebula clouds in each biome's colours.
+- **Performance**: every object is painted once into a small cached canvas (by type, colour, variant, on-screen size) and stamped each frame; painting is capped at ~2.5 ms per frame. Settings > Visual quality: Auto (default), High, Lite. Auto drops to Lite (1.5x pixel density, one disk layer, no star lensing, fewer particles) if frames run long. `__bh.perf()` reports frame work time.
+
 ## 🌙 What's new in v3: Calm & Themed
 
 Built to be a calm, centring time-waster: no startling events, no punishing fail states.
