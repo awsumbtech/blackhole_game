@@ -175,13 +175,24 @@ function clampInBounds(state, x, y, radius) {
   return { x, y };
 }
 
+// v5: "around the view" = the visible rectangle grown by 30%. Things appear in
+// the margin just outside the screen (near) or anywhere in that area (far).
+const AROUND = 1.3;
 function pickSpawnPos(state, near, radius) {
-  // v5: no edges. Things appear just outside the view (near) or scattered
-  // around you (far), and are recycled once they're far behind.
-  const a = rand(0, TAU);
-  const vr = viewRadius(state);
-  const d = near ? vr * rand(1.0, 1.4) + radius : vr * Math.sqrt(rand(0.06, 1)) * 1.5;
-  return { x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d };
+  const hw = (state.viewW || 800) / 2, hh = (state.viewH || 600) / 2;
+  let x, y;
+  if (near) {
+    // a point on the edge band, weighted by side length
+    const k = 1.04 + Math.random() * (AROUND - 1.04);
+    const ex = hw * k + radius, ey = hh * k + radius;
+    const t = Math.random() * (ex + ey) * 2;
+    if (t < ex * 2) { x = -ex + t; y = Math.random() < 0.5 ? -ey : ey; }
+    else { y = -ey + (t - ex * 2); x = Math.random() < 0.5 ? -ex : ex; }
+  } else {
+    x = (Math.random() * 2 - 1) * hw * AROUND;
+    y = (Math.random() * 2 - 1) * hh * AROUND;
+  }
+  return { x: state.playerX + x, y: state.playerY + y };
 }
 
 function finishSpawn(e) {
@@ -242,8 +253,7 @@ function spawnBigFish(state) {
 }
 
 export const DENSITY = { regular: 60, breather: 70 };  // objects around the view
-const RING = 1.1;       // "around the view" = within 1.1 view radii (just past the corners)
-const RECYCLE = 3.0;    // gone once 3 view radii behind
+const RECYCLE = 2.0;    // gone once 2 view radii away (well off-screen)
 const HARD_CAP = 170;
 
 /** v5: fill the space around you at galaxy start (no fixed field any more). */
@@ -260,7 +270,8 @@ export function fillAround(state, n) {
 function updateDynamicSpawning(state, dt) {
   const vr = viewRadius(state);
   const px = state.playerX, py = state.playerY;
-  const ringR = vr * RING, far = vr * RECYCLE;
+  const far = vr * RECYCLE;
+  const hwA = state.viewW / 2 * AROUND, hhA = state.viewH / 2 * AROUND;
   let inRing = 0, big = 0;
   const ents = state.entities;
   for (let i = ents.length - 1; i >= 0; i--) {
@@ -276,7 +287,7 @@ function updateDynamicSpawning(state, dt) {
       if (d > vr * 1.1) ents.splice(i, 1);
       continue;
     }
-    if (d < ringR) inRing++;
+    if (Math.abs(e.x - px) < hwA + e.radius && Math.abs(e.y - py) < hhA + e.radius) inRing++;
     if (state.radius <= e.radius * state.eatRatio) big++;
   }
   world.inRing = inRing;

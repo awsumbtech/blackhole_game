@@ -119,8 +119,8 @@ const MIN_BITE_CAP = 6;
 const REGULAR_GAIN = 0.26;   // v4.1: share of a bite's mass you keep in regular galaxies (breathers 0.5)
 // v5: each galaxy now climbs only ~1 tier (instead of ~14x in size), so every
 // bite counts for less: "very small increments". These scale all of the above.
-const PACE = 0.25;
-const BREATHER_PACE = 0.16;
+const PACE = 0.16;
+const BREATHER_PACE = 0.14;
 
 // ─── HELPERS ───
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
