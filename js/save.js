@@ -52,6 +52,7 @@ export function save(state) {
       seenHints: state.seenHints,
       settings: state.settings,
       legacyPending: state.legacyBonusPending || 0,
+      lastActive: Date.now(),
       run: (!credited && inPlay && state.run) ? {
         galaxy: state.galaxy,
         mass: state.mass,
@@ -96,7 +97,8 @@ export function load() {
     seenHints: raw.seenHints || {},
     settings: raw.settings || {},
     run: raw.run || null,
-    legacyBonus: raw.legacyPending || 0   // only used for the one-time summary note
+    legacyBonus: raw.legacyPending || 0,  // only used for the one-time summary note
+    lastActive: raw.lastActive || 0
   };
   data.records.fastest = { ...(data.records.fastest || {}) };
 

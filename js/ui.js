@@ -97,7 +97,7 @@ export function isSummaryOpen() {
 
 // ─── STATS ───
 
-export function showStats(state, onClose) {
+export function showStats(state, onClose, opts = {}) {
   const s = state.stats;
   const r = state.records;
   const row = (k, v) => `<div class="stat-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`;
@@ -122,14 +122,18 @@ export function showStats(state, onClose) {
       <p>${seen ? esc(b.codex) : "Not visited yet."}</p></div>`;
   }).join("");
 
-  $("stats-body").innerHTML = `
+  const settingsHtml = `
     <div class="stats-section"><h3>Settings</h3>
       ${setRow("Zen mode", "No clock or par, bumps cost nothing", onOff("zen"))}
       ${setRow("Breathing guide", "A faint ring that grows as you breathe in (10s cycle)", onOff("breathGuide"))}
       ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}
       ${setRow("Touch controls", "Thumbstick, or drift toward your finger", seg("touchMode", [["joystick", "Joystick"], ["follow", "Follow"]]))}
-    </div>
+      ${setRow("Visual quality", "Auto lowers detail if your phone needs it", seg("quality", [["auto", "Auto"], ["high", "High"], ["balanced", "Lite"]]))}
+    </div>`;
+  $("stats-title").textContent = opts.settingsOnly ? "Settings" : "Stats & Records";
+  $("btn-stats-close").textContent = opts.settingsOnly ? "Done" : "Back to the void";
+  $("stats-body").innerHTML = opts.settingsOnly ? settingsHtml : settingsHtml + `
     <div class="stats-section"><h3>What's that? (events)</h3>${evItems}</div>
     <div class="stats-section"><h3>Galaxies</h3>${biomeItems}</div>
     <div class="stats-section"><h3>Progress</h3>

@@ -30,9 +30,12 @@ const hudBest = document.getElementById("hud-best");
 const hudBiome = document.getElementById("hud-biome");
 const hudProgressBar = document.getElementById("hud-progress-bar");
 
+// Screen sharpness cap: 2x on High, 1.5x on Balanced ("Lite")
+let dprCap = 2;
+
 function resizeCanvas() {
   const container = document.getElementById("game-container");
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = container.clientWidth;
   const h = container.clientHeight;
   canvas.width = w * dpr;
@@ -82,7 +85,10 @@ const state = {
   stardust: 0,
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
-  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false },
+  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto" },
+
+  // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
+  screen: "play", camMul: 1, drift: null,
   legacyBonusPending: 0,
 
   mods: computeMods(defaultUpgrades()),
@@ -117,7 +123,7 @@ function zoomTarget() {
 }
 
 function updateCameraScale(snap = false) {
-  const zt = zoomTarget();
+  const zt = zoomTarget() * state.camMul;
   state.zoom = snap ? zt : state.zoom + (zt - state.zoom) * 0.04;
   state.viewW = screenW / state.zoom;
   state.viewH = screenH / state.zoom;
@@ -626,6 +632,190 @@ function showHint(msg, ms = 2800) {
   showHint._t = setTimeout(() => el.classList.add("hidden"), ms);
 }
 
+// ─── SCREENS: TITLE, INTRO, DRIFT-IN ───
+const TITLE_AFTER_MS = 10 * 60 * 1000;
+const TITLE_ZOOM = 3.4;          // camera close-up on the hole behind the title
+const titleEl = document.getElementById("title-screen");
+const introEl = document.getElementById("intro-screen");
+let firstPlayStart = true;
+
+function showScreenEl(el) {
+  el.classList.remove("hidden", "fading");
+}
+function fadeOutScreenEl(el) {
+  if (el.classList.contains("hidden")) return;
+  el.classList.add("fading");
+  setTimeout(() => { if (el.classList.contains("fading")) el.classList.add("hidden"); }, 1400);
+}
+
+function showTitle() {
+  state.screen = "title";
+  state.drift = null;
+  state.camMul = TITLE_ZOOM;
+  input.setEnabled(false);
+  document.body.classList.add("on-title");
+  document.getElementById("newgame-confirm").classList.add("hidden");
+  document.getElementById("hint-toast").classList.add("hidden");
+  document.getElementById("title-continue-sub").textContent = `Galaxy ${state.galaxy} · ${state.biome ? state.biome.name : ""}`;
+  showScreenEl(titleEl);
+  warmHole(state.radius * zoomTarget() * TITLE_ZOOM * screenDpr);
+  save(state);
+}
+
+const INTRO_LINES = ["Drift.", "Eat what's smaller.", "Grow."];
+let introTimers = [];
+function showIntro() {
+  state.screen = "intro";
+  state.camMul = TITLE_ZOOM;
+  updateCameraScale(true);
+  input.setEnabled(false);
+  document.body.classList.add("on-title");
+  state.seenHints.intro = true;
+  showScreenEl(introEl);
+  const line = document.getElementById("intro-line");
+  INTRO_LINES.forEach((txt, i) => {
+    const at = 900 + i * 3600;
+    introTimers.push(setTimeout(() => { line.textContent = txt; line.classList.add("on"); }, at));
+    introTimers.push(setTimeout(() => line.classList.remove("on"), at + 2500));
+  });
+  introTimers.push(setTimeout(endIntro, 900 + INTRO_LINES.length * 3600));
+}
+function endIntro() {
+  if (state.screen !== "intro") return;
+  introTimers.forEach(clearTimeout);
+  introTimers = [];
+  fadeOutScreenEl(introEl);
+  startDrift("fresh");
+}
+document.getElementById("btn-skip-intro").addEventListener("click", () => { audio.playClick(); endIntro(); });
+
+/** Title -> play: the camera eases into the hole, a breath of dark, then play. */
+function startDrift(kind) {
+  if (state.drift) return;
+  fadeOutScreenEl(titleEl);
+  const rm = state.settings.reduceMotion;
+  state.drift = { t: 0, phase: 1, kind, veil: 0, from: state.camMul, inDur: rm ? 50 : 110, outDur: rm ? 50 : 80 };
+}
+
+function updateDrift(dt) {
+  const d = state.drift;
+  d.t += dt;
+  if (d.phase === 1) {
+    const p = Math.min(1, d.t / d.inDur);
+    const e = p * p * (3 - 2 * p);
+    if (!state.settings.reduceMotion) state.camMul = d.from + (TITLE_ZOOM * 2.1 - d.from) * e;
+    d.veil = e * 0.94;
+    if (p >= 1) {
+      // Swap to the play camera under the veil
+      d.phase = 2;
+      d.t = 0;
+      state.screen = "play";
+      state.camMul = 1;
+      updateCameraScale(true);
+      document.body.classList.remove("on-title");
+      titleEl.classList.add("hidden");
+      introEl.classList.add("hidden");
+      lastTime = performance.now();
+    }
+  } else {
+    const p = Math.min(1, d.t / d.outDur);
+    d.veil = 0.94 * (1 - p * p * (3 - 2 * p));
+    if (p >= 1) {
+      state.drift = null;
+      input.setEnabled(true);
+      onPlayStart(d.kind);
+    }
+  }
+}
+
+/** The world idles behind the title: things drift slowly, nothing happens. */
+function updateBackdrop(dt) {
+  updateCameraScale();
+  state.camX += (state.playerX - state.camX) * 0.05;
+  state.camY += (state.playerY - state.camY) * 0.05;
+  updateEntities(state.entities, state.bounds, dt * 0.4);
+}
+
+function onPlayStart(kind) {
+  if (kind === "resume") showHint(`Welcome back! Galaxy ${state.galaxy}: ${state.biome.name}`);
+  else showHint(`Galaxy ${state.galaxy}: ${state.biome.name}`);
+  if (!firstPlayStart) return;
+  firstPlayStart = false;
+  if (state.legacyBonusPending) {
+    setTimeout(() => showHint(`+${state.legacyBonusPending} stardust legacy bonus! Spend it after this galaxy`, 4000), 3000);
+  } else if (kind === "fresh") {
+    const touch = matchMedia("(pointer: coarse)").matches;
+    setTimeout(() => showHint(touch ? "Touch anywhere and drag to steer. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 2600);
+  }
+  if (kind !== "fresh" && !state.seenHints.v3_zen) {
+    state.seenHints.v3_zen = true;
+    setTimeout(() => showHint("Zen mode is on (no clock, no penalties). Tap Zen below to switch it off.", 5000), 7000);
+  }
+}
+
+document.getElementById("btn-title-continue").addEventListener("click", () => { audio.playClick(); startDrift("continue"); });
+document.getElementById("btn-title-new").addEventListener("click", () => {
+  audio.playClick();
+  document.getElementById("newgame-confirm").classList.remove("hidden");
+});
+document.getElementById("btn-newgame-no").addEventListener("click", () => {
+  audio.playClick();
+  document.getElementById("newgame-confirm").classList.add("hidden");
+});
+document.getElementById("btn-newgame-yes").addEventListener("click", () => {
+  audio.playClick();
+  document.getElementById("newgame-confirm").classList.add("hidden");
+  // Fresh journey: galaxy 1, no stardust or upgrades. Settings, records, codex stay.
+  state.galaxy = 1;
+  state.stardust = 0;
+  state.upgrades = defaultUpgrades();
+  state.legacyBonusPending = 0;
+  state.galaxyCredited = false;
+  state.transitioning = false;
+  state.transitionPhase = "";
+  document.getElementById("transition-overlay").classList.add("hidden");
+  initGalaxy(1);
+  state.camMul = TITLE_ZOOM;
+  updateCameraScale(true);
+  save(state);
+  startDrift("new");
+});
+document.getElementById("btn-title-settings").addEventListener("click", () => {
+  audio.playClick();
+  ui.showStats(state, () => {}, { settingsOnly: true });
+});
+
+// ─── PERFORMANCE + AUTO QUALITY ───
+// Work time per frame (not the vsync interval). At 120Hz the budget is 8.3ms;
+// on Auto, if the average stays above ~6.5ms for 2s we drop to Lite.
+const perf = { ema: 0, ring: new Float32Array(240), n: 0, over: 0, drops: 0 };
+function trackPerf(ms, dt) {
+  perf.ring[perf.n++ % perf.ring.length] = ms;
+  perf.ema = perf.ema ? perf.ema * 0.95 + ms * 0.05 : ms;
+  if (state.settings.quality !== "auto" || getArtQuality() !== "high" || state.screen !== "play") return;
+  perf.over = perf.ema > 6.5 ? perf.over + dt : 0;
+  if (perf.over > 120) {
+    perf.drops++;
+    applyQuality("balanced");
+  }
+}
+function perfReport() {
+  const n = Math.min(perf.n, perf.ring.length);
+  const a = Array.from(perf.ring.slice(0, n)).sort((x, y) => x - y);
+  const q = f => a.length ? +a[Math.min(a.length - 1, Math.floor(a.length * f))].toFixed(2) : 0;
+  return { avg: +(a.reduce((s, v) => s + v, 0) / (a.length || 1)).toFixed(2), p50: q(0.5), p95: q(0.95), max: q(0.999),
+    quality: getArtQuality(), autoDrops: perf.drops, entities: state.entities.length, ...artStats() };
+}
+function applyQuality(q) {
+  setArtQuality(q);
+  const cap = q === "high" ? 2 : 1.5;
+  if (cap !== dprCap) {
+    dprCap = cap;
+    ({ w: screenW, h: screenH, dpr: screenDpr } = resizeCanvas());
+    invalidateStarfield();
+  }
+}
+
 // ─── BREATHING ───
 // ~6 breaths per minute: 5s in, 5s out. Drives the drone swell, the biome
 // glow and the hole's halo (plus the optional guide ring).
@@ -652,6 +842,7 @@ canvas.addEventListener("mouseleave", () => {
 
 function frame(now) {
   requestAnimationFrame(frame);
+  const t0 = performance.now();
 
   // rAF timestamps can be slightly earlier than a performance.now() taken in an
   // event handler (resume/continue), so clamp at 0 to avoid negative steps.
@@ -661,11 +852,14 @@ function frame(now) {
 
   if (state.paused || state.menuOpen) return;
 
-  state.stats.timePlayed += dt / 60;
+  const inPlay = state.screen === "play";
+  if (inPlay) state.stats.timePlayed += dt / 60;
 
-  if (state.transitioning) updateTransition(dt);
+  if (state.transitioning && inPlay) updateTransition(dt);
+  if (!inPlay) updateBackdrop(dt);
+  if (state.drift) updateDrift(dt);
 
-  const playing = !state.transitioning || state.transitionPhase === "fadein";
+  const playing = inPlay && (!state.transitioning || state.transitionPhase === "fadein");
   const worldDt = dt * slowFactor(state);
 
   if (playing) {
@@ -743,12 +937,14 @@ function frame(now) {
     ctx.fillRect(0, 0, w, h);
   }
 
-  drawLivingWorldOverlay(ctx, state, w, h);
-  drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
-  drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio);
-  drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
-  drawThumbstick(input.getStick());
-  drawFloaters(w, h, z);
+  if (inPlay) {
+    drawLivingWorldOverlay(ctx, state, w, h);
+    drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
+    drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio);
+    drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
+    drawThumbstick(input.getStick());
+    drawFloaters(w, h, z);
+  }
 
   if (state.transitioning) {
     if (state.transitionPhase === "implode") {
@@ -778,8 +974,16 @@ function frame(now) {
     }
   }
 
+  // Drift-in veil (title -> play)
+  if (state.drift && state.drift.veil > 0) {
+    ctx.fillStyle = `rgba(2, 3, 8, ${state.drift.veil})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  trackPerf(performance.now() - t0, dt);
+
   // Combo counter + bonus
-  if (state.comboCount >= 3 && !state.transitioning) {
+  if (inPlay && state.comboCount >= 3 && !state.transitioning) {
     const hx = (state.playerX - state.camX) * z + w / 2;
     const hy = (state.playerY - state.camY) * z + h / 2;
     const size = 14 + Math.min(state.comboCount, 25) * 0.5;
@@ -857,17 +1061,30 @@ const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentC
 
 function setPaused(p) {
   if (state.transitioning && state.transitionPhase === "summary") return;
+  if (state.screen !== "play" || state.drift) return;
   state.paused = p;
   input.setEnabled(!p);
   const btn = document.getElementById("btn-pause");
   btn.innerHTML = p ? PLAY_SVG : PAUSE_SVG;
+  document.getElementById("pause-menu").classList.toggle("hidden", !p);
   if (p) {
-    showHint("Paused");
     save(state);
   } else {
+    if (ui.isStatsOpen()) ui.closeStats();
     lastTime = performance.now();
   }
 }
+
+document.getElementById("btn-resume").addEventListener("click", () => { audio.playClick(); setPaused(false); });
+document.getElementById("btn-pause-settings").addEventListener("click", () => {
+  audio.playClick();
+  ui.showStats(state, () => {}, { settingsOnly: true });
+});
+document.getElementById("btn-pause-title").addEventListener("click", () => {
+  audio.playClick();
+  setPaused(false);
+  showTitle();
+});
 
 document.getElementById("btn-pause").addEventListener("click", () => setPaused(!state.paused));
 
@@ -924,7 +1141,7 @@ window.addEventListener("keydown", e => {
     e.preventDefault();
     return;
   }
-  if (e.key === "Escape" || e.key === "p" || e.key === "P") {
+  if ((e.key === "Escape" || e.key === "p" || e.key === "P") && state.screen === "play") {
     setPaused(!state.paused);
     e.preventDefault();
   }
@@ -933,9 +1150,20 @@ window.addEventListener("keydown", e => {
 // Save often, and whenever the app is backgrounded (phones kill tabs)
 let resetting = false;
 setInterval(() => { if (!resetting) save(state); }, 5000);
+let hiddenAt = 0;
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && !resetting) save(state);
-  if (!document.hidden) lastTime = performance.now();
+  if (document.hidden) {
+    hiddenAt = Date.now();
+    if (!resetting) save(state);
+    return;
+  }
+  lastTime = performance.now();
+  // Back after a long break: greet with the title screen instead of mid-galaxy
+  if (hiddenAt && Date.now() - hiddenAt > TITLE_AFTER_MS && state.screen === "play" && !state.drift &&
+      !(state.transitioning && state.transitionPhase === "summary")) {
+    if (state.paused) setPaused(false);
+    showTitle();
+  }
 });
 window.addEventListener("pagehide", () => { if (!resetting) save(state); });
 
@@ -970,17 +1198,23 @@ function applySettings() {
   document.body.classList.toggle("soft-palette", !!st.softPalette);
   setSoftPalette(!!st.softPalette);
   document.getElementById("btn-zen").classList.toggle("on", !!st.zen);
+  document.body.classList.toggle("reduce-motion", !!st.reduceMotion);
   if (st.reduceMotion) state.shake = 0;
 }
 
 state.setSetting = (key, val) => {
   state.settings[key] = val;
+  if (key === "quality") {
+    perf.over = 0;
+    applyQuality(val === "balanced" ? "balanced" : "high");
+  }
   applySettings();
   syncHud(true);
   save(state);
 };
 state.setTouchMode = mode => state.setSetting("touchMode", mode);
 applySettings();
+applyQuality(state.settings.quality === "balanced" ? "balanced" : "high");
 
 document.getElementById("btn-zen").addEventListener("click", () => {
   const on = !state.settings.zen;
@@ -1004,24 +1238,23 @@ const initAudio = () => {
 for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, initAudio, true);
 
 initGalaxy(state.galaxy, resumeRun);
-if (resumeRun) {
-  showHint(`Welcome back! Galaxy ${state.galaxy}: ${state.biome.name}`);
+
+// Fresh install: short intro. Away > 10 min (or never seen v4): title screen.
+// Otherwise drop straight back in where you were.
+const awayMs = savedData ? Date.now() - (savedData.lastActive || 0) : Infinity;
+if (!savedData && !state.seenHints.intro) {
+  showIntro();
+} else if (awayMs > TITLE_AFTER_MS) {
+  showTitle();
 } else {
-  showHint(`Galaxy ${state.galaxy}: ${state.biome.name}`);
-}
-if (state.legacyBonusPending) {
-  setTimeout(() => showHint(`+${state.legacyBonusPending} stardust legacy bonus! Spend it after this galaxy`, 4000), 3000);
-} else if (!savedData) {
-  const touch = matchMedia("(pointer: coarse)").matches;
-  setTimeout(() => showHint(touch ? "Touch anywhere and drag to steer. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 3000);
-}
-if (savedData && !state.seenHints.v3_zen) {
-  state.seenHints.v3_zen = true;
-  setTimeout(() => showHint("New: Zen mode is on (no clock, no penalties). Tap Zen below to switch it off.", 5000), 7000);
+  onPlayStart(resumeRun ? "resume" : "continue");
 }
 save(state);
 
 requestAnimationFrame(frame);
 
 // Debug/automation hook (harmless; lets a test bot read state)
-window.__bh = { state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo };
+window.__bh = {
+  state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
+  perf: perfReport, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats
+};

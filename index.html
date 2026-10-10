@@ -87,16 +87,53 @@
       </div>
     </div>
 
+    <!-- Pause menu -->
+    <div id="pause-menu" class="modal hidden" role="dialog" aria-label="Paused">
+      <div class="modal-card pause-card">
+        <div class="sum-head"><div class="sum-title">Paused</div><div class="sum-sub">Take a breath. Nothing is waiting.</div></div>
+        <button id="btn-resume" class="big-btn">Resume</button>
+        <button id="btn-pause-settings" class="soft-btn">Settings</button>
+        <button id="btn-pause-title" class="soft-btn">Title screen</button>
+      </div>
+    </div>
+
     <!-- Stats view -->
     <div id="stats" class="modal hidden" role="dialog" aria-label="Stats">
       <div class="modal-card">
         <div class="sum-head">
-          <div class="sum-title">Stats &amp; Records</div>
+          <div class="sum-title" id="stats-title">Stats &amp; Records</div>
         </div>
         <div id="stats-body"></div>
         <button id="btn-stats-close" class="big-btn">Back to the void</button>
       </div>
     </div>
+  </div>
+
+  <!-- Title screen (the live game is the backdrop) -->
+  <div id="title-screen" class="screen hidden" aria-label="Title">
+    <div class="title-top">
+      <div class="title-name">Black Hole</div>
+      <div class="title-sub">Galaxy Eater</div>
+    </div>
+    <div class="title-menu">
+      <button id="btn-title-continue" class="title-btn primary">Continue<small id="title-continue-sub">Galaxy 1 · Debris Reef</small></button>
+      <button id="btn-title-new" class="title-btn">New Game</button>
+      <button id="btn-title-settings" class="title-btn">Settings</button>
+      <div id="newgame-confirm" class="confirm hidden">
+        <p>Start a new journey from Galaxy 1?</p>
+        <small>Stardust and upgrades reset. Your settings, records and codex stay.</small>
+        <div class="confirm-row">
+          <button id="btn-newgame-yes" class="title-btn">Start over</button>
+          <button id="btn-newgame-no" class="title-btn primary">Keep my journey</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-launch intro -->
+  <div id="intro-screen" class="screen hidden" aria-live="polite">
+    <div id="intro-line" class="intro-line"></div>
+    <button id="btn-skip-intro" class="skip-btn">Skip</button>
   </div>
 
   <!-- Controls bar outside canvas -->

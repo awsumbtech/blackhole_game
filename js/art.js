@@ -498,8 +498,8 @@ function diskTexture(palette, b, layer) {
   const base = g.createRadialGradient(0, 0, b * inner * 0.92, 0, 0, b * outer);
   const c0 = colAt(layer === 0 ? 0 : 0.45), c1 = colAt(layer === 0 ? 0.45 : 1);
   base.addColorStop(0, `rgba(${c0}, 0)`);
-  base.addColorStop(0.12, `rgba(${c0}, ${layer === 0 ? 0.42 : 0.2})`);
-  base.addColorStop(0.6, `rgba(${c1}, ${layer === 0 ? 0.18 : 0.1})`);
+  base.addColorStop(0.12, `rgba(${c0}, ${layer === 0 ? 0.6 : 0.26})`);
+  base.addColorStop(0.6, `rgba(${c1}, ${layer === 0 ? 0.26 : 0.13})`);
   base.addColorStop(1, `rgba(${c1}, 0)`);
   g.fillStyle = base;
   g.beginPath(); g.arc(0, 0, b * outer, 0, TAU); g.fill();
@@ -515,7 +515,7 @@ function diskTexture(palette, b, layer) {
     const tt = (rad / b - DISK_IN) / (DISK_OUT - DISK_IN);
     const col = colAt(Math.min(1, Math.max(0, tt)));
     const a0 = r() * TAU, len = 0.4 + r() * 1.3;
-    g.strokeStyle = `rgba(${col}, ${(0.05 + r() * 0.16) * (1 - tt * 0.5)})`;
+    g.strokeStyle = `rgba(${col}, ${(0.07 + r() * 0.2) * (1 - tt * 0.5)})`;
     g.lineWidth = Math.max(0.6, b * (0.03 + r() * 0.09));
     g.beginPath();
     g.arc(0, 0, rad, a0, a0 + len);
@@ -648,7 +648,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   ctx.clip();
   ctx.scale(1, 0.85);
   ctx.rotate(spinInner);
-  ctx.globalAlpha = 0.5 * glowA;
+  ctx.globalAlpha = 0.8 * glowA;
   const si = inner.k * radius * 0.82;
   ctx.drawImage(inner.c, -si / 2, -si / 2, si, si);
   ctx.restore();
