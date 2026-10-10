@@ -8,6 +8,8 @@ import {
   drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
   invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
+import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
+  onWorldBump, onWorldEvent, worldMassMul, eventPairText, worldsInfo } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
@@ -195,6 +197,7 @@ function initGalaxy(galaxyNum, resume = null) {
   state.nearGoalPlayed = false;
 
   initLivingWorld(state);
+  initWorlds(state);
   initPowerups();
   ui.updatePowerupBar(state);
 
@@ -305,7 +308,7 @@ function tryConsume(dt) {
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
       const cap = Math.max(MIN_BITE_CAP, state.mass * biteK);
-      const gain = Math.min(e.mass * 0.5 * comboBonus, cap) * dbl;
+      const gain = Math.min(e.mass * 0.5 * comboBonus, cap) * dbl * worldMassMul();
       state.mass += gain;
       updateRadius();
 
@@ -369,6 +372,7 @@ const BUMP_LOSS = 0.01;         // was 5% of mass (0 in Zen)
 const COMBO_PAUSE = 120;        // combo holds for 2s instead of resetting
 
 function bump(e, dx, dy, dist) {
+  onWorldBump(state, e);           // Ruined Armada: brittle hulls crumble
   const d = Math.max(1, dist);
   const nx = -dx / d;
   const ny = -dy / d;
@@ -446,6 +450,16 @@ function collectPowerup(e) {
 state.onEventWarn = id => {
   const info = EVENT_INFO[id];
   if (!info) return;
+  // v4.1: a galaxy's signature event also feeds its mechanic; say so softly
+  const pair = eventPairText(id);
+  if (pair) {
+    const key = "pair_" + state.biome.name + "_" + id;
+    const first = !state.seenHints[key];
+    state.seenHints[key] = true;
+    state.seenHints["ev_" + id] = true;
+    showHint(first ? `${info.name}: ${pair}.` : `${info.name}: ${pair}`, first ? 4200 : 2400);
+    return;
+  }
   if (!state.seenHints["ev_" + id]) {
     state.seenHints["ev_" + id] = true;
     showHint(info.first, 4800);
@@ -453,6 +467,9 @@ state.onEventWarn = id => {
     showHint(info.name, 2000);
   }
 };
+
+state.onEventStart = id => onWorldEvent(state, id);
+state.worldHint = (key, msg, ms) => hint(key, msg, ms);
 
 // Power-ups fade out over their last 3 seconds, so no end sound is needed
 state.onPowerupEnd = () => {};
@@ -878,6 +895,7 @@ function frame(now) {
     state.bgX += (state.camX - prevCamX) * state.zoom;
     state.bgY += (state.camY - prevCamY) * state.zoom;
     updateLivingWorld(state, dt, worldDt);
+    updateWorlds(state, dt, worldDt);
     updateEntities(state.entities, state.bounds, worldDt);
     if (updatePowerups(state, dt)) {
       audio.playPowerupSpawn();
@@ -915,6 +933,7 @@ function frame(now) {
   ctx.translate(shakeX, shakeY);
   ctx.scale(z, z);
   drawBoundary(ctx, vw, vh, state.camX, state.camY, state.bounds, state.biome ? state.biome.borderColor : "#1a2e6a", now, z);
+  drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
@@ -947,8 +966,10 @@ function frame(now) {
 
   if (inPlay) {
     drawLivingWorldOverlay(ctx, state, w, h);
+    drawWorldsOverlay(ctx, state, w, h, breath);
     drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
-    drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio);
+    drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio,
+      (c, mx, my, sc) => drawWorldsMinimap(c, mx, my, sc, now));
     drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
     drawThumbstick(input.getStick());
     drawFloaters(w, h, z);
@@ -1264,5 +1285,5 @@ requestAnimationFrame(frame);
 // Debug/automation hook (harmless; lets a test bot read state)
 window.__bh = {
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
-  perf: perfReport, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats
+  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats
 };

@@ -221,13 +221,16 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
   return finishSpawn(e);
 }
 
-function spawnFood(state, near) {
-  const type = weightedType(state.biome.weights, state.galaxy);
+/** opts: { type: id, pos: {x, y}, sizeK } (v4.1: worlds.js plants food in reefs, rivers...) */
+export function spawnFood(state, near, opts = {}) {
+  const type = opts.type ? typeById(opts.type) : weightedType(state.biome.weights, state.galaxy);
+  const k = opts.sizeK || 1;
+  const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined };
   if (state.biome.breather) {
-    return spawnScaled(state, type, CFG.BREATHER_FOOD_MIN, CFG.BREATHER_FOOD_MAX, { near });
+    return spawnScaled(state, type, CFG.BREATHER_FOOD_MIN * k, CFG.BREATHER_FOOD_MAX * k, o);
   }
-  const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1);
-  return spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, { near });
+  const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1) * k;
+  return spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, o);
 }
 
 function spawnBigFish(state) {
@@ -388,6 +391,7 @@ function updateActiveEvents(state, dt) {
       ev.warn -= dt;
       ev.warnAge += dt;
       if (ev.warnUpdate) ev.warnUpdate(state, dt);
+      if (ev.warn <= 0) state.onEventStart?.(ev.id);
       continue;
     }
     ev.age += dt;

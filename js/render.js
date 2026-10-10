@@ -489,7 +489,7 @@ export function drawRipples(ctx, ripples, w, h, camX, camY, zoom = 1) {
 
 // ─── MINIMAP ───
 
-export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playerRadius = 0, eatRatio = 0.88) {
+export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playerRadius = 0, eatRatio = 0.88, overlay = null) {
   const mapSize = 90;
   const mapX = w - mapSize - 16;
   const mapY = h - mapSize - 16;
@@ -512,6 +512,9 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playe
   ctx.strokeStyle = "rgba(110, 114, 255, 0.1)";
   ctx.lineWidth = 1;
   ctx.stroke();
+
+  // v4.1: landmarks, rivers, aurora, pulsar beams
+  if (overlay) overlay(ctx, mapX + mapSize / 2, mapY + mapSize / 2, scale);
 
   // Entities as dots: red = too big, gold = power-up
   for (const e of entities) {

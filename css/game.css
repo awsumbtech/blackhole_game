@@ -699,3 +699,6 @@ body.on-title #hud, body.on-title #powerup-bar, body.on-title #hint-toast, body.
 @keyframes titleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .title-top, .title-menu { animation: none; } }
 body.reduce-motion .title-top, body.reduce-motion .title-menu { animation: none; }
+
+.codex-item p.mech { margin-top: 4px; color: rgba(220, 226, 255, 0.85); }
+.codex-item p.mech b { color: var(--accent-glow); font-weight: 600; }

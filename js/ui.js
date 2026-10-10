@@ -1,3 +1,4 @@
+import { MECHANICS } from "./worlds.js";
 // ─── UI ───
 // Between-galaxy summary + upgrade shop, stats view, power-up timers.
 
@@ -119,7 +120,8 @@ export function showStats(state, onClose, opts = {}) {
   const biomeItems = biomeCatalog.map(b => {
     const seen = state.seenHints["biome_" + b.name];
     return `<div class="codex-item${seen ? "" : " unseen"}"><b><i class="dot" style="background:${b.borderColor}"></i>${seen ? esc(b.name) : "???"}</b>
-      <p>${seen ? esc(b.codex) : "Not visited yet."}</p></div>`;
+      <p>${seen ? esc(b.codex) : "Not visited yet."}</p>
+      ${seen && MECHANICS[b.name] ? `<p class="mech"><b>${esc(MECHANICS[b.name].name)}.</b> ${esc(MECHANICS[b.name].codex)}</p>` : ""}</div>`;
   }).join("");
 
   const settingsHtml = `
