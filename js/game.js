@@ -1403,7 +1403,10 @@ save(state);
 requestAnimationFrame(frame);
 
 // Debug/automation hook (harmless; lets a test bot read state)
-window.__bh = {
+// Developer hook for the automated tests. Only exists on a local dev server
+// or with ?debug in the URL, never for normal play.
+const DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("debug");
+if (DEV) window.__bh = {
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats,
   density: densityInfo, music: audio.musicInfo, feature: () => worldsFeature(state),

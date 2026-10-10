@@ -1115,11 +1115,10 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
 let lastFD = 0;
 /** For tests/debug: nearest mechanic feature, in view radii */
 export function worldsFeature(state) { if (!W) return null; lastFD = featureDist(state) / viewR(state); return lastFD; }
-/** For tests/debug */
+/** For the automated tests (dev builds only) */
 export function worldsInfo() {
   if (!W) return null;
-  return { biome: W.biome, f: +W.f.toFixed(2), landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), visited: l.visited })),
-    sets: 1 + W.old.length, setNo: W.setNo, tierNo: W.tierNo || 0, travelSets: W.travelSets || 0, featureDist: lastFD, b0: Math.round(W.b0), ox: Math.round(W.ox), oy: Math.round(W.oy),
-    hint: W.hint.lm ? W.hint.lm.name : null,
-    pulsars: W.pulsars.map(p => ({ x: Math.round(px(p.x)), y: Math.round(py(p.y)), ang: p.ang })), inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
+  return { biome: W.biome, landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), visited: l.visited })),
+    sets: 1 + W.old.length, tierNo: W.tierNo || 0, travelSets: W.travelSets || 0, featureDist: lastFD,
+    inBeam: W.inBeam, riding: !!W.riding };
 }
