@@ -382,7 +382,7 @@ const UPDATE = {
       if (e.riverItem && (e.x * e.x + e.y * e.y) > Math.pow(state.bounds * 0.9, 2)) e.consumed = true;
     }
     // Rivers carry fresh comets from upstream
-    const every = W.boost > 0 ? 50 : 150;
+    const every = W.boost > 0 ? 60 : 200;
     for (const rv of W.rivers) {
       rv.spawn += dt;
       if (rv.spawn < every) continue;
@@ -936,5 +936,6 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
 export function worldsInfo() {
   if (!W) return null;
   return { biome: W.biome, f: +W.f.toFixed(2), landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(l.x * W.f), y: Math.round(l.y * W.f), visited: l.visited })),
-    hint: W.hint.lm ? W.hint.lm.name : null, inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
+    hint: W.hint.lm ? W.hint.lm.name : null,
+    pulsars: W.pulsars.map(p => ({ x: Math.round(p.x * W.f), y: Math.round(p.y * W.f), ang: p.ang })), inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
 }

@@ -122,6 +122,7 @@ export const biomeCatalog = [
     nebula: [[160, 225, 255], [205, 240, 255], [120, 205, 235]],
     weights: { dust: 3, junk: 0.5, meteor: 0.5, comet: 8, craft: 0.5, planet: 0.5, star: 0.3, neutron: 0 },
     events: { cometStream: 3, meteorShower: 1 },
+    gainK: 0.85,           // v4.1: the rivers bring a lot of food
     sound: { root: 82.4, chord: [1, 1.5, 2.25], cutoff: 700, scale: 329.6 },
     description: "Rivers of ice and light",
     codex: "Icy cyan space full of comets. Comet streams glide across your path."
@@ -163,6 +164,7 @@ export const biomeCatalog = [
     nebula: [[255, 205, 115], [255, 175, 95], [255, 232, 165]],
     weights: { dust: 2, junk: 0.5, meteor: 0.5, comet: 0.5, craft: 0.3, planet: 1, star: 7, neutron: 0 },
     events: { stellarBirth: 3, voidPulse: 1 },
+    gainK: 1.15,           // v4.1: buds start small, so bites are a bit richer
     sound: { root: 87.3, chord: [1, 1.25, 1.5, 2], cutoff: 800, scale: 349.2 },
     description: "A breather: fields of gentle suns",
     codex: "A breather galaxy. Warm gold fields of little suns. Big, easy bites and a short clear."
@@ -173,6 +175,7 @@ export const biomeCatalog = [
     nebula: [[200, 182, 255], [255, 155, 95], [160, 142, 255]],
     weights: { dust: 3, junk: 2, meteor: 2, comet: 1, craft: 1, planet: 2, star: 3, neutron: 4 },
     events: { gravitationalWave: 3, stellarBirth: 1 },
+    gainK: 0.8,            // v4.1: pulsar beams give +50%
     sound: { root: 58.3, chord: [1, 1.5, 2], cutoff: 380, scale: 233.1 },
     description: "Where dead stars are born again",
     codex: "Cool violet with ember sparks. Dense neutron stars; slow gravity waves roll through."

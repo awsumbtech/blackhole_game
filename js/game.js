@@ -105,10 +105,11 @@ const input = createInput(canvas);
 
 // Largest single bite as a share of your mass. Growth is exponential, so this
 // (more than the galaxy target) sets the pace: ~6% => roughly 2.5-4 min per galaxy for a person.
-const MAX_BITE = 0.06;
-const MAX_BIG_BITE = 0.08;   // outgrown "bigger fish" are a slightly bigger treat
+const MAX_BITE = 0.042;     // v4.1: worlds add food (reefs, rivers, aurora), so bites are a little smaller
+const MAX_BIG_BITE = 0.056;  // outgrown "bigger fish" are a slightly bigger treat
 const BREATHER_BITE = 0.055; // breathers: food is big and everywhere, so a smaller cap keeps it ~1-1.5 min
 const MIN_BITE_CAP = 6;
+const REGULAR_GAIN = 0.26;   // v4.1: share of a bite's mass you keep in regular galaxies (breathers 0.5)
 
 // ─── HELPERS ───
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -308,7 +309,9 @@ function tryConsume(dt) {
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
       const cap = Math.max(MIN_BITE_CAP, state.mass * biteK);
-      const gain = Math.min(e.mass * 0.5 * comboBonus, cap) * dbl * worldMassMul();
+      const gk = state.biome.breather ? 0.5 : REGULAR_GAIN;
+      // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
+      const gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
       state.mass += gain;
       updateRadius();
 
