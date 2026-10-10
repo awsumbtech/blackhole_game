@@ -100,8 +100,8 @@ const SET_KEYS = ["b0", "ox", "oy", "lms", "reefs", "rivers", "cradle", "aurora"
 let AM = 1;                 // alpha multiplier while drawing older (receding) sets
 const PREFIX = ["Greater", "Outer", "High", "Far", "Grand", "Deep"];
 function setName(n) {
-  if (!W.setNo) return n;
-  const p = PREFIX[(W.setNo - 1) % PREFIX.length];
+  if (!W.tierNo) return n;
+  const p = PREFIX[(W.tierNo - 1) % PREFIX.length];
   return n.startsWith("The ") ? "The " + p + " " + n.slice(4) : p + " " + n;
 }
 function viewR(state) { return Math.hypot(state.viewW, state.viewH) / 2; }
@@ -165,9 +165,9 @@ export function initWorlds(state) {
   buildSet(state);
 }
 
-function buildSet(state) {
+function buildSet(state, ox = state.playerX, oy = state.playerY) {
   W.b0 = state.radius * B0K;
-  W.ox = state.playerX; W.oy = state.playerY;
+  W.ox = ox; W.oy = oy;
   W.lms = []; W.reefs = []; W.rivers = []; W.cradle = null; W.aurora = null;
   W.meadows = []; W.pulsars = []; W.flagship = null; W.grid = null;
   const setup = SETUP[W.biome];
@@ -180,14 +180,10 @@ function buildSet(state) {
  */
 export function onWorldTier(state) {
   if (!W) return;
-  for (const e of state.entities) {
-    if (e.orbit && W.cradle) {
-      const rr = wx(W.cradle.rings[e.orbit.ring]);
-      e.vx = -Math.sin(e.orbit.ang) * e.orbit.w * rr; e.vy = Math.cos(e.orbit.ang) * e.orbit.w * rr;
-    }
-    e.reef = null; e.orbit = null; e.meadow = null; e.bloom = null;
-    e.riverItem = false; e.auroraItem = false; e.hull = false;
-  }
+  releaseTags(state);
+  W.same = [];
+  W.tierNo = (W.tierNo || 0) + 1;
+  W.setCool = 240;
   const snap = {};
   for (const k of SET_KEYS) snap[k] = W[k];
   W.old.unshift(snap);
@@ -333,7 +329,7 @@ function setBudSize(e) {
 
 // River flow lookup grid (base units)
 function buildFlowGrid(b0) {
-  const cell = Math.max(24, b0 / 40);
+  const cell = Math.max(24, b0 / 30);
   const n = Math.ceil((b0 * 2.4) / cell) + 1;
   const dist = new Float32Array(n * n), tx = new Float32Array(n * n), ty = new Float32Array(n * n);
   const o = -b0 * 1.2;
@@ -391,10 +387,83 @@ export function updateWorlds(state, dt, worldDt) {
     if (W.introTimer <= 0 && W.mech) state.worldHint?.("mech_" + W.biome, W.mech.first, 5600);
   }
 
+  maintainSet(state, dt);
+
   const upd = UPDATE[W.biome];
   if (upd) upd(state, dt, worldDt);
 
   updateLandmarks(state, dt);
+}
+
+// ─── v5.1: landmarks follow you through the edgeless world ───
+// You cross a set (~100 hole radii) in seconds, so when nothing of this
+// galaxy's mechanic is near you any more, a new set of the same scale is laid
+// out ahead of you. If you turn back toward an earlier one, it comes back.
+const SAME_TIER_KEEP = 3;
+
+/** Distance from you to the nearest piece of the current set's mechanic. */
+function featureDist(state) {
+  const X = state.playerX, Y = state.playerY;
+  let best = Infinity;
+  const pt = (x, y, r = 0) => { const d = Math.hypot(x - X, y - Y) - r; if (d < best) best = d; };
+  for (const rf of W.reefs) pt(px(rf.x), py(rf.y), wx(rf.r));
+  for (const rv of W.rivers) for (let i = 0; i < rv.pts.length; i += 2) pt(px(rv.pts[i][0]), py(rv.pts[i][1]), wx(rv.w));
+  if (W.aurora) for (let i = 0; i < W.aurora.pts.length; i += 2) pt(px(W.aurora.pts[i][0]), py(W.aurora.pts[i][1]), W.b0 * 0.06);
+  if (W.cradle) pt(px(W.cradle.x), py(W.cradle.y), wx(W.cradle.rings[3]));
+  if (W.flagship) pt(px(W.flagship.x), py(W.flagship.y), wx(W.flagship.size));
+  for (const m of W.meadows) pt(px(m.x), py(m.y), wx(m.r));
+  for (const p of W.pulsars) pt(px(p.x), py(p.y), W.b0 * 0.4);   // the beams reach well past the star
+  for (const lm of W.lms) pt(px(lm.x), py(lm.y), wx(lm.r));
+  return Math.max(0, best);
+}
+
+function releaseTags(state) {
+  for (const e of state.entities) {
+    if (e.orbit && W.cradle) {
+      const rr = wx(W.cradle.rings[e.orbit.ring]);
+      e.vx = -Math.sin(e.orbit.ang) * e.orbit.w * rr; e.vy = Math.cos(e.orbit.ang) * e.orbit.w * rr;
+    }
+    e.reef = null; e.orbit = null; e.meadow = null; e.bloom = null;
+    e.riverItem = false; e.auroraItem = false; e.hull = false;
+  }
+}
+
+function snapSet() { const o = {}; for (const k of SET_KEYS) o[k] = W[k]; return o; }
+function loadSet(o) { for (const k of SET_KEYS) W[k] = o[k]; }
+
+function maintainSet(state, dt) {
+  W.setCheck = (W.setCheck || 0) + dt;
+  W.setCool = Math.max(0, (W.setCool || 0) - dt);
+  if (W.setCheck < 20 || W.setCool > 0) return;
+  W.setCheck = 0;
+  const vr = viewR(state);
+  if (featureDist(state) < vr * 1.2) return;
+  // Turned back toward an earlier set of this scale?
+  W.same = W.same || [];
+  let back = -1, bd = vr * 1.0;
+  W.same.forEach((o, i) => {
+    if (o.tierNo !== W.tierNo) return;
+    let d = Infinity;
+    withSet(o, () => { d = featureDist(state); });
+    if (d < bd) { bd = d; back = i; }
+  });
+  releaseTags(state);
+  const cur = snapSet(); cur.tierNo = W.tierNo;
+  if (back >= 0) {
+    const o = W.same.splice(back, 1)[0];
+    W.same.unshift(cur);
+    loadSet(o);
+  } else {
+    W.same.unshift(cur);
+    // Lay the next set out ahead of where you're heading
+    const v = Math.hypot(state.playerVX, state.playerVY);
+    const a = v > 0.01 ? Math.atan2(state.playerVY, state.playerVX) : W.r() * TAU;
+    const R = state.radius * B0K;
+    buildSet(state, state.playerX + Math.cos(a) * R * 0.5, state.playerY + Math.sin(a) * R * 0.5);
+  }
+  if (W.same.length > SAME_TIER_KEEP) W.same.length = SAME_TIER_KEEP;
+  W.setCool = 150;
+  W.travelSets = (W.travelSets || 0) + 1;
 }
 
 const UPDATE = {
@@ -467,6 +536,18 @@ const UPDATE = {
     const c = W.cradle;
     const cx = px(c.x), cy = py(c.y);
     const pr = pullRange(state);
+    // v5.1: the Cradle keeps welcoming new little worlds while you're around
+    let orbiting = 0;
+    for (const e of state.entities) if (e.orbit) orbiting++;
+    c.regrow = (c.regrow || 0) + dt;
+    if (orbiting < 14 && c.regrow > 150 && nearYou(state, cx, cy, 2.6)) {
+      c.regrow = 0;
+      const e = spawnFood(state, false, { type: W.r() < 0.4 ? "planet" : undefined, pos: { x: cx, y: cy }, sizeK: 1.1 });
+      putInOrbit(e, Math.floor(W.r() * 4), W.r() * TAU);
+      const rr = wx(c.rings[e.orbit.ring]);
+      e.x = cx + Math.cos(e.orbit.ang) * rr; e.y = cy + Math.sin(e.orbit.ang) * rr;
+      state.entities.push(e);
+    }
     for (const e of state.entities) {
       if (!e.orbit) {
         // Keep loose things from sitting on the sun
@@ -494,7 +575,20 @@ const UPDATE = {
   },
 
   "Ruined Armada"(state, dt) {
-    for (const e of state.entities) if (e._crumbleCd > 0) e._crumbleCd -= dt;
+    let hulls = 0;
+    for (const e of state.entities) { if (e._crumbleCd > 0) e._crumbleCd -= dt; if (e.hull) hulls++; }
+    // v5.1: fresh brittle hulls keep drifting near the wrecks
+    W.hullT = (W.hullT || 0) + dt;
+    if (hulls < 4 && W.hullT > 300) {
+      W.hullT = 0;
+      const spots = W.lms.filter(l => nearYou(state, px(l.x), py(l.y), 2.6));
+      if (spots.length) {
+        const l = spots[Math.floor(W.r() * spots.length)];
+        const a = W.r() * TAU, d = wx(l.r) * (0.5 + W.r() * 0.8);
+        const h = addHull(state, px(l.x) + Math.cos(a) * d, py(l.y) + Math.sin(a) * d, 1.2, 1.8);
+        h._spawnAge = 0; h._spawnAlpha = 0;
+      }
+    }
   },
 
   "Void Rift"(state, dt, wdt) {
@@ -641,7 +735,7 @@ export function eventPairText(id) {
 // ─── Landmarks: arrival names, food-thin edge hints ───
 function updateLandmarks(state, dt) {
   for (const lm of W.lms) {
-    if (lm.visited) continue;
+    if (lm.visited || state.tierBanner) continue;   // don't talk over a tier reveal
     if (Math.hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY) < wx(lm.r) + state.radius) {
       lm.visited = true;
       W.banner = { text: lm.name, age: 0 };
@@ -956,7 +1050,7 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
 }
 
 /** Minimap overlay: called with the map centre and world->map scale. */
-export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
+export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   if (!W) return;
   const f = W.f;
   cx += W.ox * sc; cy += W.oy * sc;
@@ -986,7 +1080,18 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
     ctx.stroke();
   }
   for (const lm of W.lms) {
-    const x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
+    let x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
+    // v5.1: landmarks beyond radar range sit on the rim, pointing the way
+    if (rim) {
+      const dx = x - rim.cx, dy = y - rim.cy, d = Math.hypot(dx, dy);
+      if (d > rim.r - 4) {
+        const k = (rim.r - 4) / d;
+        ctx.globalAlpha = lm.visited ? 0.3 : 0.6;
+        ctx.fillStyle = `rgba(${lm.rgb}, 1)`;
+        ctx.beginPath(); ctx.arc(rim.cx + dx * k, rim.cy + dy * k, 1.8, 0, TAU); ctx.fill();
+        continue;
+      }
+    }
     ctx.globalAlpha = lm.visited ? 0.55 : 0.9;
     ctx.strokeStyle = ctx.fillStyle = `rgba(${lm.rgb}, 1)`;
     ctx.lineWidth = 1;
@@ -1007,11 +1112,14 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
   ctx.restore();
 }
 
+let lastFD = 0;
+/** For tests/debug: nearest mechanic feature, in view radii */
+export function worldsFeature(state) { if (!W) return null; lastFD = featureDist(state) / viewR(state); return lastFD; }
 /** For tests/debug */
 export function worldsInfo() {
   if (!W) return null;
   return { biome: W.biome, f: +W.f.toFixed(2), landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), visited: l.visited })),
-    sets: 1 + W.old.length, setNo: W.setNo, b0: Math.round(W.b0),
+    sets: 1 + W.old.length, setNo: W.setNo, tierNo: W.tierNo || 0, travelSets: W.travelSets || 0, featureDist: lastFD, b0: Math.round(W.b0), ox: Math.round(W.ox), oy: Math.round(W.oy),
     hint: W.hint.lm ? W.hint.lm.name : null,
     pulsars: W.pulsars.map(p => ({ x: Math.round(px(p.x)), y: Math.round(py(p.y)), ang: p.ang })), inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
 }

@@ -526,7 +526,7 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, player
   }
 
   const ox = cx - playerX * scale, oy = cy - playerY * scale;
-  if (overlay) overlay(ctx, ox, oy, scale);
+  if (overlay) overlay(ctx, ox, oy, scale, { cx, cy, r });
 
   // Trail of where you've been (oldest faintest)
   const trail = extra.trail;

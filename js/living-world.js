@@ -230,12 +230,21 @@ export function spawnFood(state, near, opts = {}) {
   const type = opts.type ? typeById(opts.type) : weightedType(foodWeights(state), 99);
   const k = opts.sizeK || 1;
   const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined };
+  // v5.1: the vast kinds (systems, nebulae, clusters, galaxies) are drawn bigger
+  // but lighter, so a bite still weighs the same but reads as what it is
+  const vk = VAST_FOOD.has(type.id) ? VAST_K : 1;
+  let e;
   if (state.biome.breather) {
-    return spawnScaled(state, type, CFG.BREATHER_FOOD_MIN * k, CFG.BREATHER_FOOD_MAX * k, o);
+    e = spawnScaled(state, type, CFG.BREATHER_FOOD_MIN * k * vk, CFG.BREATHER_FOOD_MAX * k * vk, o);
+  } else {
+    const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1) * k * vk;
+    e = spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, o);
   }
-  const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1) * k;
-  return spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, o);
+  if (vk !== 1) { e.mass /= vk * vk; e.density /= vk * vk; }
+  return e;
 }
+const VAST_FOOD = new Set(["system", "nebula", "cluster", "galaxy"]);
+const VAST_K = 1.7;
 
 function spawnBigFish(state) {
   const type = weightedType(bigWeights(state), 99);

@@ -9,7 +9,7 @@ import {
   invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
-  onWorldBump, onWorldEvent, onWorldTier, worldMassMul, eventPairText, worldsInfo } from "./worlds.js";
+  onWorldBump, onWorldEvent, onWorldTier, worldMassMul, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
@@ -1086,7 +1086,7 @@ function frame(now) {
     drawWorldsOverlay(ctx, state, w, h, breath);
     drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
     drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, radarRange(), state.radius, state.eatRatio,
-      (c, mx, my, sc) => drawWorldsMinimap(c, mx, my, sc, now), { trail: state.trail, viewW: vw, viewH: vh });
+      (c, mx, my, sc, rim) => drawWorldsMinimap(c, mx, my, sc, now, rim), { trail: state.trail, viewW: vw, viewH: vh });
     drawTierBanner(w, h);
     drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
     drawThumbstick(input.getStick());
@@ -1406,7 +1406,7 @@ requestAnimationFrame(frame);
 window.__bh = {
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats,
-  density: densityInfo, music: audio.musicInfo,
+  density: densityInfo, music: audio.musicInfo, feature: () => worldsFeature(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
   // test helper: grow to just under the next tier line
