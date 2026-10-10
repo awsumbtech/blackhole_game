@@ -1,6 +1,8 @@
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
+import { spriteFor, tailFor, drawBlackHoleArt, getArtQuality } from "./art.js";
+
 const TAU = Math.PI * 2;
 
 // "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
@@ -96,35 +98,92 @@ function renderNebulaToCache(w, h, camX, camY) {
   const offY = -STAR_BUFFER;
 
   nebulaCtx.clearRect(0, 0, bw, bh);
-
   const slowCamX = camX * 0.3;
   const slowCamY = camY * 0.3;
-  const bx2 = Math.floor((slowCamX - w / 2 + offX) / 200) - 1;
-  const by2 = Math.floor((slowCamY - h / 2 + offY) / 200) - 1;
 
-  for (let gx = 0; gx < Math.ceil(bw / 200) + 3; gx++) {
-    for (let gy = 0; gy < Math.ceil(bh / 200) + 3; gy++) {
-      const wx = bx2 + gx;
-      const wy = by2 + gy;
-      const hash = Math.abs((wx * 48611) ^ (wy * 96769)) % 1000;
-
-      if (hash < 30) {
-        const px = (wx * 200 - slowCamX) + w / 2 - offX + (hash % 13) * 8;
-        const py = (wy * 200 - slowCamY) + h / 2 - offY + (hash % 9) * 10;
-
-        const ng = nebulaCtx.createRadialGradient(px, py, 0, px, py, 30 + hash % 40);
-        const alpha = 0.015 + (hash % 20) * 0.001;
+  // v4: two soft layers, big slow clouds and smaller wisps, in biome colours
+  const layers = [
+    { cell: 340, chance: 330, rMin: 170, rMax: 420, aMin: 0.03, aMax: 0.06, salt: 48611 },
+    { cell: 200, chance: 60, rMin: 40, rMax: 110, aMin: 0.025, aMax: 0.05, salt: 7919 }
+  ];
+  for (const L of layers) {
+    const bx = Math.floor((slowCamX - w / 2 + offX) / L.cell) - 2;
+    const by = Math.floor((slowCamY - h / 2 + offY) / L.cell) - 2;
+    const cols = Math.ceil(bw / L.cell) + 5;
+    const rows = Math.ceil(bh / L.cell) + 5;
+    for (let gx = 0; gx < cols; gx++) {
+      for (let gy = 0; gy < rows; gy++) {
+        const wx = bx + gx, wy = by + gy;
+        const hash = Math.abs((wx * L.salt) ^ (wy * 96769)) % 1000;
+        if (hash >= L.chance) continue;
+        const px = (wx * L.cell - slowCamX) + w / 2 - offX + (hash % 13) * 9;
+        const py = (wy * L.cell - slowCamY) + h / 2 - offY + (hash % 9) * 11;
+        const rad = L.rMin + ((hash * 7) % 100) / 100 * (L.rMax - L.rMin);
+        const a = L.aMin + ((hash * 13) % 100) / 100 * (L.aMax - L.aMin);
         const c = NEBULA[hash % 3];
-        ng.addColorStop(0, `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha * 1.6})`);
-        ng.addColorStop(1, "transparent");
+        const ng = nebulaCtx.createRadialGradient(px, py, 0, px, py, rad);
+        ng.addColorStop(0, `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`);
+        ng.addColorStop(0.5, `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a * 0.45})`);
+        ng.addColorStop(1, `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0)`);
         nebulaCtx.fillStyle = ng;
-        nebulaCtx.fillRect(px - 60, py - 60, 120, 120);
+        nebulaCtx.fillRect(px - rad, py - rad, rad * 2, rad * 2);
       }
     }
   }
 
   nebulaCachedCamX = camX;
   nebulaCachedCamY = camY;
+}
+
+// ─── GRAVITATIONAL LENSING ───
+// Cheap approximation: stars just around the hole are re-drawn from the star
+// cache, magnified more the closer they are (three rings), and blended in
+// with a soft mask. One small offscreen canvas, a few drawImage calls.
+let lensCanvas = null, lensCtx = null;
+let lastStarDX = 0, lastStarDY = 0;
+
+export function drawLens(ctx, cx, cy, rScreen) {
+  if (!starCanvas || rScreen < 4) return;
+  const ext = 3.2;
+  const L = Math.ceil(rScreen * ext * 2);
+  if (L > 900) return;
+  if (!lensCanvas || lensCanvas.width < L) {
+    lensCanvas = document.createElement("canvas");
+    lensCanvas.width = lensCanvas.height = Math.max(L, 64);
+    lensCtx = lensCanvas.getContext("2d");
+  }
+  const g = lensCtx;
+  const half = L / 2;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = "source-over";
+  g.clearRect(0, 0, L, L);
+  g.fillStyle = "#04060c";
+  g.fillRect(0, 0, L, L);
+  // Star cache pixel that sits under the hole centre
+  const srcX = cx - lastStarDX + STAR_BUFFER;
+  const srcY = cy - lastStarDY + STAR_BUFFER;
+  const rings = [[1.0, 1.55, 2.1], [1.55, 2.25, 1.5], [2.25, ext, 1.18]];
+  for (const [r0, r1, mag] of rings) {
+    g.save();
+    g.beginPath();
+    g.arc(half, half, rScreen * r1, 0, TAU);
+    g.arc(half, half, rScreen * r0, TAU, 0, true);
+    g.clip();
+    g.translate(half, half);
+    g.scale(mag, mag);
+    g.drawImage(starCanvas, -srcX, -srcY);
+    g.restore();
+  }
+  g.globalCompositeOperation = "destination-in";
+  const m = g.createRadialGradient(half, half, rScreen * 0.95, half, half, rScreen * ext);
+  m.addColorStop(0, "rgba(0, 0, 0, 0)");
+  m.addColorStop(0.08, "rgba(0, 0, 0, 0.85)");
+  m.addColorStop(0.45, "rgba(0, 0, 0, 0.4)");
+  m.addColorStop(1, "rgba(0, 0, 0, 0)");
+  g.fillStyle = m;
+  g.fillRect(0, 0, L, L);
+  g.globalCompositeOperation = "source-over";
+  ctx.drawImage(lensCanvas, 0, 0, L, L, cx - half, cy - half, L, L);
 }
 
 // Biome nebula palette (three RGB triples)
@@ -168,6 +227,8 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5) {
   // Blit stars with offset
   const sdx = (starCachedCamX - camX);
   const sdy = (starCachedCamY - camY);
+  lastStarDX = sdx;
+  lastStarDY = sdy;
   ctx.drawImage(starCanvas, sdx - STAR_BUFFER, sdy - STAR_BUFFER);
 
   // Nebula: parallax moves slower, so threshold can be higher
@@ -219,46 +280,22 @@ export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time, z
   ctx.restore();
 }
 
-// ─── ENTITY GLOW CACHE ───
-
-let glowCanvas = null;
-let glowCtx = null;
-const GLOW_SIZE = 64;
-
-function ensureGlowCanvas() {
-  if (glowCanvas) return;
-  glowCanvas = document.createElement("canvas");
-  glowCanvas.width = GLOW_SIZE;
-  glowCanvas.height = GLOW_SIZE;
-  glowCtx = glowCanvas.getContext("2d");
-
-  const half = GLOW_SIZE / 2;
-  const gg = glowCtx.createRadialGradient(half, half, half * 0.25, half, half, half);
-  gg.addColorStop(0, "rgba(255, 255, 255, 0.19)");
-  gg.addColorStop(1, "transparent");
-  glowCtx.fillStyle = gg;
-  glowCtx.fillRect(0, 0, GLOW_SIZE, GLOW_SIZE);
-}
-
-// ─── BLACK HOLE GRADIENT CACHE ───
-
-let bhCachedRadius = -1;
-let bhOuterGlow = null;
-let bhEdgeGrad = null;
-let bhInnerGrad = null;
-
 // ─── ENTITIES ───
 
 // w/h are the zoomed (world-unit) viewport; the caller applies ctx.scale(zoom).
-export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1) {
-  ensureGlowCanvas();
+// v4: painted sprites from art.js (cached by type/variant/size), soft tails.
+const ROTATES = { junk: true, meteor: true, craft: true };
+
+export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5) {
+  const pxScale = zoom * dpr;
+  const twinkle = 0.9 + breath * 0.1;
 
   for (const e of entities) {
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
 
-    // Culling (margin covers glow and comet tails)
-    const margin = e.radius * 3.5 + 20;
+    // Culling (margin covers coronas and comet tails)
+    const margin = e.radius * (e.hasTail ? 9 : 3.2) + 20;
     if (sx < -margin || sx > w + margin || sy < -margin || sy > h + margin) continue;
 
     if (e.powerup) {
@@ -266,81 +303,58 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       continue;
     }
 
-    // Spawn fade-in alpha
     const spawnAlpha = e._spawnAlpha ?? 1;
-    if (spawnAlpha < 1) {
-      ctx.globalAlpha = spawnAlpha;
-    }
-
-    // Same rule as tryConsume: too big unless playerRadius > radius * eatRatio
-    const tooBig = playerRadius <= e.radius * eatRatio;
-
-    // Only save/restore when consuming (the only case that modifies transform)
+    let alpha = spawnAlpha;
+    let r = e.radius;
+    let rot = ROTATES[e.type] ? e.rotation : 0;
     if (e.consuming) {
-      ctx.save();
+      // Spiral down into the hole
       const p = e.consumeProgress;
-      const scale = 1 - p;
-      ctx.globalAlpha = 1 - p * p;
+      alpha *= 1 - p * p;
+      r *= 1 - p;
+      rot += p * Math.PI * 2;
+    }
+    if (alpha <= 0.01 || r <= 0.05) continue;
+
+    const rpx = e.radius * pxScale;
+
+    // Comet tail: one cached tapered gradient, rotated along the velocity
+    if (e.hasTail) {
+      const t = tailFor(e.color, rpx);
+      const speed = Math.hypot(e.vx, e.vy);
+      const ang = Math.atan2(-e.vy, -e.vx);
+      const len = r * (5 + Math.min(4, speed * 3));
+      const hgt = r * 2.4;
+      ctx.globalAlpha = alpha * 0.9;
       ctx.translate(sx, sy);
-      ctx.scale(scale, scale);
-      ctx.rotate(p * Math.PI * 2);
+      ctx.rotate(ang);
+      ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);
+      ctx.rotate(-ang);
       ctx.translate(-sx, -sy);
     }
 
-    // Glow for glowing objects — use cached glow canvas
-    if (e.glow > 0) {
-      const glowSize = e.radius * (2 + e.glow);
-      const diameter = glowSize * 2;
-      ctx.globalAlpha = e.consuming ? ctx.globalAlpha : spawnAlpha;
-      ctx.drawImage(glowCanvas, sx - glowSize, sy - glowSize, diameter, diameter);
-      ctx.globalAlpha = e.consuming ? (1 - e.consumeProgress * e.consumeProgress) : spawnAlpha;
+    const sp = spriteFor(e, rpx);
+    let d = sp.k * r;
+    if (e.type === "star" || e.type === "neutron") {
+      alpha *= twinkle;
+      d *= 0.98 + breath * 0.04;
     }
-
-    // Comet tail — simple alpha-faded strokes instead of gradient
-    if (e.hasTail) {
-      const speed = Math.hypot(e.vx, e.vy);
-      const tailLen = Math.max(e.radius * 2.5, speed * 50);
-      const angle = Math.atan2(-e.vy, -e.vx);
-      const segments = 4;
-
-      ctx.lineCap = "round";
-      for (let i = 0; i < segments; i++) {
-        const t0 = i / segments;
-        const t1 = (i + 1) / segments;
-        const x0 = sx + Math.cos(angle) * tailLen * t0;
-        const y0 = sy + Math.sin(angle) * tailLen * t0;
-        const x1 = sx + Math.cos(angle) * tailLen * t1;
-        const y1 = sy + Math.sin(angle) * tailLen * t1;
-        ctx.globalAlpha = (1 - t0) * 0.35 * spawnAlpha;
-        ctx.strokeStyle = e.color;
-        ctx.lineWidth = e.radius * 1.2 * (1 - t0 * 0.5);
-        ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = e.consuming ? (1 - e.consumeProgress * e.consumeProgress) : spawnAlpha;
-    }
-
-    // Main body — use pre-rendered sprite if available
-    if (e._sprite) {
-      const d = e._sprite.width;
-      ctx.drawImage(e._sprite, sx - d / 2, sy - d / 2);
-    } else if (e.shape === "polygon") {
-      drawPolygon(ctx, sx, sy, e.radius, 6, e.rotation, e.color);
-    } else if (e.bands) {
-      drawBandedCircle(ctx, sx, sy, e.radius, e.bands, e.rotation);
+    ctx.globalAlpha = alpha;
+    if (rot) {
+      ctx.translate(sx, sy);
+      ctx.rotate(rot);
+      ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
+      ctx.rotate(-rot);
+      ctx.translate(-sx, -sy);
     } else {
-      // Simple circle
-      ctx.beginPath();
-      ctx.arc(sx, sy, e.radius, 0, TAU);
-      ctx.fillStyle = e.color;
-      ctx.fill();
+      ctx.drawImage(sp.c, sx - d / 2, sy - d / 2, d, d);
     }
 
-    // "Too big to eat" indicator: pulsing red ring
+    // "Too big to eat" indicator: slow soft ring
+    const tooBig = playerRadius <= e.radius * eatRatio;
     if (tooBig && !e.consuming) {
       const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
+      ctx.globalAlpha = spawnAlpha;
       ctx.beginPath();
       ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
       ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
@@ -348,23 +362,18 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.stroke();
     }
 
-    // Blinking light for craft
-    if (e.type === "craft" && Math.sin(time * 0.003 + e.rotation * 10) > 0.85) {
+    // Slow blinking running light for derelicts
+    if (e.type === "craft" && !e.consuming && Math.sin(time * 0.002 + e.rotation * 10) > 0.8) {
+      const lx = sx + Math.cos(e.rotation) * e.radius * 0.95;
+      const ly = sy + Math.sin(e.rotation) * e.radius * 0.95;
+      ctx.globalAlpha = alpha * 0.8;
       ctx.beginPath();
-      ctx.arc(sx + e.radius * 0.3, sy - e.radius * 0.3, 1.5, 0, TAU);
-      ctx.fillStyle = "#fff";
+      ctx.arc(lx, ly, Math.max(1, e.radius * 0.08), 0, TAU);
+      ctx.fillStyle = "#ffe9c4";
       ctx.fill();
     }
-
-    if (e.consuming) {
-      ctx.restore();
-    }
-
-    // Restore alpha after spawn fade-in
-    if (spawnAlpha < 1) {
-      ctx.globalAlpha = 1;
-    }
   }
+  ctx.globalAlpha = 1;
 }
 
 const PU_STYLE = {
@@ -422,251 +431,40 @@ function drawPowerupPickup(ctx, e, sx, sy, time, zoom) {
   ctx.restore();
 }
 
-function drawPolygon(ctx, x, y, r, sides, rotation, color) {
-  ctx.beginPath();
-  for (let i = 0; i < sides; i++) {
-    const angle = rotation + (i / sides) * TAU;
-    const wobble = 0.85 + Math.sin(i * 2.7) * 0.15;
-    const px = x + Math.cos(angle) * r * wobble;
-    const py = y + Math.sin(angle) * r * wobble;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-function drawBandedCircle(ctx, x, y, r, bands, rotation) {
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, TAU);
-  ctx.fillStyle = bands[0];
-  ctx.fill();
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, TAU);
-  ctx.clip();
-
-  const bandH = (r * 2) / bands.length;
-  for (let i = 0; i < bands.length; i++) {
-    ctx.fillStyle = bands[i];
-    const by = y - r + i * bandH + Math.sin(rotation + i) * 2;
-    ctx.fillRect(x - r, by, r * 2, bandH);
-  }
-  ctx.restore();
-}
-
 // ─── ENTITY SPRITE PRE-RENDERING ───
 
+/** Kept for API compatibility: v4 paints sprites lazily in art.js. */
 export function prerenderEntitySprite(e) {
-  if (e.bands) {
-    const padding = 2;
-    const size = Math.ceil(e.radius * 2) + padding * 2;
-    const c = document.createElement("canvas");
-    c.width = size;
-    c.height = size;
-    const sCtx = c.getContext("2d");
-    const cx = size / 2;
-    const cy = size / 2;
-
-    // Base circle
-    sCtx.beginPath();
-    sCtx.arc(cx, cy, e.radius, 0, TAU);
-    sCtx.fillStyle = e.bands[0];
-    sCtx.fill();
-
-    // Bands
-    sCtx.save();
-    sCtx.beginPath();
-    sCtx.arc(cx, cy, e.radius, 0, TAU);
-    sCtx.clip();
-
-    const bandH = (e.radius * 2) / e.bands.length;
-    for (let i = 0; i < e.bands.length; i++) {
-      sCtx.fillStyle = e.bands[i];
-      const by = cy - e.radius + i * bandH + Math.sin(e.rotation + i) * 2;
-      sCtx.fillRect(cx - e.radius, by, e.radius * 2, bandH);
-    }
-    sCtx.restore();
-
-    e._sprite = c;
-  } else if (e.shape === "polygon") {
-    const padding = 4;
-    const size = Math.ceil(e.radius * 2) + padding * 2;
-    const c = document.createElement("canvas");
-    c.width = size;
-    c.height = size;
-    const sCtx = c.getContext("2d");
-    const cx = size / 2;
-    const cy = size / 2;
-
-    sCtx.beginPath();
-    const sides = 6;
-    for (let i = 0; i < sides; i++) {
-      const angle = e.rotation + (i / sides) * TAU;
-      const wobble = 0.85 + Math.sin(i * 2.7) * 0.15;
-      const px = cx + Math.cos(angle) * e.radius * wobble;
-      const py = cy + Math.sin(angle) * e.radius * wobble;
-      if (i === 0) sCtx.moveTo(px, py);
-      else sCtx.lineTo(px, py);
-    }
-    sCtx.closePath();
-    sCtx.fillStyle = e.color;
-    sCtx.fill();
-
-    e._sprite = c;
-  }
+  e._artBase = null;
 }
 
-// ─── BLACK HOLE (PLAYER) ───
-// Drawn at (x, y) inside the zoomed world transform. Gradients are built around
-// the origin and drawn with translate(), so screen resizes can't misplace them.
-
+/** v4: the black hole is painted by art.js (disk, photon ring, lensed arc). */
 export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
-  const speed = Math.hypot(velocity.vx, velocity.vy);
-  const zoom = fx.zoom || 1;
-  const breath = fx.breath ?? 0.5;
-  const pScale = Math.max(1, radius * 0.05);
-  const disk = fx.double ? "255, 120, 220" : "130, 140, 255";
-  const disk2 = fx.double ? "255, 190, 240" : "200, 160, 255";
-
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Magnet: golden ring showing the pull range
-  if (fx.magnet && fx.pullRange) {
-    ctx.save();
-    ctx.rotate(time * 0.0006);
-    ctx.setLineDash([fx.pullRange * 0.08, fx.pullRange * 0.06]);
-    ctx.beginPath();
-    ctx.arc(0, 0, fx.pullRange, 0, TAU);
-    ctx.strokeStyle = `rgba(255, 209, 102, ${0.18 + Math.sin(time * 0.006) * 0.06})`;
-    ctx.lineWidth = 2 / zoom;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Optional breathing guide: a faint ring that grows on the in-breath
-  if (fx.breathGuide) {
-    const gr = radius * (1.9 + breath * 1.1) + 14 / zoom;
-    ctx.beginPath();
-    ctx.arc(0, 0, gr, 0, TAU);
-    ctx.strokeStyle = `rgba(180, 200, 255, ${0.1 + breath * 0.12})`;
-    ctx.lineWidth = 2 / zoom;
-    ctx.stroke();
-  }
-
-  // Accretion disk — rotating particles
-  const rotAngle = time * 0.0008;
-  const particleCount = Math.floor(14 + Math.min(40, radius * 0.4));
-  ctx.save();
-  ctx.rotate(rotAngle);
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (i / particleCount) * TAU;
-    const dist = radius * 1.1 + Math.sin(angle * 3 + time * 0.002) * radius * 0.3;
-    const size = (1 + Math.sin(angle * 2 + time * 0.003) * 0.8) * pScale;
-    const alpha = (fx.double ? 0.3 : 0.15) + Math.sin(angle + time * 0.002) * 0.1;
-    ctx.beginPath();
-    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist * 0.45, Math.max(0.5, size), 0, TAU);
-    ctx.fillStyle = `rgba(${disk}, ${alpha})`;
-    ctx.fill();
-  }
-  ctx.rotate(rotAngle * -1.7);
-  const n2 = Math.floor(particleCount * 0.6);
-  for (let i = 0; i < n2; i++) {
-    const angle = (i / n2) * TAU;
-    const dist = radius * 1.3 + Math.sin(angle * 2 + time * 0.003) * radius * 0.2;
-    const alpha = 0.08 + Math.sin(angle * 3 + time * 0.004) * 0.05;
-    ctx.beginPath();
-    ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist * 0.35, 0.8 * pScale, 0, TAU);
-    ctx.fillStyle = `rgba(${disk2}, ${alpha})`;
-    ctx.fill();
-  }
-  ctx.restore();
-
-  if (Math.abs(radius - bhCachedRadius) > Math.max(1, radius * 0.02)) {
-    const glowR = radius + Math.max(20, radius * 0.6);
-    bhOuterGlow = ctx.createRadialGradient(0, 0, radius * 0.8, 0, 0, glowR);
-    bhOuterGlow.addColorStop(0, "rgba(90, 100, 220, 0.1)");
-    bhOuterGlow.addColorStop(0.5, "rgba(70, 80, 200, 0.045)");
-    bhOuterGlow.addColorStop(1, "rgba(70, 80, 200, 0)");
-    bhOuterGlow._glowR = glowR;
-
-    bhEdgeGrad = ctx.createRadialGradient(0, 0, radius * 0.85, 0, 0, radius * 1.05);
-    bhEdgeGrad.addColorStop(0, "rgba(110, 120, 255, 0)");
-    bhEdgeGrad.addColorStop(0.7, "rgba(110, 120, 255, 0.3)");
-    bhEdgeGrad.addColorStop(1, "rgba(110, 120, 255, 0)");
-
-    bhInnerGrad = ctx.createRadialGradient(-radius * 0.2, -radius * 0.2, 0, 0, 0, radius * 0.7);
-    bhInnerGrad.addColorStop(0, "rgba(60, 70, 140, 0.06)");
-    bhInnerGrad.addColorStop(1, "rgba(60, 70, 140, 0)");
-    bhCachedRadius = radius;
-  }
-
-  // Outer glow (pulse animates by scaling the cached gradient)
-  const pulse = 1 + (breath - 0.5) * 0.14 + (fx.gulp || 0) * 0.12;
-  ctx.save();
-  ctx.scale(pulse, pulse);
-  ctx.fillStyle = bhOuterGlow;
-  ctx.beginPath();
-  ctx.arc(0, 0, bhOuterGlow._glowR, 0, TAU);
-  ctx.fill();
-  ctx.restore();
-
-  const r = radius * (1 + (fx.gulp || 0) * 0.06);
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, TAU);
-  ctx.fillStyle = "#020308";
-  ctx.fill();
-
-  ctx.fillStyle = bhEdgeGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, TAU);
-  ctx.fill();
-
-  ctx.fillStyle = bhInnerGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, radius * 0.7, 0, TAU);
-  ctx.fill();
-
-  // Speed trail
-  const trailSpeed = speed / Math.max(1, fx.speedScale || 1);
-  if (trailSpeed > 0.5) {
-    const trailAngle = Math.atan2(-velocity.vy, -velocity.vx);
-    const trailLen = Math.min(radius * 1.4, trailSpeed * 8 * Math.max(1, radius * 0.08));
-    ctx.lineCap = "round";
-    ctx.lineWidth = radius * 1.5;
-    const baseAlpha = ctx.globalAlpha;
-    for (let i = 0; i < 3; i++) {
-      const t0 = i / 3, t1 = (i + 1) / 3;
-      ctx.globalAlpha = baseAlpha * (1 - t0) * 0.12;
-      ctx.strokeStyle = `rgba(${fx.double ? "220, 100, 200" : "90, 100, 220"}, 1)`;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(trailAngle) * trailLen * t0, Math.sin(trailAngle) * trailLen * t0);
-      ctx.lineTo(Math.cos(trailAngle) * trailLen * t1, Math.sin(trailAngle) * trailLen * t1);
-      ctx.stroke();
-    }
-  }
-  ctx.restore();
+  drawBlackHoleArt(ctx, x, y, radius, time, fx);
 }
 
 // ─── PARTICLES ───
-
-export function drawParticles(ctx, particles, w, h, camX, camY) {
+// v4: soft glowing streaks (additive), length follows velocity. Reduce Motion
+// draws short soft dots instead.
+export function drawParticles(ctx, particles, w, h, camX, camY, opts = {}) {
+  const trail = opts.reduceMotion ? 0.6 : (getArtQuality() === "high" ? 5 : 3);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
   for (const p of particles) {
     const sx = p.x - camX + w / 2;
     const sy = p.y - camY + h / 2;
-    if (sx < -10 || sx > w + 10 || sy < -10 || sy > h + 10) continue;
-
-    const lifeRatio = 1 - p.age / p.maxAge;
-    ctx.globalAlpha = lifeRatio * p.alpha;
+    if (sx < -20 || sx > w + 20 || sy < -20 || sy > h + 20) continue;
+    const life = 1 - p.age / p.maxAge;
+    ctx.globalAlpha = life * p.alpha * 0.85;
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = Math.max(0.5, p.size * (0.4 + life * 0.8));
     ctx.beginPath();
-    ctx.arc(sx, sy, p.size * lifeRatio, 0, TAU);
-    ctx.fillStyle = p.color;
-    ctx.fill();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx - p.vx * trail - 0.01, sy - p.vy * trail);
+    ctx.stroke();
   }
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 // ─── CONSUME RIPPLE ───

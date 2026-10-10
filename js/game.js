@@ -6,8 +6,9 @@ import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand } from "
 import {
   drawStarfield, drawBoundary, drawEntities, drawBlackHole,
   drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
-  invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette
+  invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
+import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
 import {
@@ -452,21 +453,28 @@ state.onPowerupEnd = () => {};
 
 // ─── PARTICLES ───
 
+// v4: bits swirl around the hole and spiral in (tangential + inward pull)
 function spawnConsumeParticles(entity) {
-  const count = 6 + Math.min(18, Math.floor(entity.radius * 0.8 / Math.max(1, state.radius * 0.05)));
-  const sizeK = Math.max(1, entity.radius * 0.15);
+  const few = state.settings.reduceMotion || getArtQuality() !== "high";
+  const count = Math.floor((6 + Math.min(14, Math.floor(entity.radius * 0.8 / Math.max(1, state.radius * 0.05)))) * (few ? 0.6 : 1));
+  const sizeK = Math.max(1, entity.radius * 0.12);
   const ss = state.speedScale;
+  const dx = entity.x - state.playerX, dy = entity.y - state.playerY;
+  const d = Math.hypot(dx, dy) || 1;
+  const tx = -dy / d, ty = dx / d;            // swirl direction (counter-clockwise)
   for (let i = 0; i < count; i++) {
-    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
-    const speed = (0.5 + Math.random() * 2) * ss;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = (0.3 + Math.random() * 1.2) * ss;
+    const swirl = (0.8 + Math.random() * 1.4) * ss;
     state.particles.push({
-      x: entity.x, y: entity.y,
-      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-      size: (1 + Math.random() * 2.5) * sizeK,
+      x: entity.x + Math.cos(angle) * entity.radius * 0.5,
+      y: entity.y + Math.sin(angle) * entity.radius * 0.5,
+      vx: Math.cos(angle) * speed + tx * swirl, vy: Math.sin(angle) * speed + ty * swirl,
+      size: (0.8 + Math.random() * 1.8) * sizeK,
       color: entity.color,
-      alpha: 0.6 + Math.random() * 0.3,
-      age: 0, maxAge: 30 + Math.random() * 20,
-      gravity: (0.02 + Math.random() * 0.02) * ss
+      alpha: 0.5 + Math.random() * 0.35,
+      age: 0, maxAge: 40 + Math.random() * 25,
+      gravity: (0.05 + Math.random() * 0.04) * ss
     });
   }
 }
@@ -507,7 +515,8 @@ function updateParticles(dt) {
     state.floaters[i].age += dt;
     if (state.floaters[i].age >= state.floaters[i].maxAge) state.floaters.splice(i, 1);
   }
-  if (state.particles.length > 300) state.particles.splice(0, state.particles.length - 300);
+  const pCap = getArtQuality() === "high" ? 300 : 160;
+  if (state.particles.length > pCap) state.particles.splice(0, state.particles.length - pCap);
 }
 
 // ─── GALAXY TRANSITION ───
@@ -692,6 +701,10 @@ function frame(now) {
   audio.setBreath(breath);
   drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath);
   drawLivingWorldBG(ctx, state, w, h);
+  beginArtFrame();
+  if (getArtQuality() === "high") {
+    drawLens(ctx, (state.playerX - state.camX) * state.zoom + w / 2, (state.playerY - state.camY) * state.zoom + h / 2, state.radius * state.zoom);
+  }
 
   const shakeX = state.shake ? (Math.random() - 0.5) * state.shake : 0;
   const shakeY = state.shake ? (Math.random() - 0.5) * state.shake : 0;
@@ -700,13 +713,16 @@ function frame(now) {
   ctx.translate(shakeX, shakeY);
   ctx.scale(z, z);
   drawBoundary(ctx, vw, vh, state.camX, state.camY, state.bounds, state.biome ? state.biome.borderColor : "#1a2e6a", now, z);
-  drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z);
-  drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY);
+  drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
+  drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
   drawBlackHole(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, now,
     { vx: state.playerVX, vy: state.playerVY }, {
       zoom: z,
+      dpr: screenDpr,
+      dt: state.paused ? 0 : dt,
+      reduceMotion: state.settings.reduceMotion,
       speedScale: state.speedScale,
       magnet: state.active.magnet > 0,
       pullRange: pullRange(state),

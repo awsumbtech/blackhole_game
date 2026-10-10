@@ -260,6 +260,9 @@ export function createEntity(type, x, y, scale = 1) {
     baseSpeed: speed,
     rotation: rand(0, Math.PI * 2),
     rotSpeed: rand(-0.008, 0.008),
+    // v4 art: a seed for the painted look and one of 4 variants (rings, moons...)
+    seed: (Math.random() * 1e9) | 0,
+    variant: Math.floor(Math.random() * 4),
     tone: type.tone + rand(-20, 20),
     glow: type.glow,
     hasTail: !!type.hasTail,
