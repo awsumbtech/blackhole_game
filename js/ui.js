@@ -133,10 +133,31 @@ export function showStats(state, onClose, opts = {}) {
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}
       ${setRow("Touch controls", "Thumbstick, or drift toward your finger", seg("touchMode", [["joystick", "Joystick"], ["follow", "Follow"]]))}
       ${setRow("Visual quality", "Auto lowers detail if your phone needs it", seg("quality", [["auto", "Auto"], ["high", "High"], ["balanced", "Lite"]]))}
+      ${setRow("Companion name", "The little wisp that drifts with you", `<input id="set-wisp-name" class="name-input" maxlength="16" value="${esc(state.settings.wispName || "Wisp")}" aria-label="Companion name">`)}
+    </div>
+    <div class="stats-section"><h3>Save backup</h3>
+      <div class="backup">
+        <small>Keep a copy of your journey, or move it to another phone or browser.</small>
+        <div class="btns">
+          <button id="btn-export" class="soft-btn">Export save</button>
+          <button id="btn-import" class="soft-btn">Import save</button>
+        </div>
+        <textarea id="backup-code" class="hidden" spellcheck="false" aria-label="Backup code"></textarea>
+        <div id="import-tools" class="btns hidden">
+          <label class="soft-btn">Load file<input id="backup-file" type="file" accept=".txt,text/plain" hidden></label>
+          <button id="btn-import-check" class="soft-btn">Check code</button>
+        </div>
+        <div id="import-confirm" class="btns hidden">
+          <button id="btn-import-yes" class="soft-btn">Replace my journey</button>
+          <button id="btn-import-no" class="soft-btn">Cancel</button>
+        </div>
+        <div id="backup-msg" class="msg" aria-live="polite"></div>
+      </div>
+      <div class="app-version">Black Hole: Galaxy Eater v${esc(state.version || "")}</div>
     </div>`;
   $("stats-title").textContent = opts.settingsOnly ? "Settings" : "Stats & Records";
   $("btn-stats-close").textContent = opts.settingsOnly ? "Done" : "Back to the void";
-  $("stats-body").innerHTML = opts.settingsOnly ? settingsHtml : settingsHtml + `
+  $("stats-body").innerHTML = opts.settingsOnly ? settingsHtml : `<button id="btn-stats-starmap" class="soft-btn stats-link">Open the star map</button>` + settingsHtml + `
     <div class="stats-section"><h3>What's that? (events)</h3>${evItems}</div>
     <div class="stats-section"><h3>Galaxies</h3>${biomeItems}</div>
     <div class="stats-section"><h3>Progress</h3>
@@ -172,6 +193,15 @@ export function showStats(state, onClose, opts = {}) {
       });
     });
   });
+
+  bindBackup(state);
+  const nameEl = $("set-wisp-name");
+  nameEl.addEventListener("change", () => {
+    const v = nameEl.value.replace(/[^\p{L}\p{N} '\-]/gu, "").trim().slice(0, 16) || "Wisp";
+    nameEl.value = v;
+    state.setSetting?.("wispName", v);
+  });
+  $("btn-stats-starmap")?.addEventListener("click", () => state.openStarMap?.());
 
   const el = $("stats");
   el.classList.remove("hidden");
@@ -213,4 +243,50 @@ export function updatePowerupBar(state) {
       delete pills[k];
     }
   }
+}
+
+// ─── v5.2: save backup (export / import with a check and a confirmation) ───
+function bindBackup(state) {
+  const code = $("backup-code"), msg = $("backup-msg"), tools = $("import-tools"), confirmEl = $("import-confirm");
+  const say = (t, err = false) => { msg.textContent = t; msg.classList.toggle("err", err); };
+  let pending = null;
+  $("btn-export").onclick = async () => {
+    const c = state.exportSave();
+    code.value = c;
+    code.readOnly = true;
+    code.classList.remove("hidden");
+    tools.classList.add("hidden"); confirmEl.classList.add("hidden");
+    let copied = false;
+    try { await navigator.clipboard.writeText(c); copied = true; } catch {}
+    try {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([c], { type: "text/plain" }));
+      a.download = `blackhole-save-${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    } catch {}
+    say(copied ? "Copied, and saved as a file. Keep it somewhere safe." : "Saved as a file. You can also copy the code above.");
+  };
+  $("btn-import").onclick = () => {
+    code.value = ""; code.readOnly = false;
+    code.classList.remove("hidden"); tools.classList.remove("hidden"); confirmEl.classList.add("hidden");
+    code.focus();
+    say("Paste a backup code, or load a backup file.");
+  };
+  $("backup-file").onchange = async ev => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    code.value = (await f.text()).slice(0, 200000);
+    check();
+  };
+  const check = () => {
+    const r = state.checkBackup(code.value);
+    if (!r.ok) { pending = null; confirmEl.classList.add("hidden"); say(r.err, true); return; }
+    pending = code.value;
+    confirmEl.classList.remove("hidden");
+    say(`This backup is ${r.label}. Your current journey (${r.current}) will be replaced.`);
+  };
+  $("btn-import-check").onclick = check;
+  $("btn-import-yes").onclick = () => { if (pending) state.applyBackup(pending); };
+  $("btn-import-no").onclick = () => { pending = null; confirmEl.classList.add("hidden"); say("Nothing changed."); };
 }
