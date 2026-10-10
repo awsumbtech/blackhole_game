@@ -99,6 +99,33 @@ export const objectTypes = [
     glow: 0.9,
     sizeClass: 3,  // small but dense — needs decent size
     minGalaxy: 4
+  },
+  // v5 "Vast": bigger layers of the universe for the higher scale tiers
+  {
+    id: "moon", label: "Moon",
+    colors: ["#b9bccb", "#a7aab8", "#c8c4bc"],
+    bands: [["#8d909e", "#b9bccb", "#d6d8e2"], ["#9a948a", "#c8c4bc", "#e0dcd2"]],
+    minR: 8, maxR: 12, density: 1.6, speed: 0.08, tone: 160, glow: 0.05, sizeClass: 4
+  },
+  {
+    id: "system", label: "Star System",
+    colors: ["#ffd98a", "#ffc7a0", "#fff1c4"],
+    minR: 14, maxR: 20, density: 3, speed: 0.03, tone: 100, glow: 0.6, sizeClass: 5
+  },
+  {
+    id: "nebula", label: "Nebula",
+    colors: ["#c48cff", "#7fd6ff", "#ff9fc8", "#9fffd0"],
+    minR: 16, maxR: 24, density: 1.4, speed: 0.02, tone: 90, glow: 0.5, sizeClass: 5
+  },
+  {
+    id: "cluster", label: "Star Cluster",
+    colors: ["#ffe9b0", "#d6e4ff", "#fff6e0"],
+    minR: 14, maxR: 20, density: 3.2, speed: 0.02, tone: 85, glow: 0.7, sizeClass: 5
+  },
+  {
+    id: "galaxy", label: "Galaxy",
+    colors: ["#cfc4ff", "#ffd9b0", "#b8e6ff"],
+    minR: 16, maxR: 24, density: 3, speed: 0.015, tone: 75, glow: 0.6, sizeClass: 5
   }
 ];
 
@@ -107,7 +134,7 @@ export const objectTypes = [
 // 3rd galaxy, big easy food, a short ~1-1.5 min clear.
 export const biomeCatalog = [
   {
-    name: "Debris Reef",
+    name: "Debris Reef", signature: "junk",
     tint: "#103040", tintRGB: [16, 48, 64], borderColor: "#2a6a7e",
     nebula: [[90, 170, 200], [110, 140, 210], [80, 200, 175]],
     weights: { dust: 6, junk: 5, meteor: 3, comet: 0.5, craft: 0.5, planet: 0.3, star: 0.1, neutron: 0 },
@@ -117,7 +144,7 @@ export const biomeCatalog = [
     codex: "Slate-blue reefs of junk and pebbles. Graze the clusters; meteor showers drift through."
   },
   {
-    name: "Comet Current",
+    name: "Comet Current", signature: "comet",
     tint: "#0b3048", tintRGB: [11, 48, 72], borderColor: "#3a8ab0",
     nebula: [[160, 225, 255], [205, 240, 255], [120, 205, 235]],
     weights: { dust: 3, junk: 0.5, meteor: 0.5, comet: 8, craft: 0.5, planet: 0.5, star: 0.3, neutron: 0 },
@@ -128,7 +155,7 @@ export const biomeCatalog = [
     codex: "Icy cyan space full of comets. Comet streams glide across your path."
   },
   {
-    name: "Planet Nursery", breather: true,
+    name: "Planet Nursery", signature: "planet", breather: true,
     tint: "#0f3424", tintRGB: [15, 52, 36], borderColor: "#3a9a6a",
     nebula: [[120, 230, 170], [90, 205, 205], [180, 240, 150]],
     weights: { dust: 2, junk: 0.5, meteor: 0.5, comet: 0.5, craft: 0.3, planet: 7, star: 1, neutron: 0 },
@@ -138,7 +165,7 @@ export const biomeCatalog = [
     codex: "A breather galaxy. Soft green space full of young planets. Big, easy bites and a short clear."
   },
   {
-    name: "Ruined Armada",
+    name: "Ruined Armada", signature: "craft",
     tint: "#24163a", tintRGB: [36, 22, 58], borderColor: "#7a5aa0",
     nebula: [[175, 125, 225], [210, 160, 110], [140, 105, 185]],
     weights: { dust: 2, junk: 4, meteor: 1, comet: 0.5, craft: 7, planet: 0.5, star: 0.3, neutron: 0 },
@@ -159,7 +186,7 @@ export const biomeCatalog = [
     codex: "Deep indigo with faint aurora. Fewer, larger bites, and the void sometimes gives food to you."
   },
   {
-    name: "Star Meadow", breather: true,
+    name: "Star Meadow", signature: "star", breather: true,
     tint: "#33260a", tintRGB: [51, 38, 10], borderColor: "#a08a3a",
     nebula: [[255, 205, 115], [255, 175, 95], [255, 232, 165]],
     weights: { dust: 2, junk: 0.5, meteor: 0.5, comet: 0.5, craft: 0.3, planet: 1, star: 7, neutron: 0 },
@@ -170,7 +197,7 @@ export const biomeCatalog = [
     codex: "A breather galaxy. Warm gold fields of little suns. Big, easy bites and a short clear."
   },
   {
-    name: "Neutron Forge",
+    name: "Neutron Forge", signature: "neutron",
     tint: "#1c1430", tintRGB: [28, 20, 48], borderColor: "#7a64c8",
     nebula: [[200, 182, 255], [255, 155, 95], [160, 142, 255]],
     weights: { dust: 3, junk: 2, meteor: 2, comet: 1, craft: 1, planet: 2, star: 3, neutron: 4 },

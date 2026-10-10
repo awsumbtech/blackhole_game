@@ -90,8 +90,33 @@ function landmark(name, kind, x, y, r, rgb) {
   return { name, kind, x, y, r, rgb, visited: false };
 }
 
-// World <-> base conversions
+// v5: each tier gets its own set of landmarks, built in world units around
+// an origin (where you were when the tier began). wx = length, px/py = position.
 const wx = v => v * W.f;
+const px = v => W.ox + v * W.f;
+const py = v => W.oy + v * W.f;
+const B0K = 100;            // a set spans ~100 hole radii (at the tier's start)
+const SET_KEYS = ["b0", "ox", "oy", "lms", "reefs", "rivers", "cradle", "aurora", "meadows", "pulsars", "flagship", "grid", "setNo"];
+let AM = 1;                 // alpha multiplier while drawing older (receding) sets
+const PREFIX = ["Greater", "Outer", "High", "Far", "Grand", "Deep"];
+function setName(n) {
+  if (!W.setNo) return n;
+  const p = PREFIX[(W.setNo - 1) % PREFIX.length];
+  return n.startsWith("The ") ? "The " + p + " " + n.slice(4) : p + " " + n;
+}
+function viewR(state) { return Math.hypot(state.viewW, state.viewH) / 2; }
+function nearYou(state, x, y, k) { return Math.hypot(x - state.playerX, y - state.playerY) < viewR(state) * k; }
+/** Pick a point on a curve that's just around the view (so it isn't recycled at once). */
+function pickNear(state, pts, tMax = 0.95) {
+  const vr = viewR(state);
+  for (let i = 0; i < 10; i++) {
+    const t = W.r() * tMax;
+    const p = pointOn(pts, t);
+    const d = Math.hypot(px(p.x) - state.playerX, py(p.y) - state.playerY);
+    if (d > vr * 0.55 && d < vr * 1.7) return { p, t };
+  }
+  return null;
+}
 
 function curve(r, b0, bend) {
   // A gentle curve from one side of the galaxy to the other
@@ -132,34 +157,66 @@ function pointOn(pts, t) {
 export function initWorlds(state) {
   const biome = state.biome.name;
   const r = rng(state.galaxy * 7919 + 13);
-  const b0 = state.baseBounds;
   W = {
-    biome, mech: MECHANICS[biome], r, b0, f: 1,
-    lms: [], banner: null, hint: { a: 0, lm: null, thin: 0, timer: 0 },
-    introTimer: 240, boost: 0, flare: 0, inBeam: false, beamA: 0,
-    reefs: [], rivers: [], cradle: null, aurora: null, meadows: [], pulsars: [], flagship: null,
-    grid: null, timer: 0
+    biome, mech: MECHANICS[biome], r, f: 1, old: [], setNo: 0,
+    banner: null, hint: { a: 0, lm: null, thin: 0, timer: 0 },
+    introTimer: 240, boost: 0, flare: 0, inBeam: false, beamA: 0, timer: 0
   };
-  const setup = SETUP[biome];
-  if (setup) setup(state, r, b0);
+  buildSet(state);
+}
+
+function buildSet(state) {
+  W.b0 = state.radius * B0K;
+  W.ox = state.playerX; W.oy = state.playerY;
+  W.lms = []; W.reefs = []; W.rivers = []; W.cradle = null; W.aurora = null;
+  W.meadows = []; W.pulsars = []; W.flagship = null; W.grid = null;
+  const setup = SETUP[W.biome];
+  if (setup) setup(state, W.r, W.b0);
+}
+
+/**
+ * v5: you crossed a tier line. This tier's landmarks stay where they are (so
+ * they shrink away as the camera pulls back) and a new, bigger set appears.
+ */
+export function onWorldTier(state) {
+  if (!W) return;
+  for (const e of state.entities) {
+    if (e.orbit && W.cradle) {
+      const rr = wx(W.cradle.rings[e.orbit.ring]);
+      e.vx = -Math.sin(e.orbit.ang) * e.orbit.w * rr; e.vy = Math.cos(e.orbit.ang) * e.orbit.w * rr;
+    }
+    e.reef = null; e.orbit = null; e.meadow = null; e.bloom = null;
+    e.riverItem = false; e.auroraItem = false; e.hull = false;
+  }
+  const snap = {};
+  for (const k of SET_KEYS) snap[k] = W[k];
+  W.old.unshift(snap);
+  if (W.old.length > 2) W.old.pop();
+  W.setNo = (W.setNo || 0) + 1;
+  W.hint.lm = null; W.hint.last = null;
+  buildSet(state);
+}
+
+function withSet(set, fn) {
+  const cur = {};
+  for (const k of SET_KEYS) { cur[k] = W[k]; W[k] = set[k]; }
+  try { fn(); } finally { for (const k of SET_KEYS) W[k] = cur[k]; }
 }
 
 const SETUP = {
   "Debris Reef"(state, r, b0) {
     const names = ["The Shoals", "Pebble Reach", "Old Reef", "Driftstone"];
     const spots = ringSpots(r, 4, b0 * 0.32, b0 * 0.7);
-    // Gather existing small rocks into the reefs
-    const pool = state.entities.filter(e => !e.bigFish && !e.powerup && (e.type === "junk" || e.type === "dust" || e.type === "meteor"));
     spots.forEach(([x, y], i) => {
-      const reef = { x, y, r: b0 * (0.17 + r() * 0.06), want: 14, regrow: 0 };
+      const reef = { x, y, r: b0 * (0.17 + r() * 0.06), want: 10, regrow: 0 };
       W.reefs.push(reef);
-      W.lms.push(landmark(names[i], "reef", x, y, reef.r, "120, 220, 200"));
-      for (let k = 0; k < reef.want && pool.length; k++) {
-        const e = pool.pop();
+      W.lms.push(landmark(setName(names[i]), "reef", x, y, reef.r, "120, 220, 200"));
+      for (let k = 0; k < 6; k++) {
         const a = r() * TAU, d = Math.sqrt(r()) * reef.r * 0.85;
-        e.x = x + Math.cos(a) * d; e.y = y + Math.sin(a) * d;
-        e.vx *= 0.4; e.vy *= 0.4;
+        const e = spawnFood(state, false, { pos: { x: px(x) + Math.cos(a) * d, y: py(y) + Math.sin(a) * d } });
+        e.vx *= 0.3; e.vy *= 0.3;
         e.reef = i;
+        state.entities.push(e);
       }
     });
   },
@@ -171,7 +228,7 @@ const SETUP = {
       const river = { ...c, w: b0 * 0.11, spawn: 0, names: names[i] };
       W.rivers.push(river);
       const m = pointOn(c.pts, 0.5);
-      W.lms.push(landmark(names[i], "river", m.x, m.y, river.w * 1.2, "170, 225, 255"));
+      W.lms.push(landmark(setName(names[i]), "river", m.x, m.y, river.w * 1.2, "170, 225, 255"));
     }
     buildFlowGrid(b0);
   },
@@ -182,10 +239,15 @@ const SETUP = {
     const sunR = b0 * 0.075;
     W.cradle = { x: cx, y: cy, sunR, rings: [2.4, 3.6, 5.0, 6.5].map(k => k * sunR),
       sun: { type: "star", color: "#ffd86d", seed: 4242, variant: 0, radius: sunR } };
-    W.lms.push(landmark("The Cradle", "cradle", cx, cy, sunR * 6.8, "255, 216, 140"));
-    // Put most planets on slow orbits
-    const planets = state.entities.filter(e => e.type === "planet" && !e.powerup);
-    planets.slice(0, 22).forEach((e, i) => putInOrbit(e, i % 4, r() * TAU));
+    W.lms.push(landmark(setName("The Cradle"), "cradle", cx, cy, sunR * 6.8, "255, 216, 140"));
+    // Little worlds (of this tier) on slow orbits
+    for (let i = 0; i < 18; i++) {
+      const e = spawnFood(state, false, { type: i % 3 ? undefined : "planet", pos: { x: px(cx), y: py(cy) }, sizeK: 1.1 });
+      putInOrbit(e, i % 4, r() * TAU);
+      const o = e.orbit, rr = wx(W.cradle.rings[o.ring]);
+      e.x = px(cx) + Math.cos(o.ang) * rr; e.y = py(cy) + Math.sin(o.ang) * rr;
+      state.entities.push(e);
+    }
   },
 
   "Ruined Armada"(state, r, b0) {
@@ -193,21 +255,21 @@ const SETUP = {
     const [fx, fy] = spots[0];
     W.flagship = { x: fx, y: fy, size: b0 * 0.16, rot: r() * TAU,
       art: { type: "craft", color: "#8f7fb0", seed: 777, variant: 2, radius: 1 } };
-    W.lms.push(landmark("The Flagship", "flagship", fx, fy, b0 * 0.22, "205, 180, 255"));
+    W.lms.push(landmark(setName("The Flagship"), "flagship", fx, fy, b0 * 0.22, "205, 180, 255"));
     const [lx, ly] = spots[1];
-    W.lms.push(landmark("The Broken Line", "line", lx, ly, b0 * 0.18, "215, 170, 120"));
+    W.lms.push(landmark(setName("The Broken Line"), "line", lx, ly, b0 * 0.18, "215, 170, 120"));
     // Brittle hulls around both
-    for (let i = 0; i < 3; i++) addHull(state, fx + (r() - 0.5) * b0 * 0.3, fy + (r() - 0.5) * b0 * 0.3, 1.5, 2.2);
+    for (let i = 0; i < 3; i++) addHull(state, px(fx) + (r() - 0.5) * b0 * 0.3, py(fy) + (r() - 0.5) * b0 * 0.3, 1.5, 2.2);
     const la = r() * Math.PI;
-    for (let i = 0; i < 4; i++) addHull(state, lx + Math.cos(la) * (i - 1.5) * b0 * 0.09, ly + Math.sin(la) * (i - 1.5) * b0 * 0.09, 1.2, 1.6);
+    for (let i = 0; i < 4; i++) addHull(state, px(lx) + Math.cos(la) * (i - 1.5) * b0 * 0.09, py(ly) + Math.sin(la) * (i - 1.5) * b0 * 0.09, 1.2, 1.6);
   },
 
   "Void Rift"(state, r, b0) {
     const c = curve(r, b0, 0.4);
     W.aurora = { ...c, spawn: 0, count: 0 };
     const m = pointOn(c.pts, 0.5), e = pointOn(c.pts, 0.85);
-    W.lms.push(landmark("The Aurora", "aurora", m.x, m.y, b0 * 0.14, "130, 240, 200"));
-    W.lms.push(landmark("Stillwater", "aurora", e.x, e.y, b0 * 0.14, "150, 150, 255"));
+    W.lms.push(landmark(setName("The Aurora"), "aurora", m.x, m.y, b0 * 0.14, "130, 240, 200"));
+    W.lms.push(landmark(setName("Stillwater"), "aurora", e.x, e.y, b0 * 0.14, "150, 150, 255"));
   },
 
   "Star Meadow"(state, r, b0) {
@@ -215,7 +277,7 @@ const SETUP = {
     ringSpots(r, 3, b0 * 0.3, b0 * 0.66).forEach(([x, y], i) => {
       const m = { x, y, r: b0 * 0.17, want: 7, plant: 0 };
       W.meadows.push(m);
-      W.lms.push(landmark(names[i], "meadow", x, y, m.r, "255, 215, 130"));
+      W.lms.push(landmark(setName(names[i]), "meadow", x, y, m.r, "255, 215, 130"));
       for (let k = 0; k < 4; k++) plantBud(state, m, 0.2 + r() * 0.6);
     });
   },
@@ -226,7 +288,7 @@ const SETUP = {
       W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * 0.0028,
         art: { type: "neutron", color: i ? "#ffd2b0" : "#e0e8ff", seed: 99 + i, variant: 0, radius: b0 * 0.012 },
         rgb: i ? "255, 190, 140" : "200, 190, 255", grad: null });
-      W.lms.push(landmark(names[i], "pulsar", x, y, b0 * 0.08, i ? "255, 190, 140" : "200, 190, 255"));
+      W.lms.push(landmark(setName(names[i]), "pulsar", x, y, b0 * 0.08, i ? "255, 190, 140" : "200, 190, 255"));
     });
   }
 };
@@ -252,7 +314,7 @@ function addHull(state, x, y, kMin, kMax) {
 
 function plantBud(state, m, progress = 0) {
   const a = W.r() * TAU, d = Math.sqrt(W.r()) * m.r * 0.85;
-  const e = spawnFood(state, false, { type: "star", pos: { x: wx(m.x) + Math.cos(a) * wx(d), y: wx(m.y) + Math.sin(a) * wx(d) }, sizeK: 1.15 });
+  const e = spawnFood(state, false, { type: "star", pos: { x: px(m.x) + Math.cos(a) * wx(d), y: py(m.y) + Math.sin(a) * wx(d) }, sizeK: 1.15 });
   e.vx *= 0.15; e.vy *= 0.15;
   const r1 = e.radius;
   e.bloom = { t: progress * 1800, dur: 1500 + W.r() * 900, r0: r1 * 0.35, r1 };
@@ -301,7 +363,7 @@ const RIVER_FLOW = 1.15;
 /** Flow vector at a world point (world units per frame, before speed scale). */
 function flowAt(x, y, out) {
   const g = W.grid;
-  const bx = x / W.f, by = y / W.f;
+  const bx = (x - W.ox) / W.f, by = (y - W.oy) / W.f;
   const i = Math.round((bx - g.o) / g.cell), j = Math.round((by - g.o) / g.cell);
   out.x = 0; out.y = 0;
   if (i < 0 || j < 0 || i >= g.n || j >= g.n) return out;
@@ -318,7 +380,7 @@ const tmp = { x: 0, y: 0 };
 // ─── Update ───
 export function updateWorlds(state, dt, worldDt) {
   if (!W) return;
-  W.f = state.bounds / W.b0;
+  W.f = 1;
   W.timer += dt;
   if (W.boost > 0) W.boost -= dt;
   if (W.flare > 0) W.flare -= dt;
@@ -342,7 +404,7 @@ const UPDATE = {
       if (e.reef == null || e.consuming) continue;
       counts[e.reef]++;
       const rf = W.reefs[e.reef];
-      const dx = wx(rf.x) - e.x, dy = wx(rf.y) - e.y, d = Math.hypot(dx, dy) || 1;
+      const dx = px(rf.x) - e.x, dy = py(rf.y) - e.y, d = Math.hypot(dx, dy) || 1;
       if (d > wx(rf.r) * 0.8) { e.vx += dx / d * 0.004 * wdt; e.vy += dy / d * 0.004 * wdt; }
       e.vx *= Math.pow(0.995, wdt); e.vy *= Math.pow(0.995, wdt);
     }
@@ -352,12 +414,12 @@ const UPDATE = {
       rf.regrow += dt;
       if (rf.regrow < every) return;
       rf.regrow = 0;
+      if (!nearYou(state, px(rf.x), py(rf.y), 2.4)) return;   // only regrow what's around you
       // Don't pop food in right under your nose
       const a = W.r() * TAU, d = Math.sqrt(W.r()) * rf.r * 0.8;
-      const x = wx(rf.x + Math.cos(a) * d), y = wx(rf.y + Math.sin(a) * d);
+      const x = px(rf.x + Math.cos(a) * d), y = py(rf.y + Math.sin(a) * d);
       if (Math.hypot(x - state.playerX, y - state.playerY) < state.radius * 3) return;
-      const pick = W.r();
-      const e = spawnFood(state, false, { type: pick < 0.45 ? "junk" : pick < 0.8 ? "dust" : "meteor", pos: { x, y } });
+      const e = spawnFood(state, false, { type: W.r() < 0.3 ? "dust" : undefined, pos: { x, y } });
       e.vx *= 0.3; e.vy *= 0.3;
       e.reef = i;
       state.entities.push(e);
@@ -379,7 +441,7 @@ const UPDATE = {
       const k = RIVER_FLOW * 0.8 * Math.max(1, Math.sqrt(ss)) * wdt;
       e.x += tmp.x * k; e.y += tmp.y * k;
       // Comets that reach the river's mouth fade out quietly
-      if (e.riverItem && (e.x * e.x + e.y * e.y) > Math.pow(state.bounds * 0.9, 2)) e.consumed = true;
+      if (e.riverItem && Math.hypot(e.x - W.ox, e.y - W.oy) > W.b0 * 0.97) e.consumed = true;
     }
     // Rivers carry fresh comets from upstream
     const every = W.boost > 0 ? 60 : 200;
@@ -390,9 +452,11 @@ const UPDATE = {
       let n = 0;
       for (const e of state.entities) if (e.riverItem) n++;
       if (n > 36) continue;
-      const p = pointOn(rv.pts, 0.04 + W.r() * 0.25);
+      const pk = pickNear(state, rv.pts, 0.9);
+      if (!pk) continue;
+      const p = pk.p;
       const off = (W.r() - 0.5) * rv.w * 0.8;
-      const e = spawnFood(state, false, { type: W.r() < 0.75 ? "comet" : "dust", pos: { x: wx(p.x - p.ty * off), y: wx(p.y + p.tx * off) } });
+      const e = spawnFood(state, false, { type: W.r() < 0.75 ? "comet" : "dust", pos: { x: px(p.x - p.ty * off), y: py(p.y + p.tx * off) } });
       e.vx = p.tx * 0.4; e.vy = p.ty * 0.4;
       e.riverItem = true;
       state.entities.push(e);
@@ -401,7 +465,7 @@ const UPDATE = {
 
   "Planet Nursery"(state, dt, wdt) {
     const c = W.cradle;
-    const cx = wx(c.x), cy = wx(c.y);
+    const cx = px(c.x), cy = py(c.y);
     const pr = pullRange(state);
     for (const e of state.entities) {
       if (!e.orbit) {
@@ -442,7 +506,7 @@ const UPDATE = {
       // Drift slowly down the ribbon
       const t = e.auroraT = Math.min(1, e.auroraT + 0.00011 * wdt);
       const p = pointOn(au.pts, t);
-      const tx = wx(p.x), ty = wx(p.y);
+      const tx = px(p.x), ty = py(p.y);
       e.x += (tx - e.x) * 0.02 * wdt + (W.r() - 0.5) * 0.2;
       e.y += (ty - e.y) * 0.02 * wdt + (W.r() - 0.5) * 0.2;
       e.vx = 0; e.vy = 0;
@@ -453,9 +517,10 @@ const UPDATE = {
     const every = W.boost > 0 ? 25 : 80;
     if (au.spawn >= every && n < 32) {
       au.spawn = 0;
-      const t = W.r() * 0.9;
-      const p = pointOn(au.pts, t);
-      const e = spawnFood(state, false, { pos: { x: wx(p.x), y: wx(p.y) } });
+      const pk = pickNear(state, au.pts, 0.9);
+      if (!pk) return;
+      const t = pk.t, p = pk.p;
+      const e = spawnFood(state, false, { pos: { x: px(p.x), y: py(p.y) } });
       if (e.radius * state.eatRatio >= state.radius) return;     // only edible gifts
       e.auroraItem = true;
       e.auroraT = t;
@@ -477,7 +542,7 @@ const UPDATE = {
     W.meadows.forEach((m, i) => {
       if (counts[i] >= m.want) { m.plant = 0; return; }
       m.plant += dt;
-      if (m.plant >= 300) { m.plant = 0; plantBud(state, m, 0); }
+      if (m.plant >= 300) { m.plant = 0; if (nearYou(state, px(m.x), py(m.y), 2.4)) plantBud(state, m, 0); }
     });
   },
 
@@ -486,7 +551,7 @@ const UPDATE = {
     const hw = beamHalfWidth();
     for (const p of W.pulsars) {
       p.ang += p.spin * wdt;
-      const dx = state.playerX - wx(p.x), dy = state.playerY - wx(p.y);
+      const dx = state.playerX - px(p.x), dy = state.playerY - py(p.y);
       const d = Math.hypot(dx, dy);
       if (d < wx(W.b0 * 0.03) || d > wx(W.b0 * 1.5)) continue;
       let diff = Math.atan2(dy, dx) - p.ang;
@@ -544,14 +609,14 @@ export function onWorldEvent(state, id) {
   if (W.biome === "Planet Nursery") {
     const ring = Math.floor(W.r() * 3);
     for (let i = 0; i < 3; i++) {
-      const e = spawnFood(state, false, { type: "planet", pos: { x: 0, y: 0 } });
+      const e = spawnFood(state, false, { type: "planet", pos: { x: px(W.cradle.x), y: py(W.cradle.y) } });
       putInOrbit(e, ring, W.r() * TAU);
       state.entities.push(e);
     }
   }
   if (W.biome === "Star Meadow") {
     let best = null, bd = Infinity;
-    for (const m of W.meadows) { const d = Math.hypot(wx(m.x) - state.playerX, wx(m.y) - state.playerY); if (d < bd) { bd = d; best = m; } }
+    for (const m of W.meadows) { const d = Math.hypot(px(m.x) - state.playerX, py(m.y) - state.playerY); if (d < bd) { bd = d; best = m; } }
     if (best) {
       for (let i = 0; i < 4; i++) plantBud(state, best, 0);
       const idx = W.meadows.indexOf(best);
@@ -577,7 +642,7 @@ export function eventPairText(id) {
 function updateLandmarks(state, dt) {
   for (const lm of W.lms) {
     if (lm.visited) continue;
-    if (Math.hypot(wx(lm.x) - state.playerX, wx(lm.y) - state.playerY) < wx(lm.r) + state.radius) {
+    if (Math.hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY) < wx(lm.r) + state.radius) {
       lm.visited = true;
       W.banner = { text: lm.name, age: 0 };
     }
@@ -599,7 +664,7 @@ function updateLandmarks(state, dt) {
     if (h.thin >= 2) {
       let bd = Infinity;
       for (const lm of W.lms) {
-        const d = Math.hypot(wx(lm.x) - state.playerX, wx(lm.y) - state.playerY);
+        const d = Math.hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY);
         if (d > wx(lm.r) * 0.9 && d < bd) { bd = d; h.lm = lm; }
       }
     }
@@ -627,6 +692,7 @@ function glow(rgb) {
 }
 
 function drawGlow(ctx, rgb, x, y, r, a) {
+  a *= AM;
   if (a <= 0.005) return;
   ctx.globalAlpha = a;
   ctx.drawImage(glow(rgb), x - r, y - r, r * 2, r * 2);
@@ -642,6 +708,12 @@ export function drawWorldsBG(ctx, state, vw, vh, fx) {
   if (!draw) return;
   ctx.save();
   ctx.translate(vw / 2 - state.camX, vh / 2 - state.camY);
+  // Older tiers' landmarks, small and fading as you outgrow them
+  for (let i = W.old.length - 1; i >= 0; i--) {
+    AM = i === 0 ? 0.55 : 0.28;
+    withSet(W.old[i], () => draw(ctx, state, fx, vw, vh));
+  }
+  AM = 1;
   draw(ctx, state, fx, vw, vh);
   ctx.restore();
   ctx.globalAlpha = 1;
@@ -654,7 +726,7 @@ function onScreen(state, x, y, r, vw, vh) {
 const DRAW = {
   "Debris Reef"(ctx, state, fx, vw, vh) {
     for (const rf of W.reefs) {
-      const x = wx(rf.x), y = wx(rf.y), r = wx(rf.r);
+      const x = px(rf.x), y = py(rf.y), r = wx(rf.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
       drawGlow(ctx, "90, 200, 180", x, y, r * 1.45, 0.1 + fx.breath * 0.03);
       drawGlow(ctx, "120, 160, 220", x + r * 0.3, y - r * 0.2, r * 0.8, 0.06);
@@ -664,11 +736,12 @@ const DRAW = {
   "Comet Current"(ctx, state, fx) {
     const f = W.f, lite = getArtQuality() !== "high";
     ctx.save();
+    ctx.translate(W.ox, W.oy);
     ctx.scale(f, f);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const rv of W.rivers) {
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = AM * (1);
       ctx.strokeStyle = `rgba(120, 200, 255, ${0.05 + (W.boost > 0 ? 0.02 : 0)})`;
       ctx.lineWidth = rv.w * 2;
       ctx.stroke(rv.path);
@@ -697,10 +770,10 @@ const DRAW = {
 
   "Planet Nursery"(ctx, state, fx, vw, vh) {
     const c = W.cradle;
-    const x = wx(c.x), y = wx(c.y);
+    const x = px(c.x), y = py(c.y);
     ctx.lineWidth = 1.2 / fx.zoom;
     for (const rr of c.rings) {
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = AM * (0.16);
       ctx.beginPath();
       ctx.arc(x, y, wx(rr), 0, TAU);
       ctx.strokeStyle = "rgba(200, 240, 200, 1)";
@@ -712,18 +785,18 @@ const DRAW = {
     c.sun.radius = sr;
     const sp = spriteFor(c.sun, sr * fx.zoom * fx.dpr);
     const d = sp.k * sr * (0.98 + fx.breath * 0.04);
-    ctx.globalAlpha = 0.95;
+    ctx.globalAlpha = AM * (0.95);
     ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
   },
 
   "Ruined Armada"(ctx, state, fx, vw, vh) {
     const fl = W.flagship;
-    const x = wx(fl.x), y = wx(fl.y), s = wx(fl.size);
+    const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
     drawGlow(ctx, "180, 150, 230", x, y, s * 2, 0.08);
     const sp = spriteFor(fl.art, s * fx.zoom * fx.dpr);
     const d = sp.k * s;
-    ctx.globalAlpha = 0.28;
+    ctx.globalAlpha = AM * (0.28);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(fl.rot + fx.time * 0.000004);
@@ -736,12 +809,13 @@ const DRAW = {
     const shimmer = fx.reduceMotion ? 0.5 : 0.5 + Math.sin(fx.time * 0.0007) * 0.5;
     const glowK = W.boost > 0 ? 1.6 : 1;
     ctx.save();
+    ctx.translate(W.ox, W.oy);
     ctx.scale(f, f);
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     const wide = W.b0 * 0.12;
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = AM * (1);
     ctx.strokeStyle = `rgba(70, 200, 170, ${0.045 * glowK})`;
     ctx.lineWidth = wide;
     ctx.stroke(au.path);
@@ -761,7 +835,7 @@ const DRAW = {
 
   "Star Meadow"(ctx, state, fx, vw, vh) {
     for (const m of W.meadows) {
-      const x = wx(m.x), y = wx(m.y), r = wx(m.r);
+      const x = px(m.x), y = py(m.y), r = wx(m.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
       drawGlow(ctx, "255, 205, 110", x, y, r * 1.4, 0.09 + fx.breath * 0.03);
     }
@@ -772,7 +846,7 @@ const DRAW = {
       if (!e.bloom || e.consuming || !onScreen(state, e.x, e.y, e.radius * 3, vw, vh)) continue;
       const k = smooth(e.bloom.t / e.bloom.dur);
       const a = (1 - k) * 0.35 * (e._spawnAlpha ?? 1);
-      ctx.globalAlpha = a;
+      ctx.globalAlpha = AM * (a);
       ctx.beginPath();
       ctx.arc(e.x, e.y, e.radius * (1.7 + k * 0.6), 0, TAU);
       ctx.strokeStyle = "rgba(255, 225, 150, 1)";
@@ -791,7 +865,7 @@ const DRAW = {
     const hw = beamHalfWidth();
     const L = wx(W.b0 * 1.6);
     for (const p of W.pulsars) {
-      const x = wx(p.x), y = wx(p.y);
+      const x = px(p.x), y = py(p.y);
       if (!p.grad || p.gradL !== L || p.gradF !== (W.flare > 0)) {
         const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
         const k = W.flare > 0 ? 1.4 : 1;
@@ -803,7 +877,7 @@ const DRAW = {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(p.ang);
-      ctx.globalAlpha = 0.85 + fx.breath * 0.15;
+      ctx.globalAlpha = AM * (0.85 + fx.breath * 0.15);
       ctx.fillStyle = p.grad;
       for (const side of [0, Math.PI]) {
         ctx.beginPath();
@@ -818,12 +892,12 @@ const DRAW = {
         p.art.radius = W.b0 * 0.012;
         const sp = spriteFor(p.art, r * fx.zoom * fx.dpr);
         const d = sp.k * r;
-        ctx.globalAlpha = 0.95;
+        ctx.globalAlpha = AM * (0.95);
         ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
       }
     }
     // A warm halo on the hole while you're in a beam
-    if (W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.6, 0.38 * W.beamA);
+    if (AM === 1 && W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.6, 0.38 * W.beamA);
   }
 };
 
@@ -847,7 +921,7 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
   const hint = W.hint, lm = hint.lm || hint.last;
   if (hint.a > 0.02 && lm) {
     const z = state.zoom;
-    const sx = (wx(lm.x) - state.camX) * z + w / 2, sy = (wx(lm.y) - state.camY) * z + h / 2;
+    const sx = (px(lm.x) - state.camX) * z + w / 2, sy = (py(lm.y) - state.camY) * z + h / 2;
     if (sx > 0 && sx < w && sy > 0 && sy < h) return;
     const px = (state.playerX - state.camX) * z + w / 2, py = (state.playerY - state.camY) * z + h / 2;
     const ang = Math.atan2(sy - py, sx - px);
@@ -885,6 +959,7 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
 export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
   if (!W) return;
   const f = W.f;
+  cx += W.ox * sc; cy += W.oy * sc;
   ctx.save();
   ctx.lineCap = "round";
   for (const rv of W.rivers) {
@@ -935,7 +1010,8 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time) {
 /** For tests/debug */
 export function worldsInfo() {
   if (!W) return null;
-  return { biome: W.biome, f: +W.f.toFixed(2), landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(l.x * W.f), y: Math.round(l.y * W.f), visited: l.visited })),
+  return { biome: W.biome, f: +W.f.toFixed(2), landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), visited: l.visited })),
+    sets: 1 + W.old.length, setNo: W.setNo, b0: Math.round(W.b0),
     hint: W.hint.lm ? W.hint.lm.name : null,
-    pulsars: W.pulsars.map(p => ({ x: Math.round(p.x * W.f), y: Math.round(p.y * W.f), ang: p.ang })), inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
+    pulsars: W.pulsars.map(p => ({ x: Math.round(px(p.x)), y: Math.round(py(p.y)), ang: p.ang })), inBeam: W.inBeam, boost: Math.max(0, Math.round(W.boost)), flare: Math.max(0, Math.round(W.flare)), riding: !!W.riding };
 }

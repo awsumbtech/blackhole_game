@@ -7,6 +7,7 @@ import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
+import { foodWeights, bigWeights, eventType, eventBigType } from "./tiers.js";
 
 const TAU = Math.PI * 2;
 
@@ -175,20 +176,12 @@ function clampInBounds(state, x, y, radius) {
 }
 
 function pickSpawnPos(state, near, radius) {
-  let x, y;
-  if (near) {
-    // Just outside the visible area, so things drift in rather than pop in
-    const a = rand(0, TAU);
-    const d = viewRadius(state) * rand(1.0, 1.4) + radius;
-    x = state.playerX + Math.cos(a) * d;
-    y = state.playerY + Math.sin(a) * d;
-  } else {
-    const a = rand(0, TAU);
-    const d = Math.sqrt(Math.random()) * state.bounds * 0.92;
-    x = Math.cos(a) * d;
-    y = Math.sin(a) * d;
-  }
-  return clampInBounds(state, x, y, radius);
+  // v5: no edges. Things appear just outside the view (near) or scattered
+  // around you (far), and are recycled once they're far behind.
+  const a = rand(0, TAU);
+  const vr = viewRadius(state);
+  const d = near ? vr * rand(1.0, 1.4) + radius : vr * Math.sqrt(rand(0.06, 1)) * 1.5;
+  return { x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d };
 }
 
 function finishSpawn(e) {
@@ -223,7 +216,7 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
 
 /** opts: { type: id, pos: {x, y}, sizeK } (v4.1: worlds.js plants food in reefs, rivers...) */
 export function spawnFood(state, near, opts = {}) {
-  const type = opts.type ? typeById(opts.type) : weightedType(state.biome.weights, state.galaxy);
+  const type = opts.type ? typeById(opts.type) : weightedType(foodWeights(state), 99);
   const k = opts.sizeK || 1;
   const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined };
   if (state.biome.breather) {
@@ -234,10 +227,7 @@ export function spawnFood(state, near, opts = {}) {
 }
 
 function spawnBigFish(state) {
-  const weights = {};
-  for (const id of BIG_TYPES) weights[id] = state.biome.weights[id] || 0;
-  if (!Object.values(weights).some(v => v > 0)) weights.planet = 1;
-  const type = weightedType(weights, state.galaxy);
+  const type = weightedType(bigWeights(state), 99);
   const e = spawnScaled(state, type, CFG.BIG_RATIO_MIN, CFG.BIG_RATIO_MAX, { near: true, forceScale: true });
   // Start at the edge of the view (fading in) so there's usually one on screen
   const a = rand(0, TAU);
@@ -251,48 +241,74 @@ function spawnBigFish(state) {
   return e;
 }
 
-function updateDynamicSpawning(state, dt) {
-  const cap = Math.floor(world.initialCount * CFG.SPAWN_CAP_RATIO) + 10;
-  const popTarget = Math.max(24, Math.floor(world.initialCount * CFG.POP_RATIO));
-  const n = state.entities.length;
+export const DENSITY = { regular: 60, breather: 70 };  // objects around the view
+const RING = 1.6;       // "around the view" = within 1.6 view radii
+const RECYCLE = 3.0;    // gone once 3 view radii behind
+const HARD_CAP = 170;
 
-  // Refill when the field thins out
-  const deficit = popTarget - n;
+/** v5: fill the space around you at galaxy start (no fixed field any more). */
+export function fillAround(state, n) {
+  for (let i = 0; i < n; i++) {
+    const e = spawnFood(state, false);
+    const sp = e.baseSpeed * rand(0.3, 1);
+    const a = rand(0, TAU);
+    e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
+    state.entities.push(e);
+  }
+}
+
+function updateDynamicSpawning(state, dt) {
+  const vr = viewRadius(state);
+  const px = state.playerX, py = state.playerY;
+  const ringR = vr * RING, far = vr * RECYCLE;
+  let inRing = 0, big = 0;
+  const ents = state.entities;
+  for (let i = ents.length - 1; i >= 0; i--) {
+    const e = ents[i];
+    if (e.consuming) continue;
+    const d = Math.hypot(e.x - px, e.y - py) - e.radius;
+    // Landmark residents (reefs, orbits, hulls, meadow buds) stay put; they're few
+    const resident = e.reef != null || e.orbit || e.hull || e.meadow != null;
+    if (d > far * (e.powerup ? 1.5 : 1) && !resident) { ents.splice(i, 1); continue; }
+    if (e.powerup) continue;
+    // Outgrown crumbs (left from a smaller tier) don't count, and quietly go once off-screen
+    if (e.radius < state.radius * 0.05 && !resident) {
+      if (d > vr * 1.1) ents.splice(i, 1);
+      continue;
+    }
+    if (d < ringR) inRing++;
+    if (state.radius <= e.radius * state.eatRatio) big++;
+  }
+  world.inRing = inRing;
+  world.bigCount = big;
+
+  // Keep a steady density around the view
+  const target = state.biome.breather ? DENSITY.breather : DENSITY.regular;
+  const deficit = target - inRing;
   if (deficit > 0) {
-    const interval = Math.max(8, 45 - deficit * 2);
+    const interval = Math.max(1.5, 14 - deficit * 0.7);
     world.depletionTimer += dt;
-    if (world.depletionTimer >= interval) {
-      world.depletionTimer = 0;
-      if (n < cap) state.entities.push(spawnFood(state, Math.random() < CFG.NEAR_SPAWN_CHANCE));
+    while (world.depletionTimer >= interval && ents.length < HARD_CAP) {
+      world.depletionTimer -= interval;
+      ents.push(spawnFood(state, true));
     }
   } else {
     world.depletionTimer = 0;
-  }
-
-  // Ambient trickle
-  world.ambientTimer += dt;
-  if (world.ambientTimer >= world.ambientNext) {
-    world.ambientTimer = 0;
-    world.ambientNext = CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE);
-    if (state.entities.length < cap) state.entities.push(spawnFood(state, true));
   }
 
   // Bigger fish: keep a minimum number of things you can't eat yet
   world.bigTimer += dt;
   if (world.bigTimer >= CFG.BIG_CHECK_INTERVAL) {
     world.bigTimer = 0;
-    let big = 0;
-    for (const e of state.entities) {
-      if (!e.powerup && !e.consuming && state.radius <= e.radius * state.eatRatio) big++;
-    }
-    world.bigCount = big;
     const want = minBigFish(state.galaxy) - big;
-    for (let i = 0; i < Math.min(2, want) && state.entities.length < cap + 8; i++) {
-      state.entities.push(spawnBigFish(state));
+    for (let i = 0; i < Math.min(2, want) && ents.length < HARD_CAP + 8; i++) {
+      ents.push(spawnBigFish(state));
       world.bigCount++;
     }
   }
 }
+
+export function densityInfo() { return world ? { inRing: world.inRing, big: world.bigCount } : null; }
 
 // ─── PROCEDURAL EVENT SYSTEM (v3: calm + telegraphed) ───
 // Every event has a 2.5s "warning" phase (edge glow / breathing ring / gathering
@@ -445,7 +461,7 @@ function streamEvent(state, opts) {
       while (this.spawnTimer >= interval && this.spawned < this.count) {
         this.spawnTimer -= interval;
         this.spawned++;
-        const type = typeById(opts.typeId);
+        const type = typeById(eventType(st, opts.typeId));
         const a = this.angle + rand(-opts.spread, opts.spread);
         const d = viewRadius(st) * 1.1;
         const pos = clampInBounds(st, st.playerX + Math.cos(a) * d, st.playerY + Math.sin(a) * d, 10);
@@ -559,7 +575,7 @@ function makeStellarBirth(state) {
       this.spawned = true;
       const pos = clampInBounds(st, this.cx, this.cy, st.radius * 1.5);
       this.cx = pos.x; this.cy = pos.y;
-      const star = spawnScaled(st, typeById("star"), 0.95, 1.4, { pos, near: false, forceScale: true });
+      const star = spawnScaled(st, typeById(eventBigType(st)), 0.95, 1.4, { pos, near: false, forceScale: true });
       star.vx = star.vy = 0;
       star.baseSpeed = 0.1;
       star.bigFish = true;

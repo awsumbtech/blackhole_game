@@ -3,7 +3,8 @@
 // v2 keeps the original key so existing v1 saves load and migrate in place.
 
 const SAVE_KEY = "blackhole_galaxy_v3";
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
+import { floorMassForLegacyGalaxy } from "./tiers.js";
 
 export function defaultStats() {
   return {
@@ -53,6 +54,8 @@ export function save(state) {
       settings: state.settings,
       legacyPending: state.legacyBonusPending || 0,
       lastActive: Date.now(),
+      floorMass: state.floorMass,
+      bestTier: state.bestTier || 0,
       run: (!credited && inPlay && state.run) ? {
         galaxy: state.galaxy,
         mass: state.mass,
@@ -98,8 +101,13 @@ export function load() {
     settings: raw.settings || {},
     run: raw.run || null,
     legacyBonus: raw.legacyPending || 0,  // only used for the one-time summary note
-    lastActive: raw.lastActive || 0
+    lastActive: raw.lastActive || 0,
+    // v5: your size carries over between galaxies. Older saves start at a
+    // tier that matches how far they'd got; a half-played galaxy restarts.
+    floorMass: raw.floorMass > 0 ? raw.floorMass : floorMassForLegacyGalaxy(Math.max(1, raw.galaxy | 0 || 1)),
+    bestTier: raw.bestTier || 0
   };
+  if ((raw.version || 1) < 5) data.run = null;
   data.records.fastest = { ...(data.records.fastest || {}) };
 
   // Thank-you for galaxies cleared before stardust existed.

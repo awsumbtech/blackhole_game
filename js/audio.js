@@ -117,6 +117,7 @@ export function startDrone(biome) {
     droneOscs.push({ osc, gain: oscGain, filter });
   });
   if (snd.scale) setScale(snd.scale);
+  if (layerWant) setMusicLayers(layerWant.tierIdx, layerWant.biome);
 }
 
 /** b in 0..1 (0 = out-breath, 1 = in-breath). Throttled, smoothed. */
@@ -156,6 +157,7 @@ export function stopDrone() {
   }
   droneOscs = [];
   droneActive = false;
+  stopMusicLayers();
 }
 
 // ─── CONSUME SOUNDS ───
@@ -434,4 +436,165 @@ export function playNearGoal() {
   if (!enabled || !ensureCtx()) return;
   resume();
   [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, { start: i * 0.09, decay: 0.5, vol: 0.03 }));
+}
+
+// ─── v5: TIER MUSIC LAYERS ───
+// One soft layer joins the drone for each scale tier you reach (up to six):
+// shimmer, low bass, slow plucks, air, an open fifth, distant bells.
+let layerNodes = [];      // [{ stop() }]
+let layerRoot = 0;
+let layerCount = 0;
+let layerTick = null;
+let pluckClock = 0, bellClock = 0;
+let airBuffer = null;
+
+function voice(freq, type, vol, { cutoff = 2000, lfo = 0.07, depth = 0.4, fade = 6 } = {}) {
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  const f = ctx.createBiquadFilter();
+  osc.type = type;
+  osc.frequency.value = freq;
+  f.type = "lowpass"; f.frequency.value = cutoff;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(vol, now + fade);
+  // slow swell
+  const l = ctx.createOscillator(), lg = ctx.createGain();
+  l.frequency.value = lfo; lg.gain.value = vol * depth;
+  l.connect(lg); lg.connect(g.gain);
+  osc.connect(f); f.connect(g); g.connect(droneGain);
+  osc.start(now); l.start(now);
+  return {
+    stop() {
+      const t = ctx.currentTime;
+      try {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 3);
+        osc.stop(t + 3.1); l.stop(t + 3.1);
+      } catch {}
+    }
+  };
+}
+
+function air(vol) {
+  if (!airBuffer) {
+    const n = ctx.sampleRate * 2;
+    airBuffer = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = airBuffer.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const now = ctx.currentTime;
+  const src = ctx.createBufferSource();
+  src.buffer = airBuffer; src.loop = true;
+  const f = ctx.createBiquadFilter();
+  f.type = "bandpass"; f.frequency.value = 1400; f.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(vol, now + 8);
+  const l = ctx.createOscillator(), lg = ctx.createGain();
+  l.frequency.value = 0.05; lg.gain.value = vol * 0.6;
+  l.connect(lg); lg.connect(g.gain);
+  src.connect(f); f.connect(g); g.connect(droneGain);
+  src.start(now); l.start(now);
+  return {
+    stop() {
+      const t = ctx.currentTime;
+      try {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 3);
+        src.stop(t + 3.1); l.stop(t + 3.1);
+      } catch {}
+    }
+  };
+}
+
+function softNote(freq, { vol = 0.02, attack = 0.03, decay = 2.2, type = "sine", start = 0 } = {}) {
+  const now = ctx.currentTime + start;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(vol, now + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay);
+  osc.connect(g); g.connect(droneGain);
+  osc.start(now);
+  osc.stop(now + attack + decay + 0.05);
+}
+
+function buildLayer(i, root) {
+  switch (i) {
+    case 0: return [voice(root * 4, "sine", 0.05, { lfo: 0.06 }), voice(root * 6.02, "sine", 0.03, { lfo: 0.045 })];
+    case 1: return [voice(root * 0.5, "sine", 0.16, { cutoff: 300, lfo: 0.05, depth: 0.25 })];
+    case 2: return [];   // plucks (scheduled)
+    case 3: return [air(0.05)];
+    case 4: return [voice(root * 3, "triangle", 0.05, { cutoff: 900, lfo: 0.03 })];
+    case 5: return [];   // bells (scheduled)
+  }
+  return [];
+}
+
+function tickLayers() {
+  if (!ctx || !enabled || !droneActive || ctx.state !== "running") return;
+  pluckClock += 0.4; bellClock += 0.4;
+  if (layerCount > 2 && pluckClock >= 3.2) {
+    pluckClock = 0;
+    const n = PENTA[Math.floor(Math.random() * PENTA.length)];
+    softNote(scaleRoot * Math.pow(2, n / 12), { vol: 0.12, decay: 2.4, type: "triangle" });
+  }
+  if (layerCount > 5 && bellClock >= 9.6) {
+    bellClock = 0;
+    const base = scaleRoot * 2;
+    [0, 7, 12].forEach((s, k) => softNote(base * Math.pow(2, s / 12), { vol: 0.07, decay: 4, start: k * 0.45 }));
+  }
+}
+
+let layerWant = null;
+export function setMusicLayers(tierIdx, biome) {
+  layerWant = { tierIdx, biome };
+  if (!ensureCtx() || !droneActive) return;
+  const root = ((biome && biome.sound) || { root: 60 }).root;
+  const want = Math.max(0, Math.min(6, tierIdx | 0));
+  if (root !== layerRoot) {
+    for (const n of layerNodes.flat()) n.stop();
+    layerNodes = [];
+    layerRoot = root;
+  }
+  while (layerNodes.length < want) layerNodes.push(buildLayer(layerNodes.length, root));
+  while (layerNodes.length > want) for (const n of layerNodes.pop()) n.stop();
+  layerCount = want;
+  if (!layerTick) layerTick = setInterval(tickLayers, 400);
+}
+
+export function stopMusicLayers() {
+  for (const n of layerNodes.flat()) { try { n.stop(); } catch {} }
+  layerNodes = [];
+  layerRoot = 0;
+  layerCount = 0;
+}
+
+export function musicInfo() { return { layers: layerCount, root: layerRoot }; }
+
+/** A tier reveal: a slow, rising four-note bell over a soft pad. */
+export function playTierChime() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  const base = scaleRoot;
+  [0, 4, 7, 12].forEach((s, k) => {
+    const f = base * Math.pow(2, s / 12);
+    const start = k * 0.38;
+    const now = ctx.currentTime + start;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = f * 2;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.05, now + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+    osc.connect(g); g.connect(sfxGain);
+    osc.start(now); osc.stop(now + 3.3);
+  });
+  pad([base, base * 1.5, base * 2], { attack: 1.4, hold: 1, release: 2.2, vol: 0.025 });
 }

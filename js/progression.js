@@ -8,12 +8,12 @@ export const MAX_LEVEL = 5;
 // Stardust cost to buy level 1..5 (scaled per upgrade by costMult).
 const BASE_COSTS = [25, 50, 85, 130, 190];
 
-const START_MASS = [20, 50, 100, 180, 300, 480];
+const START_BONUS = [0, 0.05, 0.1, 0.15, 0.2, 0.25];  // v5: head start above your floor
 
 export const UPGRADES = [
   {
     id: "startMass", name: "Seed Mass", costMult: 1.2,
-    desc: l => `Start each galaxy at ${START_MASS[l]} mass`
+    desc: l => l ? `Start each galaxy ${Math.round(START_BONUS[l] * 100)}% heavier than you left the last` : "Start each galaxy a little heavier"
   },
   {
     id: "thrusters", name: "Thrusters", costMult: 1,
@@ -39,7 +39,7 @@ export const UPGRADES = [
 
 export function eatRatioFor(level) { return 0.88 - 0.03 * level; }
 export function comboWindowFor(level) { return 75 * (1 + 0.2 * level); }
-export function startMassFor(level) { return START_MASS[Math.min(level, MAX_LEVEL)]; }
+export function startBonusFor(level) { return START_BONUS[Math.min(level, MAX_LEVEL)]; }
 
 export function upgradeCost(upg, level) {
   if (level >= MAX_LEVEL) return null;
@@ -50,7 +50,7 @@ export function upgradeCost(upg, level) {
 export function computeMods(upgrades) {
   const u = upgrades;
   return {
-    startMass: startMassFor(u.startMass || 0),
+    startBonus: startBonusFor(u.startMass || 0),
     thrust: 1 + 0.08 * (u.thrusters || 0),
     eatRatio: eatRatioFor(u.reach || 0),
     reachBonus: 0.1 * (u.reach || 0),
@@ -143,10 +143,12 @@ export function fmtTime(sec) {
   return `${m}:${String(s % 60).padStart(2, "0")}`;
 }
 
+const SUFFIX = ["", "k", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
 export function fmtMass(n) {
   n = Math.floor(n);
   if (n < 1000) return String(n);
-  if (n < 10000) return (n / 1000).toFixed(1) + "k";
-  if (n < 1e6) return Math.round(n / 1000) + "k";
-  return (n / 1e6).toFixed(1) + "M";
+  const e = Math.min(SUFFIX.length - 1, Math.floor(Math.log10(n) / 3));
+  if (e === SUFFIX.length - 1 && n >= 1e36) return n.toExponential(1);
+  const v = n / Math.pow(1000, e);
+  return (v < 10 ? v.toFixed(1) : Math.round(v)) + SUFFIX[e];
 }

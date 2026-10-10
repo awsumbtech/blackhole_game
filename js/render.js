@@ -144,7 +144,7 @@ let lastStarDX = 0, lastStarDY = 0;
 
 export function drawLens(ctx, cx, cy, rScreen) {
   if (!starCanvas || rScreen < 4) return;
-  const ext = 3.2;
+  const ext = 2.6;
   const L = Math.ceil(rScreen * ext * 2);
   if (L > 900) return;
   if (!lensCanvas || lensCanvas.width < L) {
@@ -162,7 +162,7 @@ export function drawLens(ctx, cx, cy, rScreen) {
   // Star cache pixel that sits under the hole centre
   const srcX = cx - lastStarDX + STAR_BUFFER;
   const srcY = cy - lastStarDY + STAR_BUFFER;
-  const rings = [[1.0, 1.55, 2.1], [1.55, 2.25, 1.5], [2.25, ext, 1.18]];
+  const rings = [[1.0, 1.45, 2.0], [1.45, 2.0, 1.45], [2.0, ext, 1.16]];
   for (const [r0, r1, mag] of rings) {
     g.save();
     g.beginPath();
@@ -198,7 +198,7 @@ export function invalidateStarfield() {
   nebulaCachedCamX = null;
 }
 
-export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5) {
+export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5, opts = {}) {
   // Dark background
   ctx.fillStyle = "#04060c";
   ctx.fillRect(0, 0, w, h);
@@ -230,6 +230,8 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5) {
   lastStarDX = sdx;
   lastStarDY = sdy;
   ctx.drawImage(starCanvas, sdx - STAR_BUFFER, sdy - STAR_BUFFER);
+
+  if (opts.noNebula) return;   // v5: the layered backdrop draws the clouds
 
   // Nebula: parallax moves slower, so threshold can be higher
   const nebulaThreshold = STAR_REDRAW_THRESHOLD / 0.3; // ~500px world movement
@@ -489,37 +491,66 @@ export function drawRipples(ctx, ripples, w, h, camX, camY, zoom = 1) {
 
 // ─── MINIMAP ───
 
-export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playerRadius = 0, eatRatio = 0.88, overlay = null) {
-  const mapSize = 90;
-  const mapX = w - mapSize - 16;
-  const mapY = h - mapSize - 16;
-  const scale = mapSize / (bounds * 2.2);
+/**
+ * v5 local radar: centred on you, shows what's around (about 2.6 view-widths),
+ * a faint frame for what's on screen, and a fading trail of where you've been.
+ * overlay(ctx, originX, originY, scale) draws landmarks in world coordinates.
+ */
+export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, playerRadius = 0, eatRatio = 0.88, overlay = null, extra = {}) {
+  const mapSize = 96;
+  const r = mapSize / 2;
+  const cx = w - r - 16;
+  const cy = h - r - 16;
+  const scale = r / range;
 
-  // Background
   ctx.save();
   ctx.beginPath();
-  ctx.arc(mapX + mapSize / 2, mapY + mapSize / 2, mapSize / 2, 0, TAU);
+  ctx.arc(cx, cy, r, 0, TAU);
   ctx.fillStyle = "rgba(4, 6, 16, 0.7)";
   ctx.fill();
-  ctx.strokeStyle = "rgba(110, 114, 255, 0.15)";
+  ctx.strokeStyle = "rgba(110, 114, 255, 0.16)";
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.clip();
 
-  // Boundary ring
-  ctx.beginPath();
-  ctx.arc(mapX + mapSize / 2, mapY + mapSize / 2, bounds * scale, 0, TAU);
-  ctx.strokeStyle = "rgba(110, 114, 255, 0.1)";
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  // Soft range rings
+  ctx.strokeStyle = "rgba(110, 114, 255, 0.07)";
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.33, 0, TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.66, 0, TAU); ctx.stroke();
 
-  // v4.1: landmarks, rivers, aurora, pulsar beams
-  if (overlay) overlay(ctx, mapX + mapSize / 2, mapY + mapSize / 2, scale);
+  // What's on screen
+  if (extra.viewW) {
+    const vw = extra.viewW * scale, vh = extra.viewH * scale;
+    ctx.strokeStyle = "rgba(200, 205, 255, 0.10)";
+    ctx.strokeRect(cx - vw / 2, cy - vh / 2, vw, vh);
+  }
 
-  // Entities as dots: red = too big, gold = power-up
+  const ox = cx - playerX * scale, oy = cy - playerY * scale;
+  if (overlay) overlay(ctx, ox, oy, scale);
+
+  // Trail of where you've been (oldest faintest)
+  const trail = extra.trail;
+  if (trail && trail.length > 1) {
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = "round";
+    for (let i = 1; i < trail.length; i++) {
+      const a = i / trail.length;
+      ctx.strokeStyle = `rgba(150, 155, 255, ${(a * 0.4).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(ox + trail[i - 1].x * scale, oy + trail[i - 1].y * scale);
+      ctx.lineTo(ox + trail[i].x * scale, oy + trail[i].y * scale);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(ox + trail[trail.length - 1].x * scale, oy + trail[trail.length - 1].y * scale);
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+  }
+
   for (const e of entities) {
-    const ex = mapX + mapSize / 2 + e.x * scale;
-    const ey = mapY + mapSize / 2 + e.y * scale;
+    const ex = ox + e.x * scale;
+    const ey = oy + e.y * scale;
+    if ((ex - cx) * (ex - cx) + (ey - cy) * (ey - cy) > r * r) continue;
     if (e.powerup) {
       ctx.fillStyle = e.color;
       ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
@@ -533,14 +564,10 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, bounds, playe
     }
   }
 
-  // Player
-  const px = mapX + mapSize / 2 + playerX * scale;
-  const py = mapY + mapSize / 2 + playerY * scale;
   ctx.beginPath();
-  ctx.arc(px, py, 3, 0, TAU);
+  ctx.arc(cx, cy, 3, 0, TAU);
   ctx.fillStyle = "#8a8dff";
   ctx.fill();
-
   ctx.restore();
 }
 

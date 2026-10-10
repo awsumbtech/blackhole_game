@@ -9,7 +9,7 @@ import {
   invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
-  onWorldBump, onWorldEvent, worldMassMul, eventPairText, worldsInfo } from "./worlds.js";
+  onWorldBump, onWorldEvent, onWorldTier, worldMassMul, eventPairText, worldsInfo } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades } from "./save.js";
@@ -17,9 +17,12 @@ import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
 } from "./living-world.js";
-import { computeMods, targetMassFor, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fmtMass } from "./progression.js";
+import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fmtMass } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
+import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
+import { R0, tier, tierIndexForR, tierName, massForR, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
+import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 // ─── CANVAS SETUP ───
 const canvas = document.getElementById("game");
@@ -67,8 +70,12 @@ const state = {
   camX: 0, camY: 0, zoom: 1, viewW: 800, viewH: 600, speedScale: 1,
   bgX: 0, bgY: 0,
 
-  entities: [], bounds: 800, baseBounds: 800, biome: null, initialCount: 0,
+  entities: [], bounds: Infinity, baseBounds: 800, biome: null, initialCount: 0,
   targetMass: 15000, startMass: 20,
+  // v5 "Vast": the scale ladder. floorMass = where this galaxy started
+  // (the most you reached in the last one). anchor = the size the camera is framed on.
+  floorMass: 20, tier: 0, bestTier: 0, galaxyProgress: 0,
+  anchorR: 8, anchorSmooth: 8, reveal: null, tierBanner: null, trail: [], trailT: 0,
 
   particles: [], ripples: [], floaters: [], shake: 0, gulp: 0,
 
@@ -110,19 +117,56 @@ const MAX_BIG_BITE = 0.056;  // outgrown "bigger fish" are a slightly bigger tre
 const BREATHER_BITE = 0.055; // breathers: food is big and everywhere, so a smaller cap keeps it ~1-1.5 min
 const MIN_BITE_CAP = 6;
 const REGULAR_GAIN = 0.26;   // v4.1: share of a bite's mass you keep in regular galaxies (breathers 0.5)
+// v5: each galaxy now climbs only ~1 tier (instead of ~14x in size), so every
+// bite counts for less: "very small increments". These scale all of the above.
+const PACE = 0.34;
+const BREATHER_PACE = 0.2;
 
 // ─── HELPERS ───
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
 function updateRadius() {
   state.radius = Math.max(6, 4 + Math.sqrt(state.mass) * 0.9);
-  // The galaxy grows with you so it never feels like a fishbowl
-  state.bounds = Math.max(state.baseBounds, state.radius * 14);
+  // v5: no edge. Space goes on; things spawn and recycle around you.
+  state.bounds = Infinity;
 }
 
+// v5: the camera is framed on an "anchor" size. Within a tier you visibly
+// grow on screen (10px -> ~26px); at each tier line the camera slowly pulls
+// back so you are small again and the next layer of the universe appears.
+const HOLE_PX = 10;
+const REVEAL_FRAMES = 160;   // ~2.7s pull-back
 function zoomTarget() {
   const k = clamp(Math.min(screenW, screenH) / 420, 0.85, 1.5);
-  return clamp(Math.pow(24 / (state.radius + 16), 0.65) * k, 0.02, 1.5);
+  return HOLE_PX * k / state.anchorSmooth;
+}
+
+function updateAnchor(dt) {
+  const rv = state.reveal;
+  if (rv) {
+    rv.p = Math.min(1, rv.p + dt / rv.dur);
+    const e = 0.5 - 0.5 * Math.cos(Math.PI * rv.p);
+    state.anchorSmooth = rv.from * Math.pow(rv.to / rv.from, e);
+    if (rv.p >= 1) state.reveal = null;
+  } else {
+    state.anchorSmooth = state.anchorR;
+  }
+}
+
+function checkTier() {
+  const t = tierIndexForR(state.radius);
+  if (t <= state.tier) return;
+  state.tier = t;
+  state.bestTier = Math.max(state.bestTier || 0, t);
+  const dur = state.settings.reduceMotion ? REVEAL_FRAMES * 0.6 : REVEAL_FRAMES;
+  state.reveal = { from: state.anchorSmooth, to: state.radius, p: 0, dur };
+  state.anchorR = state.radius;
+  state.tierBanner = { name: tierName(t), line: tier(t).line, age: 0 };
+  state.stats.tierReveals = (state.stats.tierReveals || 0) + 1;
+  audio.playTierChime();
+  audio.setMusicLayers(t, state.biome);
+  onWorldTier(state);
+  state.onTierReveal?.(t);
 }
 
 function updateCameraScale(snap = false) {
@@ -130,8 +174,10 @@ function updateCameraScale(snap = false) {
   state.zoom = snap ? zt : state.zoom + (zt - state.zoom) * 0.04;
   state.viewW = screenW / state.zoom;
   state.viewH = screenH / state.zoom;
-  // World speeds scale up as the camera zooms out, keeping on-screen speed steady
-  state.speedScale = Math.pow((state.radius + 16) / 24, 0.55);
+  // World speeds scale with the camera framing, keeping on-screen speed steady;
+  // within a tier you speed up a little as you grow.
+  const A = state.anchorSmooth;
+  state.speedScale = (A / HOLE_PX) * Math.pow(Math.max(1, state.radius / A), 0.45);
 }
 
 function hint(key, msg, ms) {
@@ -147,30 +193,78 @@ function floater(x, y, text, color = "#ffd27a", size = 16) {
   if (state.floaters.length > 12) state.floaters.shift();
 }
 
+// ─── v5: RADAR TRAIL + TIER BANNER ───
+const TIER_BANNER_FRAMES = 330;
+function radarRange() {
+  return Math.hypot(state.viewW, state.viewH) / 2 * 2.6;
+}
+function updateTrail(dt) {
+  state.trailT += dt;
+  if (state.trailT < 20) return;   // a point every ~1/3s
+  state.trailT = 0;
+  const t = state.trail;
+  const last = t[t.length - 1];
+  const step = Math.hypot(state.viewW, state.viewH) * 0.02;
+  if (!last || Math.hypot(last.x - state.playerX, last.y - state.playerY) > step) {
+    t.push({ x: state.playerX, y: state.playerY });
+    if (t.length > 90) t.shift();
+  }
+}
+function drawTierBanner(w, h) {
+  const b = state.tierBanner;
+  if (!b) return;
+  const t = b.age / TIER_BANNER_FRAMES;
+  const a = Math.min(1, b.age / 50) * Math.min(1, (TIER_BANNER_FRAMES - b.age) / 70);
+  if (a <= 0) return;
+  const y = h * 0.24 - (state.settings.reduceMotion ? 0 : t * 8);
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+  ctx.shadowBlur = 8;
+  ctx.font = "500 11px system-ui, sans-serif";
+  ctx.fillStyle = `rgba(190, 196, 255, ${0.55 * a})`;
+  ctx.fillText("A WIDER VIEW", w / 2, y - 24);
+  ctx.font = "300 26px system-ui, sans-serif";
+  ctx.fillStyle = `rgba(236, 238, 255, ${0.9 * a})`;
+  ctx.fillText(b.name, w / 2, y);
+  ctx.font = "italic 300 14px system-ui, sans-serif";
+  ctx.fillStyle = `rgba(210, 214, 240, ${0.7 * a})`;
+  ctx.fillText(b.line, w / 2, y + 26);
+  ctx.restore();
+}
+
 // ─── INIT GALAXY ───
 function initGalaxy(galaxyNum, resume = null) {
-  const { entities, biome, bounds } = spawnGalaxy(galaxyNum);
+  const biome = getBiome(galaxyNum);
 
   state.mods = computeMods(state.upgrades);
   state.eatRatio = state.mods.eatRatio;
-  state.startMass = state.mods.startMass;
+  // v5: start where the last galaxy ended (your floor), plus Seed Mass
+  state.floorMass = Math.max(massForR(R0), state.floorMass || 0);
+  state.startMass = state.floorMass * (1 + (state.mods.startBonus || 0));
+  state.targetMass = targetMassFrom(state.floorMass, !!biome.breather);
+  state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
 
-  state.entities = entities;
+  state.entities = [];
   state.biome = biome;
-  state.baseBounds = bounds;
-  state.initialCount = entities.length;
-  state.targetMass = targetMassFor(galaxyNum);
+  state.baseBounds = 1000;
+  state.initialCount = DENSITY.regular;
 
-  for (const e of entities) prerenderEntitySprite(e);
   setNebulaPalette(biome.nebula);
+  setBackdropPalette(biome.nebula);
   invalidateStarfield();
   if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 
   state.mass = resume ? clamp(resume.mass, state.startMass, state.targetMass * 0.97) : state.startMass;
   updateRadius();
-
-  // Anything you can't eat at the start counts as a "big catch" later
-  for (const e of entities) if (state.radius <= e.radius * state.eatRatio) e.bigFish = true;
+  state.tier = tierIndexForR(state.radius);
+  state.bestTier = Math.max(state.bestTier || 0, state.tier);
+  state.anchorR = state.anchorSmooth = state.radius;
+  state.reveal = null;
+  state.tierBanner = null;
+  state.trail = [];
+  state.galaxyProgress = galaxyProgressNow();
 
   state.run = freshRun(state.stats);
   if (resume) {
@@ -199,10 +293,12 @@ function initGalaxy(galaxyNum, resume = null) {
 
   initLivingWorld(state);
   initWorlds(state);
+  fillAround(state, Math.max(20, (biome.breather ? DENSITY.breather : DENSITY.regular) - state.entities.length));
   initPowerups();
   ui.updatePowerupBar(state);
 
   audio.startDrone(biome);
+  audio.setMusicLayers(state.tier, biome);
   syncHud(true);
 }
 
@@ -308,8 +404,9 @@ function tryConsume(dt) {
       const dbl = state.active.double > 0 ? 2 : 1;
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
-      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK);
-      const gk = state.biome.breather ? 0.5 : REGULAR_GAIN;
+      const pace = state.biome.breather ? BREATHER_PACE : PACE;
+      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace;
+      const gk = (state.biome.breather ? 0.5 : REGULAR_GAIN) * pace;
       // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
       const gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
       state.mass += gain;
@@ -557,6 +654,8 @@ function galaxyComplete() {
   audio.playGalaxyComplete();
   state.stats.galaxiesCleared += 1;
   state.summary = finishGalaxy(state);
+  // v5: the next galaxy starts at the most you reached here
+  state.floorMass = Math.max(state.floorMass, state.mass);
   state.galaxyCredited = true;
   save(state);
 }
@@ -624,14 +723,19 @@ function startWarp() {
 // ─── HUD ───
 
 let lastHudSec = -1;
-function syncHud(force = false) {
+function galaxyProgressNow() {
   // Log-scale progress: growth is roughly exponential, so this fills steadily
   const m0 = state.startMass;
-  const progress = state.targetMass > m0
+  return state.targetMass > m0
     ? clamp(Math.log(Math.max(state.mass, m0) / m0) / Math.log(state.targetMass / m0), 0, 1)
     : 0;
+}
+
+function syncHud(force = false) {
+  const progress = galaxyProgressNow();
   hudGalaxy.textContent = state.galaxy;
-  hudMass.textContent = fmtMass(state.mass) + " / " + fmtMass(state.targetMass);
+  const tn = tierName(state.tier);
+  if (hudMass.textContent !== tn) hudMass.textContent = tn;
   hudBiome.textContent = state.biome ? state.biome.name : "";
   hudProgressBar.style.width = (progress * 100).toFixed(1) + "%";
 
@@ -787,6 +891,8 @@ document.getElementById("btn-newgame-yes").addEventListener("click", () => {
   document.getElementById("newgame-confirm").classList.add("hidden");
   // Fresh journey: galaxy 1, no stardust or upgrades. Settings, records, codex stay.
   state.galaxy = 1;
+  state.floorMass = massForR(R0);
+  state.bestTier = 0;
   state.stardust = 0;
   state.upgrades = defaultUpgrades();
   state.legacyBonusPending = 0;
@@ -894,6 +1000,7 @@ function frame(now) {
     state.run.time += dt / 60;
     const prevCamX = state.camX, prevCamY = state.camY;
     updatePlayer(dt);
+    updateAnchor(dt);
     updateCameraScale();
     state.bgX += (state.camX - prevCamX) * state.zoom;
     state.bgY += (state.camY - prevCamY) * state.zoom;
@@ -905,8 +1012,15 @@ function frame(now) {
       hint("pu_first", "A power-up appeared! Grab the glowing orb", 2600);
     }
     tryConsume(dt);
+    state.galaxyProgress = galaxyProgressNow();
+    if (!state.transitioning) checkTier();
+    updateTrail(dt);
     ui.updatePowerupBar(state);
     syncHud();
+  }
+  if (state.tierBanner) {
+    state.tierBanner.age += dt;
+    if (state.tierBanner.age > TIER_BANNER_FRAMES) state.tierBanner = null;
   }
   updateParticles(dt);
   state.shake *= Math.pow(0.88, dt);
@@ -922,7 +1036,8 @@ function frame(now) {
 
   const breath = breathPhase(now);
   audio.setBreath(breath);
-  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath);
+  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath, { noNebula: true });
+  drawBackdrop(ctx, w, h, z, state.bgX, state.bgY, breath, { lite: getArtQuality() !== "high" });
   drawLivingWorldBG(ctx, state, w, h);
   beginArtFrame();
   if (getArtQuality() === "high") {
@@ -935,7 +1050,6 @@ function frame(now) {
   ctx.save();
   ctx.translate(shakeX, shakeY);
   ctx.scale(z, z);
-  drawBoundary(ctx, vw, vh, state.camX, state.camY, state.bounds, state.biome ? state.biome.borderColor : "#1a2e6a", now, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
@@ -971,8 +1085,9 @@ function frame(now) {
     drawLivingWorldOverlay(ctx, state, w, h);
     drawWorldsOverlay(ctx, state, w, h, breath);
     drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
-    drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, state.bounds, state.radius, state.eatRatio,
-      (c, mx, my, sc) => drawWorldsMinimap(c, mx, my, sc, now));
+    drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, radarRange(), state.radius, state.eatRatio,
+      (c, mx, my, sc) => drawWorldsMinimap(c, mx, my, sc, now), { trail: state.trail, viewW: vw, viewH: vh });
+    drawTierBanner(w, h);
     drawCursor(ctx, mouseScreenX, mouseScreenY, w, h);
     drawThumbstick(input.getStick());
     drawFloaters(w, h, z);
@@ -1216,6 +1331,8 @@ if (savedData) {
   state.seenHints = savedData.seenHints;
   state.settings = { ...state.settings, ...(savedData.settings || {}) };
   state.legacyBonusPending = savedData.legacyBonus || 0;
+  state.floorMass = savedData.floorMass;
+  state.bestTier = savedData.bestTier || 0;
   if (savedData.run && savedData.run.galaxy === state.galaxy) resumeRun = savedData.run;
 
   document.getElementById("volume-slider").value = Math.round(state.volume * 100);
@@ -1288,5 +1405,10 @@ requestAnimationFrame(frame);
 // Debug/automation hook (harmless; lets a test bot read state)
 window.__bh = {
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
-  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats
+  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats,
+  density: densityInfo, music: audio.musicInfo,
+  tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
+    reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
+  // test helper: grow to just under the next tier line
+  nearNextTier: (k = 0.985) => { const r = rForTier(state.tier + 1) * k; state.mass = massForR(r); updateRadius(); }
 };

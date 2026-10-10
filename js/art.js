@@ -98,6 +98,10 @@ function extentFor(type, variant) {
     case "comet": return 2.3;
     case "planet": return variant === 0 ? 2.0 : variant === 1 ? 1.65 : 1.3;
     case "meteor": return 1.5;
+    case "system": return 2.5;
+    case "nebula": return 1.7;
+    case "cluster": return 1.9;
+    case "galaxy": return 1.7;
     case "dust": return 1.5;
     default: return 1.3;
   }
@@ -429,6 +433,119 @@ const PAINTERS = {
   }
 };
 
+// v5: bigger layers of the universe
+Object.assign(PAINTERS, {
+  moon(g, R, e, r) {
+    PAINTERS.planet(g, R, e, r, 2);
+    if (R < 5) return;
+    g.save();
+    g.beginPath(); g.arc(0, 0, R, 0, TAU); g.clip();
+    for (let i = 0; i < 4; i++) {
+      const a = r() * TAU, d = r() * R * 0.7, cr = R * (0.1 + r() * 0.14);
+      const cx = Math.cos(a) * d, cy = Math.sin(a) * d;
+      const cg = g.createRadialGradient(cx, cy, 0, cx, cy, cr);
+      cg.addColorStop(0, "rgba(40, 42, 56, 0.35)");
+      cg.addColorStop(1, "rgba(40, 42, 56, 0)");
+      g.fillStyle = cg;
+      g.beginPath(); g.arc(cx, cy, cr, 0, TAU); g.fill();
+    }
+    g.restore();
+  },
+
+  system(g, R, e, r) {
+    // A small sun with faint orbits and a few worlds
+    const halo = g.createRadialGradient(0, 0, 0, 0, 0, R * 2.5);
+    halo.addColorStop(0, rgba(e.color, 0.22));
+    halo.addColorStop(1, rgba(e.color, 0));
+    g.fillStyle = halo;
+    g.beginPath(); g.arc(0, 0, R * 2.5, 0, TAU); g.fill();
+    g.lineWidth = Math.max(0.5, R * 0.03);
+    const worlds = ["#7fc8e8", "#d8a878", "#9ad8a0", "#c8b0f0"];
+    for (let i = 0; i < 3; i++) {
+      const rr = R * (0.9 + i * 0.55);
+      g.strokeStyle = rgba(e.color, 0.16);
+      g.beginPath(); g.arc(0, 0, rr, 0, TAU); g.stroke();
+      const a = r() * TAU, pr = R * (0.1 + r() * 0.08);
+      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+      const pg = g.createRadialGradient(px - pr * 0.3, py - pr * 0.3, 0, px, py, pr);
+      pg.addColorStop(0, light(worlds[i], 0.3));
+      pg.addColorStop(1, dark(worlds[i], 0.4));
+      g.fillStyle = pg;
+      g.beginPath(); g.arc(px, py, pr, 0, TAU); g.fill();
+    }
+    const cg = g.createRadialGradient(0, 0, 0, 0, 0, R * 0.55);
+    cg.addColorStop(0, "rgba(255, 252, 236, 1)");
+    cg.addColorStop(0.5, light(e.color, 0.3, 0.95));
+    cg.addColorStop(1, rgba(e.color, 0));
+    g.fillStyle = cg;
+    g.beginPath(); g.arc(0, 0, R * 0.55, 0, TAU); g.fill();
+  },
+
+  nebula(g, R, e, r) {
+    // Soft overlapping clouds, a second hue, a few newborn stars
+    const hues = [e.color, mix(e.color, [255, 160, 210], 0.4), mix(e.color, [120, 220, 255], 0.4)];
+    if ("filter" in g && R > 8) g.filter = `blur(${(R * 0.08).toFixed(1)}px)`;
+    for (let i = 0; i < 7; i++) {
+      const a = r() * TAU, d = r() * R * 0.6, cr = R * (0.45 + r() * 0.5);
+      const cx = Math.cos(a) * d, cy = Math.sin(a) * d * 0.8;
+      const cg = g.createRadialGradient(cx, cy, 0, cx, cy, cr);
+      const h = hues[i % 3];
+      cg.addColorStop(0, rgba(h, 0.32));
+      cg.addColorStop(0.6, rgba(h, 0.12));
+      cg.addColorStop(1, rgba(h, 0));
+      g.fillStyle = cg;
+      g.beginPath(); g.arc(cx, cy, cr, 0, TAU); g.fill();
+    }
+    g.filter = "none";
+    g.fillStyle = "rgba(255, 250, 240, 0.85)";
+    for (let i = 0; i < 6; i++) {
+      g.beginPath(); g.arc((r() - 0.5) * R * 1.2, (r() - 0.5) * R, Math.max(0.6, R * 0.025), 0, TAU); g.fill();
+    }
+  },
+
+  cluster(g, R, e, r) {
+    const halo = g.createRadialGradient(0, 0, 0, 0, 0, R * 1.9);
+    halo.addColorStop(0, rgba(e.color, 0.4));
+    halo.addColorStop(0.4, rgba(e.color, 0.12));
+    halo.addColorStop(1, rgba(e.color, 0));
+    g.fillStyle = halo;
+    g.beginPath(); g.arc(0, 0, R * 1.9, 0, TAU); g.fill();
+    const n = R > 10 ? 60 : 25;
+    for (let i = 0; i < n; i++) {
+      const d = Math.pow(r(), 1.8) * R * 1.3, a = r() * TAU;
+      const sr = Math.max(0.5, R * (0.02 + r() * 0.035));
+      g.fillStyle = i % 5 ? "rgba(255, 248, 230, 0.9)" : "rgba(190, 210, 255, 0.9)";
+      g.beginPath(); g.arc(Math.cos(a) * d, Math.sin(a) * d, sr, 0, TAU); g.fill();
+    }
+  },
+
+  galaxy(g, R, e, r) {
+    // A tilted spiral: soft core and two arms of tiny lights
+    g.save();
+    g.rotate(r() * TAU);
+    g.scale(1, 0.55 + r() * 0.3);
+    const halo = g.createRadialGradient(0, 0, 0, 0, 0, R * 1.6);
+    halo.addColorStop(0, rgba(e.color, 0.3));
+    halo.addColorStop(1, rgba(e.color, 0));
+    g.fillStyle = halo;
+    g.beginPath(); g.arc(0, 0, R * 1.6, 0, TAU); g.fill();
+    const n = R > 10 ? 180 : 60;
+    for (let i = 0; i < n; i++) {
+      const arm = i % 2, t = r();
+      const ang = arm * Math.PI + t * 4.2 + (r() - 0.5) * 0.5;
+      const d = R * (0.12 + t * 1.25);
+      g.fillStyle = t < 0.3 ? "rgba(255, 236, 200, 0.55)" : (r() < 0.3 ? "rgba(180, 200, 255, 0.6)" : rgba(e.color, 0.5));
+      g.beginPath(); g.arc(Math.cos(ang) * d, Math.sin(ang) * d, Math.max(0.5, R * 0.03 * (1 - t * 0.5)), 0, TAU); g.fill();
+    }
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, R * 0.4);
+    core.addColorStop(0, "rgba(255, 250, 235, 0.95)");
+    core.addColorStop(1, "rgba(255, 230, 190, 0)");
+    g.fillStyle = core;
+    g.beginPath(); g.arc(0, 0, R * 0.4, 0, TAU); g.fill();
+    g.restore();
+  }
+});
+
 function path(g, pts) {
   g.beginPath();
   g.moveTo(pts[0][0], pts[0][1]);
@@ -492,7 +609,7 @@ const PALETTES = {
   double: { hot: [255, 238, 250], mid: [255, 146, 220], cool: [196, 120, 255] }
 };
 const diskCache = new Map();
-const DISK_IN = 1.3, DISK_OUT = 2.9;   // in hole radii
+const DISK_IN = 1.25, DISK_OUT = 2.25;  // in hole radii (v5: smaller footprint)
 
 function lerp3(a, b, t) {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t].map(Math.round);
@@ -503,8 +620,8 @@ function diskTexture(palette, b, layer) {
   let d = diskCache.get(key);
   if (d) return d;
   const P = PALETTES[palette] || PALETTES.calm;
-  const inner = layer === 0 ? DISK_IN : 1.9;
-  const outer = layer === 0 ? 2.2 : DISK_OUT;
+  const inner = layer === 0 ? DISK_IN : 1.6;
+  const outer = layer === 0 ? 1.85 : DISK_OUT;
   const size = Math.ceil(b * outer * 2) + 2;
   const c = makeCanvas(size);
   const g = c.getContext("2d");
@@ -549,16 +666,16 @@ let glowSprite = null, glowB = 0, ringSprite = null, ringB = 0;
 
 function holeSprites(b) {
   if (glowB !== b) {
-    const size = Math.ceil(b * 4.2 * 2);
+    const size = Math.ceil(b * 3.0 * 2);
     glowSprite = makeCanvas(size);
     const g = glowSprite.getContext("2d");
     g.translate(size / 2, size / 2);
-    const gr = g.createRadialGradient(0, 0, b * 0.9, 0, 0, b * 4.2);
+    const gr = g.createRadialGradient(0, 0, b * 0.9, 0, 0, b * 3.0);
     gr.addColorStop(0, "rgba(120, 120, 230, 0.16)");
     gr.addColorStop(0.35, "rgba(100, 100, 210, 0.06)");
     gr.addColorStop(1, "rgba(90, 90, 200, 0)");
     g.fillStyle = gr;
-    g.beginPath(); g.arc(0, 0, b * 4.2, 0, TAU); g.fill();
+    g.beginPath(); g.arc(0, 0, b * 3.0, 0, TAU); g.fill();
     glowB = b;
   }
   if (ringB !== b) {
@@ -634,7 +751,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   }
 
   // Soft outer glow
-  const gs = radius * 4.2 * (1 + (breath - 0.5) * 0.08);
+  const gs = radius * 3.0 * (1 + (breath - 0.5) * 0.08);
   ctx.globalAlpha = glowA;
   ctx.drawImage(glowSprite, -gs, -gs, gs * 2, gs * 2);
 
@@ -659,7 +776,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   // Light from the far side, bent up and over the shadow (the lensed arc)
   ctx.save();
   ctx.beginPath();
-  ctx.arc(0, 0, radius * 1.75, Math.PI, TAU);
+  ctx.arc(0, 0, radius * 1.6, Math.PI, TAU);
   ctx.arc(0, 0, radius * 1.02, TAU, Math.PI, true);
   ctx.closePath();
   ctx.clip();
