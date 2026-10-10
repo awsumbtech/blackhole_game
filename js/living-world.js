@@ -1,33 +1,60 @@
 // ─── LIVING WORLD SYSTEM ───
-// Gravity well, dynamic spawning, procedural events, ambient background life.
-// Makes the galaxy feel alive, reactive, and surprising.
+// Gravity well, dynamic spawning (food + "bigger fish" that scale with you),
+// procedural events, ambient background life.
 
-import { weightedType, createEntity, rand, getBiome, objectTypes } from "./entities.js";
+import { weightedType, createEntity, rand, typeAvgRadius, typeById, isBreather } from "./entities.js";
 import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
+import { foodScaleFor } from "./progression.js";
+import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
+import { foodWeights, bigWeights, eventType, eventBigType } from "./tiers.js";
+
+const TAU = Math.PI * 2;
 
 // ─── CONFIG ───
 
-const CFG = {
-  // Gravity well
-  GRAVITY_G: 0.0004,
-  GRAVITY_ATTRACT_BASE: 60,
-  GRAVITY_ATTRACT_MULT: 12,
+export const CFG = {
+  // Gravity well: strength = PULL_K * speedScale * (R / dist)^2 inside R * PULL_RANGE
+  PULL_K: 0.06,
+  PULL_RANGE: 6,
+  PULL_CAP: 2.5,
 
-  // Dynamic spawning
-  SPAWN_CAP_RATIO: 1.5,
-  AMBIENT_SPAWN_MIN: 300,
-  AMBIENT_SPAWN_RANGE: 200,
+  // Food is sized relative to the player (fraction of player radius)
+  FOOD_RATIO_MIN: 0.08,
+  FOOD_RATIO_MAX: 0.22,
+  NEAR_SPAWN_CHANCE: 0.7,
 
-  // Event system
-  EVENT_EVAL_INTERVAL: 120,
-  EVENT_GLOBAL_COOLDOWN: 180,
-  EVENT_GRACE_PERIOD: 300,
+  // Breathers: big, easy food (fraction of player radius)
+  BREATHER_FOOD_MIN: 0.25,
+  BREATHER_FOOD_MAX: 0.45,
 
-  // Mass-based progression
-  TARGET_MASS_BASE: 10000,
-  TARGET_MASS_PER_GALAXY: "5000*g + 1000*g²"
+  // Bigger fish: always keep a few things on the field you can't eat yet
+  BIG_RATIO_MIN: 1.4,
+  BIG_RATIO_MAX: 2.6,
+  BIG_CHECK_INTERVAL: 30,
+
+  // Population
+  POP_RATIO: 0.75,
+  SPAWN_CAP_RATIO: 1.6,
+  AMBIENT_SPAWN_MIN: 240,
+  AMBIENT_SPAWN_RANGE: 180,
+
+  // Event system (frames @60fps). v3: far fewer, always telegraphed.
+  EVENT_EVAL_INTERVAL: 120,     // look for a chance every 2s once cooled down
+  EVENT_FIRE_CHANCE: 0.3,
+  EVENT_COOLDOWN_MIN: 1500,     // 25-40s of quiet between events
+  EVENT_COOLDOWN_MAX: 2400,
+  EVENT_GRACE_PERIOD: 1800,     // nothing in the first 30s
+  MAX_EVENTS: 5,                // per galaxy
+  BREATHER_EVENTS: 3
 };
+
+const BIG_TYPES = ["planet", "star", "craft", "meteor"];
+
+export function minBigFish(galaxy) {
+  if (isBreather(galaxy)) return galaxy >= 9 ? 2 : 1;
+  return 3 + Math.min(2, Math.floor(galaxy / 3));
+}
 
 // ─── MODULE STATE ───
 
@@ -35,21 +62,20 @@ let world = null;
 
 function freshWorldState() {
   return {
-    // Spawning
     initialCount: 0,
     depletionTimer: 0,
     ambientTimer: 0,
+    ambientNext: CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE),
+    bigTimer: 0,
+    bigCount: 0,
 
-    // Events
     eventEvalTimer: 0,
     globalCooldown: 0,
     graceTimer: CFG.EVENT_GRACE_PERIOD,
-    eventCooldowns: {},
+    eventsFired: 0,
     activeEvents: [],
     galaxyTime: 0,
-    totalConsumedAtStart: 0,
 
-    // Ambient background
     shootingStars: [],
     shootingStarTimer: 0,
     distantFlashes: [],
@@ -62,20 +88,23 @@ function freshWorldState() {
 export function initLivingWorld(state) {
   world = freshWorldState();
   world.initialCount = state.initialCount;
-  world.totalConsumedAtStart = state.totalConsumed || 0;
 }
 
-export function updateLivingWorld(state, dt) {
+export function getBigFishCount() {
+  return world ? world.bigCount : 0;
+}
+
+/** dt = real frame step, worldDt = slowed step while Slow-Mo is active. */
+export function updateLivingWorld(state, dt, worldDt = dt) {
   if (!world) return;
 
   world.galaxyTime += dt;
 
   updateGravityWell(state, dt);
   updateDynamicSpawning(state, dt);
-  updateEventSystem(state, dt);
+  updateEventSystem(state, worldDt);
   updateAmbientBackground(state, dt);
 
-  // Advance spawn fade-in for all entities
   for (const e of state.entities) {
     if (e._spawnAge != null && e._spawnAge < 60) {
       e._spawnAge += dt;
@@ -91,661 +120,574 @@ export function drawLivingWorldBG(ctx, state, w, h) {
   drawEnergyWaves(ctx, w, h);
 }
 
+/** Drawn inside the zoomed world transform; w/h are the zoomed (world) viewport. */
 export function drawLivingWorldFG(ctx, state, w, h) {
   if (!world) return;
   for (const ev of world.activeEvents) {
-    if (ev.draw) ev.draw(ctx, state, w, h);
+    if (ev.draw && ev.rgb) ev.draw(ctx, state, w, h);
   }
 }
 
-// ─── 2A: GRAVITY WELL ───
+// ─── GRAVITY WELL ───
+// Only pulls things you can actually eat; bigger fish don't budge.
+
+export function pullRange(state) {
+  const m = powerupFade(state, "magnet");
+  return state.radius * CFG.PULL_RANGE * state.mods.pullRange * (1 + (MAGNET_RANGE - 1) * m);
+}
 
 function updateGravityWell(state, dt) {
-  const attractRadius = state.radius * CFG.GRAVITY_ATTRACT_MULT + CFG.GRAVITY_ATTRACT_BASE;
-  const playerMass = state.mass;
+  const m = powerupFade(state, "magnet");
+  const R = state.radius;
+  const range = pullRange(state);
+  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (1 + (MAGNET_PULL - 1) * m);
+  const cap = CFG.PULL_CAP * state.speedScale * (1 + (MAGNET_RANGE - 1) * m);
   const px = state.playerX;
   const py = state.playerY;
-  const minDist = state.radius * 2;
 
   for (const e of state.entities) {
     if (e.consuming) continue;
+    if (!e.powerup && R <= e.radius * state.eatRatio) continue;
 
     const dx = px - e.x;
     const dy = py - e.y;
     const dist = Math.hypot(dx, dy);
+    if (dist > range || dist < 1) continue;
 
-    if (dist > attractRadius || dist < 1) continue;
-
-    const effectiveDist = Math.max(dist, minDist);
-    let strength = CFG.GRAVITY_G * playerMass / (effectiveDist * effectiveDist);
-    strength = Math.min(strength, e.baseSpeed * 0.8);
-
-    const nx = dx / dist;
-    const ny = dy / dist;
-    e.vx += nx * strength * dt;
-    e.vy += ny * strength * dt;
-    e._attracted = true;
+    const ed = Math.max(dist, R * 1.2);
+    const strength = k * (R / ed) * (R / ed);
+    e.vx += (dx / dist) * strength * dt;
+    e.vy += (dy / dist) * strength * dt;
+    e._pullCap = cap;
   }
 }
 
-// ─── 2B: DYNAMIC SPAWNING ───
+// ─── SPAWNING ───
 
-function spawnEdgeEntity(state) {
-  const biome = state.biome;
-  if (!biome) return null;
+function viewRadius(state) {
+  return Math.hypot(state.viewW || 800, state.viewH || 600) / 2;
+}
 
-  const type = weightedType(biome.weights, state.galaxy);
-  const angle = rand(0, Math.PI * 2);
-  const bounds = state.bounds;
+function clampInBounds(state, x, y, radius) {
+  const lim = Math.max(10, state.bounds - radius - 4);
+  const d = Math.hypot(x, y);
+  if (d > lim) return { x: x * lim / d, y: y * lim / d };
+  return { x, y };
+}
 
-  // Position on the boundary circle
-  const x = Math.cos(angle) * (bounds - 5);
-  const y = Math.sin(angle) * (bounds - 5);
+// v5: "around the view" = the visible rectangle grown by 30%. Things appear in
+// the margin just outside the screen (near) or anywhere in that area (far).
+const AROUND = 1.3;
+function pickSpawnPos(state, near, radius) {
+  const hw = (state.viewW || 800) / 2, hh = (state.viewH || 600) / 2;
+  let x, y;
+  if (near) {
+    // a point on the edge band, weighted by side length
+    const k = 1.04 + Math.random() * (AROUND - 1.04);
+    const ex = hw * k + radius, ey = hh * k + radius;
+    const t = Math.random() * (ex + ey) * 2;
+    if (t < ex * 2) { x = -ex + t; y = Math.random() < 0.5 ? -ey : ey; }
+    else { y = -ey + (t - ex * 2); x = Math.random() < 0.5 ? -ex : ex; }
+  } else {
+    x = (Math.random() * 2 - 1) * hw * AROUND;
+    y = (Math.random() * 2 - 1) * hh * AROUND;
+  }
+  return { x: state.playerX + x, y: state.playerY + y };
+}
 
-  const entity = createEntity(type, x, y);
+function finishSpawn(e) {
+  e._spawnAge = 0;
+  e._spawnAlpha = 0;
+  prerenderEntitySprite(e);
+  return e;
+}
 
-  // Aim inward with spread
-  const inwardAngle = angle + Math.PI + rand(-0.6, 0.6);
-  const speed = entity.baseSpeed;
-  entity.vx = Math.cos(inwardAngle) * speed;
-  entity.vy = Math.sin(inwardAngle) * speed;
+/** Aim an entity roughly toward the player so near spawns cross the view. */
+function aimAtPlayer(state, e, spread, speed) {
+  const a = Math.atan2(state.playerY - e.y, state.playerX - e.x) + rand(-spread, spread);
+  e.vx = Math.cos(a) * speed;
+  e.vy = Math.sin(a) * speed;
+}
 
-  // Fade-in properties
-  entity._spawnAge = 0;
-  entity._spawnAlpha = 0;
+/**
+ * Create an entity sized as a fraction of the player's radius.
+ * forceScale lets bigger fish shrink below the type's natural size early on.
+ */
+export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
+  const desired = rand(ratioMin, ratioMax) * state.radius;
+  const raw = desired / typeAvgRadius(type);
+  const scale = opts.forceScale ? raw : Math.max(1, raw);
+  const e = createEntity(type, 0, 0, scale);
+  const pos = opts.pos || pickSpawnPos(state, opts.near ?? true, e.radius);
+  e.x = pos.x;
+  e.y = pos.y;
+  if (opts.near ?? true) aimAtPlayer(state, e, 1.0, e.baseSpeed);
+  return finishSpawn(e);
+}
 
-  prerenderEntitySprite(entity);
-  return entity;
+/** opts: { type: id, pos: {x, y}, sizeK } (v4.1: worlds.js plants food in reefs, rivers...) */
+export function spawnFood(state, near, opts = {}) {
+  const type = opts.type ? typeById(opts.type) : weightedType(foodWeights(state), 99);
+  const k = opts.sizeK || 1;
+  const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined };
+  // v5.1: the vast kinds (systems, nebulae, clusters, galaxies) are drawn bigger
+  // but lighter, so a bite still weighs the same but reads as what it is
+  const vk = VAST_FOOD.has(type.id) ? VAST_K : 1;
+  let e;
+  if (state.biome.breather) {
+    e = spawnScaled(state, type, CFG.BREATHER_FOOD_MIN * k * vk, CFG.BREATHER_FOOD_MAX * k * vk, o);
+  } else {
+    const fs = foodScaleFor(state.galaxy) * (state.biome.foodBoost || 1) * k * vk;
+    e = spawnScaled(state, type, CFG.FOOD_RATIO_MIN * fs, CFG.FOOD_RATIO_MAX * fs, o);
+  }
+  if (vk !== 1) { e.mass /= vk * vk; e.density /= vk * vk; }
+  return e;
+}
+const VAST_FOOD = new Set(["system", "nebula", "cluster", "galaxy"]);
+const VAST_K = 1.7;
+
+function spawnBigFish(state) {
+  const type = weightedType(bigWeights(state), 99);
+  const e = spawnScaled(state, type, CFG.BIG_RATIO_MIN, CFG.BIG_RATIO_MAX, { near: true, forceScale: true });
+  // Start at the edge of the view (fading in) so there's usually one on screen
+  const a = rand(0, TAU);
+  const d = Math.min(state.viewW, state.viewH) * rand(0.45, 0.75) + e.radius * 0.5;
+  const pos = clampInBounds(state, state.playerX + Math.cos(a) * d, state.playerY + Math.sin(a) * d, e.radius);
+  e.x = pos.x;
+  e.y = pos.y;
+  e.bigFish = true;
+  e.baseSpeed = rand(0.2, 0.45) * Math.sqrt(state.speedScale);
+  aimAtPlayer(state, e, 0.9, e.baseSpeed);
+  return e;
+}
+
+export const DENSITY = { regular: 60, breather: 70 };  // objects around the view
+const RECYCLE = 2.0;    // gone once 2 view radii away (well off-screen)
+const HARD_CAP = 170;
+
+/** v5: fill the space around you at galaxy start (no fixed field any more). */
+export function fillAround(state, n) {
+  for (let i = 0; i < n; i++) {
+    const e = spawnFood(state, false);
+    const sp = e.baseSpeed * rand(0.3, 1);
+    const a = rand(0, TAU);
+    e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
+    state.entities.push(e);
+  }
 }
 
 function updateDynamicSpawning(state, dt) {
-  const objectCap = Math.floor(world.initialCount * CFG.SPAWN_CAP_RATIO);
+  const vr = viewRadius(state);
+  const px = state.playerX, py = state.playerY;
+  const far = vr * RECYCLE;
+  const hwA = state.viewW / 2 * AROUND, hhA = state.viewH / 2 * AROUND;
+  let inRing = 0, big = 0;
+  const ents = state.entities;
+  for (let i = ents.length - 1; i >= 0; i--) {
+    const e = ents[i];
+    if (e.consuming) continue;
+    const d = Math.hypot(e.x - px, e.y - py) - e.radius;
+    // Landmark residents (reefs, orbits, hulls, meadow buds) stay put; they're few
+    const resident = e.reef != null || e.orbit || e.hull || e.meadow != null;
+    if (d > far * (e.powerup ? 1.5 : 1) && !resident) { ents.splice(i, 1); continue; }
+    if (e.powerup) continue;
+    // Outgrown crumbs (left from a smaller tier) don't count, and quietly go once off-screen
+    if (e.radius < state.radius * 0.05 && !resident) {
+      if (d > vr * 1.1) ents.splice(i, 1);
+      continue;
+    }
+    if (Math.abs(e.x - px) < hwA + e.radius && Math.abs(e.y - py) < hhA + e.radius) inRing++;
+    if (state.radius <= e.radius * state.eatRatio) big++;
+  }
+  world.inRing = inRing;
+  world.bigCount = big;
 
-  // Depletion spawner
-  const targetPop = Math.max(20, Math.floor(world.initialCount * 0.35));
-  const deficit = targetPop - state.entities.length;
-
+  // Keep a steady density around the view
+  const target = state.biome.breather ? DENSITY.breather : DENSITY.regular;
+  const deficit = target - inRing;
   if (deficit > 0) {
-    const interval = Math.max(30, 120 - deficit * 5);
+    const interval = Math.max(1.5, 14 - deficit * 0.7);
     world.depletionTimer += dt;
-    if (world.depletionTimer >= interval) {
-      world.depletionTimer = 0;
-      if (state.entities.length < objectCap) {
-        const e = spawnEdgeEntity(state);
-        if (e) state.entities.push(e);
-      }
+    while (world.depletionTimer >= interval && ents.length < HARD_CAP) {
+      world.depletionTimer -= interval;
+      ents.push(spawnFood(state, true));
     }
   } else {
     world.depletionTimer = 0;
   }
 
-  // Ambient trickle
-  const ambientInterval = CFG.AMBIENT_SPAWN_MIN + rand(0, CFG.AMBIENT_SPAWN_RANGE);
-  world.ambientTimer += dt;
-  if (world.ambientTimer >= ambientInterval) {
-    world.ambientTimer = 0;
-    if (state.entities.length < objectCap) {
-      const e = spawnEdgeEntity(state);
-      if (e) state.entities.push(e);
+  // Bigger fish: keep a minimum number of things you can't eat yet
+  world.bigTimer += dt;
+  if (world.bigTimer >= CFG.BIG_CHECK_INTERVAL) {
+    world.bigTimer = 0;
+    const want = minBigFish(state.galaxy) - big;
+    for (let i = 0; i < Math.min(2, want) && ents.length < HARD_CAP + 8; i++) {
+      ents.push(spawnBigFish(state));
+      world.bigCount++;
     }
   }
 }
 
-// ─── 2C: PROCEDURAL EVENT SYSTEM ───
+export function densityInfo() { return world ? { inRing: world.inRing, big: world.bigCount } : null; }
 
-function getMetrics(state) {
-  const targetMass = state.targetMass || 400;
-  const consumeRatio = world.initialCount > 0
-    ? 1 - (state.entities.length / world.initialCount)
-    : 0;
-  const entityDensity = state.entities.length / Math.max(1, world.initialCount);
-  const massRatio = state.mass / targetMass;
+// ─── PROCEDURAL EVENT SYSTEM (v3: calm + telegraphed) ───
+// Every event has a 2.5s "warning" phase (edge glow / breathing ring / gathering
+// light) before anything moves, plus a calm caption the first time you see it.
+// Each biome has a signature event (see biome.events in entities.js).
 
-  return {
-    galaxyTime: world.galaxyTime,
-    consumeRatio,
-    entityDensity,
-    playerMass: state.mass,
-    playerRadius: state.radius,
-    comboActivity: state.comboCount > 0 ? 1 : 0,
-    massRatio,
-    galaxy: state.galaxy,
-    isEarlyGame: state.mass < 60,
-    isMidGame: state.mass >= 60 && massRatio < 0.6,
-    isLateGame: massRatio >= 0.6
-  };
-}
-
-const EVENT_DEFS = [
-  {
-    id: "meteorShower",
-    cooldown: 900,   // 15 sec
-    minGalaxy: 1,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.08;
-      if (m.entityDensity < 0.5) p += 0.03;
-      if (m.comboActivity) p += 0.03;
-      return p;
-    },
-    fire: fireMeteorShower
+export const EVENT_INFO = {
+  meteorShower: {
+    name: "Meteor Shower", rgb: "255, 196, 150",
+    first: "A meteor shower is drifting in from the glow. Free snacks!",
+    codex: "Small rocks drift in from the glowing edge. Every one of them is food."
   },
-  {
-    id: "cometStream",
-    cooldown: 1200,  // 20 sec
-    minGalaxy: 1,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.06;
-      if (m.entityDensity < 0.5) p += 0.04;
-      if (m.galaxyTime > 1800) p += 0.04; // 30 sec
-      return p;
-    },
-    fire: fireCometStream
+  cometStream: {
+    name: "Comet Stream", rgb: "160, 225, 255",
+    first: "Comets are gliding through. Catch a few if you like.",
+    codex: "Icy comets glide across your path from the glowing edge. All edible."
   },
-  {
-    id: "voidPulse",
-    cooldown: 1500,  // 25 sec
-    minGalaxy: 2,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.04;
-      if (!m.comboActivity) p += 0.04;
-      if (m.isLateGame) p += 0.06;
-      return p;
-    },
-    fire: fireVoidPulse
+  derelictFlotilla: {
+    name: "Derelict Flotilla", rgb: "205, 180, 255",
+    first: "Old ship wrecks are drifting by, slow and easy to catch.",
+    codex: "A slow line of old wrecks drifts in from one side. Easy, chunky food."
   },
-  {
-    id: "derelictFlotilla",
-    cooldown: 1800,  // 30 sec
-    minGalaxy: 2,
-    minMass: 40,
-    hazard(m) {
-      let p = 0.04;
-      if (m.isMidGame) p += 0.03;
-      if (m.isLateGame) p += 0.04;
-      return p;
-    },
-    fire: fireDerelictFlotilla
+  voidPulse: {
+    name: "Void Gift", rgb: "170, 150, 255",
+    first: "The void is breathing out. Nearby food will drift toward you.",
+    codex: "A soft ring breathes in, then releases and gently draws nearby food toward you."
   },
-  {
-    id: "stellarBirth",
-    cooldown: 2400,  // 40 sec
-    minGalaxy: 3,
-    minMass: 80,
-    hazard(m) {
-      let p = 0.03;
-      if (m.isLateGame) p += 0.04;
-      if (m.consumeRatio > 0.5) p += 0.05;
-      return p;
-    },
-    fire: fireStellarBirth
+  stellarBirth: {
+    name: "Stellar Birth", rgb: "255, 232, 180",
+    first: "A new star is forming nearby. It's bigger than you for now, so grow into it.",
+    codex: "Light gathers, then a young star blooms with a sprinkle of dust. Grow into it for a big catch."
   },
-  {
-    id: "gravitationalWave",
-    cooldown: 1980,  // 33 sec
-    minGalaxy: 3,
-    minMass: 0,
-    hazard(m) {
-      let p = 0.03;
-      if (m.galaxyTime > 1500) p += 0.03; // 25 sec
-      if (m.consumeRatio > 0.4) p += 0.04;
-      return p;
-    },
-    fire: fireGravitationalWave
+  gravitationalWave: {
+    name: "Gravity Wave", rgb: "140, 170, 255",
+    first: "A gravity wave is rolling through. Things will sway for a moment.",
+    codex: "Faint lines roll across space, and things sway sideways as they pass. Harmless."
   }
-];
+};
+
+const WARN_FRAMES = 150;                         // 2.5s heads-up before every event
+const DEFAULT_EVENTS = { meteorShower: 2, cometStream: 1 };
+
+function eventBudget(state) {
+  return state.biome && state.biome.breather ? CFG.BREATHER_EVENTS : CFG.MAX_EVENTS;
+}
 
 function updateEventSystem(state, dt) {
-  // Tick grace period
-  if (world.graceTimer > 0) {
-    world.graceTimer -= dt;
-    // Still update active events during grace
-    updateActiveEvents(state, dt);
-    return;
-  }
-
-  // Tick global cooldown
-  if (world.globalCooldown > 0) {
-    world.globalCooldown -= dt;
-  }
-
-  // Tick per-event cooldowns
-  for (const key in world.eventCooldowns) {
-    if (world.eventCooldowns[key] > 0) {
-      world.eventCooldowns[key] -= dt;
-    }
-  }
-
-  // Evaluate events on interval
-  world.eventEvalTimer += dt;
-  if (world.eventEvalTimer >= CFG.EVENT_EVAL_INTERVAL) {
-    world.eventEvalTimer = 0;
-
-    if (world.globalCooldown <= 0) {
-      const metrics = getMetrics(state);
-
-      for (const def of EVENT_DEFS) {
-        if (state.galaxy < def.minGalaxy) continue;
-        if (state.mass < def.minMass) continue;
-        if ((world.eventCooldowns[def.id] || 0) > 0) continue;
-
-        const prob = def.hazard(metrics);
-        if (Math.random() < prob) {
-          def.fire(state);
-          world.eventCooldowns[def.id] = def.cooldown;
-          world.globalCooldown = CFG.EVENT_GLOBAL_COOLDOWN;
-          break; // Only one event per evaluation
-        }
-      }
-    }
-  }
-
   updateActiveEvents(state, dt);
+  if (world.graceTimer > 0) { world.graceTimer -= dt; return; }
+  if (world.globalCooldown > 0) { world.globalCooldown -= dt; return; }
+  if (world.eventsFired >= eventBudget(state)) return;
+  if (world.activeEvents.length > 0) return;     // one thing at a time
+
+  world.eventEvalTimer += dt;
+  if (world.eventEvalTimer < CFG.EVENT_EVAL_INTERVAL) return;
+  world.eventEvalTimer = 0;
+  if (Math.random() > CFG.EVENT_FIRE_CHANCE) return;
+
+  const pool = (state.biome && state.biome.events) || DEFAULT_EVENTS;
+  fireEvent(state, pickWeighted(pool));
+}
+
+function pickWeighted(pool) {
+  const entries = Object.entries(pool);
+  let r = Math.random() * entries.reduce((s, [, w]) => s + w, 0);
+  for (const [id, w] of entries) { r -= w; if (r <= 0) return id; }
+  return entries[0][0];
+}
+
+/** Start an event (with its warning phase). Exported for tests/debugging. */
+export function fireEvent(state, id) {
+  const make = EVENT_MAKERS[id];
+  if (!make || !world) return null;
+  const ev = make(state);
+  ev.id = id;
+  ev.age = 0;
+  ev.warn = WARN_FRAMES;
+  ev.warnAge = 0;
+  ev.rgb = EVENT_INFO[id].rgb;
+  world.activeEvents.push(ev);
+  world.eventsFired++;
+  world.globalCooldown = rand(CFG.EVENT_COOLDOWN_MIN, CFG.EVENT_COOLDOWN_MAX);
+  playEventCue(id);
+  state.onEventWarn?.(id);
+  return ev;
+}
+
+export function activeEventInfo() {
+  return world ? world.activeEvents.map(e => ({ id: e.id, warn: Math.max(0, e.warn), age: e.age })) : [];
 }
 
 function updateActiveEvents(state, dt) {
   for (let i = world.activeEvents.length - 1; i >= 0; i--) {
     const ev = world.activeEvents[i];
+    if (ev.warn > 0) {
+      ev.warn -= dt;
+      ev.warnAge += dt;
+      if (ev.warnUpdate) ev.warnUpdate(state, dt);
+      if (ev.warn <= 0) state.onEventStart?.(ev.id);
+      continue;
+    }
     ev.age += dt;
     if (ev.update) ev.update(state, dt);
-    if (ev.age >= ev.duration) {
-      world.activeEvents.splice(i, 1);
-    }
+    if (ev.age >= ev.duration) world.activeEvents.splice(i, 1);
   }
 }
 
-// ─── EVENT: METEOR SHOWER ───
+const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
-function fireMeteorShower(state) {
-  const angle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(5, 9));
-  const bounds = state.bounds;
+/** Screen-space overlay: soft edge glows pointing at where an event comes from. */
+export function drawLivingWorldOverlay(ctx, state, w, h) {
+  if (!world) return;
+  for (const ev of world.activeEvents) {
+    if (ev.edgeAngle == null) continue;
+    let a;
+    if (ev.warn > 0) a = smooth(ev.warnAge / WARN_FRAMES);
+    else a = 1 - smooth(ev.age / Math.min(ev.duration, 90));
+    if (a <= 0.01) continue;
+    drawEdgeGlow(ctx, state, w, h, ev.edgeAngle, ev.rgb, a);
+  }
+}
 
-  const ev = {
-    id: "meteorShower",
-    age: 0,
-    duration: 90,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    angle,
-    bounds,
+function drawEdgeGlow(ctx, state, w, h, angle, rgb, a) {
+  const px = (state.playerX - state.camX) * state.zoom + w / 2;
+  const py = (state.playerY - state.camY) * state.zoom + h / 2;
+  const cx = Math.cos(angle), cy = Math.sin(angle);
+  const tx = cx > 0 ? (w - px) / cx : cx < 0 ? -px / cx : Infinity;
+  const ty = cy > 0 ? (h - py) / cy : cy < 0 ? -py / cy : Infinity;
+  const t = Math.min(tx, ty);
+  const ex = px + cx * t, ey = py + cy * t;
+  const breathe = 0.85 + 0.15 * Math.sin(performance.now() * 0.0025);
+  const r = Math.min(w, h) * 0.32;
+  const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, r);
+  g.addColorStop(0, `rgba(${rgb}, ${0.45 * a * breathe})`);
+  g.addColorStop(0.5, `rgba(${rgb}, ${0.15 * a * breathe})`);
+  g.addColorStop(1, `rgba(${rgb}, 0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(ex - r, ey - r, r * 2, r * 2);
+}
+
+// Streams enter from just outside the view and drift across the player's area.
+function streamEvent(state, opts) {
+  const angle = rand(0, TAU);
+  return {
+    duration: opts.duration, spawnTimer: 0, spawned: 0,
+    count: opts.count, angle, edgeAngle: angle,
     update(st, dt) {
       this.spawnTimer += dt;
-      const interval = 60 / this.count;
+      const interval = opts.window / this.count;
       while (this.spawnTimer >= interval && this.spawned < this.count) {
         this.spawnTimer -= interval;
         this.spawned++;
-
-        const meteorType = objectTypes.find(t => t.id === "meteor") || objectTypes[0];
-        const spread = rand(-0.3, 0.3);
-        const spawnAngle = this.angle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(meteorType, x, y);
-        // Override speed for meteors — fast
-        const speed = rand(0.8, 1.4);
-        const inward = spawnAngle + Math.PI + rand(-0.4, 0.4);
+        const type = typeById(eventType(st, opts.typeId));
+        const a = this.angle + rand(-opts.spread, opts.spread);
+        const d = viewRadius(st) * 1.1;
+        const pos = clampInBounds(st, st.playerX + Math.cos(a) * d, st.playerY + Math.sin(a) * d, 10);
+        const e = spawnScaled(st, type, opts.ratioMin, opts.ratioMax, { pos, near: false });
+        const speed = rand(opts.speedMin, opts.speedMax) * st.speedScale;
+        const inward = Math.atan2(st.playerY - pos.y, st.playerX - pos.x) + rand(-opts.aimJitter, opts.aimJitter);
         e.vx = Math.cos(inward) * speed;
         e.vy = Math.sin(inward) * speed;
         e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
         st.entities.push(e);
       }
     }
   };
-
-  world.activeEvents.push(ev);
-  playEventCue("meteorShower");
 }
 
-// ─── EVENT: COMET STREAM ───
+const EVENT_MAKERS = {
+  meteorShower: st => streamEvent(st, {
+    typeId: "meteor", count: Math.floor(rand(6, 10)), duration: 150, window: 110,
+    spread: 0.3, aimJitter: 0.35, ratioMin: 0.12, ratioMax: 0.28, speedMin: 0.55, speedMax: 0.9
+  }),
+  cometStream: st => streamEvent(st, {
+    typeId: "comet", count: Math.floor(rand(5, 9)), duration: 170, window: 140,
+    spread: 0.2, aimJitter: 0.6, ratioMin: 0.12, ratioMax: 0.24, speedMin: 0.45, speedMax: 0.75
+  }),
+  derelictFlotilla: st => streamEvent(st, {
+    typeId: "craft", count: Math.floor(rand(4, 7)), duration: 90, window: 60,
+    spread: 0.15, aimJitter: 0.2, ratioMin: 0.2, ratioMax: 0.4, speedMin: 0.2, speedMax: 0.35
+  }),
+  voidPulse: makeVoidGift,
+  stellarBirth: makeStellarBirth,
+  gravitationalWave: makeGravityWave
+};
 
-function fireCometStream(state) {
-  const entryAngle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(4, 8));
-  const bounds = state.bounds;
-
-  const ev = {
-    id: "cometStream",
-    age: 0,
-    duration: 120,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    entryAngle,
-    bounds,
+// ─── EVENT: VOID GIFT (was Void Pulse) ───
+// A ring breathes in at a point near you, then releases: food the ring has
+// passed drifts gently toward you for a few seconds.
+function makeVoidGift(state) {
+  const angle = rand(0, TAU);
+  const dist = viewRadius(state) * rand(0.3, 0.55);
+  const ss = state.speedScale;
+  return {
+    duration: 240,
+    cx: state.playerX + Math.cos(angle) * dist,
+    cy: state.playerY + Math.sin(angle) * dist,
+    radius: 0, speed: 2.6 * ss, pull: 0.035 * ss, cap: 1.6 * ss,
     update(st, dt) {
-      this.spawnTimer += dt;
-      const interval = 90 / this.count;
-      while (this.spawnTimer >= interval && this.spawned < this.count) {
-        this.spawnTimer -= interval;
-        this.spawned++;
-
-        const cometType = objectTypes.find(t => t.id === "comet") || objectTypes[0];
-        const spread = rand(-0.2, 0.2);
-        const spawnAngle = this.entryAngle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(cometType, x, y);
-        // Aim toward a midpoint for curved path
-        const midAngle = spawnAngle + Math.PI + rand(-0.8, 0.8);
-        const speed = rand(0.6, 1.0);
-        e.vx = Math.cos(midAngle) * speed;
-        e.vy = Math.sin(midAngle) * speed;
-        e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
-        st.entities.push(e);
-      }
-    }
-  };
-
-  world.activeEvents.push(ev);
-  playEventCue("cometStream");
-}
-
-// ─── EVENT: VOID PULSE ───
-
-function fireVoidPulse(state) {
-  // Epicenter away from player
-  const angle = rand(0, Math.PI * 2);
-  const dist = rand(200, state.bounds * 0.6);
-  const cx = state.playerX + Math.cos(angle) * dist;
-  const cy = state.playerY + Math.sin(angle) * dist;
-
-  const rings = [
-    { delay: 0, radius: 0 },
-    { delay: 15, radius: 0 },
-    { delay: 30, radius: 0 }
-  ];
-
-  const ev = {
-    id: "voidPulse",
-    age: 0,
-    duration: 90,
-    cx, cy,
-    rings,
-    speed: 3.5,
-    pushStrength: 0.4,
-    waveBand: 40,
-    update(st, dt) {
-      for (const ring of this.rings) {
-        if (this.age >= ring.delay) {
-          ring.radius += this.speed * dt;
-        }
-      }
-
-      // Push entities in the wave band
-      const mainRadius = this.rings[0].radius;
+      this.radius += this.speed * dt;
+      const reach = viewRadius(st) * 1.3;
+      const fade = 1 - smooth((this.age - 150) / 90);
       for (const e of st.entities) {
-        if (e.consuming) continue;
-        const dx = e.x - this.cx;
-        const dy = e.y - this.cy;
-        const d = Math.hypot(dx, dy);
-        if (d < 1) continue;
-
-        if (Math.abs(d - mainRadius) < this.waveBand) {
-          const nx = dx / d;
-          const ny = dy / d;
-          e.vx += nx * this.pushStrength * dt;
-          e.vy += ny * this.pushStrength * dt;
-        }
+        if (e.consuming || e.powerup) continue;
+        if (st.radius <= e.radius * st.eatRatio) continue;     // only food
+        const d = Math.hypot(e.x - this.cx, e.y - this.cy);
+        if (d > this.radius) continue;
+        const dx = st.playerX - e.x, dy = st.playerY - e.y;
+        const dp = Math.hypot(dx, dy);
+        if (dp < 1 || dp > reach) continue;
+        e.vx += (dx / dp) * this.pull * fade * dt;
+        e.vy += (dy / dp) * this.pull * fade * dt;
+        e._pullCap = Math.max(e._pullCap || 0, this.cap);
       }
     },
     draw(ctx, st, w, h) {
       const sx = this.cx - st.camX + w / 2;
       const sy = this.cy - st.camY + h / 2;
-
-      for (const ring of this.rings) {
-        if (ring.radius <= 0) continue;
-        const progress = this.age / this.duration;
-        const alpha = (1 - progress) * 0.25;
+      if (this.warn > 0) {
+        // Breathing in: a soft ring slowly contracts toward its centre
+        const p = smooth(this.warnAge / WARN_FRAMES);
+        const base = 60 / st.zoom;
+        const r = base * (1.6 - p * 1.2);
         ctx.beginPath();
-        ctx.arc(sx, sy, ring.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(120, 100, 220, ${alpha})`;
-        ctx.lineWidth = 2;
+        ctx.arc(sx, sy, r, 0, TAU);
+        ctx.strokeStyle = `rgba(${this.rgb}, ${0.08 + p * 0.22})`;
+        ctx.lineWidth = 2 / st.zoom;
+        ctx.stroke();
+        const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, base * 0.5);
+        g.addColorStop(0, `rgba(${this.rgb}, ${0.25 * p})`);
+        g.addColorStop(1, `rgba(${this.rgb}, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(sx, sy, base * 0.5, 0, TAU);
+        ctx.fill();
+        return;
+      }
+      const alpha = (1 - this.age / this.duration) * 0.28;
+      for (let i = 0; i < 2; i++) {
+        const r = this.radius - i * 40 / st.zoom;
+        if (r <= 0) continue;
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, TAU);
+        ctx.strokeStyle = `rgba(${this.rgb}, ${alpha * (1 - i * 0.4)})`;
+        ctx.lineWidth = 2 / st.zoom;
         ctx.stroke();
       }
     }
   };
-
-  world.activeEvents.push(ev);
-  playEventCue("voidPulse");
-}
-
-// ─── EVENT: DERELICT FLOTILLA ───
-
-function fireDerelictFlotilla(state) {
-  const angle = rand(0, Math.PI * 2);
-  const count = Math.floor(rand(3, 7));
-  const bounds = state.bounds;
-
-  const ev = {
-    id: "derelictFlotilla",
-    age: 0,
-    duration: 60,
-    spawnTimer: 0,
-    spawned: 0,
-    count,
-    angle,
-    bounds,
-    update(st, dt) {
-      this.spawnTimer += dt;
-      const interval = 30 / this.count;
-      while (this.spawnTimer >= interval && this.spawned < this.count) {
-        this.spawnTimer -= interval;
-        this.spawned++;
-
-        const craftType = objectTypes.find(t => t.id === "craft") || objectTypes[0];
-        const spread = rand(-0.15, 0.15);
-        const spawnAngle = this.angle + spread;
-        const x = Math.cos(spawnAngle) * (this.bounds - 5);
-        const y = Math.sin(spawnAngle) * (this.bounds - 5);
-
-        const e = createEntity(craftType, x, y);
-        const inward = spawnAngle + Math.PI + rand(-0.2, 0.2);
-        const speed = rand(0.12, 0.22);
-        e.vx = Math.cos(inward) * speed;
-        e.vy = Math.sin(inward) * speed;
-        e.baseSpeed = speed;
-        e._spawnAge = 0;
-        e._spawnAlpha = 0;
-        prerenderEntitySprite(e);
-        st.entities.push(e);
-      }
-    }
-  };
-
-  world.activeEvents.push(ev);
-  playEventCue("derelictFlotilla");
 }
 
 // ─── EVENT: STELLAR BIRTH ───
-
-function fireStellarBirth(state) {
-  // Point in space away from player
-  const angle = rand(0, Math.PI * 2);
-  const dist = rand(150, state.bounds * 0.5);
-  const cx = state.playerX + Math.cos(angle) * dist;
-  const cy = state.playerY + Math.sin(angle) * dist;
-
-  const ev = {
-    id: "stellarBirth",
-    age: 0,
-    duration: 165, // 90 gathering + 15 flash + 60 explode
-    cx, cy,
-    phase: "gathering",
-    spawned: false,
-    update(st, dt) {
-      if (this.age < 90) {
-        this.phase = "gathering";
-      } else if (this.age < 105) {
-        this.phase = "flash";
-        if (!this.spawned) {
-          this.spawned = true;
-          // Spawn a star or planet
-          const type = Math.random() > 0.5
-            ? objectTypes.find(t => t.id === "star")
-            : objectTypes.find(t => t.id === "planet");
-          if (type) {
-            const star = createEntity(type, this.cx, this.cy);
-            star._spawnAge = 0;
-            star._spawnAlpha = 0;
-            prerenderEntitySprite(star);
-            st.entities.push(star);
-          }
-
-          // Eject dust fragments
-          const fragCount = Math.floor(rand(3, 8));
-          const dustType = objectTypes.find(t => t.id === "dust") || objectTypes[0];
-          for (let i = 0; i < fragCount; i++) {
-            const fragAngle = rand(0, Math.PI * 2);
-            const frag = createEntity(dustType, this.cx, this.cy);
-            const speed = rand(0.4, 1.0);
-            frag.vx = Math.cos(fragAngle) * speed;
-            frag.vy = Math.sin(fragAngle) * speed;
-            frag.baseSpeed = speed;
-            frag._spawnAge = 30; // Partial fade-in (born from explosion)
-            frag._spawnAlpha = 0.5;
-            prerenderEntitySprite(frag);
-            st.entities.push(frag);
-          }
-        }
-      } else {
-        this.phase = "explode";
+// Light gathers (the warning), then a soft bloom (no flash) and a new star.
+function makeStellarBirth(state) {
+  const angle = rand(0, TAU);
+  const dist = viewRadius(state) * rand(0.35, 0.6);
+  const sf = Math.max(1, state.radius / 12);
+  return {
+    duration: 150, spawned: false, sf,
+    cx: state.playerX + Math.cos(angle) * dist,
+    cy: state.playerY + Math.sin(angle) * dist,
+    update(st) {
+      if (this.spawned) return;
+      this.spawned = true;
+      const pos = clampInBounds(st, this.cx, this.cy, st.radius * 1.5);
+      this.cx = pos.x; this.cy = pos.y;
+      const star = spawnScaled(st, typeById(eventBigType(st)), 0.95, 1.4, { pos, near: false, forceScale: true });
+      star.vx = star.vy = 0;
+      star.baseSpeed = 0.1;
+      star.bigFish = true;
+      star._spawnAge = 0;
+      star._spawnAlpha = 0;
+      st.entities.push(star);
+      const fragCount = Math.floor(rand(5, 10));
+      for (let i = 0; i < fragCount; i++) {
+        const frag = spawnScaled(st, typeById("dust"), 0.08, 0.2, { pos: { x: this.cx, y: this.cy }, near: false });
+        const a = rand(0, TAU);
+        const speed = rand(0.3, 0.8) * st.speedScale;
+        frag.vx = Math.cos(a) * speed;
+        frag.vy = Math.sin(a) * speed;
+        frag.baseSpeed = speed;
+        st.entities.push(frag);
       }
     },
     draw(ctx, st, w, h) {
       const sx = this.cx - st.camX + w / 2;
       const sy = this.cy - st.camY + h / 2;
-
-      if (this.phase === "gathering") {
-        const brightness = this.age / 90;
-        const r = 3 + brightness * 5;
-        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-        grad.addColorStop(0, `rgba(255, 240, 200, ${brightness * 0.6})`);
-        grad.addColorStop(1, "transparent");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (this.phase === "flash") {
-        const flashProgress = (this.age - 90) / 15;
-        const alpha = (1 - flashProgress) * 0.8;
-        const r = 20 + flashProgress * 40;
-        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        grad.addColorStop(0.3, `rgba(255, 240, 180, ${alpha * 0.5})`);
-        grad.addColorStop(1, "transparent");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.fill();
+      let r, alpha;
+      if (this.warn > 0) {
+        const b = smooth(this.warnAge / WARN_FRAMES);
+        r = (6 + b * 14) * sf;
+        alpha = 0.15 + b * 0.35;
       } else {
-        // Explode: expanding ripple
-        const explodeProgress = (this.age - 105) / 60;
-        const alpha = (1 - explodeProgress) * 0.3;
-        const r = 30 + explodeProgress * 80;
-        ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 220, 120, ${alpha})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        const p = smooth(this.age / this.duration);
+        r = (20 + p * 50) * sf;
+        alpha = 0.5 * (1 - p);
       }
+      const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+      grad.addColorStop(0, `rgba(255, 244, 215, ${alpha})`);
+      grad.addColorStop(0.4, `rgba(255, 225, 160, ${alpha * 0.4})`);
+      grad.addColorStop(1, "rgba(255, 225, 160, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, TAU);
+      ctx.fill();
     }
   };
-
-  world.activeEvents.push(ev);
-  playEventCue("stellarBirth");
 }
 
-// ─── EVENT: GRAVITATIONAL WAVE ───
-
-function fireGravitationalWave(state) {
-  const dirAngle = rand(0, Math.PI * 2);
-  const bounds = state.bounds;
-  const speed = 2.5;
-  const duration = Math.floor((bounds * 2) / speed + 60);
-  const wavelength = 120;
-
-  const ev = {
-    id: "gravitationalWave",
-    age: 0,
-    duration,
-    dirAngle,
-    waveFront: -bounds,
-    speed,
-    wavelength,
-    bounds,
-    sineStrength: 0.3,
+// ─── EVENT: GRAVITY WAVE ───
+// Starts just off-screen (shown by an edge glow) and rolls past you; things
+// sway sideways gently as the front passes.
+function makeGravityWave(state) {
+  const dirAngle = rand(0, TAU);
+  const ss = state.speedScale;
+  const vr = viewRadius(state);
+  const speed = 1.8 * ss;
+  const dirX = Math.cos(dirAngle), dirY = Math.sin(dirAngle);
+  const startFront = state.playerX * dirX + state.playerY * dirY - vr * 1.15;
+  return {
+    duration: Math.floor((vr * 2.6) / speed),
+    edgeAngle: dirAngle + Math.PI,        // it comes from behind the direction of travel
+    dirAngle, waveFront: startFront, speed, wavelength: 120 * ss, sineStrength: 0.1 * ss,
     update(st, dt) {
       this.waveFront += this.speed * dt;
-
-      const dirX = Math.cos(this.dirAngle);
-      const dirY = Math.sin(this.dirAngle);
-      // Perpendicular direction
-      const perpX = -dirY;
-      const perpY = dirX;
-
+      const perpX = -dirY, perpY = dirX;
       for (const e of st.entities) {
         if (e.consuming) continue;
-        // Project entity onto wave direction
-        const proj = e.x * dirX + e.y * dirY;
-        const distToFront = proj - this.waveFront;
-
+        const distToFront = e.x * dirX + e.y * dirY - this.waveFront;
         if (Math.abs(distToFront) < this.wavelength) {
-          // Sinusoidal displacement perpendicular to wave
-          const sineForce = Math.sin((distToFront / this.wavelength) * Math.PI * 2) * this.sineStrength;
-          e.vx += perpX * sineForce * dt;
-          e.vy += perpY * sineForce * dt;
+          const f = Math.sin((distToFront / this.wavelength) * TAU) * this.sineStrength;
+          e.vx += perpX * f * dt;
+          e.vy += perpY * f * dt;
         }
       }
     },
     draw(ctx, st, w, h) {
-      const dirX = Math.cos(this.dirAngle);
-      const dirY = Math.sin(this.dirAngle);
-      const perpX = -dirY;
-      const perpY = dirX;
-
-      const progress = this.age / this.duration;
-      const alpha = Math.min(0.12, (1 - progress) * 0.15);
-
-      // Draw a few parallel lines perpendicular to wave direction
-      const lineCount = 5;
-      for (let i = 0; i < lineCount; i++) {
+      if (this.warn > 0) return;
+      const perpX = -dirY, perpY = dirX;
+      const fadeIn = smooth(this.age / 40);
+      const alpha = Math.min(0.14, (1 - this.age / this.duration) * 0.18) * fadeIn;
+      const halfLen = Math.hypot(w, h);
+      // Centre the lines on the player's projection so they always span the view
+      const along = st.playerX * perpX + st.playerY * perpY;
+      for (let i = 0; i < 5; i++) {
         const offset = (i - 2) * (this.wavelength / 3);
-        const lineCenterX = dirX * (this.waveFront + offset);
-        const lineCenterY = dirY * (this.waveFront + offset);
-
-        const sx = lineCenterX - st.camX + w / 2;
-        const sy = lineCenterY - st.camY + h / 2;
-
-        const halfLen = this.bounds * 1.5;
-        const x1 = sx + perpX * halfLen;
-        const y1 = sy + perpY * halfLen;
-        const x2 = sx - perpX * halfLen;
-        const y2 = sy - perpY * halfLen;
-
+        const wx = dirX * (this.waveFront + offset) + perpX * along;
+        const wy = dirY * (this.waveFront + offset) + perpY * along;
+        const sx = wx - st.camX + w / 2;
+        const sy = wy - st.camY + h / 2;
         ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(100, 140, 255, ${alpha})`;
-        ctx.lineWidth = 1;
+        ctx.moveTo(sx + perpX * halfLen, sy + perpY * halfLen);
+        ctx.lineTo(sx - perpX * halfLen, sy - perpY * halfLen);
+        ctx.strokeStyle = `rgba(${this.rgb}, ${alpha * (1 - Math.abs(i - 2) * 0.25)})`;
+        ctx.lineWidth = 1.5 / st.zoom;
         ctx.stroke();
       }
     }
   };
-
-  world.activeEvents.push(ev);
-  playEventCue("gravitationalWave");
 }
 
 // ─── 2D: AMBIENT BACKGROUND LIFE ───
