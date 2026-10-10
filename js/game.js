@@ -132,9 +132,9 @@ function updateRadius() {
 }
 
 // v5: the camera is framed on an "anchor" size. Within a tier you visibly
-// grow on screen (10px -> ~26px); at each tier line the camera slowly pulls
+// grow on screen (13px -> ~34px); at each tier line the camera slowly pulls
 // back so you are small again and the next layer of the universe appears.
-const HOLE_PX = 10;
+const HOLE_PX = 13;
 const REVEAL_FRAMES = 160;   // ~2.7s pull-back
 function zoomTarget() {
   const k = clamp(Math.min(screenW, screenH) / 420, 0.85, 1.5);

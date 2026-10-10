@@ -15,10 +15,10 @@ const LNB = Math.log(B);
 // d: how strongly the layer follows zoom (0 = fixed, 1 = like the world)
 // par: how much it pans with camera movement
 const LAYERS = [
-  { id: "far",  d: 0.12, par: 0.04, cell: 190, occ: 0.10, size: [10, 22], alpha: 0.30, kind: "smudge", salt: 11 },
-  { id: "neb",  d: 0.30, par: 0.12, cell: 300, occ: 0.42, size: [120, 260], alpha: 0.075, kind: "cloud", salt: 23 },
+  { id: "far",  d: 0.12, par: 0.04, cell: 170, occ: 0.12, size: [12, 30], alpha: 0.5, kind: "smudge", salt: 11 },
+  { id: "neb",  d: 0.30, par: 0.12, cell: 280, occ: 0.45, size: [130, 280], alpha: 0.15, kind: "cloud", salt: 23 },
   { id: "mid",  d: 0.58, par: 0.30, cell: 64,  occ: 0.20, size: [1.2, 2.6], alpha: 0.55, kind: "star", salt: 37 },
-  { id: "near", d: 0.92, par: 0.75, cell: 150, occ: 0.16, size: [4, 11], alpha: 0.16, kind: "mote", salt: 53 }
+  { id: "near", d: 0.92, par: 0.75, cell: 150, occ: 0.18, size: [4, 12], alpha: 0.22, kind: "mote", salt: 53 }
 ];
 
 let palette = [[110, 140, 210], [90, 170, 200], [150, 120, 220]];

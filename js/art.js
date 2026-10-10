@@ -483,16 +483,15 @@ Object.assign(PAINTERS, {
 
   nebula(g, R, e, r) {
     // Soft overlapping clouds, a second hue, a few newborn stars
-    const hues = [e.color, mix(e.color, [255, 160, 210], 0.4), mix(e.color, [120, 220, 255], 0.4)];
+    const hueA = (i, a) => i % 3 === 0 ? rgba(e.color, a) : mix(e.color, i % 3 === 1 ? [255, 160, 210] : [120, 220, 255], 0.4, a);
     if ("filter" in g && R > 8) g.filter = `blur(${(R * 0.08).toFixed(1)}px)`;
     for (let i = 0; i < 7; i++) {
       const a = r() * TAU, d = r() * R * 0.6, cr = R * (0.45 + r() * 0.5);
       const cx = Math.cos(a) * d, cy = Math.sin(a) * d * 0.8;
       const cg = g.createRadialGradient(cx, cy, 0, cx, cy, cr);
-      const h = hues[i % 3];
-      cg.addColorStop(0, rgba(h, 0.32));
-      cg.addColorStop(0.6, rgba(h, 0.12));
-      cg.addColorStop(1, rgba(h, 0));
+      cg.addColorStop(0, hueA(i, 0.32));
+      cg.addColorStop(0.6, hueA(i, 0.12));
+      cg.addColorStop(1, hueA(i, 0));
       g.fillStyle = cg;
       g.beginPath(); g.arc(cx, cy, cr, 0, TAU); g.fill();
     }

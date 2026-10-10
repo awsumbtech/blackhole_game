@@ -242,7 +242,7 @@ function spawnBigFish(state) {
 }
 
 export const DENSITY = { regular: 60, breather: 70 };  // objects around the view
-const RING = 1.6;       // "around the view" = within 1.6 view radii
+const RING = 1.1;       // "around the view" = within 1.1 view radii (just past the corners)
 const RECYCLE = 3.0;    // gone once 3 view radii behind
 const HARD_CAP = 170;
 
