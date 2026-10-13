@@ -1,6 +1,6 @@
 # Black Hole: Galaxy Eater
 
-**v5.2** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v6.0** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
 No ads, no purchases, no timers (in Zen mode), no way to lose.
 
@@ -12,7 +12,13 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
   the further you drag, the faster you drift. Let go to coast. (Settings can switch to
   "follow finger".) On a computer, use the mouse, or WASD / arrow keys.
 - **Eat** anything smaller than you (it glows softly when it's edible). Bumping into something
-  bigger just nudges you away.
+  bigger just nudges you away. Each bite is a real mouthful and plays the next note of a slow,
+  evolving tune in the galaxy's key.
+- **Big catches:** a soft gold halo means something big is almost in reach. When it's steady,
+  drift in for a slow swallow and a warm chime.
+- **Discoveries:** a few rare finds hide in every galaxy (a golden comet, a lost probe, a whale
+  nebula...). A faint glow at the screen edge, and your wisp leaning that way, mean one is near.
+  Everything you find goes in your **Logbook** (title screen or Stats).
 - **Grow through scales.** Each galaxy grows you a little. Cross into a new scale (Asteroids,
   Moons, Planets, Stars, Nebulae, Galaxies...) and the camera slowly pulls back to show the bigger
   universe. Your size carries into the next galaxy.
@@ -21,8 +27,10 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
   quick, generous breather. Gentle events (with a soft warning first) are explained in Stats >
   "What's that?".
 - **Stardust** from each galaxy buys upgrades between galaxies.
-- **Your wisp** drifts along with you and now and then floats toward something worth eating.
-- **Star map** (title screen or Stats): a star for every galaxy you've cleared. Tap one.
+- **Your wisp** drifts along with you, now and then floats toward something worth eating, twirls
+  after a big catch, rests during breathers and perks up near a discovery.
+- **Star map** (title screen or Stats): a star for every galaxy you've cleared. Tap one. At the end
+  of each galaxy you'll see its new star settle into your sky before the summary.
 - **Pause** (top-left button or Esc / P) for Resume, Settings, Title.
 
 ## Settings worth knowing
@@ -58,7 +66,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 ## Project structure
 
 ```
-index.html        HUD, title, overlays, star map screen
+index.html        HUD, title, overlays, star map and logbook screens
 manifest.json     PWA manifest
 sw.js             network-first service worker (offline fallback); bump CACHE_NAME each release
 css/game.css      all styling
@@ -71,7 +79,9 @@ js/art.js         painterly code-drawn sprites (cached) and the black hole
 js/backdrop.js    four-layer parallax sky
 js/render.js      particles, ripples, radar
 js/wisp.js        the companion wisp
-js/starmap.js     the star map screen
+js/starmap.js     the star map screen (and the end-of-galaxy ritual)
+js/discoveries.js rare biome-themed finds (v6)
+js/logbook.js     the logbook screen (v6)
 js/audio.js       procedural WebAudio drone, music layers and sounds
 js/powerups.js    power-ups
 js/progression.js upgrades, stardust, galaxy summary

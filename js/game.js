@@ -27,7 +27,7 @@ import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
 import { R0, START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
 
-const VERSION = "5.2";
+const VERSION = "6.0";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 // ─── CANVAS SETUP ───

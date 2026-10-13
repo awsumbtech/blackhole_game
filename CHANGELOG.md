@@ -2,6 +2,35 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v6.0 Next Level (Oct 2026)
+
+Balance and feel, from a bot playtest. Time per galaxy is unchanged (checked with the playtest bot
+against v5.2).
+
+- **Meatier bites.** Food is bigger and a little sparser (food 12-30% of your size, was 8-22%;
+  ~44 objects around the view, was 60). Each bite is worth more and the hole visibly swells a touch
+  on every bite. Gains are retuned so each galaxy takes the same time as before.
+- **Big catches.** Things you've nearly outgrown get a soft gold halo that warms as you close in,
+  and turns steady once they fit. Eating one is a slow (~1s) swirling swallow with a warm chime in
+  the galaxy's key. The old tiny screen shake on big catches is gone.
+- **Discoveries + Logbook.** 21 rare, biome-themed finds (3 per galaxy type: Golden Comet, Lost
+  Probe, Whale Nebula, Dandelion Star...). One or two hide in each galaxy (one in breathers), planted
+  ahead of you and following you like the mechanics do. A soft edge glow fades in over ~2.5s when
+  one is near, with a one-time caption. Drift into it for a gentle rising phrase. The new Logbook
+  (title screen or Stats) lists what you've found and when. Save version 6: older saves migrate
+  with an empty logbook.
+- **Livelier wisp.** It twirls after a big catch, curls up and rests close by during breathers (no
+  hints there), and perks up, brighter and leaning that way, when a discovery is near.
+- **Melodic bites.** Each bite plays the next note of an 8-note pentatonic phrase in the biome's key,
+  so a streak sounds like a tune. The phrase drifts one note every 12 bites, restarts after a pause
+  and is new each galaxy. Bite and combo sounds are softer and in key.
+- **End-of-galaxy ritual.** Before the summary, the star map opens for a quiet moment: the new star
+  drifts up and settles into your sky, with one line about your discoveries or best catch. A low,
+  slow chord plays. Tap to move on, or it continues by itself after ~7s. Reduce Motion fades the
+  star in place.
+- Codex: new "What's that?" entries for the golden halo, the shimmer, the wisp and the new star.
+- Service worker cache `blackhole-v6.0`.
+
 ## v5.2 Star Map & Wisp (Oct 2026)
 
 - **Star map.** A slowly drifting sky with one star for every galaxy you've cleared, coloured by
