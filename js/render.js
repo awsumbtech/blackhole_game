@@ -7,6 +7,9 @@ const TAU = Math.PI * 2;
 
 // "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
 let TOO_BIG_RGB = "240, 130, 140";
+// v6 big-catch halo: warm gold; starts once you're 82% of the way to its size
+const HALO_RGB = "255, 214, 140";
+const BIG_HALO_FROM = 0.82;
 export function setSoftPalette(on) {
   TOO_BIG_RGB = on ? "235, 185, 110" : "240, 130, 140";
 }
@@ -310,11 +313,18 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     let r = e.radius;
     let rot = ROTATES[e.type] ? e.rotation : 0;
     if (e.consuming) {
-      // Spiral down into the hole
+      // Spiral down into the hole (v6: big catches stretch and swirl slowly)
       const p = e.consumeProgress;
-      alpha *= 1 - p * p;
-      r *= 1 - p;
-      rot += p * Math.PI * 2;
+      if (e.swallow) {
+        const q = p * p * (3 - 2 * p);
+        alpha *= 1 - q * q;
+        r *= 1 - q * 0.92;
+        rot += q * Math.PI * 3;
+      } else {
+        alpha *= 1 - p * p;
+        r *= 1 - p;
+        rot += p * Math.PI * 2;
+      }
     }
     if (alpha <= 0.01 || r <= 0.05) continue;
 
@@ -352,8 +362,24 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.drawImage(sp.c, sx - d / 2, sy - d / 2, d, d);
     }
 
-    // "Too big to eat" indicator: slow soft ring
+    // v6 big catches: a soft gold halo as you near something's size, steady once it fits
     const tooBig = playerRadius <= e.radius * eatRatio;
+    const nearQ = playerRadius / (e.radius * eatRatio);
+    if (e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
+      const ready = !tooBig;
+      const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
+      const a = (0.10 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
+      const hr = e.radius * (ready ? 1.65 : 1.35 + 0.25 * k);
+      const g = ctx.createRadialGradient(sx, sy, e.radius * 0.85, sx, sy, hr);
+      g.addColorStop(0, `rgba(${HALO_RGB}, ${a.toFixed(3)})`);
+      g.addColorStop(1, `rgba(${HALO_RGB}, 0)`);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(sx, sy, hr, 0, TAU);
+      ctx.fill();
+    }
+
     if (tooBig && !e.consuming) {
       const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
       ctx.globalAlpha = spawnAlpha;

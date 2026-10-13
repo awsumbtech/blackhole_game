@@ -13,7 +13,7 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
-import { resetWisp, updateWisp, drawWisp, wispInfo } from "./wisp.js";
+import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
@@ -125,6 +125,10 @@ const REGULAR_GAIN = 0.26;   // v4.1: share of a bite's mass you keep in regular
 // bite counts for less: "very small increments". These scale all of the above.
 const PACE = 0.16;
 const BREATHER_PACE = 0.095;
+// v6 "meatier bites": food is bigger and sparser, so each bite carries more but
+// the total time per galaxy is unchanged (tuned with the playtest bot).
+// gain scales what a bite gives, cap lifts the per-bite ceiling so big morsels count.
+const MEATY = { gain: 1, breatherGain: 1, cap: 2 };
 
 // ─── HELPERS ───
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -272,7 +276,7 @@ function initGalaxy(galaxyNum, resume = null) {
 
   state.run = freshRun(state.stats);
   if (resume) {
-    for (const k of ["time", "eaten", "bestCombo", "bigFish", "powerups", "bumps", "startBestCombo"]) {
+    for (const k of ["time", "eaten", "bestCombo", "bigFish", "powerups", "bumps", "startBestCombo", "bestCatch", "found"]) {
       if (typeof resume[k] === "number") state.run[k] = resume[k];
     }
   }
@@ -379,7 +383,7 @@ function tryConsume(dt) {
       const pull = 1 - Math.pow(1 - 0.18, dt);
       e.x += (state.playerX - e.x) * pull;
       e.y += (state.playerY - e.y) * pull;
-      e.consumeProgress += 0.06 * dt;
+      e.consumeProgress += (e.swallow ? (state.settings.reduceMotion ? 0.035 : 0.016) : 0.06) * dt;
       if (e.consumeProgress >= 1) e.consumed = true;
       continue;
     }
@@ -410,8 +414,8 @@ function tryConsume(dt) {
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
       const pace = state.biome.breather ? BREATHER_PACE : PACE;
-      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace;
-      const gk = (state.biome.breather ? 0.5 : REGULAR_GAIN) * pace;
+      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace * MEATY.cap;
+      const gk = (state.biome.breather ? 0.5 * MEATY.breatherGain : REGULAR_GAIN * MEATY.gain) * pace;
       // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
       const gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
       state.mass += gain;
@@ -431,11 +435,16 @@ function tryConsume(dt) {
       spawnRipple(e);
 
       if (e.bigFish) {
+        // v6: a slow, satisfying swallow (about a second) with a soft chime. No shake.
+        e.swallow = true;
         state.run.bigFish += 1;
         state.stats.bigFishEaten += 1;
+        if (!state.run.bestCatch || e.radius > state.run.bestCatch.r) state.run.bestCatch = { r: e.radius, type: e.type };
         floater(e.x, e.y, "Big catch", "#ffcf6e", 19);
-        shakeBy(1.5);
+        state.gulp = 1;
         audio.playBigCatch();
+        wispReact(state, "catch");
+        hint("bigcatch", "Big catch! Golden halos show what's almost in reach.", 3600);
       }
     } else if (!edible && state.invuln <= 0 && (e._spawnAlpha ?? 1) > 0.6 && dist < R + e.radius * 0.85) {
       bump(e, dx, dy, dist);
@@ -1463,7 +1472,7 @@ requestAnimationFrame(frame);
 // Developer hook for the automated tests. Only exists on a local dev server
 // or with ?debug in the URL, never for normal play.
 const DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("debug");
-if (DEV) window.__bh = {
+if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo,
   density: densityInfo, music: audio.musicInfo, feature: () => worldsFeature(state),

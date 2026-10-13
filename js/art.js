@@ -801,7 +801,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   }
 
   // Shadow + photon ring
-  const g = 1 + gulp * 0.05;
+  const g = 1 + gulp * 0.08;   // v6: each bite visibly swells the hole a touch
   const rs = radius * 1.3 * g;
   ctx.globalAlpha = 1;
   ctx.drawImage(ringSprite, -rs, -rs, rs * 2, rs * 2);

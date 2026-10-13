@@ -1,6 +1,8 @@
 // ─── COMPANION WISP (v5.2) ───
 // A small glowing wisp drifts beside the hole, breathing with the 10s cycle.
 // Now and then it floats toward something tasty nearby, as a gentle hint.
+// v6: it twirls happily after a big catch, curls up and rests during breather
+// galaxies, and perks up (brighter, leaning that way) near a hidden discovery.
 // It never eats, never blocks, and costs one cached sprite per frame.
 
 const TAU = Math.PI * 2;
@@ -27,14 +29,23 @@ export function resetWisp(state) {
   w = {
     x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d,
     vx: 0, vy: 0, ang: a, mode: "follow", modeT: 0,
-    nextHint: 900 + Math.random() * 600, target: null, trail: [], trailT: 0, age: 0
+    nextHint: 900 + Math.random() * 600, target: null, trail: [], trailT: 0, age: 0, joy: 0, perk: 0
   };
 }
 
 function homePoint(state) {
   // Orbit gently a little off the hole's shoulder (at least ~22px out on screen)
-  const d = Math.max(state.radius * 2.6, 22 / state.zoom);
+  const rest = state.biome && state.biome.breather;
+  let d = Math.max(state.radius * (rest ? 1.9 : 2.6), (rest ? 17 : 22) / state.zoom);
+  // Resting: a slow little curl (a loop within the loop), like a cat settling
+  if (rest) d *= 1 + 0.18 * Math.sin(w.ang * 3);
   return { x: state.playerX + Math.cos(w.ang) * d, y: state.playerY + Math.sin(w.ang) * d * 0.8 };
+}
+
+/** v6: moments the wisp reacts to ("catch" after a big catch, "discovery" on a find). */
+export function wispReact(state, kind) {
+  if (!w) return;
+  w.joy = kind === "discovery" ? 150 : 100;
 }
 
 function findHint(state) {
@@ -53,12 +64,27 @@ function findHint(state) {
 export function updateWisp(state, dt, reduceMotion) {
   if (!w) resetWisp(state);
   w.age += dt;
-  w.ang += (reduceMotion ? 0.0015 : 0.003) * dt;
+  const rest = state.biome && state.biome.breather;
+  if (w.joy > 0) w.joy = Math.max(0, w.joy - dt);
+  // Happy twirl after a catch; slow, settled orbit in breathers
+  const spin = w.joy > 0 && !reduceMotion ? 0.012 * Math.min(1, w.joy / 40) : 0;
+  w.ang += ((reduceMotion ? 0.0015 : 0.003) * (rest ? 0.55 : 1) + spin) * dt;
   let goal = homePoint(state);
+  // Perk up near a hidden discovery: lean toward it from the hole's shoulder
+  const dn = state.discoveryNear;
+  const perkGoal = dn && dn.q > 0 ? Math.min(1, dn.q) : 0;
+  w.perk += (perkGoal - w.perk) * Math.min(1, 0.02 * dt);
+  if (w.perk > 0.05 && dn && w.mode === "follow") {
+    const a = Math.atan2(dn.y - state.playerY, dn.x - state.playerX);
+    const d = Math.max(state.radius * 3.4, 30 / state.zoom);
+    const lean = { x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d };
+    goal = { x: goal.x + (lean.x - goal.x) * w.perk, y: goal.y + (lean.y - goal.y) * w.perk };
+  }
 
   if (w.mode === "follow") {
     w.nextHint -= dt;
-    if (w.nextHint <= 0) {
+    if (w.nextHint <= 0 && rest) w.nextHint = 600;   // resting: no hints in breathers
+    else if (w.nextHint <= 0) {
       w.target = findHint(state);
       w.nextHint = 1100 + Math.random() * 700;   // every ~20-30s
       if (w.target) { w.mode = "hint"; w.modeT = 0; }
@@ -104,8 +130,11 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
   const z = state.zoom;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
   // Grows a little with each scale tier, in screen pixels
-  const px = 7 + Math.min(6, (state.tier || 0) * 0.5);
-  const pulse = reduceMotion ? 1 : 0.85 + breath * 0.3;
+  const rest = state.biome && state.biome.breather;
+  const joyK = Math.min(1, w.joy / 40);
+  const px = (7 + Math.min(6, (state.tier || 0) * 0.5)) * (rest ? 0.85 : 1) * (1 + 0.3 * joyK + 0.2 * w.perk);
+  // Perked: a quicker, brighter shimmer (still soft); resting: slow and dim
+  const pulse = reduceMotion ? 1 : 0.85 + breath * 0.3 + w.perk * 0.12 * Math.sin(w.age * 0.08);
   const fade = Math.min(1, w.age / 120);
   const s = px * pulse / z;
   for (let i = 0; i < w.trail.length; i += 2) {
@@ -114,9 +143,9 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
     ctx.globalAlpha = a;
     ctx.drawImage(sprite, w.trail[i] + ox - ts, w.trail[i + 1] + oy - ts, ts * 2, ts * 2);
   }
-  ctx.globalAlpha = (0.7 + breath * 0.25) * fade;
+  ctx.globalAlpha = Math.min(1, (0.7 + breath * 0.25) * (rest ? 0.8 : 1) + 0.25 * joyK + 0.2 * w.perk) * fade;
   ctx.drawImage(sprite, w.x + ox - s * 2, w.y + oy - s * 2, s * 4, s * 4);
   ctx.globalAlpha = 1;
 }
 
-export function wispInfo() { return w ? { x: w.x, y: w.y, mode: w.mode, age: w.age } : null; }
+export function wispInfo() { return w ? { x: w.x, y: w.y, mode: w.mode, age: w.age, joy: w.joy, perk: +w.perk.toFixed(2) } : null; }
