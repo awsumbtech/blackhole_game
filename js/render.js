@@ -368,7 +368,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     if (e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
       const ready = !tooBig;
       const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
-      const a = (0.10 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
+      const a = (0.14 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
       const hr = e.radius * (ready ? 1.65 : 1.35 + 0.25 * k);
       const g = ctx.createRadialGradient(sx, sy, e.radius * 0.85, sx, sy, hr);
       g.addColorStop(0, `rgba(${HALO_RGB}, ${a.toFixed(3)})`);

@@ -74,7 +74,7 @@ export function updateWisp(state, dt, reduceMotion) {
   const dn = state.discoveryNear;
   const perkGoal = dn && dn.q > 0 ? Math.min(1, dn.q) : 0;
   w.perk += (perkGoal - w.perk) * Math.min(1, 0.02 * dt);
-  if (w.perk > 0.05 && dn && w.mode === "follow") {
+  if (w.perk > 0.05 && dn) {
     const a = Math.atan2(dn.y - state.playerY, dn.x - state.playerX);
     const d = Math.max(state.radius * 3.4, 30 / state.zoom);
     const lean = { x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d };
@@ -92,7 +92,7 @@ export function updateWisp(state, dt, reduceMotion) {
   } else {
     w.modeT += dt;
     const t = w.target;
-    if (!t || t.consuming || !state.entities.includes(t) || w.modeT > 260) {
+    if (!t || t.consuming || !state.entities.includes(t) || w.modeT > 260 || w.perk > 0.3) {
       w.mode = "follow"; w.target = null;
     } else {
       // hover just beside it, never on top
