@@ -84,7 +84,7 @@ export function parTimeFor(galaxy) {
 }
 
 export function freshRun(stats) {
-  return { time: 0, eaten: 0, bestCombo: 0, bigFish: 0, powerups: 0, bumps: 0, startBestCombo: stats.bestCombo || 0 };
+  return { time: 0, eaten: 0, bestCombo: 0, bigFish: 0, powerups: 0, bumps: 0, found: 0, foundNames: [], bestCatch: null, startBestCombo: stats.bestCombo || 0 };
 }
 
 /** Called once when a galaxy is cleared. Updates records + stardust, returns summary. */

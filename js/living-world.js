@@ -20,8 +20,8 @@ export const CFG = {
   PULL_CAP: 2.5,
 
   // Food is sized relative to the player (fraction of player radius)
-  FOOD_RATIO_MIN: 0.12,   // v6 meatier bites: fewer, bigger morsels (was 0.08-0.22)
-  FOOD_RATIO_MAX: 0.30,
+  FOOD_RATIO_MIN: 0.15,   // v6 meatier bites: fewer, bigger morsels (was 0.08-0.22)
+  FOOD_RATIO_MAX: 0.36,
   NEAR_SPAWN_CHANCE: 0.7,
 
   // Breathers: big, easy food (fraction of player radius)
@@ -261,7 +261,7 @@ function spawnBigFish(state) {
   return e;
 }
 
-export const DENSITY = { regular: 44, breather: 52 };  // v6: fewer, bigger (was 60/70)  // objects around the view
+export const DENSITY = { regular: 38, breather: 46 };  // v6: fewer, bigger (was 60/70)  // objects around the view
 const RECYCLE = 2.0;    // gone once 2 view radii away (well off-screen)
 const HARD_CAP = 170;
 

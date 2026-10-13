@@ -3,7 +3,7 @@
 // v2 keeps the original key so existing v1 saves load and migrate in place.
 
 const SAVE_KEY = "blackhole_galaxy_v3";
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;   // v6: records.discoveries (logbook)
 import { floorMassForLegacyGalaxy } from "./tiers.js";
 
 export function defaultStats() {
@@ -26,7 +26,8 @@ export function defaultRecords() {
     mostEaten: 0,         // most objects eaten in one galaxy
     mostBigFish: 0,
     bestStardust: 0,      // most stardust from one galaxy
-    galaxyLog: {}         // v5.2: galaxy number -> { b: biome, d: date, t: tier, est? } for the star map
+    galaxyLog: {},        // v5.2: galaxy number -> { b: biome, d: date, t: tier, est? } for the star map
+    discoveries: {}       // v6: discovery id -> { g: galaxy first found, d: date, n: times found }
   };
 }
 
@@ -115,6 +116,9 @@ function normalize(raw) {
   if ((raw.version || 1) < 5) data.run = null;
   data.records.fastest = { ...(data.records.fastest || {}) };
   data.records.galaxyLog = { ...(data.records.galaxyLog || {}) };
+  // v6 migration: older saves have no logbook yet; start it empty
+  const disc = data.records.discoveries;
+  data.records.discoveries = disc && typeof disc === "object" && !Array.isArray(disc) ? { ...disc } : {};
 
   // Thank-you for galaxies cleared before stardust existed.
   if (fromV1) {

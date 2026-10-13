@@ -13,8 +13,10 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
+import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo, discoveryById } from "./discoveries.js";
 import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
+import { openLogbook } from "./logbook.js";
 import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
@@ -201,6 +203,21 @@ function floater(x, y, text, color = "#ffd27a", size = 16) {
   if (state.floaters.length > 12) state.floaters.shift();
 }
 
+// ─── v6: DISCOVERIES ───
+function onDiscovery(def, f) {
+  const log = state.records.discoveries || (state.records.discoveries = {});
+  const first = !log[def.id];
+  log[def.id] = { g: first ? state.galaxy : log[def.id].g, d: first ? Date.now() : log[def.id].d, n: (log[def.id]?.n || 0) + 1 };
+  state.run.found = (state.run.found || 0) + 1;
+  (state.run.foundNames || (state.run.foundNames = [])).push(def.name);
+  floater(f.x, f.y, first ? "Discovered" : "Found again", "#fff0c8", 17);
+  showHint(`${def.name}. ${def.line}`, 5200);
+  audio.playDiscovery();
+  wispReact(state, "discovery");
+  if (first) setTimeout(() => hint("logbook", "Written in your logbook (title screen or Stats)", 3600), 5600);
+  save(state);
+}
+
 // ─── v5: RADAR TRAIL + TIER BANNER ───
 const TIER_BANNER_FRAMES = 330;
 function radarRange() {
@@ -303,10 +320,12 @@ function initGalaxy(galaxyNum, resume = null) {
   initWorlds(state);
   fillAround(state, Math.max(20, (biome.breather ? DENSITY.breather : DENSITY.regular) - state.entities.length));
   resetWisp(state);
+  initDiscoveries(state);
   initPowerups();
   ui.updatePowerupBar(state);
 
   audio.startDrone(biome);
+  audio.newPhrase();
   audio.setMusicLayers(state.tier, biome);
   syncHud(true);
 }
@@ -695,12 +714,15 @@ function updateTransition(dt) {
 
   if (state.transitionPhase === "implode") {
     if (state.transitionTimer > 60) {
-      state.transitionPhase = "summary";
+      // v6: a calm moment first. The new star joins your sky, then the summary.
+      state.transitionPhase = "ritual";
       state.transitionTimer = 0;
       input.setEnabled(false);
-      ui.showSummary(state.summary, state, {
-        onBuy: buyUpgrade,
-        onContinue: startWarp
+      audio.playRitual();
+      openStarMap(starEntries(), {
+        reduceMotion: state.settings.reduceMotion,
+        ritual: ritualText(),
+        onClose: showGalaxySummary
       });
     }
   } else if (state.transitionPhase === "warp") {
@@ -720,6 +742,30 @@ function updateTransition(dt) {
       state.transitionPhase = "";
     }
   }
+}
+
+function showGalaxySummary() {
+  if (state.transitionPhase !== "ritual") return;
+  state.transitionPhase = "summary";
+  state.transitionTimer = 0;
+  ui.showSummary(state.summary, state, {
+    onBuy: buyUpgrade,
+    onContinue: startWarp
+  });
+}
+
+const CATCH_NAMES = { planet: "a whole planet", star: "a sleeping star", craft: "an old derelict hull", meteor: "a great meteor",
+  junk: "a drifting rock", moon: "a moon", comet: "a comet", neutron: "a neutron star", system: "a star system",
+  nebula: "a nebula", cluster: "a star cluster", galaxy: "a galaxy" };
+function ritualText() {
+  const r = state.run || {};
+  const found = r.foundNames || [];
+  let line;
+  if (found.length) line = `You found ${found.length > 1 ? found.slice(0, -1).join(", ") + " and " + found[found.length - 1] : "the " + found[0]}.`;
+  else if (r.bestCatch) line = `Your best catch here was ${CATCH_NAMES[r.bestCatch.type] || "something big"}.`;
+  else line = `${r.eaten || 0} gentle bites, and a new star.`;
+  if (found.length && r.bestCatch) line += ` Best catch: ${CATCH_NAMES[r.bestCatch.type] || "something big"}.`;
+  return { title: "A new star", sub: `Galaxy ${state.galaxy} · ${state.biome.name} joins your sky`, line };
 }
 
 function startWarp() {
@@ -1032,6 +1078,8 @@ function frame(now) {
       hint("pu_first", "A power-up appeared! Grab the glowing orb", 2600);
     }
     tryConsume(dt);
+    updateDiscoveries(state, dt, onDiscovery);
+    if (state.discoveryNear && state.discoveryNear.q > 0.3) hint("discovery_near", "Something rare is shimmering nearby. Follow the soft glow.", 4200);
     state.galaxyProgress = galaxyProgressNow();
     if (!state.transitioning) checkTier();
     updateTrail(dt);
@@ -1072,6 +1120,7 @@ function frame(now) {
   ctx.scale(z, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
+  drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion);
   if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
@@ -1105,6 +1154,7 @@ function frame(now) {
   if (inPlay) {
     drawLivingWorldOverlay(ctx, state, w, h);
     drawWorldsOverlay(ctx, state, w, h, breath);
+    drawDiscoveryCue(ctx, state, w, h);
     drawEdgeIndicators(ctx, state.entities, w, h, state.camX, state.camY, state.radius, z, state.eatRatio);
     drawMinimap(ctx, w, h, state.playerX, state.playerY, state.entities, radarRange(), state.radius, state.eatRatio,
       (c, mx, my, sc, rim) => drawWorldsMinimap(c, mx, my, sc, now, rim), { trail: state.trail, viewW: vw, viewH: vh });
@@ -1119,7 +1169,7 @@ function frame(now) {
       const alpha = Math.min(1, state.transitionTimer / 60);
       ctx.fillStyle = `rgba(2, 3, 8, ${alpha * 0.8})`;
       ctx.fillRect(0, 0, w, h);
-    } else if (state.transitionPhase === "summary") {
+    } else if (state.transitionPhase === "summary" || state.transitionPhase === "ritual") {
       ctx.fillStyle = "rgba(2, 3, 8, 0.8)";
       ctx.fillRect(0, 0, w, h);
     } else if (state.transitionPhase === "warp") {
@@ -1228,7 +1278,7 @@ const PAUSE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="current
 const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><polygon points="5,3 15,9 5,15"/></svg>';
 
 function setPaused(p) {
-  if (state.transitioning && state.transitionPhase === "summary") return;
+  if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
   if (state.screen !== "play" || state.drift) return;
   state.paused = p;
   input.setEnabled(!p);
@@ -1285,7 +1335,7 @@ document.getElementById("volume-slider").addEventListener("input", e => {
 
 document.getElementById("btn-stats").addEventListener("click", () => {
   if (ui.isStatsOpen()) { ui.closeStats(); return; }
-  if (state.transitioning && state.transitionPhase === "summary") return;
+  if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
   state.menuOpen = true;
   input.setEnabled(false);
   ui.showStats(state, () => {
@@ -1328,7 +1378,7 @@ document.addEventListener("visibilitychange", () => {
   lastTime = performance.now();
   // Back after a long break: greet with the title screen instead of mid-galaxy
   if (hiddenAt && Date.now() - hiddenAt > TITLE_AFTER_MS && state.screen === "play" && !state.drift &&
-      !(state.transitioning && state.transitionPhase === "summary")) {
+      !(state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual"))) {
     if (state.paused) setPaused(false);
     showTitle();
   }
@@ -1413,6 +1463,11 @@ state.openStarMap = () => {
   openStarMap(starEntries(), { reduceMotion: state.settings.reduceMotion });
 };
 document.getElementById("btn-title-starmap").addEventListener("click", () => state.openStarMap());
+state.openLogbook = () => {
+  audio.playClick();
+  openLogbook(state.records.discoveries);
+};
+document.getElementById("btn-title-logbook").addEventListener("click", () => state.openLogbook());
 
 const backupLabel = d => `Galaxy ${d.galaxy} · ${tierName(tierIndexForR(rForMass(d.floorMass)))} · ${Math.floor(d.stardust)} stardust`;
 state.exportSave = () => exportCode(state);
@@ -1474,8 +1529,8 @@ requestAnimationFrame(frame);
 const DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("debug");
 if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
-  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo,
-  density: densityInfo, music: audio.musicInfo, feature: () => worldsFeature(state),
+  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
+  density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
   // test helper: grow to just under the next tier line

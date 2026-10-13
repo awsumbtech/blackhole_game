@@ -114,10 +114,19 @@
     <canvas id="starmap-canvas"></canvas>
     <div class="starmap-top">
       <button id="btn-starmap-back" class="soft-btn">Back</button>
-      <div><h2>Star Map</h2><p id="starmap-count"></p></div>
+      <div><h2 id="starmap-title">Star Map</h2><p id="starmap-count"></p></div>
     </div>
     <p id="starmap-empty" class="starmap-empty hidden">Your sky is still empty.<br>Clear a galaxy and its star will appear here.</p>
     <div id="starmap-card" class="starmap-card hidden"></div>
+  </div>
+
+  <!-- v6 logbook of discoveries -->
+  <div id="logbook" class="hidden" role="dialog" aria-label="Logbook">
+    <div class="logbook-top">
+      <button id="btn-logbook-back" class="soft-btn">Back</button>
+      <div><h2>Logbook</h2><p id="logbook-count"></p></div>
+    </div>
+    <div id="logbook-body" class="logbook-body"></div>
   </div>
 
   <div id="title-screen" class="screen hidden" aria-label="Title">
@@ -129,6 +138,7 @@
       <button id="btn-title-continue" class="title-btn primary">Continue<small id="title-continue-sub">Galaxy 1 · Debris Reef</small></button>
       <button id="btn-title-new" class="title-btn">New Game</button>
       <button id="btn-title-starmap" class="title-btn">Star Map</button>
+      <button id="btn-title-logbook" class="title-btn">Logbook</button>
       <button id="btn-title-settings" class="title-btn">Settings</button>
       <div id="newgame-confirm" class="confirm hidden">
         <p>Start a new journey from Galaxy 1?</p>

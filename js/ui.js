@@ -10,6 +10,14 @@ import { biomeCatalog } from "./entities.js";
 
 const $ = id => document.getElementById(id);
 
+// v6 codex entries for the new gentle things
+const V6_CODEX = [
+  ["255, 214, 140", "Golden halo", "A soft gold glow around something big means you're nearly its size. When the halo turns steady, it fits: drift in for a slow, satisfying big catch."],
+  ["255, 240, 200", "Shimmer (discovery)", "Rare finds hide in every galaxy: a golden comet, a lost probe, a whale-shaped nebula. A faint glow at the screen edge (and your wisp leaning that way) means one is near. Drift into it to write it in your logbook."],
+  ["150, 235, 215", "Your wisp", "It twirls when you make a big catch, curls up to rest in breather galaxies, and perks up when a discovery is close."],
+  ["200, 210, 255", "A new star", "After each galaxy, its star joins your sky for a quiet moment before the summary. Tap to move on whenever you like."]
+].map(([rgb, name, text]) => `<div class="codex-item"><b><i class="dot" style="background:rgb(${rgb})"></i>${name}</b><p>${text}</p></div>`).join("");
+
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
@@ -157,8 +165,8 @@ export function showStats(state, onClose, opts = {}) {
     </div>`;
   $("stats-title").textContent = opts.settingsOnly ? "Settings" : "Stats & Records";
   $("btn-stats-close").textContent = opts.settingsOnly ? "Done" : "Back to the void";
-  $("stats-body").innerHTML = opts.settingsOnly ? settingsHtml : `<button id="btn-stats-starmap" class="soft-btn stats-link">Open the star map</button>` + settingsHtml + `
-    <div class="stats-section"><h3>What's that? (events)</h3>${evItems}</div>
+  $("stats-body").innerHTML = opts.settingsOnly ? settingsHtml : `<button id="btn-stats-starmap" class="soft-btn stats-link">Open the star map</button><button id="btn-stats-logbook" class="soft-btn stats-link">Open the logbook</button>` + settingsHtml + `
+    <div class="stats-section"><h3>What's that? (events)</h3>${evItems}${V6_CODEX}</div>
     <div class="stats-section"><h3>Galaxies</h3>${biomeItems}</div>
     <div class="stats-section"><h3>Progress</h3>
       ${row("Current galaxy", state.galaxy)}
@@ -202,6 +210,7 @@ export function showStats(state, onClose, opts = {}) {
     state.setSetting?.("wispName", v);
   });
   $("btn-stats-starmap")?.addEventListener("click", () => state.openStarMap?.());
+  $("btn-stats-logbook")?.addEventListener("click", () => state.openLogbook?.());
 
   const el = $("stats");
   el.classList.remove("hidden");

@@ -8,6 +8,9 @@ let el = null, cvs = null, g = null, card = null;
 let entries = [], pts = [], raf = 0, sel = -1, onCloseCb = null, reduceMotion = false;
 let W = 0, H = 0, dpr = 1, dust = null, glowCache = new Map();
 let panX = 0, panY = 0, drag = null, t0 = 0;
+// v6 end-of-galaxy ritual: the newest star drifts up and settles into place
+let ritual = null, ritualTimer = 0;
+const RITUAL_IN = 2.8, RITUAL_HOLD = 7.5;   // seconds
 
 function glow(rgb) {
   let c = glowCache.get(rgb);
@@ -84,25 +87,47 @@ function draw(now) {
   const dx = reduceMotion ? 0 : Math.sin(t * 0.05) * 10, dy = reduceMotion ? 0 : Math.cos(t * 0.04) * 7;
   g.drawImage(dust, dx * 0.4 - 6, dy * 0.4 - 6, W + 12, H + 12);
   const ox = dx + panX, oy = dy + panY;
+  // Ritual: ease the newest star in (Reduce Motion: it simply fades in place)
+  const last = pts.length - 1;
+  let rp = 1;
+  if (ritual && last >= 0) {
+    const q = Math.max(0, Math.min(1, (t - 0.5) / RITUAL_IN));
+    rp = q * q * (3 - 2 * q);
+  }
+  const P = i => {
+    if (!ritual || i !== last || reduceMotion) return pts[i];
+    const sx = W / 2, sy = H * 0.86;
+    return [sx + (pts[i][0] - sx) * rp, sy + (pts[i][1] - sy) * rp];
+  };
   // Constellation lines
   if (pts.length > 1) {
     g.lineWidth = 1.2;
     g.lineCap = "round";
     for (let i = 1; i < pts.length; i++) {
-      const a = pts[i - 1], b = pts[i];
+      const a = P(i - 1), b = P(i);
+      const la = ritual && i === last ? rp : 1;
+      g.globalAlpha = la;
       const lg = g.createLinearGradient(a[0] + ox, a[1] + oy, b[0] + ox, b[1] + oy);
       lg.addColorStop(0, `rgba(${entries[i - 1].rgb}, 0.22)`);
       lg.addColorStop(1, `rgba(${entries[i].rgb}, 0.22)`);
       g.strokeStyle = lg;
       g.beginPath(); g.moveTo(a[0] + ox, a[1] + oy); g.lineTo(b[0] + ox, b[1] + oy); g.stroke();
     }
+    g.globalAlpha = 1;
   }
   // Stars: size grows with the scale reached there; each twinkles on its own slow phase
   entries.forEach((e, i) => {
-    const [x, y] = pts[i];
+    const [x, y] = P(i);
     const tw = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 0.6 + i * 1.7);
-    const s = (9 + Math.min(10, e.tier * 0.9)) * (0.9 + 0.12 * tw) * (e.breather ? 0.8 : 1);
-    g.globalAlpha = 0.75 + 0.25 * tw;
+    const isNew = ritual && i === last;
+    const s = (9 + Math.min(10, e.tier * 0.9)) * (0.9 + 0.12 * tw) * (e.breather ? 0.8 : 1) * (isNew ? 1 + 0.35 * breath : 1);
+    g.globalAlpha = (0.75 + 0.25 * tw) * (isNew ? rp : 1);
+    if (isNew && rp > 0.6) {
+      // a slow, soft ring breathing around the newcomer
+      g.strokeStyle = `rgba(${e.rgb}, ${0.35 * (rp - 0.6) / 0.4 * (0.6 + 0.4 * breath)})`;
+      g.lineWidth = 1.2;
+      g.beginPath(); g.arc(x + ox, y + oy, s * 2 + breath * 4, 0, TAU); g.stroke();
+    }
     g.drawImage(glow(e.rgb), x + ox - s * 2, y + oy - s * 2, s * 4, s * 4);
     if (i === sel) {
       g.globalAlpha = 0.5 + 0.3 * breath;
@@ -157,6 +182,8 @@ function bind() {
     if (drag.moved) { panX = drag.px + mx; panY = drag.py + my; }
   });
   cvs.addEventListener("pointerup", ev => {
+    if (ritual && (performance.now() - t0) > 1200) { drag = null; closeStarMap(); return; }
+    if (ritual) { drag = null; return; }
     if (drag && !drag.moved) showCard(hit(ev.clientX, ev.clientY));
     drag = null;
   });
@@ -171,12 +198,24 @@ export function openStarMap(list, opts = {}) {
   entries = list;
   reduceMotion = !!opts.reduceMotion;
   onCloseCb = opts.onClose || null;
+  ritual = opts.ritual || null;
   panX = panY = 0; sel = -1;
   resize();
   showCard(-1);
+  el.classList.toggle("ritual", !!ritual);
   document.getElementById("starmap-empty").classList.toggle("hidden", entries.length > 0);
-  document.getElementById("starmap-count").textContent = entries.length
+  document.getElementById("starmap-title").textContent = ritual ? ritual.title : "Star Map";
+  document.getElementById("btn-starmap-back").textContent = ritual ? "Continue" : "Back";
+  document.getElementById("starmap-count").textContent = ritual ? ritual.sub : entries.length
     ? `${entries.length} galax${entries.length === 1 ? "y" : "ies"} cleared · tap a star` : "";
+  if (ritual) {
+    card.innerHTML = `<span class="ritual-line">${esc(ritual.line)}</span>`;
+    card.style.setProperty("--star", `rgb(${entries.length ? entries[entries.length - 1].rgb : "200, 210, 255"})`);
+    card.classList.remove("hidden");
+    card.classList.add("ritual-card");
+    clearTimeout(ritualTimer);
+    ritualTimer = setTimeout(() => { if (ritual && raf) closeStarMap(); }, RITUAL_HOLD * 1000);
+  } else card.classList.remove("ritual-card");
   el.classList.remove("hidden");
   t0 = performance.now();
   cancelAnimationFrame(raf);
@@ -184,6 +223,8 @@ export function openStarMap(list, opts = {}) {
 }
 
 export function closeStarMap() {
+  clearTimeout(ritualTimer);
+  ritual = null;
   cancelAnimationFrame(raf);
   raf = 0;
   if (el) el.classList.add("hidden");

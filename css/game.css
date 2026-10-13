@@ -727,3 +727,25 @@ body.reduce-motion .title-top, body.reduce-motion .title-menu { animation: none;
 .backup .msg.err { color: #ffb4a8; }
 .backup .hidden { display: none; }
 .app-version { margin-top: 10px; text-align: center; font: 400 11px Outfit, system-ui, sans-serif; color: rgba(200, 206, 255, 0.4); }
+
+/* ─── v6 Logbook + ritual ─── */
+#logbook { position: fixed; inset: 0; z-index: 410; background: radial-gradient(ellipse at 50% 30%, #0d1230 0%, #03040b 75%); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#logbook.hidden { display: none; }
+.logbook-top { position: sticky; top: 0; display: flex; gap: 14px; align-items: center; padding: calc(14px + env(safe-area-inset-top)) 14px 12px; background: linear-gradient(#060819 70%, rgba(6, 8, 25, 0)); z-index: 1; }
+.logbook-top button { width: auto; flex: 0 0 auto; padding: 8px 16px; }
+.logbook-top h2 { margin: 0; font: 300 20px Outfit, system-ui, sans-serif; letter-spacing: 3px; color: #e9edff; }
+.logbook-top p { margin: 2px 0 0; font: 400 12px Outfit, system-ui, sans-serif; color: rgba(200, 206, 255, 0.6); }
+.logbook-body { padding: 0 16px calc(28px + env(safe-area-inset-bottom)); }
+.lb-biome { margin: 14px 0 6px; font: 600 11px Outfit, system-ui, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(200, 206, 255, 0.55); }
+.lb-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; background: rgba(12, 15, 34, 0.75); border: 1px solid rgba(160, 170, 255, 0.12); }
+.lb-item .gem { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; margin-top: 2px; background: radial-gradient(circle, #fffaf0 0 18%, rgba(var(--c), 0.9) 30%, rgba(var(--c), 0) 72%); }
+.lb-item.unfound .gem { background: radial-gradient(circle, rgba(200, 206, 255, 0.25) 0 22%, rgba(200, 206, 255, 0) 70%); }
+.lb-item b { display: block; font: 600 14px Outfit, system-ui, sans-serif; color: #f1f3ff; }
+.lb-item p { margin: 2px 0 0; font: 400 13px/1.4 Outfit, system-ui, sans-serif; color: rgba(220, 224, 255, 0.78); }
+.lb-item small { display: block; margin-top: 3px; font: 400 11px Outfit, system-ui, sans-serif; color: rgba(200, 206, 255, 0.5); }
+.lb-item.unfound b, .lb-item.unfound p { color: rgba(200, 206, 255, 0.42); }
+#starmap.ritual .starmap-top { justify-content: space-between; }
+.starmap-card.ritual-card { text-align: center; align-items: center; animation: ritualIn 2.4s ease-out both; }
+.ritual-line { font: 300 16px/1.5 Outfit, system-ui, sans-serif; color: #eef0ff; }
+@keyframes ritualIn { from { opacity: 0; } 40% { opacity: 0; } to { opacity: 1; } }
+body.reduce-motion .starmap-card.ritual-card { animation-duration: 0.8s; }

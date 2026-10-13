@@ -160,6 +160,44 @@ export function stopDrone() {
   stopMusicLayers();
 }
 
+// ─── v6 MELODIC BITES ───
+// An 8-note phrase on scale degrees (0-9 = two octaves of the pentatonic).
+// It walks in small steps so it always sounds like a melody, and every 12
+// bites one note drifts by a step, so the tune slowly evolves as you play.
+const PHRASE_LEN = 8;
+let phrase = makePhrase();
+let phraseIdx = 0, phraseBites = 0, lastBiteAt = 0;
+function makePhrase() {
+  const p = [];
+  let d = 3 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < PHRASE_LEN; i++) {
+    p.push(d);
+    d = Math.max(0, Math.min(9, d + [-2, -1, -1, 1, 1, 2, 0][Math.floor(Math.random() * 7)]));
+  }
+  p[PHRASE_LEN - 1] = [0, 2, 5, 7][Math.floor(Math.random() * 4)];   // phrases come home to a root/fifth
+  return p;
+}
+function degreeToFreq(d) {
+  const oct = Math.floor(d / 5), step = PENTA[d % 5];
+  return scaleRoot * 2 * Math.pow(2, (oct * 12 + step) / 12);
+}
+function nextPhraseNote() {
+  const t = ctx ? ctx.currentTime : 0;
+  // After a quiet pause the phrase starts again from the top, like a new line
+  if (t - lastBiteAt > 2.5) phraseIdx = 0;
+  lastBiteAt = t;
+  const f = degreeToFreq(phrase[phraseIdx]);
+  phraseIdx = (phraseIdx + 1) % PHRASE_LEN;
+  if (++phraseBites % 12 === 0) {
+    const i = Math.floor(Math.random() * (PHRASE_LEN - 1));
+    phrase[i] = Math.max(0, Math.min(9, phrase[i] + (Math.random() < 0.5 ? -1 : 1)));
+  }
+  return f;
+}
+/** A new galaxy gets a fresh phrase. */
+export function newPhrase() { phrase = makePhrase(); phraseIdx = 0; }
+export function phraseInfo() { return { phrase: phrase.slice(), idx: phraseIdx, root: scaleRoot }; }
+
 // ─── CONSUME SOUNDS ───
 
 export function playConsume(tone, massRatio, comboCount) {
@@ -174,23 +212,24 @@ export function playConsume(tone, massRatio, comboCount) {
   const filter = ctx.createBiquadFilter();
 
   osc.type = "sine";
-  // Higher combo = ascending pitch
-  const pitch = snapToScale(tone * (1 + Math.min(comboCount, 20) * 0.04));
+  // v6 melodic bites: each bite plays the next note of a slowly evolving
+  // pentatonic phrase in the biome's key, so a streak sounds like a tune.
+  const pitch = nextPhraseNote();
   osc.frequency.value = pitch;
 
   filter.type = "lowpass";
   filter.frequency.value = 1200 + massRatio * 400;
 
-  const vol = Math.min(0.15, 0.04 + massRatio * 0.08);
+  const vol = Math.min(0.1, 0.035 + massRatio * 0.06);
   gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(vol, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18 + massRatio * 0.1);
+  gain.gain.exponentialRampToValueAtTime(vol, now + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32 + massRatio * 0.15);
 
   osc.connect(filter);
   filter.connect(gain);
   gain.connect(sfxGain);
   osc.start(now);
-  osc.stop(now + 0.3);
+  osc.stop(now + 0.5);
 
   // Layer 2: Sub-bass bloom for larger objects
   if (massRatio > 0.3) {
@@ -237,10 +276,10 @@ export function playComboChime(count) {
   resume();
 
   const now = ctx.currentTime;
-  const baseNote = 440;
+  const baseNote = scaleRoot * 2;
 
-  // Ascending arpeggio based on combo length
-  const intervals = [0, 4, 7, 12, 16]; // Major + octave
+  // v6: a soft arpeggio in the biome's pentatonic key (was a fixed A major)
+  const intervals = [0, 4, 7, 12, 14];
   const noteCount = Math.min(count, 5);
 
   for (let i = 0; i < noteCount; i++) {
@@ -251,7 +290,7 @@ export function playComboChime(count) {
 
     const t = now + i * 0.06;
     gain.gain.setValueAtTime(0.001, t);
-    gain.gain.exponentialRampToValueAtTime(0.04, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.025, t + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
 
     osc.connect(gain);
@@ -404,12 +443,28 @@ export function playBump() {
   tone(196, { type: "sine", attack: 0.03, decay: 0.35, vol: 0.035, slideTo: 165 });
 }
 
+/** v6: the end-of-galaxy ritual. A low, slow chord, like a held breath. */
+export function playRitual() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  [0, 7, 16].forEach((st, i) => tone(scaleRoot / 2 * Math.pow(2, st / 12), { start: 0.3 + i * 0.35, attack: 0.9, decay: 3.2, vol: 0.03 }));
+}
+
+/** v6: a discovery. A slow, soft rising phrase in the biome's key. */
+export function playDiscovery() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  const r = scaleRoot * 2;
+  [0, 4, 7, 9, 12].forEach((s, i) => tone(r * Math.pow(2, s / 12), { start: i * 0.16, attack: 0.06, decay: 1.1, vol: 0.026 }));
+}
+
 /** Swallowed a former "bigger fish". */
 export function playBigCatch() {
   if (!enabled || !ensureCtx()) return;
   resume();
-  tone(65.4, { attack: 0.08, decay: 0.9, vol: 0.06 });
-  [261.6, 392, 523.3, 784].forEach((f, i) => tone(f, { start: 0.05 + i * 0.09, attack: 0.04, decay: 0.6, vol: 0.03 }));
+  // v6: a slow, warm swell in the biome's key that matches the swallow
+  tone(scaleRoot / 2, { attack: 0.25, decay: 1.4, vol: 0.05 });
+  [0, 7, 12, 16, 19].forEach((st, i) => tone(scaleRoot * Math.pow(2, st / 12), { start: 0.12 + i * 0.13, attack: 0.08, decay: 1.0, vol: 0.024 }));
 }
 
 export function playPurchase() {
