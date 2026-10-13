@@ -1,8 +1,8 @@
 # Black Hole: Galaxy Eater — Design & Handoff
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v5.2**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v5.2"` in `sw.js`, `SAVE_VERSION = 5` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v6.0**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v6.0"` in `sw.js`, `SAVE_VERSION = 6` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -45,7 +45,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **Tier reveal.** The camera slowly pulls back (~2.5s) while you keep moving. A soft chime plays and a quiet line names the new scale. The music adds one layer per tier, up to six.
 - **No edges.** Objects spawn in a band just outside the view and recycle at about 2 view radii, keeping a steady density (~25–40 visible, ~60 nearby).
 - Radar is centred on you, with a trail and rim markers for out-of-range landmarks.
-- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s.
+- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). Re-run the bot after any pacing change.
 
 ## 6. The 7 galaxy mechanics (`js/worlds.js`)
 
@@ -70,6 +70,17 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **Save backup** (`js/save.js`): export as a code or a .txt file, and import with a checksum and version check plus a confirmation. Progress otherwise lives in the browser's localStorage, and saves carry forward through every version.
 - Cleanup: the `window.__bh` test hook only loads on localhost or with `?debug`. The version is shown in Settings.
 
+## 7b. v6.0 features ("Next Level")
+
+- **Meatier bites:** food 12–30% of your radius (was 8–22%), ~44 objects around the view (was 60; breathers 52). Each bite swells the hole a touch (`gulp`). Per-galaxy gain factors keep clear times unchanged.
+- **Big catches:** bigger fish get a soft gold halo from 82% of their size (`BIG_HALO_FROM` in `js/render.js`), steady once edible. Eating one is a ~1s smoothstep swirl (`e.swallow`) with a warm chime in the biome key. No shake.
+- **Discoveries** (`js/discoveries.js`): 21 finds, 3 per biome. Planted at ~35s and ~120s (breathers: one at ~22s) just off-screen ahead of you, re-planted ahead if you wander >4.5 view radii away (they follow the player). Cue: soft edge glow fading in over ~2.5s, the wisp leaning toward it, and a one-time caption. Not food. Saved in `records.discoveries` (SAVE_VERSION 6; older saves migrate with `{}`).
+- **Logbook** (`js/logbook.js`): opened from the title screen or Stats. Found entries show name, line and when; unfound show "???" per biome.
+- **Wisp:** `wispReact(state, "catch"|"discovery")` twirls it; in breathers it rests close with a slow curl and gives no hints; it perks up near a discovery (`state.discoveryNear`).
+- **Melodic bites** (`js/audio.js`): an 8-note pentatonic phrase in the biome key, one note per bite, one note drifts every 12 bites, restarts after a 2.5s pause, new phrase per galaxy (`newPhrase`). Bite volume lowered.
+- **End-of-galaxy ritual:** new transition phase `ritual` between `implode` and `summary`. The star map opens in ritual mode: the newest star drifts up and settles (Reduce Motion: fades in place), one line about discoveries or best catch, a low slow chord. Tap after 1.2s or wait ~7.5s.
+- Codex: four new "What's that?" entries (golden halo, shimmer, wisp, a new star).
+
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
@@ -80,11 +91,12 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v6.0 Next Level:** from a bot playtest. Meatier bites (same clear times), big-catch halo + slow swallow, discoveries + logbook (save v6), livelier wisp, melodic bites, end-of-galaxy ritual. Built on `main`.
 
 ## 9. File layout
 
 ```
-index.html          HUD, title, overlays, star map screen
+index.html          HUD, title, overlays, star map + logbook screens
 manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
 js/game.js          main loop, state, camera, tiers/reveals, saves, wiring, VERSION (~1.5k lines)
@@ -92,7 +104,8 @@ js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
-js/wisp.js          companion wisp       js/starmap.js     star map
+js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
+js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
 js/powerups.js      power-ups            js/progression.js upgrades, stardust, summary, BREATHER_TARGET
 js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex, shop
 js/input.js         thumbstick, follow-finger, mouse, keyboard
@@ -120,9 +133,10 @@ Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it 
 ## 12. Backlog (awaiting Brian's pick; don't start without asking)
 
 - **App polish** (parked by Brian): proper icon, splash screen, keep screen awake, landscape support.
-- Discoveries / logbook
 - Achievements and skins
 - Photo mode
 - Music (fuller soundtrack)
 - Pinch zoom on the star map
 - Optional gentle vibration (haptics, off by default, subtle)
+- From the v6 playtest (not built yet): quieter combo counter (hide numbers above ×25; combo stardust is overweighted), make upgrades feel visible, fewer repeat events per galaxy (no back-to-back repeats), give Magnet a purpose, slightly bigger/brighter late-tier food on phone
+- Discoveries follow-ups: radar marker for a near find, more finds per biome, a logbook "complete a biome" moment
