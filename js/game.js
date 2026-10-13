@@ -132,8 +132,10 @@ const BREATHER_PACE = 0.095;
 // gain scales what a bite gives, cap lifts the per-bite ceiling so big morsels count.
 // Per-galaxy factors keep each galaxy's v5.2 clear time (bot-measured, within ~10%).
 const MEATY = { gain: 1, breatherGain: 1, cap: 2, byBiome: {
-  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.43, "Ruined Armada": 0.53,
-  "Void Rift": 0.69, "Star Meadow": 0.43, "Neutron Forge": 0.62 } };
+  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.48, "Ruined Armada": 0.53,
+  "Void Rift": 0.69, "Star Meadow": 0.48, "Neutron Forge": 0.62 },
+  // bite ceiling per galaxy (breathers and Armada are ceiling-bound, so this sets their pace)
+  capBiome: { "Planet Nursery": 1, "Star Meadow": 1, "Ruined Armada": 1.2 } };
 function meatyK() { return (MEATY.byBiome[state.biome.name] ?? 0.62) * (state.biome.breather ? MEATY.breatherGain : MEATY.gain); }
 
 // ─── HELPERS ───
@@ -437,7 +439,7 @@ function tryConsume(dt) {
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
       const pace = state.biome.breather ? BREATHER_PACE : PACE;
-      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace * MEATY.cap;
+      const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace * (MEATY.capBiome[state.biome.name] ?? MEATY.cap);
       const gk = (state.biome.breather ? 0.5 : REGULAR_GAIN) * meatyK() * pace;
       // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
       const gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();

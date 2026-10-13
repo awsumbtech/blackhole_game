@@ -45,7 +45,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **Tier reveal.** The camera slowly pulls back (~2.5s) while you keep moving. A soft chime plays and a quiet line names the new scale. The music adds one layer per tier, up to six.
 - **No edges.** Objects spawn in a band just outside the view and recycle at about 2 view radii, keeping a steady density (~25–40 visible, ~60 nearby).
 - Radar is centred on you, with a trail and rim markers for out-of-range landmarks.
-- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). Re-run the bot after any pacing change.
+- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
 
 ## 6. The 7 galaxy mechanics (`js/worlds.js`)
 
