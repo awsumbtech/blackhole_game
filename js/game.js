@@ -9,7 +9,7 @@ import {
   invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
-  onWorldBump, onWorldEvent, onWorldTier, worldMassMul, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
+  onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
@@ -17,6 +17,8 @@ import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, 
 import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import { openLogbook } from "./logbook.js";
+import { depthInfo, ascMods, defaultAsc, freshAscRun, dmFor, GOALS, starsFor, GALAXY_PERKS, COLLAPSE_MIN_CLEARED, rollGolden, rollDeep, rollSupernova, keptUpgrades, milestonesAt, hasMilestone, SKINS, RARE_FIND_CHANCE } from "./ascension.js";
+import { initRivals, updateRivals, drawRivals } from "./rivals.js";
 import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
@@ -100,7 +102,8 @@ const state = {
   stardust: 0,
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
-  settings: { touchMode: "joystick", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
+  mode: "ascension", asc: defaultAsc(), zenNotes: [], densityK: 1, breathPull: 1, rivals: [],
+  settings: { touchMode: "joystick", skin: "classic", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
 
   // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
   screen: "play", camMul: 1, drift: null,
@@ -209,6 +212,84 @@ function floater(x, y, text, color = "#ffd27a", size = 16) {
   if (state.floaters.length > 12) state.floaters.shift();
 }
 
+// ─── v7: ASCENSION HOOKS ───
+function tintNebula(neb, rgb, k) {
+  return neb.map(c => Array.isArray(c) ? c.map((v, i) => Math.round(v + (rgb[i] - v) * k)) : c);
+}
+
+/** Per-galaxy goal: count the bites (or seconds) that use this galaxy's mechanic. */
+function trackGoal(e) {
+  const g = state.goal;
+  if (!g || state.mode === "zen") return;
+  let hit = false;
+  switch (g.metric) {
+    case "reef": hit = e.reef != null; break;
+    case "orbit": hit = !!e.orbit; break;
+    case "crumb": hit = !!e.crumb; break;
+    case "aurora": hit = !!e.auroraItem; break;
+    case "bloom": hit = e.meadow != null && !e.bloom; break;
+    case "beam": hit = worldMassMul() > 1; break;
+  }
+  if (hit) bumpGoal(1);
+}
+function bumpGoal(n) {
+  state.goalCount += n;
+  const st = starsFor(state.goal, state.goalCount);
+  if (st > state.goalStarsShown) {
+    state.goalStarsShown = st;
+    audio.playGoalStar(st);
+    floater(state.playerX, state.playerY - state.radius * 2.2, "★".repeat(st) + "☆".repeat(3 - st), "#ffe3a0", 18);
+    hint("goal_star", "A goal star! Each galaxy type has its own goal. 3 stars unlocks its perk.", 4200);
+  }
+}
+function updateAscension(dt) {
+  if (state.mode === "zen") return;
+  if (state.goal && state.goal.metric === "ride" && worldFlags().riding) bumpGoal(dt / 60);
+  state.asc.run.time = (state.asc.run.time || 0) + dt / 60;
+  updateRivals(state, dt, onRivalSwallow);
+}
+
+function onRivalSwallow(rv) {
+  const gain = state.mass * 0.035 * state.ascMods.bigCatch * state.ascMods.gain;
+  state.mass += gain;
+  updateRadius();
+  state.gulp = 1;
+  state.run.bigFish += 1;
+  if (!state.run.bestCatch || rv.r > state.run.bestCatch.r) state.run.bestCatch = { r: rv.r, type: "rival" };
+  floater(rv.x, rv.y, "Rival swallowed", "#ffcf6e", 19);
+  audio.playBigCatch();
+  wispReact(state, "catch");
+  hint("rival_eat", "You outgrew a rival. Another, a little bigger, will drift in later.", 4000);
+}
+
+/** After a galaxy clears: depth, goal stars, galaxy perks, golden rewards. */
+function onAscensionClear() {
+  const a = state.asc, r = a.run, sum = state.summary;
+  r.cleared += 1;
+  r.peakTier = Math.max(r.peakTier || 0, state.tier, tierIndexForR(state.radius));
+  a.bestDepth = Math.max(a.bestDepth || 0, r.cleared);
+  sum.depth = r.cleared;
+  // Golden galaxy: triple stardust. Salvager perk: +30%.
+  let extra = 0;
+  if (state.golden) { r.goldenCleared = (r.goldenCleared || 0) + 1; extra += sum.earned * 2; sum.parts.push(["Golden galaxy ×3", sum.earned * 2]); }
+  if (state.ascMods.stardustMul > 1) { const x = Math.round((sum.earned + extra) * (state.ascMods.stardustMul - 1)); extra += x; sum.parts.push(["Salvager", x]); }
+  if (extra) { state.stardust += extra; state.stats.stardustEarned += extra; sum.earned += extra; }
+  // Goal stars (best per galaxy type)
+  if (state.goal) {
+    const st = starsFor(state.goal, state.goalCount);
+    const key = state.biome.name;
+    const prev = a.goalStars[key] || 0;
+    a.goalStars[key] = Math.max(prev, st);
+    sum.goal = { name: state.goal.name, stars: st, best: a.goalStars[key], count: Math.floor(state.goalCount), unit: state.goal.unit, need: state.goal.stars };
+    const gp = GALAXY_PERKS.find(p => p.galaxy === key);
+    if (st >= 3 && gp && !a.perks[gp.id]) { a.perks[gp.id] = true; sum.unlocked = gp; }
+  }
+  sum.dmPreview = dmFor(r, state.ascMods).total;
+  sum.canCollapse = r.cleared >= COLLAPSE_MIN_CLEARED;
+  // The soft wall: when a galaxy took much longer than this galaxy type usually does
+  sum.heavy = r.cleared >= COLLAPSE_MIN_CLEARED && state.run.time > (state.biome.breather ? 150 : 400);
+}
+
 // ─── v6: DISCOVERIES ───
 function onDiscovery(def, f) {
   const log = state.records.discoveries || (state.records.discoveries = {});
@@ -270,11 +351,31 @@ function initGalaxy(galaxyNum, resume = null) {
   const biome = getBiome(galaxyNum);
 
   state.mods = computeMods(state.upgrades);
+  // v7 Ascension: permanent perks layer on top of the in-run stardust upgrades
+  const zen = state.mode === "zen";
+  const am = state.ascMods = ascMods(state.asc);
+  if (!zen) {
+    state.mods.pullRange *= am.pullRange;
+    state.mods.pullStrength *= am.pullStrength;
+    state.mods.eatRatio = Math.max(0.7, state.mods.eatRatio - am.eatRatioAdd);
+    state.mods.reachBonus += am.reachAdd;
+    state.mods.thrust *= am.speed;
+    state.mods.comboWindow *= am.comboWindow;
+    state.mods.surgeDuration *= am.puDur;
+    state.mods.surgeFrequency *= am.puFreq;
+  }
   state.eatRatio = state.mods.eatRatio;
+  const dinfo = state.depth = depthInfo(zen ? 1 : galaxyNum);
+  state.densityK = zen ? 1 : dinfo.density;
+  state.golden = !zen && !resume && rollGolden(state.asc, am);
+  state.deep = !zen && !resume && !state.golden && rollDeep(state.asc);
+  state.goal = zen ? null : GOALS[biome.name] || null;
+  state.goalCount = resume && typeof resume.goalCount === "number" ? resume.goalCount : 0;
+  state.goalStarsShown = starsFor(state.goal, state.goalCount);
   // v5: start where the last galaxy ended (your floor), plus Seed Mass
   state.floorMass = Math.max(massForR(START_R), state.floorMass || 0);
   state.startMass = state.floorMass * (1 + (state.mods.startBonus || 0));
-  state.targetMass = targetMassFrom(state.floorMass, !!biome.breather);
+  state.targetMass = zen ? Infinity : targetMassFrom(state.floorMass, !!biome.breather, dinfo.climbK * (biome.breather ? am.breatherClimb : 1));
   state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
 
   state.entities = [];
@@ -282,8 +383,10 @@ function initGalaxy(galaxyNum, resume = null) {
   state.baseBounds = 1000;
   state.initialCount = DENSITY.regular;
 
-  setNebulaPalette(biome.nebula);
-  setBackdropPalette(biome.nebula);
+  // Golden galaxies glow warm gold; deep variants go night-blue
+  const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : state.deep ? tintNebula(biome.nebula, [30, 40, 110], 0.5) : biome.nebula;
+  setNebulaPalette(neb);
+  setBackdropPalette(neb);
   invalidateStarfield();
   if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 
@@ -324,7 +427,8 @@ function initGalaxy(galaxyNum, resume = null) {
 
   initLivingWorld(state);
   initWorlds(state);
-  fillAround(state, Math.max(20, (biome.breather ? DENSITY.breather : DENSITY.regular) - state.entities.length));
+  fillAround(state, Math.max(20, Math.round((biome.breather ? DENSITY.breather : DENSITY.regular) * state.densityK) - state.entities.length));
+  initRivals(state, zen ? 0 : dinfo.rivals, dinfo.rivalSize);
   resetWisp(state);
   initDiscoveries(state);
   initPowerups();
@@ -434,7 +538,7 @@ function tryConsume(dt) {
       e.consuming = true;
       e.consumeProgress = 0;
 
-      const comboBonus = 1 + Math.min(state.comboCount, 25) * 0.01;
+      const comboBonus = 1 + Math.min(state.comboCount, state.mode === "zen" ? 25 : state.ascMods.comboCap) * 0.01;
       const dbl = state.active.double > 0 ? 2 : 1;
       // Small absolute floor keeps the opening seconds snappy
       const biteK = state.biome.breather ? BREATHER_BITE : (e.bigFish ? MAX_BIG_BITE : MAX_BITE);
@@ -442,7 +546,13 @@ function tryConsume(dt) {
       const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace * (MEATY.capBiome[state.biome.name] ?? MEATY.cap);
       const gk = (state.biome.breather ? 0.5 : REGULAR_GAIN) * meatyK() * pace;
       // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
-      const gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
+      let gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
+      // v7 Ascension: perks (Appetite), supernova runs, and big-catch perks
+      if (state.mode !== "zen") {
+        gain *= state.ascMods.gain * (state.asc.run.supernova ? 1.5 : 1);
+        if (e.bigFish) gain *= state.ascMods.bigCatch;
+      }
+      trackGoal(e);
       state.mass += gain;
       updateRadius();
 
@@ -693,10 +803,12 @@ function galaxyComplete() {
   audio.playGalaxyComplete();
   state.stats.galaxiesCleared += 1;
   state.summary = finishGalaxy(state);
+  onAscensionClear();
   // v5: the next galaxy starts at the most you reached here
   state.floorMass = Math.max(state.floorMass, state.mass);
   // v5.2: a star for the star map
-  state.records.galaxyLog[state.galaxy] = { b: state.biome.name, d: Date.now(), t: Math.max(state.tier, tierIndexForR(rForMass(state.mass))) };
+  // v7: keyed by journey order (galaxies cleared), since runs restart at Galaxy 1 after a collapse
+  state.records.galaxyLog[Math.max(state.stats.galaxiesCleared, state.galaxy)] = { b: state.biome.name, gold: state.golden || undefined, d: Date.now(), t: Math.max(state.tier, tierIndexForR(rForMass(state.mass))) };
   state.galaxyCredited = true;
   save(state);
 }
@@ -760,7 +872,7 @@ function showGalaxySummary() {
   });
 }
 
-const CATCH_NAMES = { planet: "a whole planet", star: "a sleeping star", craft: "an old derelict hull", meteor: "a great meteor",
+const CATCH_NAMES = { rival: "a rival black hole", planet: "a whole planet", star: "a sleeping star", craft: "an old derelict hull", meteor: "a great meteor",
   junk: "a drifting rock", moon: "a moon", comet: "a comet", neutron: "a neutron star", system: "a star system",
   nebula: "a nebula", cluster: "a star cluster", galaxy: "a galaxy" };
 function ritualText() {
@@ -1085,6 +1197,7 @@ function frame(now) {
     }
     tryConsume(dt);
     updateDiscoveries(state, dt, onDiscovery);
+    updateAscension(dt);
     if (state.discoveryNear && state.discoveryNear.q > 0.3) hint("discovery_near", "Something rare is shimmering nearby. Follow the soft glow.", 4200);
     state.galaxyProgress = galaxyProgressNow();
     if (!state.transitioning) checkTier();
@@ -1126,6 +1239,7 @@ function frame(now) {
   ctx.scale(z, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
+  drawRivals(ctx, state, vw, vh, now, state.settings.reduceMotion);
   drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion);
   if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
@@ -1410,6 +1524,15 @@ if (savedData) {
   state.legacyBonusPending = savedData.legacyBonus || 0;
   state.floorMass = savedData.floorMass;
   state.bestTier = savedData.bestTier || 0;
+  state.asc = savedData.asc;
+  state.zenNotes = savedData.zenNotes || [];
+  if (savedData.v7Welcome) {
+    // v7: your journey so far becomes the current Ascension run
+    state.asc.run.cleared = Math.max(0, state.galaxy - 1);
+    state.asc.run.peakTier = state.bestTier || 0;
+    state.asc.bestDepth = state.galaxy - 1;
+    state.v7Welcome = true;
+  }
   if (savedData.run && savedData.run.galaxy === state.galaxy) resumeRun = savedData.run;
 
   document.getElementById("volume-slider").value = Math.round(state.volume * 100);

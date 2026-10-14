@@ -474,6 +474,21 @@ export function playRitual() {
   [0, 7, 16].forEach((st, i) => tone(scaleRoot / 2 * Math.pow(2, st / 12), { start: 0.3 + i * 0.35, attack: 0.9, decay: 3.2, vol: 0.03 }));
 }
 
+/** v7: a goal star. One soft, rising note per star. */
+export function playGoalStar(n) {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  [0, 4, 7].slice(0, Math.max(1, n)).forEach((st, i) => tone(scaleRoot * Math.pow(2, st / 12), { start: i * 0.18, attack: 0.08, decay: 1.1, vol: 0.022 }));
+}
+
+/** v7: collapse into a singularity. A slow descending fall into a low, held note. */
+export function playCollapse() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  [12, 7, 4, 0].forEach((st, i) => tone(scaleRoot / 2 * Math.pow(2, st / 12), { start: i * 0.45, attack: 0.3, decay: 2.2, vol: 0.026 }));
+  tone(scaleRoot / 4, { start: 1.6, attack: 1.5, decay: 5, vol: 0.04 });
+}
+
 /** v6: a discovery. A slow, soft rising phrase in the biome's key. */
 export function playDiscovery() {
   if (!enabled || !ensureCtx()) return;

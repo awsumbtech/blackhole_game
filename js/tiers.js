@@ -71,8 +71,9 @@ export function tierProgress(r) {
 export const REGULAR_CLIMB = 1.12;
 export const BREATHER_CLIMB = 0.5;
 
-export function targetMassFrom(startMass, breather) {
-  const r = rForMass(startMass) * Math.pow(TIER_STEP, breather ? BREATHER_CLIMB : REGULAR_CLIMB);
+export function targetMassFrom(startMass, breather, climbMul = 1) {
+  // v7: Ascension depth multiplies the climb (deeper galaxies are bigger)
+  const r = rForMass(startMass) * Math.pow(TIER_STEP, (breather ? BREATHER_CLIMB : REGULAR_CLIMB) * climbMul);
   return massForR(r);
 }
 

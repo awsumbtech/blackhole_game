@@ -3,7 +3,8 @@
 // v2 keeps the original key so existing v1 saves load and migrate in place.
 
 const SAVE_KEY = "blackhole_galaxy_v3";
-export const SAVE_VERSION = 6;   // v6: records.discoveries (logbook)
+export const SAVE_VERSION = 7;   // v7: asc (Ascension: Dark Matter, perks, goals, collapses)
+import { normalizeAsc } from "./ascension.js";
 import { floorMassForLegacyGalaxy } from "./tiers.js";
 
 export function defaultStats() {
@@ -36,6 +37,8 @@ export function defaultUpgrades() {
 }
 
 export function save(state) {
+  // v7: a Zen session never touches your journey; it was saved before the session began
+  if (state.mode === "zen") return;
   try {
     // Once a galaxy is credited (summary showing), save as if already in the
     // next galaxy so a reload can't re-earn the same rewards.
@@ -58,6 +61,8 @@ export function save(state) {
       lastActive: Date.now(),
       floorMass: state.floorMass,
       bestTier: state.bestTier || 0,
+      asc: state.asc,
+      zenNotes: state.zenNotes || [],
       run: (!credited && inPlay && state.run) ? {
         galaxy: state.galaxy,
         mass: state.mass,
@@ -67,7 +72,8 @@ export function save(state) {
         bigFish: state.run.bigFish,
         powerups: state.run.powerups,
         bumps: state.run.bumps,
-        startBestCombo: state.run.startBestCombo
+        startBestCombo: state.run.startBestCombo,
+        goalCount: state.goalCount || 0
       } : null
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -111,7 +117,11 @@ function normalize(raw) {
     // v5: your size carries over between galaxies. Older saves start at a
     // tier that matches how far they'd got; a half-played galaxy restarts.
     floorMass: raw.floorMass > 0 ? raw.floorMass : floorMassForLegacyGalaxy(Math.max(1, raw.galaxy | 0 || 1)),
-    bestTier: raw.bestTier || 0
+    bestTier: raw.bestTier || 0,
+    // v7 migration: older saves get a fresh Ascension block; the journey carries on as the current run
+    asc: normalizeAsc(raw.asc),
+    zenNotes: Array.isArray(raw.zenNotes) ? raw.zenNotes.slice(-20) : [],
+    v7Welcome: (raw.version || 1) < 7 && !raw.asc
   };
   if ((raw.version || 1) < 5) data.run = null;
   data.records.fastest = { ...(data.records.fastest || {}) };

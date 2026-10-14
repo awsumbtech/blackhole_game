@@ -661,6 +661,9 @@ const UPDATE = {
 function beamHalfWidth() { return W.flare > 0 ? 0.13 : 0.075; }
 
 /** Mass multiplier for a bite (pulsar beams). */
+/** v7: flags for galaxy goals. */
+export function worldFlags() { return { riding: !!(W && W.biome === "Comet Current" && W.riding), inBeam: !!(W && W.inBeam) }; }
+
 export function worldMassMul() {
   return W && W.biome === "Neutron Forge" && W.inBeam ? 1.5 : 1;
 }
@@ -678,6 +681,7 @@ export function onWorldBump(state, e) {
     p.vx = Math.cos(a) * 0.5 * Math.sqrt(state.speedScale);
     p.vy = Math.sin(a) * 0.5 * Math.sqrt(state.speedScale);
     p.color = e.color;
+    p.crumb = true;   // v7: Armada goal counts these
     p._artBase = null;
     p._spawnAge = 30; p._spawnAlpha = 0.5;
     state.entities.push(p);

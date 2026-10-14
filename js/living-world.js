@@ -140,7 +140,8 @@ function updateGravityWell(state, dt) {
   const m = powerupFade(state, "magnet");
   const R = state.radius;
   const range = pullRange(state);
-  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (1 + (MAGNET_PULL - 1) * m);
+  // v7: breathPull (Zen) eases the pull on the inhale and deepens it on the exhale
+  const k = CFG.PULL_K * state.speedScale * state.mods.pullStrength * (1 + (MAGNET_PULL - 1) * m) * (state.breathPull ?? 1);
   const cap = CFG.PULL_CAP * state.speedScale * (1 + (MAGNET_RANGE - 1) * m);
   const px = state.playerX;
   const py = state.playerY;
@@ -303,7 +304,7 @@ function updateDynamicSpawning(state, dt) {
   world.bigCount = big;
 
   // Keep a steady density around the view
-  const target = state.biome.breather ? DENSITY.breather : DENSITY.regular;
+  const target = Math.round((state.biome.breather ? DENSITY.breather : DENSITY.regular) * (state.densityK || 1));
   const deficit = target - inRing;
   if (deficit > 0) {
     const interval = Math.max(1.5, 14 - deficit * 0.7);
