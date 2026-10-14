@@ -827,3 +827,6 @@ body.reduce-motion .sing-point { animation: none; }
 .zx-thing { margin-top: 14px; font: 400 18px/1.4 Outfit, system-ui, sans-serif; color: rgba(255, 238, 200, 0.9); max-width: 320px; min-height: 1em; }
 .zx-small { margin: 22px 0 30px; font: 400 13px Outfit, system-ui, sans-serif; color: rgba(190, 225, 215, 0.6); }
 #btn-zen{display:none!important}
+/* v7.1 */
+#zen-cue{position:fixed;left:0;right:0;bottom:16%;text-align:center;font:300 15px 'Outfit',sans-serif;letter-spacing:.25em;color:#cfe8ff;pointer-events:none;z-index:6;transition:opacity .3s}
+.mix-slider{width:110px;accent-color:#8f88ff;margin-right:8px;vertical-align:middle}

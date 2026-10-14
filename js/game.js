@@ -31,7 +31,7 @@ import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
 import { R0, START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
 
-const VERSION = "7.0";
+const VERSION = "7.1";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 // ─── CANVAS SETUP ───
@@ -106,7 +106,7 @@ const state = {
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
   mode: "ascension", asc: defaultAsc(), zenNotes: [], densityK: 1, breathPull: 1, rivals: [],
-  settings: { touchMode: "joystick", skin: "classic", zen: true, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
+  settings: { touchMode: "joystick", skin: "classic", zen: true, musicVol: 0.6, sfxVol: 0.6, musicOn: true, sfxOn: true, zenBreathCue: false, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
 
   // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
   screen: "play", camMul: 1, drift: null,
@@ -1266,6 +1266,17 @@ function updateZen(dt, now) {
   state.densityK = zen.zenDensity(p);
   state.breathPull = zen.zenBreathPull(now, BREATH_MS);
   zen.setArc(p);
+  // v7.1 optional "breathe in / out" words (off by default)
+  const cue = document.getElementById("zen-cue");
+  if (cue) {
+    const on = !!state.settings.zenBreathCue && !z.wound;
+    cue.classList.toggle("hidden", !on);
+    if (on) {
+      const ph = (now % BREATH_MS) / BREATH_MS * 10;
+      cue.textContent = ph < 4 ? "breathe in" : "breathe out";
+      cue.style.opacity = (ph < 4 ? Math.sin(Math.PI * ph / 4) : Math.sin(Math.PI * (ph - 4) / 6)) * 0.55;
+    }
+  }
   if (!z.wound && p >= zen.ARC.WIND) {
     z.wound = true;
     audio.setMusicLayers(0, state.biome);
@@ -1280,6 +1291,7 @@ function zenBeginExit() {
   input.setEnabled(false);
   state.screen = "zenexit";
   document.getElementById("zen-arc").classList.add("hidden");
+  document.getElementById("zen-cue")?.classList.add("hidden");
   setTimeout(() => {
     audio.stopDrone();
     zen.runExit({
@@ -1356,7 +1368,9 @@ function applyQuality(q) {
 // glow and the hole's halo (plus the optional guide ring).
 const BREATH_MS = 10000;
 function breathPhase(now) {
-  return 0.5 - 0.5 * Math.cos((now % BREATH_MS) / BREATH_MS * Math.PI * 2);
+  // v7.1: 4 s in, 6 s out (6 breaths a minute)
+  const ph = (now % BREATH_MS) / BREATH_MS * 10;
+  return ph < 4 ? 0.5 - 0.5 * Math.cos(Math.PI * ph / 4) : 0.5 + 0.5 * Math.cos(Math.PI * (ph - 4) / 6);
 }
 
 // ─── MAIN LOOP ───
@@ -1479,7 +1493,7 @@ function frame(now) {
       double: state.active.double > 0,
       gulp: state.gulp,
       breath,
-      breathGuide: state.settings.breathGuide || state.mode === "zen",
+      breathGuide: state.settings.breathGuide && state.mode !== "zen",   // v7.1: no ring in Zen; the wisp breathes instead
       filter: skinFilter()
     });
   ctx.restore();
@@ -1778,6 +1792,7 @@ function applySettings() {
   document.getElementById("btn-zen").classList.toggle("on", !!st.zen);
   document.body.classList.toggle("reduce-motion", !!st.reduceMotion);
   if (st.reduceMotion) state.shake = 0;
+  audio.setMix({ music: st.musicVol ?? 0.6, sfx: st.sfxVol ?? 0.6, musicOn: st.musicOn !== false, sfxOn: st.sfxOn !== false });
 }
 
 state.setSetting = (key, val) => {

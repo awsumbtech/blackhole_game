@@ -18,7 +18,9 @@ export function zenDensity(p) {
 
 /** Breath-paced pull: eases on the inhale (food drifts), deepens on the exhale. */
 export function zenBreathPull(now, breathMs) {
-  const s = Math.sin((now % breathMs) / breathMs * Math.PI * 2);   // >0 inhale, <0 exhale
+  // v7.1: 4 s in, 6 s out (same shape as the game's breathPhase)
+  const ph = (now % breathMs) / breathMs * 10;
+  const s = ph < 4 ? Math.sin(Math.PI * ph / 4) : -Math.sin(Math.PI * (ph - 4) / 6);   // >0 inhale, <0 exhale
   return 1 - 0.6 * s;
 }
 

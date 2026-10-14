@@ -159,6 +159,19 @@ kept locally only), then a send-off back to the title.
 
   The journey is snapshotted before a session and restored after it, untouched.
 
+## 7d. Audio rules (v7.1). Read `docs/AUDIO_RESEARCH.md` before touching sound
+
+Brian got headaches from the v7.0 drone. Follow these rules for any new sound:
+- Sine waves only, with no detune, no LFO and no chorus. Overlapping tones must be exact just-intonation
+  consonances, at least a fourth apart.
+- Music is sparse and slow: one note every 5.5 s or more, with fade-ins of seconds. Leave silence.
+- Keep the whole mix under a 1.8 kHz lowpass (ear-sensitive band) and above 150 Hz (phone speakers).
+- The bed is brown noise (surf), not a synth drone.
+- Effects: fade-in of at least 20 ms, in the key. Don't add new loud cues.
+- Music and Effects have separate volumes. Defaults stay low.
+- Check every audio change with `tools/audio-analyze.py`: peak, RMS, centroid, 2–5 kHz energy, and
+  envelope roughness.
+
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
@@ -169,6 +182,7 @@ kept locally only), then a send-off back to the title.
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v7.1 Calm Sound:** research-based audio rebuild (surf bed, sparse just-intonation sines, 1.8 kHz lowpass, Music/SFX sliders). No ring in Zen; the wisp breathes 4 in / 6 out.
 - **v7.0 Ascension + Zen:** prestige loop (collapse → Dark Matter → constellation), galaxy goals, rivals, milestones, golden/supernova/rare finds; Zen sessions with breath pull and a clean exit. Save v7.
 - **v6.0.1 Softer Sound:** all effects softened (lower bites, slow attacks, sine/triangle only, 1.6 kHz lowpass, compressor and limiter). **Brian wants soft audio: keep new sounds this gentle.**
 - **v6.0 Next Level:** from a bot playtest. Meatier bites (same clear times), big-catch halo + slow swallow, discoveries + logbook (save v6), livelier wisp, melodic bites, end-of-galaxy ritual. Built on `main`.

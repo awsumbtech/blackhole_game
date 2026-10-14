@@ -164,7 +164,10 @@ export function showStats(state, onClose, opts = {}) {
   const settingsHtml = `
     <div class="stats-section"><h3>Settings</h3>
       ${skinRow(state)}
-      ${setRow("Breathing guide", "A faint ring that grows as you breathe in (10s cycle)", onOff("breathGuide"))}
+      ${setRow("Music", "Soft surf and slow notes", `<input type="range" class="mix-slider" data-mix="musicVol" min="0" max="100" value="${Math.round((state.settings.musicVol ?? 0.6) * 100)}" aria-label="Music volume">` + onOff("musicOn"))}
+      ${setRow("Sound effects", "Bites and chimes", `<input type="range" class="mix-slider" data-mix="sfxVol" min="0" max="100" value="${Math.round((state.settings.sfxVol ?? 0.6) * 100)}" aria-label="Effects volume">` + onOff("sfxOn"))}
+      ${setRow("Breathing guide", "Ascension: a faint ring that grows as you breathe in (4s in, 6s out)", onOff("breathGuide"))}
+      ${setRow("Zen breath words", "Faint 'breathe in / out' words in Zen sessions", onOff("zenBreathCue"))}
       ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}
       ${setRow("Touch controls", "Thumbstick, or drift toward your finger", seg("touchMode", [["joystick", "Joystick"], ["follow", "Follow"]]))}
@@ -230,6 +233,9 @@ export function showStats(state, onClose, opts = {}) {
     });
   });
 
+  $("stats-body").querySelectorAll(".mix-slider").forEach(el => {
+    el.addEventListener("change", () => state.setSetting?.(el.dataset.mix, Number(el.value) / 100));
+  });
   bindBackup(state);
   const nameEl = $("set-wisp-name");
   nameEl.addEventListener("change", () => {

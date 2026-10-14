@@ -134,7 +134,11 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
   const joyK = Math.min(1, w.joy / 40);
   const px = (7 + Math.min(6, (state.tier || 0) * 0.5)) * (rest ? 0.85 : 1) * (1 + 0.3 * joyK + 0.2 * w.perk);
   // Perked: a quicker, brighter shimmer (still soft); resting: slow and dim
-  const pulse = reduceMotion ? 1 : 0.85 + breath * 0.3 + w.perk * 0.12 * Math.sin(w.age * 0.08);
+  // v7.1 Zen: the wisp is the breathing guide. It swells on the in-breath (4 s)
+  // and settles on the out-breath (6 s). It stays gentle with Reduce Motion.
+  const zenB = state.mode === "zen";
+  const pulse = zenB ? (reduceMotion ? 0.85 + breath * 0.35 : 0.7 + breath * 0.8)
+    : reduceMotion ? 1 : 0.85 + breath * 0.3 + w.perk * 0.12 * Math.sin(w.age * 0.08);
   const fade = Math.min(1, w.age / 120);
   const s = px * pulse / z;
   for (let i = 0; i < w.trail.length; i += 2) {
@@ -143,7 +147,7 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
     ctx.globalAlpha = a;
     ctx.drawImage(sprite, w.trail[i] + ox - ts, w.trail[i + 1] + oy - ts, ts * 2, ts * 2);
   }
-  ctx.globalAlpha = Math.min(1, (0.7 + breath * 0.25) * (rest ? 0.8 : 1) + 0.25 * joyK + 0.2 * w.perk) * fade;
+  ctx.globalAlpha = Math.min(1, (zenB ? 0.55 + breath * 0.45 : 0.7 + breath * 0.25) * (rest ? 0.8 : 1) + 0.25 * joyK + 0.2 * w.perk) * fade;
   ctx.drawImage(sprite, w.x + ox - s * 2, w.y + oy - s * 2, s * 4, s * 4);
   ctx.globalAlpha = 1;
 }

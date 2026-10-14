@@ -2,6 +2,36 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v7.1 Calm Sound (Oct 2026)
+
+Brian said the music gave him a headache and the effects were still harsh. The audio was rebuilt
+from research (see `docs/AUDIO_RESEARCH.md` for the sources and rules).
+
+- **New bed.** Soft brown noise, like distant surf, replaces the synth drone. It swells gently with
+  the breath (4 s in, 6 s out). The old drone had detuned oscillators, a 2.01× "almost octave", a
+  1.498 fifth, triangle overtones and LFO layers. That beating and roughness is the likely headache
+  cause.
+- **New music.** Sparse single sine notes in just intonation: one every 5.5–9 s, each with a slow
+  2.5 s fade-in. Only exact consonances (octave, fifth, fourth, wide third) ever overlap, so nothing
+  beats. Scales and tiers only open the note pool a little. They never stack layers.
+- **Softer effects.** Every effect is a soft sine "water-drop" pluck in the key, 380–1,000 Hz, with a
+  fade-in of at least 20 ms. Rapid bites thin out (90 ms minimum gap), and the combo chime plays only
+  every 10th bite.
+- **Safer mix.** The whole mix passes a 1.8 kHz lowpass and a 150 Hz highpass (phone speakers can't
+  play deep bass cleanly). Default levels are lower.
+- **Volume settings.** Settings now has separate **Music** and **Sound effects** sliders with
+  on/off switches.
+- **Measured.** These come from an offline 30 s render at default volume (`tools/audio-analyze.py`):
+  - Peak −22 dBFS, RMS −37 dBFS.
+  - Spectral centroid 338 Hz (383 Hz at deeper scales).
+  - 0.002% of energy in the 2–5 kHz band.
+  - The music's envelope-roughness index is 0.022, against 0.092 for the old Reef drone.
+- **Zen visuals.** The breathing ring around the hole is gone. Your wisp is now the breath guide:
+  it swells and brightens on the 4 s in-breath and settles on the 6 s out-breath. There is an
+  optional, off-by-default "breathe in / breathe out" words setting. Zen's pull now follows the same
+  4/6 rhythm.
+- Service worker cache `blackhole-v7.1`.
+
 ## v7.0 Ascension + Zen (Oct 2026)
 
 Two modes with clear jobs. Save version 7; older saves migrate, so the current journey becomes your
