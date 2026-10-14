@@ -9,7 +9,8 @@ const TAU = Math.PI * 2;
 let TOO_BIG_RGB = "240, 130, 140";
 // v6 big-catch halo: warm gold; starts once you're 82% of the way to its size
 const HALO_RGB = "255, 214, 140";
-const BIG_HALO_FROM = 0.82;
+let BIG_HALO_FROM = 0.82;
+export function setHaloFrom(v) { BIG_HALO_FROM = v; }
 export function setSoftPalette(on) {
   TOO_BIG_RGB = on ? "235, 185, 110" : "240, 130, 140";
 }
@@ -468,6 +469,8 @@ export function prerenderEntitySprite(e) {
 
 /** v4: the black hole is painted by art.js (disk, photon ring, lensed arc). */
 export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
+  // v7 hole skins: a gentle colour filter over the painted disk
+  if (fx.filter) { ctx.save(); ctx.filter = fx.filter; drawBlackHoleArt(ctx, x, y, radius, time, fx); ctx.restore(); return; }
   drawBlackHoleArt(ctx, x, y, radius, time, fx);
 }
 

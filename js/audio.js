@@ -474,6 +474,30 @@ export function playRitual() {
   [0, 7, 16].forEach((st, i) => tone(scaleRoot / 2 * Math.pow(2, st / 12), { start: 0.3 + i * 0.35, attack: 0.9, decay: 3.2, vol: 0.03 }));
 }
 
+/** v7 Zen wind-down: the music resolves into one long, held note. */
+export function playZenResolve() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  const now = ctx.currentTime;
+  [[scaleRoot / 2, 0.035], [scaleRoot, 0.018], [scaleRoot * 1.5, 0.01]].forEach(([f, v]) => {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = "sine"; osc.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(v, now + 6);
+    g.gain.setValueAtTime(v, now + 40);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 80);
+    osc.connect(g); g.connect(sfxGain);
+    osc.start(now); osc.stop(now + 81);
+  });
+}
+
+/** v7 Zen exit: a soft low tone under each guided breath. */
+export function playBreathTone() {
+  if (!enabled || !ensureCtx()) return;
+  resume();
+  tone(scaleRoot / 2, { attack: 1.6, decay: 5, vol: 0.03 });
+}
+
 /** v7: a goal star. One soft, rising note per star. */
 export function playGoalStar(n) {
   if (!enabled || !ensureCtx()) return;

@@ -60,7 +60,10 @@ function vrOf(state) { return Math.hypot(state.viewW || 800, state.viewH || 600)
 export function initDiscoveries(state) {
   const list = (state.biome && DISCOVERIES[state.biome.name]) || [];
   const log = (state.records && state.records.discoveries) || {};
-  const plan = state.biome && state.biome.breather ? PLAN_BREATHER : PLAN_REGULAR;
+  let plan = state.biome && state.biome.breather ? PLAN_BREATHER : PLAN_REGULAR;
+  // v7: none in Zen sessions (nothing there is kept); Keen Eye adds one more
+  if (state.mode === "zen") plan = [];
+  else if (state.ascMods && state.ascMods.extraFind && !(state.biome && state.biome.breather)) plan = [...plan, 200];
   // Prefer finds you haven't logged yet; then any (seeing an old friend again is nice too)
   const fresh = list.filter(d => !log[d.id]);
   const pool = [...shuffle(fresh), ...shuffle(list.filter(d => log[d.id]))];

@@ -114,7 +114,7 @@ export function finishGalaxy(state) {
     ["Big catches", run.bigFish],
     ["Speed bonus", !zen && time < par ? Math.round((par - time) / 5) : 0],
     ["New record", newFast && prevFast != null ? 10 : 0],
-    ["Zen bonus", zen ? 10 : 0]
+    ["Calm bonus", zen ? 10 : 0]
   ].filter(p => p[1] > 0);
   const earned = parts.reduce((s, p) => s + p[1], 0);
 

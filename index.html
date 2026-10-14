@@ -37,6 +37,7 @@
         <div id="hud-progress-wrap" class="hud-progress-wrap">
           <div id="hud-progress-bar" class="hud-progress-bar"></div>
         </div>
+        <div id="hud-goal" class="hud-goal"></div>
       </div>
       <div class="hud-right">
         <div class="hud-stat">
@@ -73,6 +74,7 @@
           <div id="sum-sub" class="sum-sub">Debris Reef</div>
         </div>
         <div id="sum-grid" class="sum-grid"></div>
+        <div id="sum-asc" class="sum-asc"></div>
         <div class="sum-stardust">
           <div class="sum-earned"><span class="sd">✦</span> +<b id="sum-earned">0</b> stardust</div>
           <div id="sum-breakdown" class="sum-breakdown"></div>
@@ -84,6 +86,7 @@
         </div>
         <div id="shop-list" class="shop-list"></div>
         <button id="btn-continue" class="big-btn">Continue</button>
+        <button id="btn-sum-collapse" class="soft-btn collapse-btn hidden">Collapse into a singularity…</button>
       </div>
     </div>
 
@@ -92,6 +95,8 @@
       <div class="modal-card pause-card">
         <div class="sum-head"><div class="sum-title">Paused</div><div class="sum-sub">Take a breath. Nothing is waiting.</div></div>
         <button id="btn-resume" class="big-btn">Resume</button>
+        <button id="btn-pause-collapse" class="soft-btn collapse-btn hidden">Collapse into a singularity…</button>
+        <button id="btn-pause-endzen" class="soft-btn hidden">End session gently</button>
         <button id="btn-pause-settings" class="soft-btn">Settings</button>
         <button id="btn-pause-title" class="soft-btn">Title screen</button>
       </div>
@@ -135,14 +140,20 @@
       <div class="title-sub">Galaxy Eater</div>
     </div>
     <div class="title-menu">
-      <button id="btn-title-continue" class="title-btn primary">Continue<small id="title-continue-sub">Galaxy 1 · Debris Reef</small></button>
-      <button id="btn-title-new" class="title-btn">New Game</button>
-      <button id="btn-title-starmap" class="title-btn">Star Map</button>
-      <button id="btn-title-logbook" class="title-btn">Logbook</button>
-      <button id="btn-title-settings" class="title-btn">Settings</button>
+      <button id="btn-title-continue" class="title-btn primary">Ascension<small id="title-continue-sub">Galaxy 1 · Debris Reef</small></button>
+      <button id="btn-title-zen" class="title-btn zen-title">Zen session<small>3, 5 or 10 calm minutes, then a gentle exit</small></button>
+      <div class="title-row">
+        <button id="btn-title-constellation" class="title-btn small">Constellation</button>
+        <button id="btn-title-starmap" class="title-btn small">Star Map</button>
+      </div>
+      <div class="title-row">
+        <button id="btn-title-logbook" class="title-btn small">Logbook</button>
+        <button id="btn-title-settings" class="title-btn small">Settings</button>
+      </div>
+      <button id="btn-title-new" class="title-link">Start completely over…</button>
       <div id="newgame-confirm" class="confirm hidden">
-        <p>Start a new journey from Galaxy 1?</p>
-        <small>Stardust and upgrades reset. Your settings, records and codex stay.</small>
+        <p>Erase your whole journey?</p>
+        <small>Your run, Dark Matter, perks, goal stars and collapses all reset. Settings, records, the star map and logbook stay. (To start a new run and keep your perks, Collapse instead.)</small>
         <div class="confirm-row">
           <button id="btn-newgame-yes" class="title-btn">Start over</button>
           <button id="btn-newgame-no" class="title-btn primary">Keep my journey</button>
@@ -150,6 +161,67 @@
       </div>
     </div>
   </div>
+
+  <!-- v7 Perk constellation -->
+  <div id="constellation" class="hidden" role="dialog" aria-label="Perk constellation">
+    <canvas id="const-canvas"></canvas>
+    <div class="const-top">
+      <button id="btn-const-back" class="soft-btn">Back</button>
+      <div><h2>Constellation</h2><p id="const-sub"></p></div>
+      <div class="dm-pill"><span class="dm-dot"></span><b id="const-dm">0</b></div>
+    </div>
+    <div id="const-card" class="const-card"></div>
+  </div>
+
+  <!-- v7 Collapse -->
+  <div id="collapse" class="modal hidden" role="dialog" aria-label="Collapse">
+    <div class="modal-card collapse-card">
+      <div class="sum-head"><div class="sum-title">Collapse into a singularity?</div>
+        <div class="sum-sub" id="collapse-sub"></div></div>
+      <p class="collapse-text">Your run folds inward and becomes <b>Dark Matter</b>. Perks you buy with it are yours forever, so the next run reaches further. You keep goal stars, the star map, the logbook and your records. Your size, stardust and upgrades reset.</p>
+      <div id="collapse-break" class="collapse-break"></div>
+      <div id="collapse-mile" class="collapse-mile"></div>
+      <button id="btn-collapse-yes" class="big-btn">Collapse</button>
+      <button id="btn-collapse-no" class="soft-btn">Not yet</button>
+    </div>
+  </div>
+  <div id="singularity" class="screen hidden" aria-live="polite">
+    <div class="sing-point"></div>
+    <div class="sing-text"><div id="sing-title"></div><div id="sing-line"></div><div id="sing-mile"></div></div>
+  </div>
+
+  <!-- v7 Zen sessions -->
+  <div id="zen-picker" class="screen hidden" role="dialog" aria-label="Zen session">
+    <div class="zen-card">
+      <div class="zen-title">Zen session</div>
+      <p class="zen-sub">Settle, drift, then a slow wind-down. Breathe with the pull: things drift out as you breathe in and come to you as you breathe out.</p>
+      <div class="zen-choices">
+        <button class="zen-choice" data-min="3"><b>3</b><span>min</span></button>
+        <button class="zen-choice" data-min="5"><b>5</b><span>min</span></button>
+        <button class="zen-choice" data-min="10"><b>10</b><span>min</span></button>
+      </div>
+      <button id="btn-zen-cancel" class="title-link">Back</button>
+    </div>
+  </div>
+  <div id="zen-exit" class="screen hidden" aria-live="polite">
+    <div class="zx-step" id="zx-breathe">
+      <div class="zx-circle" id="zx-circle"></div>
+      <div class="zx-cue" id="zx-cue">Breathe in…</div>
+      <div class="zx-count" id="zx-count">1 of 3</div>
+    </div>
+    <div class="zx-step hidden" id="zx-ask">
+      <div class="zx-q">What's the one thing you're doing next?</div>
+      <input id="zx-input" class="zx-input" maxlength="80" placeholder="Just one thing" autocomplete="off" />
+      <div class="zx-row"><button id="btn-zx-done" class="big-btn">That's it</button><button id="btn-zx-skip" class="title-link">Skip</button></div>
+    </div>
+    <div class="zx-step hidden" id="zx-close">
+      <div class="zx-go" id="zx-go">Go do it.</div>
+      <div class="zx-thing" id="zx-thing"></div>
+      <div class="zx-small">The void will be here whenever you need it.</div>
+      <button id="btn-zx-title" class="soft-btn">Back to the title</button>
+    </div>
+  </div>
+  <div id="zen-arc" class="hidden"><svg viewBox="0 0 120 14"><path id="zen-arc-bg" d="M4 12 Q60 -6 116 12" /><path id="zen-arc-fg" d="M4 12 Q60 -6 116 12" /></svg></div>
 
   <!-- First-launch intro -->
   <div id="intro-screen" class="screen hidden" aria-live="polite">
@@ -172,7 +244,7 @@
     <button id="btn-stats" class="ctrl-btn" title="Stats &amp; Records">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
     </button>
-    <button id="btn-zen" class="ctrl-btn zen-btn" title="Zen mode: no clock, no penalties">Zen</button>
+    <button id="btn-zen" class="ctrl-btn zen-btn hidden" title="Zen" aria-hidden="true">Zen</button>
     <span class="ctrl-hint">WASD / Mouse to move</span>
     <div class="ctrl-spacer"></div>
     <button id="btn-reset" class="ctrl-btn ctrl-danger" title="Hard Reset">Reset All</button>

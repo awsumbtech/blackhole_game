@@ -7,15 +7,29 @@ import { UPGRADES, MAX_LEVEL, upgradeCost, fmtTime, fmtMass } from "./progressio
 import { POWERUPS, POWERUP_KINDS } from "./powerups.js";
 import { EVENT_INFO } from "./living-world.js";
 import { biomeCatalog } from "./entities.js";
+import { SKINS, hasMilestone } from "./ascension.js";
 
 const $ = id => document.getElementById(id);
+
+function skinRow(state) {
+  const have = SKINS.filter(k => !k.unlock || hasMilestone(state.asc, k.unlock));
+  if (have.length < 2) return "";
+  const cur = state.settings.skin || "classic";
+  return `<div class="set-row"><div><b>Hole skin</b><small>Unlocked by collapses</small></div><div class="seg" data-set="skin">${have.map(k => `<button data-val="${k.id}" class="${k.id === cur ? "on" : ""}">${k.name}</button>`).join("")}</div></div>`;
+}
 
 // v6 codex entries for the new gentle things
 const V6_CODEX = [
   ["255, 214, 140", "Golden halo", "A soft gold glow around something big means you're nearly its size. When the halo turns steady, it fits: drift in for a slow, satisfying big catch."],
   ["255, 240, 200", "Shimmer (discovery)", "Rare finds hide in every galaxy: a golden comet, a lost probe, a whale-shaped nebula. A faint glow at the screen edge (and your wisp leaning that way) means one is near. Drift into it to write it in your logbook."],
   ["150, 235, 215", "Your wisp", "It twirls when you make a big catch, curls up to rest in breather galaxies, and perks up when a discovery is close."],
-  ["200, 210, 255", "A new star", "After each galaxy, its star joins your sky for a quiet moment before the summary. Tap to move on whenever you like."]
+  ["200, 210, 255", "A new star", "After each galaxy, its star joins your sky for a quiet moment before the summary. Tap to move on whenever you like."],
+  ["170, 140, 240", "Ascension and collapse", "Each run starts from dust at Galaxy 1 and every galaxy deeper is a little bigger, sparser and slower. When it starts to feel heavy, Collapse (pause menu or after a galaxy, from depth 3) to turn the run into Dark Matter."],
+  ["210, 190, 255", "Dark Matter and the constellation", "Dark Matter lights permanent perks on the constellation: Reach, Appetite and Fortune. Each tier opens the next; forks are a choice. Collapsing deeper earns much more."],
+  ["170, 140, 240", "Rival holes", "From Galaxy 3 of a run, calm rival black holes drift about eating food. Bumping a bigger one just eases you aside. Grow past one and it turns gold: swallow it."],
+  ["255, 228, 170", "Galaxy goals", "Each galaxy type has its own goal (graze the reefs, ride the current, feed in the beams...). Up to 3 stars; your best is kept, and 3 stars unlocks that galaxy's perk."],
+  ["255, 210, 120", "Golden galaxies and supernova runs", "After your first collapse, a galaxy now and then shines gold (triple stardust). Later, some runs begin as a supernova: every bite counts 50% more. Rare finds can shine too (+3 Dark Matter)."],
+  ["160, 235, 215", "Zen sessions", "A separate calm space for 3, 5 or 10 minutes: settle, flow, wind down. The pull follows your breath. It ends with three slow breaths and a gentle send-off. Nothing is kept or counted."]
 ].map(([rgb, name, text]) => `<div class="codex-item"><b><i class="dot" style="background:rgb(${rgb})"></i>${name}</b><p>${text}</p></div>`).join("");
 
 function esc(s) {
@@ -59,7 +73,7 @@ function tile(label, value, sub, isNew) {
   </div>`;
 }
 
-export function showSummary(summary, state, { onBuy, onContinue }) {
+export function showSummary(summary, state, { onBuy, onContinue, onCollapse }) {
   const el = $("summary");
   $("sum-title").textContent = `Galaxy ${summary.galaxy} devoured`;
   $("sum-sub").textContent = summary.biome;
@@ -75,6 +89,20 @@ export function showSummary(summary, state, { onBuy, onContinue }) {
     tile("Objects eaten", summary.eaten, `record ${state.records.mostEaten}`, summary.newEaten),
     tile("Big catches", summary.bigFish, summary.powerups ? `${summary.powerups} power-up${summary.powerups > 1 ? "s" : ""}` : "", summary.newBig)
   ].join("");
+
+  // v7 Ascension: depth, the galaxy goal, unlocks, and the option to collapse
+  const rows = [];
+  if (summary.goal) {
+    const g = summary.goal;
+    rows.push(`<div class="row"><b>${esc(g.name)}</b> <span class="stars">${"★".repeat(g.stars)}${"☆".repeat(3 - g.stars)}</span><br>${g.count} ${esc(g.unit)} · stars at ${g.need.join(" / ")}${g.best > g.stars ? ` · best ${"★".repeat(g.best)}` : ""}</div>`);
+  }
+  if (summary.unlocked) rows.push(`<div class="row gold">3 stars! Galaxy perk unlocked: <b>${esc(summary.unlocked.name)}</b>. ${esc(summary.unlocked.desc)}</div>`);
+  if (summary.depth) rows.push(`<div class="row">Run depth <b>${summary.depth}</b>${summary.canCollapse ? ` · collapsing now would give <b>${summary.dmPreview}</b> Dark Matter` : ` · you can collapse from depth 3`}</div>`);
+  if (summary.heavy) rows.push(`<div class="row heavy">The pull is getting heavy out here. A collapse would carry you further next time.</div>`);
+  $("sum-asc").innerHTML = rows.join("");
+  const cb = $("btn-sum-collapse");
+  cb.classList.toggle("hidden", !summary.canCollapse);
+  cb.onclick = () => onCollapse?.();
 
   $("sum-earned").textContent = summary.earned;
   $("sum-breakdown").innerHTML = summary.parts.map(([k, v]) => `<span>${esc(k)} +${v}</span>`).join("");
@@ -135,7 +163,7 @@ export function showStats(state, onClose, opts = {}) {
 
   const settingsHtml = `
     <div class="stats-section"><h3>Settings</h3>
-      ${setRow("Zen mode", "No clock or par, bumps cost nothing", onOff("zen"))}
+      ${skinRow(state)}
       ${setRow("Breathing guide", "A faint ring that grows as you breathe in (10s cycle)", onOff("breathGuide"))}
       ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}

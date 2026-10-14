@@ -4,7 +4,7 @@
 import { createInput } from "./input.js";
 import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand, biomeCatalog } from "./entities.js";
 import {
-  drawStarfield, drawBoundary, drawEntities, drawBlackHole,
+  drawStarfield, drawBoundary, drawEntities, drawBlackHole, setHaloFrom,
   drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
   invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
 } from "./render.js";
@@ -17,6 +17,8 @@ import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, 
 import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import { openLogbook } from "./logbook.js";
+import { openConstellation } from "./constellation.js";
+import * as zen from "./zen.js";
 import { depthInfo, ascMods, defaultAsc, freshAscRun, dmFor, GOALS, starsFor, GALAXY_PERKS, COLLAPSE_MIN_CLEARED, rollGolden, rollDeep, rollSupernova, keptUpgrades, milestonesAt, hasMilestone, SKINS, RARE_FIND_CHANCE } from "./ascension.js";
 import { initRivals, updateRivals, drawRivals } from "./rivals.js";
 import {
@@ -37,6 +39,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const hudGalaxy = document.getElementById("hud-galaxy");
+const hudGoal = document.getElementById("hud-goal");
 const hudTime = document.getElementById("hud-time");
 const hudMass = document.getElementById("hud-mass");
 const hudBest = document.getElementById("hud-best");
@@ -246,6 +249,25 @@ function updateAscension(dt) {
   if (state.mode === "zen") return;
   if (state.goal && state.goal.metric === "ride" && worldFlags().riding) bumpGoal(dt / 60);
   state.asc.run.time = (state.asc.run.time || 0) + dt / 60;
+  // Hungry Wisp perk: every ~4s the wisp nudges a nearby crumb into you
+  if (state.ascMods.wispFeed) {
+    state.wispFeedT = (state.wispFeedT || 0) + dt;
+    const wi = wispInfo();
+    if (state.wispFeedT > 240 && wi) {
+      state.wispFeedT = 0;
+      let best = null, bd = Math.hypot(state.viewW, state.viewH) * 0.3;
+      for (const e of state.entities) {
+        if (e.consuming || e.powerup || state.radius <= e.radius * state.eatRatio) continue;
+        const d = Math.hypot(e.x - wi.x, e.y - wi.y);
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (best) {
+        const dx = state.playerX - best.x, dy = state.playerY - best.y, d = Math.hypot(dx, dy) || 1;
+        const sp = 2.2 * Math.sqrt(state.speedScale);
+        best.vx = dx / d * sp; best.vy = dy / d * sp;
+      }
+    }
+  }
   updateRivals(state, dt, onRivalSwallow);
 }
 
@@ -296,6 +318,14 @@ function onDiscovery(def, f) {
   const first = !log[def.id];
   log[def.id] = { g: first ? state.galaxy : log[def.id].g, d: first ? Date.now() : log[def.id].d, n: (log[def.id]?.n || 0) + 1 };
   state.run.found = (state.run.found || 0) + 1;
+  if (state.mode !== "zen") {
+    state.asc.run.finds = (state.asc.run.finds || 0) + 1;
+    // Rare, shining finds: +3 Dark Matter on the spot
+    if (hasMilestone(state.asc, "golden") && Math.random() < RARE_FIND_CHANCE * state.ascMods.rareMul * (state.deep ? 2 : 1)) {
+      state.asc.dm += 3; state.asc.dmTotal += 3;
+      setTimeout(() => { floater(state.playerX, state.playerY - state.radius * 2, "Shining find · +3 Dark Matter", "#d9ccff", 17); audio.playGoalStar(3); }, 900);
+    }
+  }
   (state.run.foundNames || (state.run.foundNames = [])).push(def.name);
   floater(f.x, f.y, first ? "Discovered" : "Found again", "#fff0c8", 17);
   showHint(`${def.name}. ${def.line}`, 5200);
@@ -434,6 +464,9 @@ function initGalaxy(galaxyNum, resume = null) {
   initPowerups();
   ui.updatePowerupBar(state);
 
+  setHaloFrom(zen ? 0.82 : am.haloFrom);
+  if (state.golden) setTimeout(() => showHint("A golden galaxy. Everything here shines: triple stardust when you clear it.", 5000), 2500);
+  else if (state.deep) setTimeout(() => showHint("A deep variant: night-blue, and rare finds shine more often here.", 4500), 2500);
   audio.startDrone(biome);
   audio.newPhrase();
   audio.setMusicLayers(state.tier, biome);
@@ -868,7 +901,8 @@ function showGalaxySummary() {
   state.transitionTimer = 0;
   ui.showSummary(state.summary, state, {
     onBuy: buyUpgrade,
-    onContinue: startWarp
+    onContinue: startWarp,
+    onCollapse: openCollapse
   });
 }
 
@@ -918,6 +952,12 @@ function syncHud(force = false) {
   if (hudMass.textContent !== tn) hudMass.textContent = tn;
   hudBiome.textContent = state.biome ? state.biome.name : "";
   hudProgressBar.style.width = (progress * 100).toFixed(1) + "%";
+  if (state.goal) {
+    const st = starsFor(state.goal, state.goalCount);
+    const nextNeed = state.goal.stars[Math.min(2, st)];
+    const txt = `${state.goal.name} <span class="st">${"★".repeat(st)}${"☆".repeat(3 - st)}</span> ${Math.floor(state.goalCount)}/${nextNeed}`;
+    if (hudGoal._t !== txt) { hudGoal._t = txt; hudGoal.innerHTML = txt; }
+  } else if (hudGoal._t) { hudGoal._t = ""; hudGoal.innerHTML = ""; }
 
   const sec = Math.floor(state.run ? state.run.time : 0);
   if (force || sec !== lastHudSec) {
@@ -960,7 +1000,13 @@ function showTitle() {
   document.body.classList.add("on-title");
   document.getElementById("newgame-confirm").classList.add("hidden");
   document.getElementById("hint-toast").classList.add("hidden");
-  document.getElementById("title-continue-sub").textContent = `Galaxy ${state.galaxy} · ${state.biome ? state.biome.name : ""}`;
+  const depthTxt = state.asc.run.cleared ? `Run depth ${state.asc.run.cleared} · ` : "";
+  document.getElementById("title-continue-sub").textContent = `${depthTxt}Galaxy ${state.galaxy} · ${state.biome ? state.biome.name : ""}`;
+  document.getElementById("btn-title-constellation").classList.toggle("glow", (state.asc.dm || 0) >= 6);
+  if (state.v7Welcome) {
+    state.v7Welcome = false;
+    setTimeout(() => showHint(`New: Ascension. Your journey is now a run, ${state.asc.run.cleared} galaxies deep. Collapse any time (pause menu) to earn Dark Matter for permanent perks.`, 7000), 1200);
+  }
   showScreenEl(titleEl);
   warmHole(state.radius * zoomTarget() * TITLE_ZOOM * screenDpr);
   save(state);
@@ -1041,6 +1087,15 @@ function updateBackdrop(dt) {
 }
 
 function onPlayStart(kind) {
+  if (kind === "zen") {
+    showHint("Breathe with the pull: things drift out as you breathe in, and come to you as you breathe out.", 6000);
+    return;
+  }
+  if (kind === "newrun") {
+    const sn = state.asc.run.supernova;
+    showHint(sn ? "A supernova run! Every bite counts 50% more, all run long." : `Run ${state.asc.runsStarted}. Galaxy ${state.galaxy}: ${state.biome.name}`, 4500);
+    return;
+  }
   if (kind === "resume") showHint(`Welcome back! Galaxy ${state.galaxy}: ${state.biome.name}`);
   else showHint(`Galaxy ${state.galaxy}: ${state.biome.name}`);
   if (!firstPlayStart) return;
@@ -1075,6 +1130,7 @@ document.getElementById("btn-newgame-yes").addEventListener("click", () => {
   state.bestTier = 0;
   state.stardust = 0;
   state.upgrades = defaultUpgrades();
+  state.asc = defaultAsc();   // v7: a full start-over also clears Ascension
   state.legacyBonusPending = 0;
   state.galaxyCredited = false;
   state.transitioning = false;
@@ -1089,6 +1145,171 @@ document.getElementById("btn-newgame-yes").addEventListener("click", () => {
 document.getElementById("btn-title-settings").addEventListener("click", () => {
   audio.playClick();
   ui.showStats(state, () => {}, { settingsOnly: true });
+});
+
+// ─── v7: CONSTELLATION, COLLAPSE, ZEN ───
+function skinFilter() {
+  const sk = SKINS.find(s => s.id === state.settings.skin);
+  if (!sk || sk.id === "classic" || state.mode === "zen" && false) return "";
+  if (sk.unlock && !hasMilestone(state.asc, sk.unlock)) return "";
+  return `hue-rotate(${sk.hue || 0}deg) saturate(${sk.sat ?? 1}) brightness(${sk.bright ?? 1})`;
+}
+
+state.openConstellation = (o = {}) => {
+  audio.playClick();
+  openConstellation(state.asc, {
+    reduceMotion: state.settings.reduceMotion,
+    newRun: !!o.newRun,
+    onBuy: () => { audio.playGoalStar(3); save(state); },
+    onClose: begin => { save(state); if (o.newRun) startNewRun(); }
+  });
+};
+document.getElementById("btn-title-constellation").addEventListener("click", () => state.openConstellation());
+
+// Collapse: confirm with a clear breakdown, then the singularity moment
+function openCollapse() {
+  const r = state.asc.run;
+  const dm = dmFor(r, state.ascMods || ascMods(state.asc));
+  document.getElementById("collapse-sub").textContent = `This run: ${r.cleared} galax${r.cleared === 1 ? "y" : "ies"} deep, up to ${tierName(r.peakTier || 0)}`;
+  document.getElementById("collapse-break").innerHTML = dm.parts.map(([k, v]) => `<span><i>${k}</i><b>+${v}</b></span>`).join("") +
+    `<span class="tot"><i>Dark Matter</i><b>+${dm.total}</b></span>`;
+  const next = milestonesAt((state.asc.collapses || 0) + 1);
+  document.getElementById("collapse-mile").innerHTML = next.length
+    ? `Collapse ${(state.asc.collapses || 0) + 1} also unlocks: ` + next.map(m => `<b>${m.name}</b> (${m.desc})`).join(", ")
+    : "";
+  document.getElementById("collapse").classList.remove("hidden");
+}
+document.getElementById("btn-collapse-no").addEventListener("click", () => { audio.playClick(); document.getElementById("collapse").classList.add("hidden"); });
+document.getElementById("btn-collapse-yes").addEventListener("click", () => { audio.playClick(); doCollapse(); });
+
+function doCollapse() {
+  const a = state.asc, r = a.run;
+  const mods = state.ascMods || ascMods(a);
+  const dm = dmFor(r, mods).total;
+  a.dm = (a.dm || 0) + dm;
+  a.dmTotal = (a.dmTotal || 0) + dm;
+  a.collapses = (a.collapses || 0) + 1;
+  a.history.push({ n: a.collapses, depth: r.cleared, dm, min: Math.round((r.time || 0) / 60), d: Date.now() });
+  const unlocked = milestonesAt(a.collapses);
+  // What resets, what stays
+  state.upgrades = { ...defaultUpgrades(), ...keptUpgrades(a, mods, state.upgrades) };
+  state.stardust = mods.startStardust || 0;
+  const head = hasMilestone(a, "headstart");
+  state.floorMass = massForR(START_R);
+  if (head) state.floorMass = targetMassFrom(state.floorMass, false);
+  state.galaxy = head ? 2 : 1;
+  a.run = freshAscRun();
+  if (head) a.run.cleared = 1;
+  a.run.supernova = rollSupernova(a, ascMods(a));
+  a.runsStarted = (a.runsStarted || 1) + 1;
+  state.galaxyCredited = false;
+  state.transitioning = false;
+  state.transitionPhase = "";
+  state.paused = false;
+  ["collapse", "summary", "pause-menu", "transition-overlay"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ui.closeStats?.();
+  input.setEnabled(false);
+  state.screen = "collapse";
+  save(state);
+  audio.stopDrone();
+  audio.playCollapse();
+  const sing = document.getElementById("singularity");
+  document.getElementById("sing-title").textContent = `Collapse ${a.collapses}`;
+  document.getElementById("sing-line").textContent = `+${dm} Dark Matter · ${Math.floor(a.dm)} to spend`;
+  document.getElementById("sing-mile").innerHTML = unlocked.map(m => `Unlocked: <b>${m.name}</b>. ${m.desc}`).join("<br>");
+  sing.style.opacity = "1";
+  sing.classList.remove("hidden");
+  let gone = false;
+  const next = () => {
+    if (gone) return; gone = true;
+    sing.style.opacity = "0";
+    setTimeout(() => { sing.classList.add("hidden"); state.openConstellation({ newRun: true }); }, 1400);
+  };
+  sing.onclick = () => { if (performance.now() - t0c > 1500) next(); };
+  const t0c = performance.now();
+  setTimeout(next, unlocked.length ? 7000 : 5200);
+}
+
+function startNewRun() {
+  initGalaxy(state.galaxy);
+  state.camMul = TITLE_ZOOM;
+  updateCameraScale(true);
+  save(state);
+  state.screen = "title";
+  startDrift("newrun");
+}
+
+// Zen session: a separate, calm space. Your journey is saved first and comes
+// back exactly as it was. Nothing in a session is saved or rewarded.
+let zenSnap = null;
+function zenStart(min) {
+  save(state);
+  zenSnap = { galaxy: state.galaxy, run: (load() || {}).run || null };
+  state.mode = "zen";
+  document.body.classList.add("mode-zen");
+  const zg = 1 + Math.floor(Math.random() * 7);
+  state.galaxy = zg;
+  state.zen = { dur: min * 3600, t: 0, wound: false, ending: false, min };
+  initGalaxy(zg);
+  state.densityK = zen.zenDensity(0);
+  document.getElementById("zen-arc").classList.remove("hidden");
+  zen.setArc(0);
+  state.camMul = TITLE_ZOOM;
+  updateCameraScale(true);
+  startDrift("zen");
+}
+function updateZen(dt, now) {
+  const z = state.zen;
+  if (!z || z.ending) return;
+  z.t += dt;
+  const p = Math.min(1, z.t / z.dur);
+  state.densityK = zen.zenDensity(p);
+  state.breathPull = zen.zenBreathPull(now, BREATH_MS);
+  zen.setArc(p);
+  if (!z.wound && p >= zen.ARC.WIND) {
+    z.wound = true;
+    audio.setMusicLayers(0, state.biome);
+    audio.playZenResolve();
+  }
+  if (p >= 1) zenBeginExit();
+}
+function zenBeginExit() {
+  const z = state.zen;
+  if (!z || z.ending) return;
+  z.ending = true;
+  input.setEnabled(false);
+  state.screen = "zenexit";
+  document.getElementById("zen-arc").classList.add("hidden");
+  setTimeout(() => {
+    audio.stopDrone();
+    zen.runExit({
+      reduceMotion: state.settings.reduceMotion,
+      onBreath: () => audio.playBreathTone(),
+      onDone: text => {
+        zenRestore();
+        if (text) { state.zenNotes = [...(state.zenNotes || []), { t: Date.now(), text }].slice(-20); save(state); }
+        showTitle();
+      }
+    });
+  }, state.settings.reduceMotion ? 300 : 1200);
+}
+function zenRestore() {
+  if (state.mode !== "zen") return;
+  state.mode = "ascension";
+  state.zen = null;
+  state.breathPull = 1;
+  document.body.classList.remove("mode-zen");
+  document.getElementById("zen-arc").classList.add("hidden");
+  state.galaxy = zenSnap ? zenSnap.galaxy : state.galaxy;
+  const resume = zenSnap && zenSnap.run && zenSnap.run.galaxy === state.galaxy ? zenSnap.run : null;
+  zenSnap = null;
+  initGalaxy(state.galaxy, resume);
+  state.camMul = TITLE_ZOOM;
+  updateCameraScale(true);
+}
+document.getElementById("btn-title-zen").addEventListener("click", () => {
+  audio.playClick();
+  zen.openPicker(min => { audio.playClick(); zenStart(min); }, () => audio.playClick());
 });
 
 // ─── PERFORMANCE + AUTO QUALITY ───
@@ -1198,6 +1419,7 @@ function frame(now) {
     tryConsume(dt);
     updateDiscoveries(state, dt, onDiscovery);
     updateAscension(dt);
+    if (state.mode === "zen") updateZen(dt, now);
     if (state.discoveryNear && state.discoveryNear.q > 0.3) hint("discovery_near", "Something rare is shimmering nearby. Follow the soft glow.", 4200);
     state.galaxyProgress = galaxyProgressNow();
     if (!state.transitioning) checkTier();
@@ -1257,7 +1479,8 @@ function frame(now) {
       double: state.active.double > 0,
       gulp: state.gulp,
       breath,
-      breathGuide: state.settings.breathGuide
+      breathGuide: state.settings.breathGuide || state.mode === "zen",
+      filter: skinFilter()
     });
   ctx.restore();
 
@@ -1405,6 +1628,8 @@ function setPaused(p) {
   const btn = document.getElementById("btn-pause");
   btn.innerHTML = p ? PLAY_SVG : PAUSE_SVG;
   document.getElementById("pause-menu").classList.toggle("hidden", !p);
+  document.getElementById("btn-pause-collapse").classList.toggle("hidden", !(state.mode !== "zen" && state.asc.run.cleared >= COLLAPSE_MIN_CLEARED));
+  document.getElementById("btn-pause-endzen").classList.toggle("hidden", state.mode !== "zen");
   if (p) {
     save(state);
   } else {
@@ -1421,8 +1646,11 @@ document.getElementById("btn-pause-settings").addEventListener("click", () => {
 document.getElementById("btn-pause-title").addEventListener("click", () => {
   audio.playClick();
   setPaused(false);
+  if (state.mode === "zen") { zenRestore(); }
   showTitle();
 });
+document.getElementById("btn-pause-collapse").addEventListener("click", () => { audio.playClick(); openCollapse(); });
+document.getElementById("btn-pause-endzen").addEventListener("click", () => { audio.playClick(); setPaused(false); zenBeginExit(); });
 
 document.getElementById("btn-pause").addEventListener("click", () => setPaused(!state.paused));
 
@@ -1521,6 +1749,7 @@ if (savedData) {
   state.stardust = savedData.stardust;
   state.seenHints = savedData.seenHints;
   state.settings = { ...state.settings, ...(savedData.settings || {}) };
+  state.settings.zen = true;   // v7: Ascension is calm (no clock); Zen is now its own session mode
   state.legacyBonusPending = savedData.legacyBonus || 0;
   state.floorMass = savedData.floorMass;
   state.bestTier = savedData.bestTier || 0;
