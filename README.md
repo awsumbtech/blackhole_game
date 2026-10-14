@@ -1,10 +1,22 @@
 # Black Hole: Galaxy Eater
 
-**v6.0.1** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v7.0** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
-No ads, no purchases, no timers (in Zen mode), no way to lose.
+No ads, no purchases, no timers, no way to lose.
 
 Play: **https://awsumbtech.github.io/blackhole_game/**
+
+## Two ways to play
+
+- **Ascension**: the long climb. Every galaxy in a run is a little bigger and sparser, with calm
+  rival holes drifting about (outgrow one and it turns gold: swallow it). When it starts feeling
+  heavy, **Collapse** into a singularity. The run resets, and you earn **Dark Matter** (much more
+  the deeper you went). Spend it on the **Constellation**, a skill tree with three branches (Reach,
+  Appetite, Fortune). Each galaxy type also has its own goal worth 1–3 stars, and 3 stars unlocks
+  its own perk. Collapses unlock golden galaxies, supernova runs and hole skins.
+- **Zen session**: 3, 5 or 10 calm minutes. The pull follows a slow breath. The session winds down
+  on its own, ends with three slow breaths, and asks what you're doing next. Nothing to collect,
+  no streaks.
 
 ## How to play
 
@@ -35,7 +47,7 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
 
 ## Settings worth knowing
 
-Zen mode (on by default), Reduce Motion, soft palette, breathing guide, visual quality (Auto drops
+Hole skin (once unlocked), Reduce Motion, soft palette, breathing guide, visual quality (Auto drops
 detail if the phone needs it), touch style, your wisp's name, and **Save backup** (export a code or
 file, import it on another device; the game checks it and asks before replacing anything).
 

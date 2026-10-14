@@ -81,6 +81,84 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **End-of-galaxy ritual:** new transition phase `ritual` between `implode` and `summary`. The star map opens in ritual mode: the newest star drifts up and settles (Reduce Motion: fades in place), one line about discoveries or best catch, a low slow chord. Tap after 1.2s or wait ~7.5s.
 - Codex: four new "What's that?" entries (golden halo, shimmer, wisp, a new star).
 
+## 7c. v7.0 — two modes, each with one job
+
+**Ascension (the game).** Purpose: a deep, satisfying long-term climb. You always have a next
+goal (the next galaxy, the next star rating, the next constellation node, the next milestone),
+and every collapse makes you visibly stronger. It is still calm: no clock, no loss, nothing
+punishes. Ascension replaced the old non-Zen mode and absorbs the old journey (saves migrate).
+
+**Zen session (the refocus tool).** Purpose: 3, 5 or 10 minutes to reset attention, then get
+back to real life. It must never trap Brian. No rewards, streaks, Dark Matter, "one more" button
+or saves. It ends with three slow breaths and "What's the one thing you're doing next?" (optional,
+kept locally only), then a send-off back to the title.
+
+### Prestige design (`js/ascension.js`, `js/rivals.js`, `js/constellation.js`)
+- **Run depth** = galaxy number in the current run. Per depth d:
+  - growth needed ×`1.18^(d-1)` (`DEPTH.CLIMB_GROWTH`; breathers ×0.85 of that with Cradle).
+  - food density `1 - 0.035(d-1)`, floor 0.62.
+  - calm rival holes from depth 3: 1 + floor((d-3)/2), max 3, size 1.5 + 0.12(d-3) × yours.
+    Rivals eat food and ease you aside. They never take mass. Once outgrown they turn gold and
+    can be swallowed.
+- **Collapse** (pause menu or summary, from 3 cleared). Resets the run to Galaxy 1 and the stardust
+  shop. Dark Matter = `3·cleared^1.5 + 2·peakTier` + finds bonus (f6) + 5/golden galaxy, × Fortune.
+  Depth 6 ≈ 58 DM, depth 10 ≈ 115, depth 15 ≈ 205.
+- **Constellation:** 27 nodes in three branches (Reach, Appetite, Fortune). There are 7 tiers per
+  branch. Tiers 3 and 5 are forks: the two options pull different ways, so buying one is a real
+  choice. Tier costs are 8 / 16 / 28 / 45 / 70 / 100 / 150. There are also 7 galaxy perks, earned
+  with 3 stars on that galaxy's goal.
+- **Stardust stays** as the in-run currency for the 6 shop upgrades. The shop is the short-term
+  "this run" layer and resets on collapse. Dark Matter is the permanent layer. Keeping both gives
+  every galaxy a reward and every collapse a bigger one. Milestones and Fortune let some
+  upgrades survive a collapse.
+- **Galaxy goals:** each biome has its own goal (graze reefs, ride rivers, eat orbiting worlds,
+  hull crumbs, aurora bites, full blooms, bites in beams), rated 1–3 stars. The best rating is kept.
+- **Milestones** by collapse count:
+
+  | Collapses | Unlock |
+  |---|---|
+  | 1 | golden galaxies (8%, ×3 stardust) + Ember skin |
+  | 2 | keep Seed Mass |
+  | 3 | supernova runs (12% of runs, bites ×1.5) + Aurora skin |
+  | 4 | deep variants |
+  | 5 | head start |
+  | 6 | Pearl skin |
+  | 8 | keep all upgrades |
+
+- **Tuning numbers** (`tools/collapse-sim.mjs`, run `node tools/collapse-sim.mjs`):
+  - Bot time ≈ v6 base × climbK^0.72, a fit to v7 bot runs at depths 1–7. Humans are about 1.2× the bot.
+  - The wall is reached when the next galaxy would take more than 9.5 minutes.
+
+  | Cycle | Depth | Min | DM | Perks | Power |
+  |---|---|---|---|---|---|
+  | 1 | 6 | 30 | 58 | 0 | 1.00 |
+  | 2 | 8 | 39 | 103 | 5 | 1.29 |
+  | 3 | 10 | 44 | 140 | 9 | 1.57 |
+  | 4 | 10 | 37 | 140 | 13 | 1.88 |
+  | 5 | 10 | 35 | 183 | 15 | 2.00 |
+  | 6 | 13 | 49 | 264 | 18 | 2.27 |
+  | 7 | 13 | 46 | 264 | 21 | 2.40 |
+  | 8 | 15 | 48 | 450 | 24 | 3.23 |
+  | 9 | 17 | 43 | 806 | 27 | 4.75 |
+
+  The tree fills in about 9 collapses (about 6 hours). After that, galaxy stars, milestones and skins carry it.
+
+### Zen design (`js/zen.js`)
+- **Arc:**
+  - settle: 0–15%, food builds up.
+  - flow: 15–75%.
+  - wind-down: 75–100%. Food thins, the music layers drop and one held note resolves.
+  - A thin arc at the top of the screen is the only clock.
+- **Breath pull:** about 6 breaths a minute (`BREATH_MS`). Gravity is ×(1 − 0.6·sin): things drift
+  out on the inhale and come in on the exhale. The breathing guide ring is always on.
+- **Exit:**
+  1. Three guided breaths (4 s in, 6 s out). They can be skipped.
+  2. The question, which can be skipped.
+  3. "Go do it." / "Go gently."
+  4. A single "Back to the title" button.
+
+  The journey is snapshotted before a session and restored after it, untouched.
+
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
@@ -91,6 +169,7 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v7.0 Ascension + Zen:** prestige loop (collapse → Dark Matter → constellation), galaxy goals, rivals, milestones, golden/supernova/rare finds; Zen sessions with breath pull and a clean exit. Save v7.
 - **v6.0.1 Softer Sound:** all effects softened (lower bites, slow attacks, sine/triangle only, 1.6 kHz lowpass, compressor and limiter). **Brian wants soft audio: keep new sounds this gentle.**
 - **v6.0 Next Level:** from a bot playtest. Meatier bites (same clear times), big-catch halo + slow swallow, discoveries + logbook (save v6), livelier wisp, melodic bites, end-of-galaxy ritual. Built on `main`.
 
@@ -107,6 +186,9 @@ js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
+js/ascension.js     v7 prestige logic    js/constellation.js perk screen
+js/rivals.js        calm rival holes     js/zen.js          Zen sessions + exit
+tools/collapse-sim.mjs  collapse-curve model (node)
 js/powerups.js      power-ups            js/progression.js upgrades, stardust, summary, BREATHER_TARGET
 js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex, shop
 js/input.js         thumbstick, follow-finger, mouse, keyboard
@@ -134,7 +216,7 @@ Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it 
 ## 12. Backlog (awaiting Brian's pick; don't start without asking)
 
 - **App polish** (parked by Brian): proper icon, splash screen, keep screen awake, landscape support.
-- Achievements and skins
+- Achievements
 - Photo mode
 - Music (fuller soundtrack)
 - Pinch zoom on the star map

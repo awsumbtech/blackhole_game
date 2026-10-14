@@ -1,0 +1,52 @@
+// v7 collapse-curve simulator. Models each galaxy's clear time from the v6 bot
+// baseline and the measured depth curve (bot time ~ base * climbK^0.72, fitted
+// to v7 bot runs at depths 1-7), applies constellation perks, and collapses when
+// the next galaxy would take a human (1.2x the bot) longer than WALL minutes.
+// Usage: node tools/collapse-sim.mjs [cycles=10] [wallMin=9.5]
+import { DEPTH, TIER_COST, depthInfo, dmFor, ascMods, defaultAsc, freshAscRun, PERKS, perkState, buyPerk, MILESTONES } from "../js/ascension.js";
+const BASE = [176, 253, 97, 268, 200, 85, 220];          // v6 bot seconds per biome (Reef..Forge)
+const BREATHER = [false, false, true, false, false, true, false];
+const HUMAN = 1.2, EXP = 0.72;
+const cycles = +(process.argv[2] || 10), WALL = +(process.argv[3] || 9.5) * 60;
+if (process.env.CLIMB) DEPTH.CLIMB_GROWTH = +process.env.CLIMB;
+if (process.env.COST) TIER_COST.splice(0, 7, ...JSON.parse(process.env.COST));
+
+function power(m) {   // how much faster a perk set clears (time divides by this)
+  return m.gain * (1 + 0.35 * (m.pullRange * m.pullStrength - 1)) * (1 + 1.5 * m.eatRatioAdd)
+    * (1 + 0.5 * m.reachAdd) * Math.sqrt(m.speed) * (m.bigCatch > 1 ? 1.05 : 1) * (m.comboCap > 25 ? 1.04 : 1);
+}
+function galaxyTime(depth, m, kept) {
+  const i = (depth - 1) % 7, d = depthInfo(depth);
+  const k = d.climbK * (BREATHER[i] ? m.breatherClimb : 1);
+  const thin = 1 + 0.6 * (1 - d.density);               // sparser food, slightly slower
+  return BASE[i] * Math.pow(k, EXP) * thin * HUMAN / power(m) / kept;
+}
+// greedy buyer: cheapest buyable, rotating Appetite -> Reach -> Fortune; first fork option
+function shop(asc) {
+  const order = ["appetite", "reach", "fortune"];
+  for (let guard = 0; guard < 99; guard++) {
+    const opts = PERKS.filter(p => perkState(asc, p).ok && !(p.fork && PERKS.some(q => q.b === p.b && q.t === p.t && asc.perks[q.id])));
+    if (!opts.length) break;
+    opts.sort((a, b) => a.t - b.t || order.indexOf(a.b) - order.indexOf(b.b) || a.id.localeCompare(b.id));
+    buyPerk(asc, opts[0].id);
+  }
+}
+const asc = defaultAsc();
+let total = 0;
+console.log("cycle  depth  minutes  cum.min  DM   perks  power");
+for (let c = 1; c <= cycles; c++) {
+  const m = ascMods(asc);
+  const kept = asc.collapses >= 5 ? 1.08 : asc.collapses >= 2 ? 1.04 : 1;   // headstart / kept upgrades
+  asc.run = freshAscRun();
+  let t = 0, depth = 1;
+  while (depth < 60) {
+    const g = galaxyTime(depth, m, kept);
+    if (depth > 3 && g > WALL) break;
+    t += g; asc.run.cleared = depth; asc.run.peakTier = depth + 1; depth++;
+  }
+  const dm = dmFor(asc.run, m).total;
+  total += t;
+  asc.dm += dm; asc.collapses++;
+  console.log(String(c).padStart(5), String(depth - 1).padStart(6), (t / 60).toFixed(1).padStart(8), (total / 60).toFixed(0).padStart(8), String(dm).padStart(4), String(Object.keys(asc.perks).length).padStart(6), power(m).toFixed(2).padStart(6));
+  shop(asc);
+}

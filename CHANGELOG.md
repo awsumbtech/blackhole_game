@@ -2,6 +2,52 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v7.0 Ascension + Zen (Oct 2026)
+
+Two modes with clear jobs. Save version 7; older saves migrate, so the current journey becomes your
+first Ascension run.
+
+**Ascension**: the long, deep climb. It replaces the old Zen/timed toggle and stays calm with no clock.
+- **Run depth.**
+  - Each galaxy deeper needs 18% more growth than the last, and food thins 3.5% (floor 62%).
+  - From Galaxy 3, calm violet rival holes drift and feed. They ease you aside and never take mass.
+  - Outgrow a rival and it turns gold, and you can swallow it.
+- **Collapse into a singularity.**
+  - Available from the pause menu or summary once you've cleared 3 galaxies.
+  - The run resets for Dark Matter: `3·cleared^1.5 + 2·peak scale`, plus golden galaxies and finds.
+  - A slow, soft singularity screen plays.
+- **Constellation**: 27 perks across Reach, Appetite and Fortune.
+  - Two forks per branch.
+  - Costs: 8 / 16 / 28 / 45 / 70 / 100 / 150.
+  - 7 galaxy perks.
+- **Galaxy goals.** Each galaxy type has its own 1–3 star goal, shown softly under the galaxy name.
+  Three stars unlocks that galaxy's perk.
+- **Milestones**: golden galaxies and the Ember skin (1), keep Seed Mass (2), supernova runs and
+  Aurora (3), deep variants (4), head start (5), Pearl (6), keep all upgrades (8).
+- **Variable rewards**:
+  - golden galaxies (×3 stardust)
+  - supernova runs (bites ×1.5)
+  - shining finds (+3 Dark Matter)
+- Stardust and the shop stay as the in-run layer. They reset on collapse.
+
+**Zen session**: a refocus tool.
+- Pick 3, 5 or 10 minutes. The session goes settle → flow → wind-down, and food thins as the music
+  resolves to one held note.
+- The pull breathes at about 6 per minute: things drift out as you breathe in and come to you as
+  you breathe out.
+- **Clean exit:**
+  1. Three guided breaths, which you can skip.
+  2. An optional "What's the one thing you're doing next?"
+  3. "Go do it." and a single "Back to the title" button.
+- No rewards, streaks or "one more". Your Ascension run is untouched.
+
+Also:
+- New codex entries.
+- Hole skin setting.
+- `tools/collapse-sim.mjs` (collapse-curve model).
+- New sounds are as soft as v6.0.1.
+- Service worker cache `blackhole-v7.0`.
+
 ## v6.0.1 Softer Sound (Oct 2026)
 
 Brian found the sounds too sharp. Every sound effect is softer now; the drone and music layers are unchanged.

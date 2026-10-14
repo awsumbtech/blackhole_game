@@ -12,7 +12,7 @@
 
 // ─── DEPTH (how each galaxy deeper escalates) ───
 export const DEPTH = {
-  CLIMB_GROWTH: 1.15,   // each galaxy needs 15% more growth (in tiers) than the last
+  CLIMB_GROWTH: 1.18,   // each galaxy needs 18% more growth (in tiers) than the last
   DENSITY_STEP: 0.035,  // food thins 3.5% per galaxy...
   DENSITY_MIN: 0.62,    // ...down to 62%
   RIVAL_FROM: 3,        // calm rival holes from galaxy 3
@@ -51,7 +51,7 @@ export const COLLAPSE_MIN_CLEARED = 3;   // you can collapse once a run has clea
 // Three branches. Each tier is one node, or a fork of two (buy either first;
 // the next tier opens when you own at least one node of the tier before).
 // Costs climb by tier, so early choices matter and later ones are big goals.
-export const TIER_COST = [6, 12, 20, 32, 48, 70, 100];
+export const TIER_COST = [8, 16, 28, 45, 70, 100, 150];
 
 export const BRANCHES = {
   reach: { name: "Reach", rgb: "140, 200, 255", line: "Pull range and event horizon" },
@@ -191,10 +191,10 @@ export function normalizeAsc(a) {
 export function ascMods(asc) {
   const P = id => !!asc.perks[id];
   let gain = 1;
-  if (P("a1")) gain *= 1.12;
-  if (P("a4")) gain *= 1.18;
-  if (P("a6")) gain *= 1.25;
-  if (P("a7")) gain *= 1.30;
+  if (P("a1")) gain *= 1.15;
+  if (P("a4")) gain *= 1.2;
+  if (P("a6")) gain *= 1.18;
+  if (P("a7")) gain *= 1.2;
   if (P("g_reef")) gain *= 1.06;
   let dmMul = 1;
   if (P("f1")) dmMul *= 1.2;
@@ -204,8 +204,8 @@ export function ascMods(asc) {
   if (P("g_beam")) dmMul *= 1.15;
   return {
     gain,
-    pullRange: (P("r1") ? 1.2 : 1) * (P("r5a") ? 1.3 : 1) * (P("r6") ? 1.15 : 1) * (P("r7") ? 1.25 : 1),
-    pullStrength: (P("r3a") ? 1.3 : 1) * (P("r7") ? 1.25 : 1),
+    pullRange: (P("r1") ? 1.2 : 1) * (P("r5a") ? 1.3 : 1) * (P("r6") ? 1.15 : 1) * (P("r7") ? 1.15 : 1),
+    pullStrength: (P("r3a") ? 1.3 : 1) * (P("r7") ? 1.15 : 1),
     eatRatioAdd: (P("r2") ? 0.03 : 0) + (P("r6") ? 0.04 : 0),
     reachAdd: (P("r4") ? 0.12 : 0) + (P("r7") ? 0.08 : 0),
     speed: (P("r5b") ? 1.12 : 1) * (P("g_river") ? 1.08 : 1),
