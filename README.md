@@ -1,6 +1,6 @@
 # Black Hole: Galaxy Eater
 
-**v6.0** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v6.0.1** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
 No ads, no purchases, no timers (in Zen mode), no way to lose.
 

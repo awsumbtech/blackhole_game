@@ -1,8 +1,8 @@
 # Black Hole: Galaxy Eater — Design & Handoff
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v6.0**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v6.0"` in `sw.js`, `SAVE_VERSION = 6` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v6.0.1**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v6.0.1"` in `sw.js`, `SAVE_VERSION = 6` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -91,6 +91,7 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v6.0.1 Softer Sound:** all effects softened (lower bites, slow attacks, sine/triangle only, 1.6 kHz lowpass, compressor and limiter). **Brian wants soft audio: keep new sounds this gentle.**
 - **v6.0 Next Level:** from a bot playtest. Meatier bites (same clear times), big-catch halo + slow swallow, discoveries + logbook (save v6), livelier wisp, melodic bites, end-of-galaxy ritual. Built on `main`.
 
 ## 9. File layout

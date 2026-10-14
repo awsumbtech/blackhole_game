@@ -26,24 +26,39 @@ function ensureCtx() {
     masterGain = ctx.createGain();
     masterGain.gain.value = volume;
 
-    // Compressor for smoothness
+    // v6.0.1 softer master: a gentle, slow compressor, then a soft limiter
+    // so nothing ever pokes out, however many sounds stack up.
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -24;
-    comp.ratio.value = 4;
-    comp.attack.value = 0.01;
-    comp.release.value = 0.2;
+    comp.threshold.value = -30;
+    comp.knee.value = 24;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.03;
+    comp.release.value = 0.4;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -10;
+    limiter.knee.value = 6;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.005;
+    limiter.release.value = 0.3;
 
     masterGain.connect(comp);
-    comp.connect(ctx.destination);
+    comp.connect(limiter);
+    limiter.connect(ctx.destination);
 
     // Sub-chains
     droneGain = ctx.createGain();
     droneGain.gain.value = 0.12;
     droneGain.connect(masterGain);
 
+    // Sound effects pass through a warm lowpass (no bright overtones)
     sfxGain = ctx.createGain();
-    sfxGain.gain.value = 0.8;
-    sfxGain.connect(masterGain);
+    sfxGain.gain.value = 0.6;
+    const sfxLP = ctx.createBiquadFilter();
+    sfxLP.type = "lowpass";
+    sfxLP.frequency.value = 1600;
+    sfxLP.Q.value = 0.5;
+    sfxGain.connect(sfxLP);
+    sfxLP.connect(masterGain);
 
     // Pre-generate noise buffer for consume sounds
     const bufferSize = ctx.sampleRate * 0.15;
@@ -179,7 +194,7 @@ function makePhrase() {
 }
 function degreeToFreq(d) {
   const oct = Math.floor(d / 5), step = PENTA[d % 5];
-  return scaleRoot * 2 * Math.pow(2, (oct * 12 + step) / 12);
+  return scaleRoot * Math.pow(2, (oct * 12 + step) / 12);   // v6.0.1: an octave lower, warmer
 }
 function nextPhraseNote() {
   const t = ctx ? ctx.currentTime : 0;
@@ -218,18 +233,18 @@ export function playConsume(tone, massRatio, comboCount) {
   osc.frequency.value = pitch;
 
   filter.type = "lowpass";
-  filter.frequency.value = 1200 + massRatio * 400;
+  filter.frequency.value = 900 + massRatio * 300;
 
-  const vol = Math.min(0.1, 0.035 + massRatio * 0.06);
-  gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(vol, now + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32 + massRatio * 0.15);
+  const vol = Math.min(0.06, 0.022 + massRatio * 0.035);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(vol, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6 + massRatio * 0.25);
 
   osc.connect(filter);
   filter.connect(gain);
   gain.connect(sfxGain);
   osc.start(now);
-  osc.stop(now + 0.5);
+  osc.stop(now + 0.9);
 
   // Layer 2: Sub-bass bloom for larger objects
   if (massRatio > 0.3) {
@@ -238,15 +253,15 @@ export function playConsume(tone, massRatio, comboCount) {
     sub.type = "sine";
     sub.frequency.value = tone * 0.25;
 
-    const subVol = Math.min(0.1, massRatio * 0.06);
-    subGain.gain.setValueAtTime(0.001, now);
-    subGain.gain.exponentialRampToValueAtTime(subVol, now + 0.04);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    const subVol = Math.min(0.05, massRatio * 0.035);
+    subGain.gain.setValueAtTime(0.0001, now);
+    subGain.gain.exponentialRampToValueAtTime(subVol, now + 0.06);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
 
     sub.connect(subGain);
     subGain.connect(sfxGain);
     sub.start(now);
-    sub.stop(now + 0.35);
+    sub.stop(now + 0.55);
   }
 
   // Layer 3: Noise "fwoomp" for suction feel — reuse pre-generated buffer
@@ -254,13 +269,15 @@ export function playConsume(tone, massRatio, comboCount) {
   noise.buffer = noiseBuffer;
 
   const noiseFilter = ctx.createBiquadFilter();
-  noiseFilter.type = "bandpass";
-  noiseFilter.frequency.value = 300 + tone * 0.5;
-  noiseFilter.Q.value = 2;
+  noiseFilter.type = "lowpass";
+  noiseFilter.frequency.value = 500 + Math.min(300, tone * 0.3);
+  noiseFilter.Q.value = 0.4;
 
+  // a soft "hush" of suction, eased in rather than clicked on
   const noiseGain = ctx.createGain();
-  noiseGain.gain.setValueAtTime(Math.min(0.06, 0.02 + massRatio * 0.04), now);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  noiseGain.gain.setValueAtTime(0.0001, now);
+  noiseGain.gain.exponentialRampToValueAtTime(Math.min(0.02, 0.008 + massRatio * 0.015), now + 0.04);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
 
   noise.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
@@ -276,7 +293,7 @@ export function playComboChime(count) {
   resume();
 
   const now = ctx.currentTime;
-  const baseNote = scaleRoot * 2;
+  const baseNote = scaleRoot;
 
   // v6: a soft arpeggio in the biome's pentatonic key (was a fixed A major)
   const intervals = [0, 4, 7, 12, 14];
@@ -288,15 +305,15 @@ export function playComboChime(count) {
     osc.type = "sine";
     osc.frequency.value = baseNote * Math.pow(2, intervals[i] / 12);
 
-    const t = now + i * 0.06;
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.exponentialRampToValueAtTime(0.025, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    const t = now + i * 0.1;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.011, t + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
 
     osc.connect(gain);
     gain.connect(sfxGain);
     osc.start(t);
-    osc.stop(t + 0.25);
+    osc.stop(t + 0.75);
   }
 }
 
@@ -318,8 +335,8 @@ export function playGalaxyComplete() {
     osc.frequency.value = freq;
 
     gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.3);
-    gain.gain.exponentialRampToValueAtTime(0.03, now + 1.5);
+    gain.gain.exponentialRampToValueAtTime(0.028, now + 0.6);
+    gain.gain.exponentialRampToValueAtTime(0.018, now + 1.8);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 3.5);
 
     osc.connect(gain);
@@ -343,13 +360,14 @@ export function playBounce() {
   osc.frequency.setValueAtTime(80, now);
   osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
 
-  gain.gain.setValueAtTime(0.06, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.03, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
 
   osc.connect(gain);
   gain.connect(sfxGain);
   osc.start(now);
-  osc.stop(now + 0.2);
+  osc.stop(now + 0.35);
 }
 
 // ─── EVENT CUES ───
@@ -397,6 +415,12 @@ export function playEventCue(eventType) {
 // ─── v2 SOUNDS ───
 
 function tone(freq, { type = "sine", start = 0, attack = 0.02, decay = 0.25, vol = 0.05, slideTo = null } = {}) {
+  // v6.0.1 soft by design: sine/triangle only, never under a 45ms attack,
+  // a longer gentle release and about 40% quieter than before
+  if (type !== "sine" && type !== "triangle") type = "triangle";
+  attack = Math.max(0.045, attack);
+  decay = decay * 1.4 + 0.1;
+  vol *= 0.6;
   const now = ctx.currentTime + start;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -463,8 +487,8 @@ export function playBigCatch() {
   if (!enabled || !ensureCtx()) return;
   resume();
   // v6: a slow, warm swell in the biome's key that matches the swallow
-  tone(scaleRoot / 2, { attack: 0.25, decay: 1.4, vol: 0.05 });
-  [0, 7, 12, 16, 19].forEach((st, i) => tone(scaleRoot * Math.pow(2, st / 12), { start: 0.12 + i * 0.13, attack: 0.08, decay: 1.0, vol: 0.024 }));
+  tone(scaleRoot / 2, { attack: 0.3, decay: 1.4, vol: 0.04 });
+  [0, 7, 12, 16].forEach((st, i) => tone(scaleRoot * Math.pow(2, st / 12), { start: 0.12 + i * 0.15, attack: 0.1, decay: 1.0, vol: 0.016 }));
 }
 
 export function playPurchase() {
@@ -477,7 +501,7 @@ export function playPurchase() {
 export function playDenied() {
   if (!enabled || !ensureCtx()) return;
   resume();
-  tone(196, { type: "square", decay: 0.12, vol: 0.02 });
+  tone(196, { type: "sine", decay: 0.12, vol: 0.02 });
 }
 
 export function playClick() {
@@ -565,7 +589,9 @@ function air(vol) {
   };
 }
 
-function softNote(freq, { vol = 0.02, attack = 0.03, decay = 2.2, type = "sine", start = 0 } = {}) {
+function softNote(freq, { vol = 0.02, attack = 0.06, decay = 2.2, type = "sine", start = 0 } = {}) {
+  attack = Math.max(0.06, attack);
+  if (type !== "sine" && type !== "triangle") type = "triangle";
   const now = ctx.currentTime + start;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -644,9 +670,9 @@ export function playTierChime() {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = "sine";
-    osc.frequency.value = f * 2;
+    osc.frequency.value = f;
     g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(0.05, now + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.026, now + 0.09);
     g.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
     osc.connect(g); g.connect(sfxGain);
     osc.start(now); osc.stop(now + 3.3);

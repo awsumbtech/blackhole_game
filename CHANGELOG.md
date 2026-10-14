@@ -2,6 +2,19 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v6.0.1 Softer Sound (Oct 2026)
+
+Brian found the sounds too sharp. Every sound effect is softer now; the drone and music layers are unchanged.
+
+- Melodic bites play an octave lower, about 40% quieter, with a 50ms fade-in and a longer, gentle
+  release. The suction "hush" is now a soft lowpass, eased in instead of clicked on.
+- All effects are sine or triangle only. They pass through a warm lowpass filter (1.6 kHz). Every
+  chime and cue fades in over at least 45ms and rings out longer.
+- Combo chime is less than half as loud and slower. The big-catch chime, tier chime, galaxy-complete
+  chord and bump are all quieter and rounder.
+- New master chain: a gentle, slow compressor followed by a soft limiter, so stacked bites never poke out.
+- Service worker cache `blackhole-v6.0.1`.
+
 ## v6.0 Next Level (Oct 2026)
 
 Balance and feel, from a bot playtest. Time per galaxy is unchanged (checked with the playtest bot
