@@ -3,16 +3,17 @@
 // a soft "???" with their galaxy, so there's a gentle sense of what's left.
 
 import { DISCOVERIES, ALL_DISCOVERIES } from "./discoveries.js";
+const $ = id => document.getElementById(id);
 
 let onCloseCb = null;
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
 export function openLogbook(log, opts = {}) {
-  const el = document.getElementById("logbook");
-  const body = document.getElementById("logbook-body");
+  const el = $("logbook");
+  const body = $("logbook-body");
   log = log || {};
   const found = ALL_DISCOVERIES.filter(d => log[d.id]).length;
-  document.getElementById("logbook-count").textContent = `${found} of ${ALL_DISCOVERIES.length} discoveries`;
+  $("logbook-count").textContent = `${found} of ${ALL_DISCOVERIES.length} discoveries`;
   body.innerHTML = (found ? "" : `<p class="lb-biome" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:13px">Rare things hide in every galaxy. When something shimmers nearby, drift into it.</p>`) +
     Object.entries(DISCOVERIES).map(([biome, list]) => `<div class="lb-biome">${esc(biome)}</div>` + list.map(d => {
       const e = log[d.id];
@@ -27,9 +28,9 @@ export function openLogbook(log, opts = {}) {
 }
 
 export function closeLogbook() {
-  document.getElementById("logbook").classList.add("hidden");
+  $("logbook").classList.add("hidden");
   const cb = onCloseCb; onCloseCb = null;
   cb?.();
 }
 
-document.getElementById("btn-logbook-back")?.addEventListener("click", closeLogbook);
+$("btn-logbook-back")?.addEventListener("click", closeLogbook);

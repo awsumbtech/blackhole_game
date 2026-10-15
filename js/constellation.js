@@ -5,6 +5,7 @@
 // with 3 goal stars) circle the core. Tap a star to read it and buy it.
 
 import { PERKS, GALAXY_PERKS, BRANCHES, perkState, buyPerk, nextMilestone } from "./ascension.js";
+const $ = id => document.getElementById(id);
 
 const TAU = Math.PI * 2;
 let el, cvs, g, card, W = 0, H = 0, dpr = 1, raf = 0, t0 = 0;
@@ -144,8 +145,8 @@ function showCard(n) {
 }
 
 function refresh() {
-  document.getElementById("const-dm").textContent = Math.floor(asc.dm || 0);
-  document.getElementById("const-sub").textContent = `${asc.collapses || 0} collapse${asc.collapses === 1 ? "" : "s"} · deepest run ${asc.bestDepth || 0} galaxies`;
+  $("const-dm").textContent = Math.floor(asc.dm || 0);
+  $("const-sub").textContent = `${asc.collapses || 0} collapse${asc.collapses === 1 ? "" : "s"} · deepest run ${asc.bestDepth || 0} galaxies`;
 }
 
 function resize() {
@@ -157,16 +158,16 @@ function resize() {
 }
 
 function bind() {
-  el = document.getElementById("constellation");
-  cvs = document.getElementById("const-canvas");
+  el = $("constellation");
+  cvs = $("const-canvas");
   g = cvs.getContext("2d");
-  card = document.getElementById("const-card");
+  card = $("const-card");
   cvs.addEventListener("pointerup", ev => {
     let best = null, bd = 26;
     for (const n of nodes) { const d = Math.hypot(n.x - ev.clientX, n.y - ev.clientY); if (d < bd) { bd = d; best = n; } }
     showCard(best);
   });
-  document.getElementById("btn-const-back").addEventListener("click", () => closeConstellation(false));
+  $("btn-const-back").addEventListener("click", () => closeConstellation(false));
   window.addEventListener("resize", () => { if (raf) resize(); });
 }
 
@@ -175,7 +176,7 @@ export function openConstellation(ascState, o = {}) {
   if (!el) bind();
   asc = ascState; opts = o; sel = null;
   resize(); refresh(); showCard(null);
-  document.getElementById("btn-const-back").textContent = o.newRun ? "Later" : "Back";
+  $("btn-const-back").textContent = o.newRun ? "Later" : "Back";
   el.classList.remove("hidden");
   t0 = performance.now();
   cancelAnimationFrame(raf);

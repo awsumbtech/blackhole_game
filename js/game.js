@@ -27,25 +27,26 @@ import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
 import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
+const $ = id => document.getElementById(id);
 
 const VERSION = "7.1";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
-const canvas = document.getElementById("game");
+const canvas = $("game");
 const ctx = canvas.getContext("2d");
 
-const hudGalaxy = document.getElementById("hud-galaxy");
-const hudGoal = document.getElementById("hud-goal");
-const hudMass = document.getElementById("hud-mass");
-const hudBiome = document.getElementById("hud-biome");
-const hudProgressBar = document.getElementById("hud-progress-bar");
+const hudGalaxy = $("hud-galaxy");
+const hudGoal = $("hud-goal");
+const hudMass = $("hud-mass");
+const hudBiome = $("hud-biome");
+const hudProgressBar = $("hud-progress-bar");
 
 // Screen sharpness cap: 2x on High, 1.5x on Balanced ("Lite")
 let dprCap = 2;
 
 function resizeCanvas() {
-  const container = document.getElementById("game-container");
+  const container = $("game-container");
   const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   const w = container.clientWidth;
   const h = container.clientHeight;
@@ -877,7 +878,7 @@ function updateTransition(dt) {
     }
   } else if (state.transitionPhase === "fadein") {
     if (state.transitionTimer > 60) {
-      document.getElementById("transition-overlay").classList.add("hidden");
+      $("transition-overlay").classList.add("hidden");
       state.transitioning = false;
       state.transitionPhase = "";
     }
@@ -916,10 +917,10 @@ function startWarp() {
   state.transitionTimer = 0;
   const nextGalaxy = state.galaxy + 1;
   const biome = getBiome(nextGalaxy);
-  document.getElementById("transition-galaxy").textContent = `Galaxy ${nextGalaxy}`;
-  document.getElementById("transition-biome").textContent = biome.name;
-  document.getElementById("transition-count").textContent = biome.description;
-  document.getElementById("transition-overlay").classList.remove("hidden");
+  $("transition-galaxy").textContent = `Galaxy ${nextGalaxy}`;
+  $("transition-biome").textContent = biome.name;
+  $("transition-count").textContent = biome.description;
+  $("transition-overlay").classList.remove("hidden");
   lastTime = performance.now();
 }
 
@@ -949,7 +950,7 @@ function syncHud(force = false) {
 }
 
 function showHint(msg, ms = 2800) {
-  const el = document.getElementById("hint-toast");
+  const el = $("hint-toast");
   el.textContent = msg;
   el.classList.remove("hidden");
   clearTimeout(showHint._t);
@@ -959,8 +960,8 @@ function showHint(msg, ms = 2800) {
 // ─── SCREENS: TITLE, INTRO, DRIFT-IN ───
 const TITLE_AFTER_MS = 10 * 60 * 1000;
 const TITLE_ZOOM = 3.4;          // camera close-up on the hole behind the title
-const titleEl = document.getElementById("title-screen");
-const introEl = document.getElementById("intro-screen");
+const titleEl = $("title-screen");
+const introEl = $("intro-screen");
 let firstPlayStart = true;
 
 function showScreenEl(el) {
@@ -978,11 +979,11 @@ function showTitle() {
   state.camMul = TITLE_ZOOM;
   input.setEnabled(false);
   document.body.classList.add("on-title");
-  document.getElementById("newgame-confirm").classList.add("hidden");
-  document.getElementById("hint-toast").classList.add("hidden");
+  $("newgame-confirm").classList.add("hidden");
+  $("hint-toast").classList.add("hidden");
   const depthTxt = state.asc.run.cleared ? `Run depth ${state.asc.run.cleared} · ` : "";
-  document.getElementById("title-continue-sub").textContent = `${depthTxt}Galaxy ${state.galaxy} · ${state.biome ? state.biome.name : ""}`;
-  document.getElementById("btn-title-constellation").classList.toggle("glow", (state.asc.dm || 0) >= 6);
+  $("title-continue-sub").textContent = `${depthTxt}Galaxy ${state.galaxy} · ${state.biome ? state.biome.name : ""}`;
+  $("btn-title-constellation").classList.toggle("glow", (state.asc.dm || 0) >= 6);
   if (state.v7Welcome) {
     state.v7Welcome = false;
     setTimeout(() => showHint(`New: Ascension. Your journey is now a run, ${state.asc.run.cleared} galaxies deep. Collapse any time (pause menu) to earn Dark Matter for permanent perks.`, 7000), 1200);
@@ -1002,7 +1003,7 @@ function showIntro() {
   document.body.classList.add("on-title");
   state.seenHints.intro = true;
   showScreenEl(introEl);
-  const line = document.getElementById("intro-line");
+  const line = $("intro-line");
   INTRO_LINES.forEach((txt, i) => {
     const at = 900 + i * 3600;
     introTimers.push(setTimeout(() => { line.textContent = txt; line.classList.add("on"); }, at));
@@ -1017,7 +1018,7 @@ function endIntro() {
   fadeOutScreenEl(introEl);
   startDrift("fresh");
 }
-document.getElementById("btn-skip-intro").addEventListener("click", () => { audio.playClick(); endIntro(); });
+$("btn-skip-intro").addEventListener("click", () => { audio.playClick(); endIntro(); });
 
 /** Title -> play: the camera eases into the hole, a breath of dark, then play. */
 function startDrift(kind) {
@@ -1092,18 +1093,18 @@ function onPlayStart(kind) {
   }
 }
 
-document.getElementById("btn-title-continue").addEventListener("click", () => { audio.playClick(); startDrift("continue"); });
-document.getElementById("btn-title-new").addEventListener("click", () => {
+$("btn-title-continue").addEventListener("click", () => { audio.playClick(); startDrift("continue"); });
+$("btn-title-new").addEventListener("click", () => {
   audio.playClick();
-  document.getElementById("newgame-confirm").classList.remove("hidden");
+  $("newgame-confirm").classList.remove("hidden");
 });
-document.getElementById("btn-newgame-no").addEventListener("click", () => {
+$("btn-newgame-no").addEventListener("click", () => {
   audio.playClick();
-  document.getElementById("newgame-confirm").classList.add("hidden");
+  $("newgame-confirm").classList.add("hidden");
 });
-document.getElementById("btn-newgame-yes").addEventListener("click", () => {
+$("btn-newgame-yes").addEventListener("click", () => {
   audio.playClick();
-  document.getElementById("newgame-confirm").classList.add("hidden");
+  $("newgame-confirm").classList.add("hidden");
   // Fresh journey: galaxy 1, no stardust or upgrades. Settings, records, codex stay.
   state.galaxy = 1;
   state.floorMass = massForR(START_R);
@@ -1115,14 +1116,14 @@ document.getElementById("btn-newgame-yes").addEventListener("click", () => {
   state.galaxyCredited = false;
   state.transitioning = false;
   state.transitionPhase = "";
-  document.getElementById("transition-overlay").classList.add("hidden");
+  $("transition-overlay").classList.add("hidden");
   initGalaxy(1);
   state.camMul = TITLE_ZOOM;
   updateCameraScale(true);
   save(state);
   startDrift("new");
 });
-document.getElementById("btn-title-settings").addEventListener("click", () => {
+$("btn-title-settings").addEventListener("click", () => {
   audio.playClick();
   ui.showStats(state, () => {}, { settingsOnly: true });
 });
@@ -1144,23 +1145,23 @@ state.openConstellation = (o = {}) => {
     onClose: begin => { save(state); if (o.newRun) startNewRun(); }
   });
 };
-document.getElementById("btn-title-constellation").addEventListener("click", () => state.openConstellation());
+$("btn-title-constellation").addEventListener("click", () => state.openConstellation());
 
 // Collapse: confirm with a clear breakdown, then the singularity moment
 function openCollapse() {
   const r = state.asc.run;
   const dm = dmFor(r, state.ascMods || ascMods(state.asc));
-  document.getElementById("collapse-sub").textContent = `This run: ${r.cleared} galax${r.cleared === 1 ? "y" : "ies"} deep, up to ${tierName(r.peakTier || 0)}`;
-  document.getElementById("collapse-break").innerHTML = dm.parts.map(([k, v]) => `<span><i>${k}</i><b>+${v}</b></span>`).join("") +
+  $("collapse-sub").textContent = `This run: ${r.cleared} galax${r.cleared === 1 ? "y" : "ies"} deep, up to ${tierName(r.peakTier || 0)}`;
+  $("collapse-break").innerHTML = dm.parts.map(([k, v]) => `<span><i>${k}</i><b>+${v}</b></span>`).join("") +
     `<span class="tot"><i>Dark Matter</i><b>+${dm.total}</b></span>`;
   const next = milestonesAt((state.asc.collapses || 0) + 1);
-  document.getElementById("collapse-mile").innerHTML = next.length
+  $("collapse-mile").innerHTML = next.length
     ? `Collapse ${(state.asc.collapses || 0) + 1} also unlocks: ` + next.map(m => `<b>${m.name}</b> (${m.desc})`).join(", ")
     : "";
-  document.getElementById("collapse").classList.remove("hidden");
+  $("collapse").classList.remove("hidden");
 }
-document.getElementById("btn-collapse-no").addEventListener("click", () => { audio.playClick(); document.getElementById("collapse").classList.add("hidden"); });
-document.getElementById("btn-collapse-yes").addEventListener("click", () => { audio.playClick(); doCollapse(); });
+$("btn-collapse-no").addEventListener("click", () => { audio.playClick(); $("collapse").classList.add("hidden"); });
+$("btn-collapse-yes").addEventListener("click", () => { audio.playClick(); doCollapse(); });
 
 function doCollapse() {
   const a = state.asc, r = a.run;
@@ -1186,17 +1187,17 @@ function doCollapse() {
   state.transitioning = false;
   state.transitionPhase = "";
   state.paused = false;
-  ["collapse", "summary", "pause-menu", "transition-overlay"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["collapse", "summary", "pause-menu", "transition-overlay"].forEach(id => $(id).classList.add("hidden"));
   ui.closeStats?.();
   input.setEnabled(false);
   state.screen = "collapse";
   save(state);
   audio.stopDrone();
   audio.playCollapse();
-  const sing = document.getElementById("singularity");
-  document.getElementById("sing-title").textContent = `Collapse ${a.collapses}`;
-  document.getElementById("sing-line").textContent = `+${dm} Dark Matter · ${Math.floor(a.dm)} to spend`;
-  document.getElementById("sing-mile").innerHTML = unlocked.map(m => `Unlocked: <b>${m.name}</b>. ${m.desc}`).join("<br>");
+  const sing = $("singularity");
+  $("sing-title").textContent = `Collapse ${a.collapses}`;
+  $("sing-line").textContent = `+${dm} Dark Matter · ${Math.floor(a.dm)} to spend`;
+  $("sing-mile").innerHTML = unlocked.map(m => `Unlocked: <b>${m.name}</b>. ${m.desc}`).join("<br>");
   sing.style.opacity = "1";
   sing.classList.remove("hidden");
   let gone = false;
@@ -1232,7 +1233,7 @@ function zenStart(min) {
   state.zen = { dur: min * 3600, t: 0, wound: false, ending: false, min };
   initGalaxy(zg);
   state.densityK = zen.zenDensity(0);
-  document.getElementById("zen-arc").classList.remove("hidden");
+  $("zen-arc").classList.remove("hidden");
   zen.setArc(0);
   state.camMul = TITLE_ZOOM;
   updateCameraScale(true);
@@ -1247,7 +1248,7 @@ function updateZen(dt, now) {
   state.breathPull = zen.zenBreathPull(now, BREATH_MS);
   zen.setArc(p);
   // v7.1 optional "breathe in / out" words (off by default)
-  const cue = document.getElementById("zen-cue");
+  const cue = $("zen-cue");
   if (cue) {
     const on = !!state.settings.zenBreathCue && !z.wound;
     cue.classList.toggle("hidden", !on);
@@ -1270,8 +1271,8 @@ function zenBeginExit() {
   z.ending = true;
   input.setEnabled(false);
   state.screen = "zenexit";
-  document.getElementById("zen-arc").classList.add("hidden");
-  document.getElementById("zen-cue")?.classList.add("hidden");
+  $("zen-arc").classList.add("hidden");
+  $("zen-cue")?.classList.add("hidden");
   setTimeout(() => {
     audio.stopDrone();
     zen.runExit({
@@ -1291,7 +1292,7 @@ function zenRestore() {
   state.zen = null;
   state.breathPull = 1;
   document.body.classList.remove("mode-zen");
-  document.getElementById("zen-arc").classList.add("hidden");
+  $("zen-arc").classList.add("hidden");
   state.galaxy = zenSnap ? zenSnap.galaxy : state.galaxy;
   const resume = zenSnap && zenSnap.run && zenSnap.run.galaxy === state.galaxy ? zenSnap.run : null;
   zenSnap = null;
@@ -1299,7 +1300,7 @@ function zenRestore() {
   state.camMul = TITLE_ZOOM;
   updateCameraScale(true);
 }
-document.getElementById("btn-title-zen").addEventListener("click", () => {
+$("btn-title-zen").addEventListener("click", () => {
   audio.playClick();
   zen.openPicker(min => { audio.playClick(); zenStart(min); }, () => audio.playClick());
 });
@@ -1614,11 +1615,11 @@ function setPaused(p) {
   if (state.screen !== "play" || state.drift) return;
   state.paused = p;
   input.setEnabled(!p);
-  const btn = document.getElementById("btn-pause");
+  const btn = $("btn-pause");
   btn.innerHTML = p ? PLAY_SVG : PAUSE_SVG;
-  document.getElementById("pause-menu").classList.toggle("hidden", !p);
-  document.getElementById("btn-pause-collapse").classList.toggle("hidden", !(state.mode !== "zen" && state.asc.run.cleared >= COLLAPSE_MIN_CLEARED));
-  document.getElementById("btn-pause-endzen").classList.toggle("hidden", state.mode !== "zen");
+  $("pause-menu").classList.toggle("hidden", !p);
+  $("btn-pause-collapse").classList.toggle("hidden", !(state.mode !== "zen" && state.asc.run.cleared >= COLLAPSE_MIN_CLEARED));
+  $("btn-pause-endzen").classList.toggle("hidden", state.mode !== "zen");
   if (p) {
     save(state);
   } else {
@@ -1627,23 +1628,23 @@ function setPaused(p) {
   }
 }
 
-document.getElementById("btn-resume").addEventListener("click", () => { audio.playClick(); setPaused(false); });
-document.getElementById("btn-pause-settings").addEventListener("click", () => {
+$("btn-resume").addEventListener("click", () => { audio.playClick(); setPaused(false); });
+$("btn-pause-settings").addEventListener("click", () => {
   audio.playClick();
   ui.showStats(state, () => {}, { settingsOnly: true });
 });
-document.getElementById("btn-pause-title").addEventListener("click", () => {
+$("btn-pause-title").addEventListener("click", () => {
   audio.playClick();
   setPaused(false);
   if (state.mode === "zen") { zenRestore(); }
   showTitle();
 });
-document.getElementById("btn-pause-collapse").addEventListener("click", () => { audio.playClick(); openCollapse(); });
-document.getElementById("btn-pause-endzen").addEventListener("click", () => { audio.playClick(); setPaused(false); zenBeginExit(); });
+$("btn-pause-collapse").addEventListener("click", () => { audio.playClick(); openCollapse(); });
+$("btn-pause-endzen").addEventListener("click", () => { audio.playClick(); setPaused(false); zenBeginExit(); });
 
-document.getElementById("btn-pause").addEventListener("click", () => setPaused(!state.paused));
+$("btn-pause").addEventListener("click", () => setPaused(!state.paused));
 
-document.getElementById("btn-restart").addEventListener("click", () => {
+$("btn-restart").addEventListener("click", () => {
   if (state.transitioning) {
     showHint("Hang on, warping…");
     return;
@@ -1653,10 +1654,10 @@ document.getElementById("btn-restart").addEventListener("click", () => {
   showHint("Galaxy restarted");
 });
 
-document.getElementById("btn-audio").addEventListener("click", () => {
+$("btn-audio").addEventListener("click", () => {
   state.audioEnabled = !state.audioEnabled;
   audio.setEnabled(state.audioEnabled);
-  document.getElementById("btn-audio").classList.toggle("audio-off", !state.audioEnabled);
+  $("btn-audio").classList.toggle("audio-off", !state.audioEnabled);
   if (state.audioEnabled) {
     audio.init();
     audio.startDrone(state.biome);
@@ -1664,13 +1665,13 @@ document.getElementById("btn-audio").addEventListener("click", () => {
   save(state);
 });
 
-document.getElementById("volume-slider").addEventListener("input", e => {
+$("volume-slider").addEventListener("input", e => {
   state.volume = Number(e.target.value) / 100;
   audio.setVolume(state.volume);
   save(state);
 });
 
-document.getElementById("btn-stats").addEventListener("click", () => {
+$("btn-stats").addEventListener("click", () => {
   if (ui.isStatsOpen()) { ui.closeStats(); return; }
   if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
   state.menuOpen = true;
@@ -1747,8 +1748,8 @@ if (savedData) {
   }
   if (savedData.run && savedData.run.galaxy === state.galaxy) resumeRun = savedData.run;
 
-  document.getElementById("volume-slider").value = Math.round(state.volume * 100);
-  if (!state.audioEnabled) document.getElementById("btn-audio").classList.add("audio-off");
+  $("volume-slider").value = Math.round(state.volume * 100);
+  if (!state.audioEnabled) $("btn-audio").classList.add("audio-off");
 }
 
 // ─── SETTINGS ───
@@ -1801,12 +1802,12 @@ state.openStarMap = () => {
   audio.playClick();
   openStarMap(starEntries(), { reduceMotion: state.settings.reduceMotion });
 };
-document.getElementById("btn-title-starmap").addEventListener("click", () => state.openStarMap());
+$("btn-title-starmap").addEventListener("click", () => state.openStarMap());
 state.openLogbook = () => {
   audio.playClick();
   openLogbook(state.records.discoveries);
 };
-document.getElementById("btn-title-logbook").addEventListener("click", () => state.openLogbook());
+$("btn-title-logbook").addEventListener("click", () => state.openLogbook());
 
 const backupLabel = d => `Galaxy ${d.galaxy} · ${tierName(tierIndexForR(rForMass(d.floorMass)))} · ${Math.floor(d.stardust)} stardust`;
 state.exportSave = () => exportCode(state);

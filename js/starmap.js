@@ -1,3 +1,4 @@
+const $ = id => document.getElementById(id);
 // ─── STAR MAP (v5.2) ───
 // A slowly drifting sky with one star per cleared galaxy, coloured by its
 // biome and joined by soft constellation lines. Tap a star for its story.
@@ -170,10 +171,10 @@ function resize() {
 }
 
 function bind() {
-  el = document.getElementById("starmap");
-  cvs = document.getElementById("starmap-canvas");
+  el = $("starmap");
+  cvs = $("starmap-canvas");
   g = cvs.getContext("2d");
-  card = document.getElementById("starmap-card");
+  card = $("starmap-card");
   cvs.addEventListener("pointerdown", ev => { drag = { x: ev.clientX, y: ev.clientY, px: panX, py: panY, moved: false }; cvs.setPointerCapture(ev.pointerId); });
   cvs.addEventListener("pointermove", ev => {
     if (!drag) return;
@@ -188,7 +189,7 @@ function bind() {
     drag = null;
   });
   cvs.addEventListener("pointercancel", () => { drag = null; });
-  document.getElementById("btn-starmap-back").addEventListener("click", closeStarMap);
+  $("btn-starmap-back").addEventListener("click", closeStarMap);
   window.addEventListener("resize", () => { if (raf) resize(); });
 }
 
@@ -203,10 +204,10 @@ export function openStarMap(list, opts = {}) {
   resize();
   showCard(-1);
   el.classList.toggle("ritual", !!ritual);
-  document.getElementById("starmap-empty").classList.toggle("hidden", entries.length > 0);
-  document.getElementById("starmap-title").textContent = ritual ? ritual.title : "Star Map";
-  document.getElementById("btn-starmap-back").textContent = ritual ? "Continue" : "Back";
-  document.getElementById("starmap-count").textContent = ritual ? ritual.sub : entries.length
+  $("starmap-empty").classList.toggle("hidden", entries.length > 0);
+  $("starmap-title").textContent = ritual ? ritual.title : "Star Map";
+  $("btn-starmap-back").textContent = ritual ? "Continue" : "Back";
+  $("starmap-count").textContent = ritual ? ritual.sub : entries.length
     ? `${entries.length} galax${entries.length === 1 ? "y" : "ies"} cleared · tap a star` : "";
   if (ritual) {
     card.innerHTML = `<span class="ritual-line">${esc(ritual.line)}</span>`;
