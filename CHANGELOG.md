@@ -2,6 +2,35 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v7.2 Lean (Oct 2026)
+
+A refactor with no gameplay change. Behaviour, balance, audio and saves are the same, and saves
+from v1 to v7 still load.
+
+**Removed**
+- The hidden old Zen/timed toggle, along with the timer code that only ran when it was off: the
+  hidden Time/Best HUD, the par and speed bonus, "New record" stardust, the 1% bump mass loss,
+  and the toggle's hint and CSS.
+- The bottom-bar "Reset All" button. Use **Start completely over…** on the title instead.
+- Dead screen shake (nothing has triggered it since v3).
+- 15 unused functions and constants, plus unused imports.
+- A per-entity random id string that was never read.
+- A no-op sprite "prerender" hook.
+- A duplicate seeded RNG.
+
+**Faster**
+- Every entity now has one fixed shape, so position and velocity updates no longer box numbers.
+- The edge arrows keep the nearest 6 in fixed slots, with no per-frame array or sort.
+- Minimap and arrow colour strings are cached.
+- A 2-argument `hypot` in the hot modules.
+- Particles and eaten objects are compacted in place instead of `splice`d.
+- About 40% less garbage per second and half as many garbage collections; see DESIGN.md §7e.
+
+**Fixed**
+- Settings opened from the title screen had its **Done** button hidden under the title buttons.
+
+Service worker cache `blackhole-v7.2`.
+
 ## v7.1 Calm Sound (Oct 2026)
 
 Brian said the music gave him a headache and the effects were still harsh. The audio was rebuilt

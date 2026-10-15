@@ -51,7 +51,7 @@ const light = (hex, t, a) => mix(hex, WHITE, t, a);
 const dark = (hex, t, a) => mix(hex, BLACK, t, a);
 const rgba = (hex, a) => mix(hex, WHITE, 0, a);
 
-function rng(seed) {
+export function rng(seed) {
   let s = seed >>> 0 || 1;
   return () => {
     s = (s + 0x6D2B79F5) >>> 0;

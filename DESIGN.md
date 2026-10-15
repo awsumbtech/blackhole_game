@@ -19,7 +19,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 4. **Themed environments.** Each galaxy (biome) has its own palette, nebula, drone chord, pentatonic eat-sound key, signature event and mechanic.
 5. **Breather levels.** Every 3rd galaxy (Planet Nursery, Star Meadow) is a short, generous breather.
 6. **Polish before adding features.** Brian has said "keep polishing what we have before we build more". Ask him before starting a new feature, and give him numbered options.
-7. **Zen mode is on by default and he loves it.** It has no clock, no par or time records, and bumping costs nothing. Never weaken it.
+7. **Calm is the default and he loves it.** Since v7.2 the clock, par and time-record code is gone. Ascension has no clock, and bumping costs nothing. Never add them back.
 8. A slow 10s breathing pulse (~6 breaths/min) runs through the drone, the biome glow and the hole halo. There's an optional breathing-guide ring.
 9. Settings to respect: Reduce Motion, soft palette, breathing guide, visual quality (Auto/High/Lite), touch style.
 
@@ -172,6 +172,33 @@ Brian got headaches from the v7.0 drone. Follow these rules for any new sound:
 - Check every audio change with `tools/audio-analyze.py`: peak, RMS, centroid, 2–5 kHz energy, and
   envelope roughness.
 
+## 7e. Code style (v7.2)
+
+The code should read the way a veteran game programmer would write it: lean and direct.
+- No classes, frameworks or build step. Plain modules and plain objects.
+- **Hot loops** (`frame`, `updateEntities`, `updateGravityWell`, `tryConsume`, `draw*`) must not
+  allocate. That means no array literals, closures, template strings or `splice` per frame.
+  - Cache strings on the object (`e._mc`, `lm._mm`).
+  - Compact arrays in place.
+  - Use the local 2-argument `hypot`.
+- **Entities have one shape.** Every field written in hot code is declared in `createEntity`
+  with a default that means "unset". Don't add new per-entity fields elsewhere; add them there.
+- Use `$()` for `getElementById`.
+- Check changes with `/workspace/bhpt/perfbench.py` (frame time, allocation rate and garbage
+  collections, plus optional CPU and allocation profiles) and `smoke_all.py` (every screen).
+  - Save migration is checked by `migcmp.mjs`, which must produce identical output to the
+    previous version.
+
+Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless Chromium, 3 runs of 20 s each:
+
+| | v7.1 | v7.2 |
+|---|---|---|
+| JS frame time, average | 0.95–1.23 ms | 1.12–1.17 ms (same within noise) |
+| JS frame time, p95 | 1.3–1.7 ms | 1.4–1.5 ms |
+| Allocation rate | 3.5–3.7 MB/s | 1.95–2.1 MB/s |
+| Garbage collections per 20 s | 62–73 | 29–32 |
+| Load to title | 0.38–0.50 s | 0.37–0.45 s |
+
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
@@ -182,6 +209,7 @@ Brian got headaches from the v7.0 drone. Follow these rules for any new sound:
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v7.2 Lean:** refactor with no gameplay change. Cut the dead Zen/timed toggle and its timer, par and bump-loss code, Reset All, shake and unused code. Hot loops are allocation-light (about 40% less garbage). Fixed the hidden Settings Done button on the title screen.
 - **v7.1 Calm Sound:** research-based audio rebuild (surf bed, sparse just-intonation sines, 1.8 kHz lowpass, Music/SFX sliders). No ring in Zen; the wisp breathes 4 in / 6 out.
 - **v7.0 Ascension + Zen:** prestige loop (collapse → Dark Matter → constellation), galaxy goals, rivals, milestones, golden/supernova/rare finds; Zen sessions with breath pull and a clean exit. Save v7.
 - **v6.0.1 Softer Sound:** all effects softened (lower bites, slow attacks, sine/triangle only, 1.6 kHz lowpass, compressor and limiter). **Brian wants soft audio: keep new sounds this gentle.**
@@ -202,7 +230,7 @@ js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
 js/ascension.js     v7 prestige logic    js/constellation.js perk screen
 js/rivals.js        calm rival holes     js/zen.js          Zen sessions + exit
-tools/collapse-sim.mjs  collapse-curve model (node)
+tools/collapse-sim.mjs  collapse-curve model (node)   tools/audio-analyze.py  offline audio render + metrics
 js/powerups.js      power-ups            js/progression.js upgrades, stardust, summary, BREATHER_TARGET
 js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex, shop
 js/input.js         thumbstick, follow-finger, mouse, keyboard

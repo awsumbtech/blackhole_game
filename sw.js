@@ -2,7 +2,7 @@
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
 // Bump on each release so phones drop the old offline copy.
-const CACHE_NAME = "blackhole-v7.1";
+const CACHE_NAME = "blackhole-v7.2";
 const ASSETS = [
   "./",
   "./index.html",

@@ -7,7 +7,7 @@
 
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
-import { spriteFor, getArtQuality } from "./art.js";
+import { spriteFor, getArtQuality, rng } from "./art.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -62,17 +62,6 @@ export const MECHANICS = {
 
 // ─── Module state ───
 let W = null;
-
-function rng(seed) {
-  let s = seed >>> 0 || 1;
-  return () => {
-    s = (s + 0x6D2B79F5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /** Landmarks spaced around the galaxy at base distance d (fraction of b0). */
 function ringSpots(r, n, dMin, dMax) {

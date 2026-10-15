@@ -3,7 +3,6 @@
 // procedural events, ambient background life.
 
 import { weightedType, createEntity, rand, typeAvgRadius, typeById, isBreather } from "./entities.js";
-import { prerenderEntitySprite } from "./render.js";
 import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
@@ -196,7 +195,6 @@ function pickSpawnPos(state, near, radius) {
 function finishSpawn(e) {
   e._spawnAge = 0;
   e._spawnAlpha = 0;
-  prerenderEntitySprite(e);
   return e;
 }
 

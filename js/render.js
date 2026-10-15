@@ -431,13 +431,6 @@ function drawPowerupPickup(ctx, e, sx, sy, time, zoom) {
   ctx.restore();
 }
 
-// ─── ENTITY SPRITE PRE-RENDERING ───
-
-/** Kept for API compatibility: v4 paints sprites lazily in art.js. */
-export function prerenderEntitySprite(e) {
-  e._artBase = null;
-}
-
 /** v4: the black hole is painted by art.js (disk, photon ring, lensed arc). */
 export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
   // v7 hole skins: a gentle colour filter over the painted disk
