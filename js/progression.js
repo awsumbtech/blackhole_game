@@ -1,7 +1,6 @@
 // ─── PROGRESSION ───
 // Stardust economy, permanent upgrades, galaxy targets and personal records.
 
-import { isBreather } from "./entities.js";
 
 export const MAX_LEVEL = 5;
 
@@ -62,25 +61,10 @@ export function computeMods(upgrades) {
   };
 }
 
-/** Mass needed to clear a galaxy. Growth is roughly exponential, so time per
- *  galaxy scales with log(target / startMass); targets rise ~75% per galaxy
- *  to keep pace with upgrades. */
-export const BREATHER_TARGET = 0.55;  // breather galaxies need 55% of the usual mass
-
-export function targetMassFor(galaxy) {
-  const k = isBreather(galaxy) ? BREATHER_TARGET : 1;
-  return Math.round((15000 * Math.pow(1.75, galaxy - 1) * k) / 500) * 500;
-}
-
 /** Food shrinks a little each galaxy (relative to you), down to 85% (was 70%). */
 export function foodScaleFor(galaxy) {
   // v5: the scale ladder is the progression now, so food only shrinks a touch
   return Math.max(0.92, 1 - 0.01 * (galaxy - 1));
-}
-
-/** Par time (seconds) for the speed bonus. */
-export function parTimeFor(galaxy) {
-  return 200 + galaxy * 10;
 }
 
 export function freshRun(stats) {
@@ -94,27 +78,19 @@ export function finishGalaxy(state) {
   const rec = state.records;
   const time = Math.round(run.time * 10) / 10;
 
-  // Zen mode: no clock pressure, so no speed bonus or time records
-  const zen = !!(state.settings && state.settings.zen);
-  const prevFast = rec.fastest[g] ?? null;
-  const newFast = !zen && (prevFast == null || time < prevFast);
-  if (newFast) rec.fastest[g] = time;
-
+  // No clock since v7: no speed bonus or time records (old ones are still shown)
   const newCombo = run.bestCombo > run.startBestCombo && run.bestCombo > 0;
   const newEaten = run.eaten > rec.mostEaten;
   if (newEaten) rec.mostEaten = run.eaten;
   const newBig = run.bigFish > rec.mostBigFish;
   if (newBig) rec.mostBigFish = run.bigFish;
 
-  const par = parTimeFor(g);
   const parts = [
     ["Galaxy bonus", 12 + g * 4],
     ["Objects eaten", Math.floor(run.eaten / 4)],
     ["Best combo", Math.floor(run.bestCombo / 2)],
     ["Big catches", run.bigFish],
-    ["Speed bonus", !zen && time < par ? Math.round((par - time) / 5) : 0],
-    ["New record", newFast && prevFast != null ? 10 : 0],
-    ["Calm bonus", zen ? 10 : 0]
+    ["Calm bonus", 10]
   ].filter(p => p[1] > 0);
   const earned = parts.reduce((s, p) => s + p[1], 0);
 
@@ -125,7 +101,7 @@ export function finishGalaxy(state) {
   return {
     galaxy: g,
     biome: state.biome ? state.biome.name : "",
-    time, prevFast, newFast, par, zen, mass: state.mass,
+    time, mass: state.mass,
     breather: !!(state.biome && state.biome.breather),
     eaten: run.eaten, newEaten,
     bestCombo: run.bestCombo, newCombo,

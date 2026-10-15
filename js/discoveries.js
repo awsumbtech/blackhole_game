@@ -46,7 +46,6 @@ export const DISCOVERIES = {
   ]
 };
 export const ALL_DISCOVERIES = Object.entries(DISCOVERIES).flatMap(([b, list]) => list.map(d => ({ ...d, biome: b })));
-export function discoveryById(id) { return ALL_DISCOVERIES.find(d => d.id === id); }
 
 // When (seconds into the galaxy) each find is planted
 const PLAN_REGULAR = [35, 120];

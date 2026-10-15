@@ -60,12 +60,6 @@ export function startMass() { return massForR(START_R); }
 export function massForR(r) { const s = Math.max(0, (r - 4) / 0.9); return s * s; }
 export function rForMass(m) { return Math.max(6, 4 + Math.sqrt(m) * 0.9); }
 
-/** 0..1 position inside the current tier (for the HUD). */
-export function tierProgress(r) {
-  const x = Math.log(Math.max(r, R0) / R0) / Math.log(TIER_STEP);
-  return x - Math.floor(x + 1e-9);
-}
-
 // How far one galaxy climbs, in tiers. Regular galaxies always cross at
 // least one tier line; breathers are a short, generous half step.
 export const REGULAR_CLIMB = 1.12;

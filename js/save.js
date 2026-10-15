@@ -139,10 +139,6 @@ function normalize(raw) {
   return data;
 }
 
-export function clearSave() {
-  localStorage.removeItem(SAVE_KEY);
-}
-
 // ─── SAVE BACKUP (v5.2) ───
 // A backup code is "BHSAVE1." + base64(JSON) + "." + checksum, so a pasted
 // code that got cut off or mangled is caught before it can replace anything.

@@ -78,13 +78,8 @@ export function showSummary(summary, state, { onBuy, onContinue, onCollapse }) {
   $("sum-title").textContent = `Galaxy ${summary.galaxy} devoured`;
   $("sum-sub").textContent = summary.biome;
 
-  const timeSub = summary.prevFast != null
-    ? (summary.newFast ? `was ${fmtTime(summary.prevFast)}` : `best ${fmtTime(summary.prevFast)}`)
-    : `par ${fmtTime(summary.par)}`;
   $("sum-grid").innerHTML = [
-    summary.zen
-      ? tile("Mass reached", fmtMass(summary.mass), summary.breather ? "a breather galaxy" : "at your own pace", false)
-      : tile("Clear time", fmtTime(summary.time), timeSub, summary.newFast && summary.prevFast != null),
+    tile("Mass reached", fmtMass(summary.mass), summary.breather ? "a breather galaxy" : "at your own pace", false),
     tile("Best combo", `×${summary.bestCombo}`, `record ×${state.stats.bestCombo}`, summary.newCombo),
     tile("Objects eaten", summary.eaten, `record ${state.records.mostEaten}`, summary.newEaten),
     tile("Big catches", summary.bigFish, summary.powerups ? `${summary.powerups} power-up${summary.powerups > 1 ? "s" : ""}` : "", summary.newBig)
@@ -129,9 +124,6 @@ export function showSummary(summary, state, { onBuy, onContinue, onCollapse }) {
   el.querySelector(".modal-card").scrollTop = 0;
 }
 
-export function isSummaryOpen() {
-  return !$("summary").classList.contains("hidden");
-}
 
 // ─── STATS ───
 

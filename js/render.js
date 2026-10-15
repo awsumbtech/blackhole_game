@@ -255,37 +255,6 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5, opts = 
 
 // ─── GALAXY BOUNDARY ───
 
-export function drawBoundary(ctx, w, h, camX, camY, bounds, borderColor, time, zoom = 1) {
-  const cx = w / 2 - camX;
-  const cy = h / 2 - camY;
-
-  // Soft glow ring
-  const pulse = 1 + Math.sin(time * 0.001) * 0.08;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, bounds * pulse, 0, TAU);
-  ctx.strokeStyle = borderColor + "18";
-  ctx.lineWidth = 40 / zoom;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, bounds, 0, TAU);
-  ctx.strokeStyle = borderColor + "60";
-  ctx.lineWidth = 2 / zoom;
-  ctx.stroke();
-
-  // Dashed inner warning ring
-  ctx.setLineDash([8 / zoom, 16 / zoom]);
-  ctx.beginPath();
-  ctx.arc(cx, cy, bounds - 30 / zoom, 0, TAU);
-  ctx.strokeStyle = borderColor + "30";
-  ctx.lineWidth = 1 / zoom;
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-}
-
 // ─── ENTITIES ───
 
 // w/h are the zoomed (world-unit) viewport; the caller applies ctx.scale(zoom).

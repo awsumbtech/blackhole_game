@@ -3,9 +3,6 @@
 // Objects drift naturally within boundaries; the gravity well in living-world.js
 // pulls edible objects toward the black hole.
 
-// You can swallow an object when your radius > its radius * eatRatio.
-// The base ratio lives here so the render "too big" ring and tryConsume agree.
-export const BASE_EAT_RATIO = 0.88;
 
 export const objectTypes = [
   {
@@ -243,15 +240,6 @@ export function weightedType(weights, galaxy) {
   return available[0] || objectTypes[0];
 }
 
-export function galaxyObjectCount(galaxy) {
-  return Math.min(340, 30 + galaxy * 16);
-}
-
-export function galaxyBounds(galaxy) {
-  // Galaxy radius grows with level
-  return 800 + galaxy * 120;
-}
-
 export function typeAvgRadius(type) {
   return (type.minR + type.maxR) / 2;
 }
@@ -260,11 +248,6 @@ export function typeById(id) {
   return objectTypes.find(t => t.id === id) || objectTypes[0];
 }
 
-/** True when a black hole of radius playerR can swallow entity e. */
-export function canEat(playerR, e, eatRatio = BASE_EAT_RATIO) {
-  if (e.powerup) return true;
-  return playerR > e.radius * eatRatio;
-}
 
 /**
  * scale > 1 makes a bigger copy of the type (used so food and "bigger fish"
@@ -312,57 +295,6 @@ export function getBiome(galaxy) {
   if (isBreather(galaxy)) return byName(BREATHERS[(galaxy / 3 - 1) % 2]);
   const regularIndex = galaxy - 1 - Math.floor(galaxy / 3);
   return byName(REGULARS[regularIndex % REGULARS.length]);
-}
-
-export function spawnGalaxy(galaxy) {
-  const biome = getBiome(galaxy);
-  const count = Math.round(galaxyObjectCount(galaxy) * (biome.density || 1));
-  const bounds = galaxyBounds(galaxy);
-  const entities = [];
-
-  // Spawn in clusters for interesting density variation
-  const clusterCount = 3 + Math.floor(galaxy / 3);
-  const perCluster = Math.floor(count / clusterCount);
-
-  for (let c = 0; c < clusterCount; c++) {
-    // Cluster center within bounds (with margin)
-    const cx = rand(-bounds * 0.7, bounds * 0.7);
-    const cy = rand(-bounds * 0.7, bounds * 0.7);
-    const clusterSpread = rand(100, 350);
-
-    for (let i = 0; i < perCluster; i++) {
-      const type = weightedType(biome.weights, galaxy);
-      const angle = rand(0, Math.PI * 2);
-      const dist = rand(20, clusterSpread);
-      const x = cx + Math.cos(angle) * dist;
-      const y = cy + Math.sin(angle) * dist;
-
-      // Clamp to within bounds
-      const clamped = clampToBounds(x, y, bounds - 30);
-      entities.push(createEntity(type, clamped.x, clamped.y));
-    }
-  }
-
-  // Fill remaining as scattered
-  while (entities.length < count) {
-    const type = weightedType(biome.weights, galaxy);
-    const angle = rand(0, Math.PI * 2);
-    const dist = rand(50, bounds * 0.85);
-    const x = Math.cos(angle) * dist;
-    const y = Math.sin(angle) * dist;
-    entities.push(createEntity(type, x, y));
-  }
-
-  return { entities, biome, bounds };
-}
-
-function clampToBounds(x, y, bounds) {
-  const dist = Math.hypot(x, y);
-  if (dist > bounds) {
-    const scale = bounds / dist;
-    return { x: x * scale, y: y * scale };
-  }
-  return { x, y };
 }
 
 export function updateEntities(entities, bounds, dt) {

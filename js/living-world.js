@@ -49,7 +49,6 @@ export const CFG = {
   BREATHER_EVENTS: 3
 };
 
-const BIG_TYPES = ["planet", "star", "craft", "meteor"];
 
 export function minBigFish(galaxy) {
   if (isBreather(galaxy)) return galaxy >= 9 ? 2 : 1;
@@ -90,9 +89,6 @@ export function initLivingWorld(state) {
   world.initialCount = state.initialCount;
 }
 
-export function getBigFishCount() {
-  return world ? world.bigCount : 0;
-}
 
 /** dt = real frame step, worldDt = slowed step while Slow-Mo is active. */
 export function updateLivingWorld(state, dt, worldDt = dt) {

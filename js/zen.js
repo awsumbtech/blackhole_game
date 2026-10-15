@@ -106,4 +106,3 @@ export function runExit(opts) {
   count.textContent = "";
   later(ask, 800 + 3 * (IN + OUT) + 600);
 }
-export function exitOpen() { return !$("zen-exit").classList.contains("hidden"); }

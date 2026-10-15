@@ -5,7 +5,7 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
-import { typeById, createEntity } from "./entities.js";
+import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality } from "./art.js";
 
@@ -58,7 +58,6 @@ export const MECHANICS = {
   }
 };
 
-export function mechanicFor(biomeName) { return MECHANICS[biomeName] || null; }
 
 // ─── Module state ───
 let W = null;

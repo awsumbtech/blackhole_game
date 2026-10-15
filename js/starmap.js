@@ -232,4 +232,3 @@ export function closeStarMap() {
   cb?.();
 }
 
-export function starMapOpen() { return !!raf; }

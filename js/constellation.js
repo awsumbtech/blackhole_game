@@ -4,7 +4,7 @@
 // stars side by side: either one opens the next tier. Galaxy perks (earned
 // with 3 goal stars) circle the core. Tap a star to read it and buy it.
 
-import { PERKS, GALAXY_PERKS, BRANCHES, perkState, buyPerk, nextMilestone, MILESTONES } from "./ascension.js";
+import { PERKS, GALAXY_PERKS, BRANCHES, perkState, buyPerk, nextMilestone } from "./ascension.js";
 
 const TAU = Math.PI * 2;
 let el, cvs, g, card, W = 0, H = 0, dpr = 1, raf = 0, t0 = 0;
@@ -188,4 +188,3 @@ export function closeConstellation(beginRun) {
   const cb = opts.onClose; opts = {};
   cb?.(!!beginRun);
 }
-export function constellationOpen() { return !!raf; }

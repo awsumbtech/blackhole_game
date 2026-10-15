@@ -173,7 +173,6 @@ export function setBreath(b) {
 export function setMusicLayers(tierIdx) {
   layer = Math.max(0, Math.min(3, Math.floor((tierIdx | 0) / 2)));
 }
-export function stopMusicLayers() { layer = 0; }
 export function musicInfo() { return { layers: layer, root: musicRoot() }; }
 
 // ─── EFFECTS: one soft voice, always in the key ───
@@ -230,7 +229,6 @@ const EVENT_DEG = { meteorShower: [0, 3], cometStream: [1, 4], stellarBirth: [2,
 export function playEventCue(type) { (EVENT_DEG[type] || [0, 3]).forEach((d, i) => blip(note(d, -1), { start: i * 0.6, attack: 0.6, decay: 2.5, vol: 0.03 })); }
 export function playPowerup() { [0, 2, 3].forEach((d, i) => blip(note(d), { start: i * 0.12, attack: 0.04, decay: 0.8, vol: 0.025 })); }
 export function playPowerupSpawn() { blip(note(4), { attack: 0.08, decay: 0.8, vol: 0.018 }); }
-export function playPowerupEnd() { blip(note(3, -1), { attack: 0.08, decay: 0.8, vol: 0.02 }); }
 export function playRitual() { [0, 3, 5, 8].forEach((d, i) => blip(note(d, -1), { start: i * 0.7, attack: 0.3, decay: 3, vol: 0.025 })); }
 export function playGoalStar(n = 1) { for (let i = 0; i < n; i++) blip(note(3 + i * 2), { start: i * 0.35, attack: 0.05, decay: 1.4, vol: 0.022 }); }
 export function playCollapse() { [5, 3, 0, -2].forEach((d, i) => blip(note(d, -1), { start: i * 0.9, attack: 0.5, decay: 3.5, vol: 0.03 })); }

@@ -2,18 +2,14 @@
 // State, main loop, consume logic, zoom camera, galaxy transitions + summary.
 
 import { createInput } from "./input.js";
-import { spawnGalaxy, updateEntities, galaxyObjectCount, getBiome, rand, biomeCatalog } from "./entities.js";
-import {
-  drawStarfield, drawBoundary, drawEntities, drawBlackHole, setHaloFrom,
-  drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor,
-  invalidateStarfield, prerenderEntitySprite, setNebulaPalette, setSoftPalette, drawLens
-} from "./render.js";
+import { updateEntities, getBiome, rand, biomeCatalog } from "./entities.js";
+import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor, invalidateStarfield, setNebulaPalette, setSoftPalette, drawLens } from "./render.js";
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
-import { save, load, clearSave, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
-import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo, discoveryById } from "./discoveries.js";
+import { save, load, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
+import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo } from "./discoveries.js";
 import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import { openLogbook } from "./logbook.js";
@@ -25,11 +21,11 @@ import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
 } from "./living-world.js";
-import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime, fmtMass } from "./progression.js";
+import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
-import { R0, START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, tierProgress, rForTier } from "./tiers.js";
+import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
 
 const VERSION = "7.1";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
@@ -40,9 +36,7 @@ const ctx = canvas.getContext("2d");
 
 const hudGalaxy = document.getElementById("hud-galaxy");
 const hudGoal = document.getElementById("hud-goal");
-const hudTime = document.getElementById("hud-time");
 const hudMass = document.getElementById("hud-mass");
-const hudBest = document.getElementById("hud-best");
 const hudBiome = document.getElementById("hud-biome");
 const hudProgressBar = document.getElementById("hud-progress-bar");
 
@@ -88,7 +82,7 @@ const state = {
   floorMass: 20, tier: 0, bestTier: 0, galaxyProgress: 0,
   anchorR: 8, anchorSmooth: 8, reveal: null, tierBanner: null, trail: [], trailT: 0,
 
-  particles: [], ripples: [], floaters: [], shake: 0, gulp: 0,
+  particles: [], ripples: [], floaters: [], gulp: 0,
 
   comboCount: 0, comboTimer: 0,
 
@@ -106,7 +100,7 @@ const state = {
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
   mode: "ascension", asc: defaultAsc(), zenNotes: [], densityK: 1, breathPull: 1, rivals: [],
-  settings: { touchMode: "joystick", skin: "classic", zen: true, musicVol: 0.6, sfxVol: 0.6, musicOn: true, sfxOn: true, zenBreathCue: false, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
+  settings: { touchMode: "joystick", skin: "classic", musicVol: 0.6, sfxVol: 0.6, musicOn: true, sfxOn: true, zenBreathCue: false, reduceMotion: false, softPalette: false, breathGuide: false, quality: "auto", wispName: "Wisp" },
 
   // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
   screen: "play", camMul: 1, drift: null,
@@ -648,9 +642,8 @@ function tryConsume(dt) {
 }
 
 // Calm bump: a soft, eased nudge away from something too big. No shake, the
-// combo just pauses, and Zen mode costs nothing (otherwise a tiny 1%).
+// combo just pauses, and it never costs mass.
 const BUMP_PUSH = 2.4;          // was a hard 7x speed kick
-const BUMP_LOSS = 0.01;         // was 5% of mass (0 in Zen)
 const COMBO_PAUSE = 120;        // combo holds for 2s instead of resetting
 
 function bump(e, dx, dy, dist) {
@@ -670,11 +663,6 @@ function bump(e, dx, dy, dist) {
   e.vx -= nx * 0.15 * e.baseSpeed;
   e.vy -= ny * 0.15 * e.baseSpeed;
 
-  const loss = state.settings.zen ? 0 : Math.min(state.mass * BUMP_LOSS, Math.max(0, state.mass - state.startMass));
-  if (loss > 0) {
-    state.mass -= loss;
-    updateRadius();
-  }
   state.invuln = 60;
   if (state.comboCount > 0) state.comboTimer = Math.max(state.comboTimer, COMBO_PAUSE);
   state.run.bumps += 1;
@@ -694,11 +682,6 @@ function bump(e, dx, dy, dist) {
   }
   audio.playBump();
   hint("bump", "Ringed objects are still too big. Grow a little, then come back for them.", 3800);
-}
-
-function shakeBy(amount) {
-  if (state.settings.reduceMotion) return;
-  state.shake = Math.max(state.shake, amount);
 }
 
 function collectPowerup(e) {
@@ -936,7 +919,6 @@ function startWarp() {
 
 // ─── HUD ───
 
-let lastHudSec = -1;
 function galaxyProgressNow() {
   // Log-scale progress: growth is roughly exponential, so this fills steadily
   const m0 = state.startMass;
@@ -958,14 +940,6 @@ function syncHud(force = false) {
     const txt = `${state.goal.name} <span class="st">${"★".repeat(st)}${"☆".repeat(3 - st)}</span> ${Math.floor(state.goalCount)}/${nextNeed}`;
     if (hudGoal._t !== txt) { hudGoal._t = txt; hudGoal.innerHTML = txt; }
   } else if (hudGoal._t) { hudGoal._t = ""; hudGoal.innerHTML = ""; }
-
-  const sec = Math.floor(state.run ? state.run.time : 0);
-  if (force || sec !== lastHudSec) {
-    lastHudSec = sec;
-    hudTime.textContent = fmtTime(sec);
-    const best = state.records.fastest[state.galaxy];
-    hudBest.textContent = best != null ? fmtTime(best) : "--:--";
-  }
 }
 
 function showHint(msg, ms = 2800) {
@@ -1446,8 +1420,6 @@ function frame(now) {
     if (state.tierBanner.age > TIER_BANNER_FRAMES) state.tierBanner = null;
   }
   updateParticles(dt);
-  state.shake *= Math.pow(0.88, dt);
-  if (state.shake < 0.2) state.shake = 0;
   state.gulp *= Math.pow(0.9, dt);
 
   // ─── DRAW ───
@@ -1467,11 +1439,8 @@ function frame(now) {
     drawLens(ctx, (state.playerX - state.camX) * state.zoom + w / 2, (state.playerY - state.camY) * state.zoom + h / 2, state.radius * state.zoom);
   }
 
-  const shakeX = state.shake ? (Math.random() - 0.5) * state.shake : 0;
-  const shakeY = state.shake ? (Math.random() - 0.5) * state.shake : 0;
 
   ctx.save();
-  ctx.translate(shakeX, shakeY);
   ctx.scale(z, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
@@ -1707,12 +1676,6 @@ document.getElementById("btn-stats").addEventListener("click", () => {
   });
 });
 
-document.getElementById("btn-reset").addEventListener("click", () => {
-  if (!confirm("Reset all progress, stardust and upgrades? This cannot be undone.")) return;
-  resetting = true;
-  clearSave();
-  location.reload();
-});
 
 // P / Escape pause (Escape also closes the stats view)
 window.addEventListener("keydown", e => {
@@ -1763,7 +1726,7 @@ if (savedData) {
   state.stardust = savedData.stardust;
   state.seenHints = savedData.seenHints;
   state.settings = { ...state.settings, ...(savedData.settings || {}) };
-  state.settings.zen = true;   // v7: Ascension is calm (no clock); Zen is now its own session mode
+  delete state.settings.zen;   // v7: the old Zen/timed toggle is gone (Ascension is always calm)
   state.legacyBonusPending = savedData.legacyBonus || 0;
   state.floorMass = savedData.floorMass;
   state.bestTier = savedData.bestTier || 0;
@@ -1786,12 +1749,9 @@ if (savedData) {
 function applySettings() {
   const st = state.settings;
   input.setTouchMode(st.touchMode);
-  document.body.classList.toggle("zen", !!st.zen);
   document.body.classList.toggle("soft-palette", !!st.softPalette);
   setSoftPalette(!!st.softPalette);
-  document.getElementById("btn-zen").classList.toggle("on", !!st.zen);
   document.body.classList.toggle("reduce-motion", !!st.reduceMotion);
-  if (st.reduceMotion) state.shake = 0;
   audio.setMix({ music: st.musicVol ?? 0.6, sfx: st.sfxVol ?? 0.6, musicOn: st.musicOn !== false, sfxOn: st.sfxOn !== false });
 }
 
@@ -1859,12 +1819,6 @@ state.applyBackup = code => {
 applySettings();
 applyQuality(state.settings.quality === "balanced" ? "balanced" : "high");
 
-document.getElementById("btn-zen").addEventListener("click", () => {
-  const on = !state.settings.zen;
-  state.setSetting("zen", on);
-  audio.playClick();
-  showHint(on ? "Zen mode on: no clock, no penalties. Just drift." : "Zen mode off: clock, par bonus and records are back", 3200);
-});
 
 audio.setVolume(state.volume);
 audio.setEnabled(state.audioEnabled);
