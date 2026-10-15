@@ -1,3 +1,4 @@
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 // ─── RIVAL HOLES (v7 Ascension depth) ───
 // From Galaxy 3 of a run, a few calm rival black holes drift through space.
 // They wander toward food and quietly eat it, so food feels sparser. If you
@@ -8,10 +9,10 @@
 const TAU = Math.PI * 2;
 const RESPAWN = 2400;   // ~40s after you swallow one
 
-function vr(state) { return Math.hypot(state.viewW || 800, state.viewH || 600) / 2; }
+function vr(state) { return hypot(state.viewW || 800, state.viewH || 600) / 2; }
 
 function place(state, rv) {
-  const sp = Math.hypot(state.playerVX || 0, state.playerVY || 0);
+  const sp = hypot(state.playerVX || 0, state.playerVY || 0);
   const heading = sp > 0.2 ? Math.atan2(state.playerVY, state.playerVX) : Math.random() * TAU;
   const a = heading + (Math.random() - 0.5) * 2.4;
   const d = vr(state) * (1.15 + Math.random() * 0.5);
@@ -24,7 +25,7 @@ function place(state, rv) {
 export function initRivals(state, n, sizeK) {
   state.rivals = [];
   for (let i = 0; i < n; i++) {
-    const rv = { r: state.radius * sizeK * (0.9 + Math.random() * 0.25), sizeK, phase: Math.random() * TAU, target: null, wait: i * 900, gone: 0 };
+    const rv = { r: state.radius * sizeK * (0.9 + Math.random() * 0.25), sizeK, phase: Math.random() * TAU, target: null, wait: i * 900, gone: 0, x: 0, y: 0, vx: 0, vy: 0, fade: 0, pick: 0 };
     place(state, rv);
     state.rivals.push(rv);
   }
@@ -43,25 +44,25 @@ export function updateRivals(state, dt, onSwallow) {
       continue;
     }
     if (rv.wait > 0) { rv.wait -= dt; continue; }
-    rv.fade = Math.min(1, (rv.fade || 0) + dt / 120);
+    rv.fade = Math.min(1, rv.fade + dt / 120);
     rv.phase += 0.004 * dt;
-    const pdx = state.playerX - rv.x, pdy = state.playerY - rv.y, pd = Math.hypot(pdx, pdy) || 1;
+    const pdx = state.playerX - rv.x, pdy = state.playerY - rv.y, pd = hypot(pdx, pdy) || 1;
     if (pd > V * 2.6) { place(state, rv); continue; }
     // Wander toward the nearest food it can eat (re-pick now and then)
-    rv.pick = (rv.pick || 0) - dt;
+    rv.pick -= dt;
     if (rv.pick <= 0 || (rv.target && (rv.target.consumed || rv.target.consuming))) {
       rv.pick = 45;
       let best = null, bd = V * 1.3;
       for (const e of state.entities) {
         if (e.consuming || e.powerup || e.radius > rv.r * 0.8) continue;
-        const d = Math.hypot(e.x - rv.x, e.y - rv.y);
+        const d = hypot(e.x - rv.x, e.y - rv.y);
         if (d < bd) { bd = d; best = e; }
       }
       rv.target = best;
     }
     let ax = 0, ay = 0;
     if (rv.target) {
-      const dx = rv.target.x - rv.x, dy = rv.target.y - rv.y, d = Math.hypot(dx, dy) || 1;
+      const dx = rv.target.x - rv.x, dy = rv.target.y - rv.y, d = hypot(dx, dy) || 1;
       ax = dx / d; ay = dy / d;
     } else { ax = Math.cos(rv.phase * 0.3); ay = Math.sin(rv.phase * 0.3); }
     // Still Water perk: rivals keep their distance from you
@@ -74,7 +75,7 @@ export function updateRivals(state, dt, onSwallow) {
     for (const e of state.entities) {
       if (e.consuming || e.powerup || e.radius > rv.r * 0.8) continue;
       if (Math.abs(e.x - rv.x) > rv.r * 1.2 || Math.abs(e.y - rv.y) > rv.r * 1.2) continue;
-      if (Math.hypot(e.x - rv.x, e.y - rv.y) < rv.r * 1.05) {
+      if (hypot(e.x - rv.x, e.y - rv.y) < rv.r * 1.05) {
         e.consumed = true;
         rv.r = Math.min(rv.r * 1.004, R * rv.sizeK * 1.6);
       }

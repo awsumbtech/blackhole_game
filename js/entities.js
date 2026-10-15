@@ -1,3 +1,4 @@
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 // ─── ENTITY SYSTEM ───
 // Object types, biomes, spawning, galaxy shapes.
 // Objects drift naturally within boundaries; the gravity well in living-world.js
@@ -261,7 +262,6 @@ export function createEntity(type, x, y, scale = 1) {
   const bandSet = type.bands ? pickRandom(type.bands) : null;
 
   return {
-    id: Math.random().toString(36).substr(2, 9),
     type: type.id,
     sizeClass: type.sizeClass,
     color,
@@ -286,7 +286,13 @@ export function createEntity(type, x, y, scale = 1) {
     // Consume animation state
     consuming: false,
     consumeProgress: 0,
-    bigFish: false
+    bigFish: false,
+    // Hot fields, declared up front so every entity shares one shape and
+    // numeric writes stay unboxed (these defaults match "unset" everywhere)
+    consumed: false, swallow: false,
+    _spawnAge: 60, _spawnAlpha: 1, _pullCap: 0, _crumbleCd: 0,
+    _sp: null, _artBase: null,
+    _mc: color + "88", _ec: color + "55"   // minimap dot / edge arrow colours
   };
 }
 
@@ -306,7 +312,7 @@ export function updateEntities(entities, bounds, dt) {
     e.rotation += e.rotSpeed * dt;
 
     // Bounce off circular boundary
-    const dist = Math.hypot(e.x, e.y);
+    const dist = hypot(e.x, e.y);
     if (dist + e.radius > bounds) {
       // Reflect velocity off the boundary normal
       const nx = e.x / dist;
@@ -327,7 +333,7 @@ export function updateEntities(entities, bounds, dt) {
 
     // Speed cap: base speed, or the gravity well's higher cap while being pulled.
     // Ease back down instead of snapping so objects leaving the pull glide.
-    const speed = Math.hypot(e.vx, e.vy);
+    const speed = hypot(e.vx, e.vy);
     const maxSpeed = Math.max(e.baseSpeed * 1.5, e._pullCap || 0);
     e._pullCap = 0;
     if (speed > maxSpeed) {

@@ -8,6 +8,7 @@ import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
 import { foodWeights, bigWeights, eventType, eventBigType } from "./tiers.js";
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 
@@ -148,7 +149,7 @@ function updateGravityWell(state, dt) {
 
     const dx = px - e.x;
     const dy = py - e.y;
-    const dist = Math.hypot(dx, dy);
+    const dist = hypot(dx, dy);
     if (dist > range || dist < 1) continue;
 
     const ed = Math.max(dist, R * 1.2);
@@ -162,12 +163,12 @@ function updateGravityWell(state, dt) {
 // ─── SPAWNING ───
 
 function viewRadius(state) {
-  return Math.hypot(state.viewW || 800, state.viewH || 600) / 2;
+  return hypot(state.viewW || 800, state.viewH || 600) / 2;
 }
 
 function clampInBounds(state, x, y, radius) {
   const lim = Math.max(10, state.bounds - radius - 4);
-  const d = Math.hypot(x, y);
+  const d = hypot(x, y);
   if (d > lim) return { x: x * lim / d, y: y * lim / d };
   return { x, y };
 }
@@ -283,7 +284,7 @@ function updateDynamicSpawning(state, dt) {
   for (let i = ents.length - 1; i >= 0; i--) {
     const e = ents[i];
     if (e.consuming) continue;
-    const d = Math.hypot(e.x - px, e.y - py) - e.radius;
+    const d = hypot(e.x - px, e.y - py) - e.radius;
     // Landmark residents (reefs, orbits, hulls, meadow buds) stay put; they're few
     const resident = e.reef != null || e.orbit || e.hull || e.meadow != null;
     if (d > far * (e.powerup ? 1.5 : 1) && !resident) { ents.splice(i, 1); continue; }
@@ -531,10 +532,10 @@ function makeVoidGift(state) {
       for (const e of st.entities) {
         if (e.consuming || e.powerup) continue;
         if (st.radius <= e.radius * st.eatRatio) continue;     // only food
-        const d = Math.hypot(e.x - this.cx, e.y - this.cy);
+        const d = hypot(e.x - this.cx, e.y - this.cy);
         if (d > this.radius) continue;
         const dx = st.playerX - e.x, dy = st.playerY - e.y;
-        const dp = Math.hypot(dx, dy);
+        const dp = hypot(dx, dy);
         if (dp < 1 || dp > reach) continue;
         e.vx += (dx / dp) * this.pull * fade * dt;
         e.vy += (dy / dp) * this.pull * fade * dt;
@@ -667,7 +668,7 @@ function makeGravityWave(state) {
       const perpX = -dirY, perpY = dirX;
       const fadeIn = smooth(this.age / 40);
       const alpha = Math.min(0.14, (1 - this.age / this.duration) * 0.18) * fadeIn;
-      const halfLen = Math.hypot(w, h);
+      const halfLen = hypot(w, h);
       // Centre the lines on the player's projection so they always span the view
       const along = st.playerX * perpX + st.playerY * perpY;
       for (let i = 0; i < 5; i++) {

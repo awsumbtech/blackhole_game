@@ -26,9 +26,10 @@ import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, s
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
 import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
+import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 
 const VERSION = "7.1";
-import { fillAround, DENSITY, densityInfo } from "./living-world.js";
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
 const canvas = document.getElementById("game");
@@ -249,14 +250,14 @@ function updateAscension(dt) {
     const wi = wispInfo();
     if (state.wispFeedT > 240 && wi) {
       state.wispFeedT = 0;
-      let best = null, bd = Math.hypot(state.viewW, state.viewH) * 0.3;
+      let best = null, bd = hypot(state.viewW, state.viewH) * 0.3;
       for (const e of state.entities) {
         if (e.consuming || e.powerup || state.radius <= e.radius * state.eatRatio) continue;
-        const d = Math.hypot(e.x - wi.x, e.y - wi.y);
+        const d = hypot(e.x - wi.x, e.y - wi.y);
         if (d < bd) { bd = d; best = e; }
       }
       if (best) {
-        const dx = state.playerX - best.x, dy = state.playerY - best.y, d = Math.hypot(dx, dy) || 1;
+        const dx = state.playerX - best.x, dy = state.playerY - best.y, d = hypot(dx, dy) || 1;
         const sp = 2.2 * Math.sqrt(state.speedScale);
         best.vx = dx / d * sp; best.vy = dy / d * sp;
       }
@@ -332,7 +333,7 @@ function onDiscovery(def, f) {
 // ─── v5: RADAR TRAIL + TIER BANNER ───
 const TIER_BANNER_FRAMES = 330;
 function radarRange() {
-  return Math.hypot(state.viewW, state.viewH) / 2 * 2.6;
+  return hypot(state.viewW, state.viewH) / 2 * 2.6;
 }
 function updateTrail(dt) {
   state.trailT += dt;
@@ -340,8 +341,8 @@ function updateTrail(dt) {
   state.trailT = 0;
   const t = state.trail;
   const last = t[t.length - 1];
-  const step = Math.hypot(state.viewW, state.viewH) * 0.02;
-  if (!last || Math.hypot(last.x - state.playerX, last.y - state.playerY) > step) {
+  const step = hypot(state.viewW, state.viewH) * 0.02;
+  if (!last || hypot(last.x - state.playerX, last.y - state.playerY) > step) {
     t.push({ x: state.playerX, y: state.playerY });
     if (t.length > 90) t.shift();
   }
@@ -486,7 +487,7 @@ function updatePlayer(dt) {
   state.playerVX *= friction;
   state.playerVY *= friction;
 
-  const speed = Math.hypot(state.playerVX, state.playerVY);
+  const speed = hypot(state.playerVX, state.playerVY);
   if (speed > maxSpeed && state.invuln < 40) {
     state.playerVX = (state.playerVX / speed) * maxSpeed;
     state.playerVY = (state.playerVY / speed) * maxSpeed;
@@ -495,7 +496,7 @@ function updatePlayer(dt) {
   state.playerX += state.playerVX * dt;
   state.playerY += state.playerVY * dt;
 
-  const distFromCenter = Math.hypot(state.playerX, state.playerY);
+  const distFromCenter = hypot(state.playerX, state.playerY);
   if (distFromCenter + state.radius > state.bounds) {
     const nx = state.playerX / distFromCenter;
     const ny = state.playerY / distFromCenter;
@@ -546,7 +547,7 @@ function tryConsume(dt) {
 
     const dx = e.x - state.playerX;
     const dy = e.y - state.playerY;
-    const dist = Math.hypot(dx, dy);
+    const dist = hypot(dx, dy);
 
     // Power-up pickup
     if (e.powerup) {
@@ -614,9 +615,10 @@ function tryConsume(dt) {
   }
 
   // Sweep finished/expired entities
-  for (let i = state.entities.length - 1; i >= 0; i--) {
-    if (state.entities[i].consumed) state.entities.splice(i, 1);
-  }
+  const es = state.entities;
+  let keep = 0;
+  for (let i = 0; i < es.length; i++) if (!es[i].consumed) es[keep++] = es[i];
+  es.length = keep;
 
   if (ateThisFrame > 0) {
     const avgTone = totalTone / ateThisFrame;
@@ -748,7 +750,7 @@ function spawnConsumeParticles(entity) {
   const sizeK = Math.max(1, entity.radius * 0.12);
   const ss = state.speedScale;
   const dx = entity.x - state.playerX, dy = entity.y - state.playerY;
-  const d = Math.hypot(dx, dy) || 1;
+  const d = hypot(dx, dy) || 1;
   const tx = -dy / d, ty = dx / d;            // swirl direction (counter-clockwise)
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -779,11 +781,14 @@ function spawnRipple(entity) {
 
 function updateParticles(dt) {
   const drag = Math.pow(0.97, dt);
-  for (let i = state.particles.length - 1; i >= 0; i--) {
-    const p = state.particles[i];
+  // In-place compaction (keeps order, no splice churn)
+  const ps = state.particles;
+  let live = 0;
+  for (let i = 0; i < ps.length; i++) {
+    const p = ps[i];
     const dx = state.playerX - p.x;
     const dy = state.playerY - p.y;
-    const dist = Math.hypot(dx, dy);
+    const dist = hypot(dx, dy);
     if (dist > 5 && p.gravity) {
       p.vx += (dx / dist) * p.gravity * dt;
       p.vy += (dy / dist) * p.gravity * dt;
@@ -793,8 +798,9 @@ function updateParticles(dt) {
     p.vx *= drag;
     p.vy *= drag;
     p.age += dt;
-    if (p.age >= p.maxAge) state.particles.splice(i, 1);
+    if (p.age < p.maxAge) ps[live++] = p;
   }
+  ps.length = live;
   for (let i = state.ripples.length - 1; i >= 0; i--) {
     state.ripples[i].age += dt;
     if (state.ripples[i].age >= state.ripples[i].maxAge) state.ripples.splice(i, 1);
@@ -1124,7 +1130,7 @@ document.getElementById("btn-title-settings").addEventListener("click", () => {
 // ─── v7: CONSTELLATION, COLLAPSE, ZEN ───
 function skinFilter() {
   const sk = SKINS.find(s => s.id === state.settings.skin);
-  if (!sk || sk.id === "classic" || state.mode === "zen" && false) return "";
+  if (!sk || sk.id === "classic") return "";
   if (sk.unlock && !hasMilestone(state.asc, sk.unlock)) return "";
   return `hue-rotate(${sk.hue || 0}deg) saturate(${sk.sat ?? 1}) brightness(${sk.bright ?? 1})`;
 }
@@ -1551,7 +1557,7 @@ function drawThumbstick(st) {
   if (!st) return;
   const dx = st.kx - st.bx;
   const dy = st.ky - st.by;
-  const d = Math.hypot(dx, dy);
+  const d = hypot(dx, dy);
   const kx = d > st.maxR ? st.bx + (dx / d) * st.maxR : st.kx;
   const ky = d > st.maxR ? st.by + (dy / d) * st.maxR : st.ky;
   ctx.save();

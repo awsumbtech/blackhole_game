@@ -8,6 +8,7 @@
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality } from "./art.js";
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
@@ -103,15 +104,15 @@ function setName(n) {
   const p = PREFIX[(W.tierNo - 1) % PREFIX.length];
   return n.startsWith("The ") ? "The " + p + " " + n.slice(4) : p + " " + n;
 }
-function viewR(state) { return Math.hypot(state.viewW, state.viewH) / 2; }
-function nearYou(state, x, y, k) { return Math.hypot(x - state.playerX, y - state.playerY) < viewR(state) * k; }
+function viewR(state) { return hypot(state.viewW, state.viewH) / 2; }
+function nearYou(state, x, y, k) { return hypot(x - state.playerX, y - state.playerY) < viewR(state) * k; }
 /** Pick a point on a curve that's just around the view (so it isn't recycled at once). */
 function pickNear(state, pts, tMax = 0.95) {
   const vr = viewR(state);
   for (let i = 0; i < 10; i++) {
     const t = W.r() * tMax;
     const p = pointOn(pts, t);
-    const d = Math.hypot(px(p.x) - state.playerX, py(p.y) - state.playerY);
+    const d = hypot(px(p.x) - state.playerX, py(p.y) - state.playerY);
     if (d > vr * 0.55 && d < vr * 1.7) return { p, t };
   }
   return null;
@@ -125,7 +126,7 @@ function curve(r, b0, bend) {
   const p2 = [Math.cos(a1) * b0 * 0.92, Math.sin(a1) * b0 * 0.92];
   const mx = (p0[0] + p2[0]) / 2, my = (p0[1] + p2[1]) / 2;
   const nx = -(p2[1] - p0[1]), ny = p2[0] - p0[0];
-  const nl = Math.hypot(nx, ny) || 1;
+  const nl = hypot(nx, ny) || 1;
   const k = (r() - 0.5) * 2 * bend * b0;
   const p1 = [mx + nx / nl * k, my + ny / nl * k];
   const wob = 0.04 * b0, wf = 2 + r() * 2, wp = r() * TAU;
@@ -148,7 +149,7 @@ function pointOn(pts, t) {
   const f = Math.max(0, Math.min(pts.length - 1.001, t * (pts.length - 1)));
   const i = Math.floor(f), k = f - i;
   const a = pts[i], b = pts[i + 1];
-  const tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1;
+  const tx = b[0] - a[0], ty = b[1] - a[1], tl = hypot(tx, ty) || 1;
   return { x: a[0] + tx * k, y: a[1] + ty * k, tx: tx / tl, ty: ty / tl };
 }
 
@@ -404,7 +405,7 @@ const SAME_TIER_KEEP = 3;
 function featureDist(state) {
   const X = state.playerX, Y = state.playerY;
   let best = Infinity;
-  const pt = (x, y, r = 0) => { const d = Math.hypot(x - X, y - Y) - r; if (d < best) best = d; };
+  const pt = (x, y, r = 0) => { const d = hypot(x - X, y - Y) - r; if (d < best) best = d; };
   for (const rf of W.reefs) pt(px(rf.x), py(rf.y), wx(rf.r));
   for (const rv of W.rivers) for (let i = 0; i < rv.pts.length; i += 2) pt(px(rv.pts[i][0]), py(rv.pts[i][1]), wx(rv.w));
   if (W.aurora) for (let i = 0; i < W.aurora.pts.length; i += 2) pt(px(W.aurora.pts[i][0]), py(W.aurora.pts[i][1]), W.b0 * 0.06);
@@ -455,7 +456,7 @@ function maintainSet(state, dt) {
   } else {
     W.same.unshift(cur);
     // Lay the next set out ahead of where you're heading
-    const v = Math.hypot(state.playerVX, state.playerVY);
+    const v = hypot(state.playerVX, state.playerVY);
     const a = v > 0.01 ? Math.atan2(state.playerVY, state.playerVX) : W.r() * TAU;
     const R = state.radius * B0K;
     buildSet(state, state.playerX + Math.cos(a) * R * 0.5, state.playerY + Math.sin(a) * R * 0.5);
@@ -472,7 +473,7 @@ const UPDATE = {
       if (e.reef == null || e.consuming) continue;
       counts[e.reef]++;
       const rf = W.reefs[e.reef];
-      const dx = px(rf.x) - e.x, dy = py(rf.y) - e.y, d = Math.hypot(dx, dy) || 1;
+      const dx = px(rf.x) - e.x, dy = py(rf.y) - e.y, d = hypot(dx, dy) || 1;
       if (d > wx(rf.r) * 0.8) { e.vx += dx / d * 0.004 * wdt; e.vy += dy / d * 0.004 * wdt; }
       e.vx *= Math.pow(0.995, wdt); e.vy *= Math.pow(0.995, wdt);
     }
@@ -486,7 +487,7 @@ const UPDATE = {
       // Don't pop food in right under your nose
       const a = W.r() * TAU, d = Math.sqrt(W.r()) * rf.r * 0.8;
       const x = px(rf.x + Math.cos(a) * d), y = py(rf.y + Math.sin(a) * d);
-      if (Math.hypot(x - state.playerX, y - state.playerY) < state.radius * 3) return;
+      if (hypot(x - state.playerX, y - state.playerY) < state.radius * 3) return;
       const e = spawnFood(state, false, { type: W.r() < 0.3 ? "dust" : undefined, pos: { x, y } });
       e.vx *= 0.3; e.vy *= 0.3;
       e.reef = i;
@@ -501,7 +502,7 @@ const UPDATE = {
     const pf = RIVER_FLOW * ss;
     state.playerX += tmp.x * pf * dt;
     state.playerY += tmp.y * pf * dt;
-    W.riding = Math.hypot(tmp.x, tmp.y) > 0.3;
+    W.riding = hypot(tmp.x, tmp.y) > 0.3;
     for (const e of state.entities) {
       if (e.consuming || e.powerup) continue;
       flowAt(e.x, e.y, tmp);
@@ -509,7 +510,7 @@ const UPDATE = {
       const k = RIVER_FLOW * 0.8 * Math.max(1, Math.sqrt(ss)) * wdt;
       e.x += tmp.x * k; e.y += tmp.y * k;
       // Comets that reach the river's mouth fade out quietly
-      if (e.riverItem && Math.hypot(e.x - W.ox, e.y - W.oy) > W.b0 * 0.97) e.consumed = true;
+      if (e.riverItem && hypot(e.x - W.ox, e.y - W.oy) > W.b0 * 0.97) e.consumed = true;
     }
     // Rivers carry fresh comets from upstream
     const every = W.boost > 0 ? 60 : 200;
@@ -551,7 +552,7 @@ const UPDATE = {
       if (!e.orbit) {
         // Keep loose things from sitting on the sun
         if (!e.consuming) {
-          const dx = e.x - cx, dy = e.y - cy, d = Math.hypot(dx, dy) || 1;
+          const dx = e.x - cx, dy = e.y - cy, d = hypot(dx, dy) || 1;
           if (d < wx(c.sunR) * 1.6) { e.vx += dx / d * 0.01 * wdt; e.vy += dy / d * 0.01 * wdt; }
         }
         continue;
@@ -559,7 +560,7 @@ const UPDATE = {
       if (e.consuming) { e.orbit = null; continue; }
       const o = e.orbit;
       const rr = wx(c.rings[o.ring]);
-      if (Math.hypot(e.x - state.playerX, e.y - state.playerY) < pr) {
+      if (hypot(e.x - state.playerX, e.y - state.playerY) < pr) {
         // Close to you: let go of the orbit and glide off along it
         e.vx = -Math.sin(o.ang) * o.w * rr;
         e.vy = Math.cos(o.ang) * o.w * rr;
@@ -645,7 +646,7 @@ const UPDATE = {
     for (const p of W.pulsars) {
       p.ang += p.spin * wdt;
       const dx = state.playerX - px(p.x), dy = state.playerY - py(p.y);
-      const d = Math.hypot(dx, dy);
+      const d = hypot(dx, dy);
       if (d < wx(W.b0 * 0.03) || d > wx(W.b0 * 1.5)) continue;
       let diff = Math.atan2(dy, dx) - p.ang;
       diff = ((diff % Math.PI) + Math.PI * 1.5) % Math.PI - Math.PI / 2;   // two opposite beams
@@ -672,14 +673,14 @@ export function onWorldBump(state, e) {
   if (!W || W.biome !== "Ruined Armada" || e.type !== "craft") return false;
   if (e._crumbleCd > 0) return true;
   e._crumbleCd = 50;
-  const dx = state.playerX - e.x, dy = state.playerY - e.y, d = Math.hypot(dx, dy) || 1;
+  const dx = state.playerX - e.x, dy = state.playerY - e.y, d = hypot(dx, dy) || 1;
   const n = 3;
   for (let i = 0; i < n; i++) {
     const a = Math.atan2(dy, dx) + (i - 1) * 0.6;
     const p = spawnFood(state, false, { type: "junk", pos: { x: e.x + Math.cos(a) * e.radius * 0.9, y: e.y + Math.sin(a) * e.radius * 0.9 }, sizeK: 1.5 });
     p.vx = Math.cos(a) * 0.5 * Math.sqrt(state.speedScale);
     p.vy = Math.sin(a) * 0.5 * Math.sqrt(state.speedScale);
-    p.color = e.color;
+    p.color = e.color; p._mc = e._mc; p._ec = e._ec;
     p.crumb = true;   // v7: Armada goal counts these
     p._artBase = null;
     p._spawnAge = 30; p._spawnAlpha = 0.5;
@@ -713,7 +714,7 @@ export function onWorldEvent(state, id) {
   }
   if (W.biome === "Star Meadow") {
     let best = null, bd = Infinity;
-    for (const m of W.meadows) { const d = Math.hypot(px(m.x) - state.playerX, py(m.y) - state.playerY); if (d < bd) { bd = d; best = m; } }
+    for (const m of W.meadows) { const d = hypot(px(m.x) - state.playerX, py(m.y) - state.playerY); if (d < bd) { bd = d; best = m; } }
     if (best) {
       for (let i = 0; i < 4; i++) plantBud(state, best, 0);
       const idx = W.meadows.indexOf(best);
@@ -739,7 +740,7 @@ export function eventPairText(id) {
 function updateLandmarks(state, dt) {
   for (const lm of W.lms) {
     if (lm.visited || state.tierBanner) continue;   // don't talk over a tier reveal
-    if (Math.hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY) < wx(lm.r) + state.radius) {
+    if (hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY) < wx(lm.r) + state.radius) {
       lm.visited = true;
       W.banner = { text: lm.name, age: 0 };
     }
@@ -761,7 +762,7 @@ function updateLandmarks(state, dt) {
     if (h.thin >= 2) {
       let bd = Infinity;
       for (const lm of W.lms) {
-        const d = Math.hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY);
+        const d = hypot(px(lm.x) - state.playerX, py(lm.y) - state.playerY);
         if (d > wx(lm.r) * 0.9 && d < bd) { bd = d; h.lm = lm; }
       }
     }
@@ -1053,6 +1054,11 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
 }
 
 /** Minimap overlay: called with the map centre and world->map scale. */
+function polyline(ctx, pts, ox, oy, k) {
+  if (!pts.length) return;
+  ctx.moveTo(ox + pts[0][0] * k, oy + pts[0][1] * k);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(ox + pts[i][0] * k, oy + pts[i][1] * k);
+}
 export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   if (!W) return;
   const f = W.f;
@@ -1061,21 +1067,21 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   ctx.lineCap = "round";
   for (const rv of W.rivers) {
     ctx.beginPath();
-    rv.pts.forEach(([x, y], i) => (i ? ctx.lineTo(cx + x * f * sc, cy + y * f * sc) : ctx.moveTo(cx + x * f * sc, cy + y * f * sc)));
+    polyline(ctx, rv.pts, cx, cy, f * sc);
     ctx.strokeStyle = "rgba(150, 215, 255, 0.4)";
     ctx.lineWidth = Math.max(1.5, rv.w * f * sc * 1.2);
     ctx.stroke();
   }
   if (W.aurora) {
     ctx.beginPath();
-    W.aurora.pts.forEach(([x, y], i) => (i ? ctx.lineTo(cx + x * f * sc, cy + y * f * sc) : ctx.moveTo(cx + x * f * sc, cy + y * f * sc)));
+    polyline(ctx, W.aurora.pts, cx, cy, f * sc);
     ctx.strokeStyle = "rgba(130, 240, 200, 0.45)";
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
   for (const p of W.pulsars) {
     const x = cx + p.x * f * sc, y = cy + p.y * f * sc, L = W.b0 * 1.6 * f * sc;
-    ctx.strokeStyle = `rgba(${p.rgb}, 0.35)`;
+    ctx.strokeStyle = p._mm || (p._mm = `rgba(${p.rgb}, 0.35)`);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x - Math.cos(p.ang) * L, y - Math.sin(p.ang) * L);
@@ -1086,17 +1092,17 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
     let x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
     // v5.1: landmarks beyond radar range sit on the rim, pointing the way
     if (rim) {
-      const dx = x - rim.cx, dy = y - rim.cy, d = Math.hypot(dx, dy);
+      const dx = x - rim.cx, dy = y - rim.cy, d = hypot(dx, dy);
       if (d > rim.r - 4) {
         const k = (rim.r - 4) / d;
         ctx.globalAlpha = lm.visited ? 0.3 : 0.6;
-        ctx.fillStyle = `rgba(${lm.rgb}, 1)`;
+        ctx.fillStyle = lm._mm || (lm._mm = `rgba(${lm.rgb}, 1)`);
         ctx.beginPath(); ctx.arc(rim.cx + dx * k, rim.cy + dy * k, 1.8, 0, TAU); ctx.fill();
         continue;
       }
     }
     ctx.globalAlpha = lm.visited ? 0.55 : 0.9;
-    ctx.strokeStyle = ctx.fillStyle = `rgba(${lm.rgb}, 1)`;
+    ctx.strokeStyle = ctx.fillStyle = lm._mm || (lm._mm = `rgba(${lm.rgb}, 1)`);
     ctx.lineWidth = 1;
     if (lm.kind === "reef" || lm.kind === "meadow") {
       ctx.beginPath(); ctx.arc(x, y, Math.max(2.5, lm.r * f * sc), 0, TAU); ctx.stroke();

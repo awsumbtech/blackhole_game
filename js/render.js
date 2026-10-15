@@ -2,17 +2,19 @@
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
 import { spriteFor, tailFor, drawBlackHoleArt, getArtQuality } from "./art.js";
+const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 
 // "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
-let TOO_BIG_RGB = "240, 130, 140";
+let TOO_BIG_RGB = "240, 130, 140", TOO_BIG_DOT = "rgba(240, 130, 140, 0.8)";
 // v6 big-catch halo: warm gold; starts once you're 82% of the way to its size
 const HALO_RGB = "255, 214, 140";
 let BIG_HALO_FROM = 0.82;
 export function setHaloFrom(v) { BIG_HALO_FROM = v; }
 export function setSoftPalette(on) {
   TOO_BIG_RGB = on ? "235, 185, 110" : "240, 130, 140";
+  TOO_BIG_DOT = `rgba(${TOO_BIG_RGB}, 0.8)`;
 }
 
 // ─── STARFIELD OFFSCREEN CACHE ───
@@ -303,7 +305,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     // Comet tail: one cached tapered gradient, rotated along the velocity
     if (e.hasTail) {
       const t = tailFor(e.color, rpx);
-      const speed = Math.hypot(e.vx, e.vy);
+      const speed = hypot(e.vx, e.vy);
       const ang = Math.atan2(-e.vy, -e.vx);
       const len = r * (5 + Math.min(4, speed * 3));
       const hgt = r * 2.4;
@@ -494,6 +496,13 @@ export function drawRipples(ctx, ripples, w, h, camX, camY, zoom = 1) {
  * a faint frame for what's on screen, and a fading trail of where you've been.
  * overlay(ctx, originX, originY, scale) draws landmarks in world coordinates.
  */
+const TRAIL_STYLES = new Map();
+function trailStyle(a) {
+  const k = a.toFixed(3);
+  let v = TRAIL_STYLES.get(k);
+  if (!v) TRAIL_STYLES.set(k, v = `rgba(150, 155, 255, ${k})`);
+  return v;
+}
 export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, playerRadius = 0, eatRatio = 0.88, overlay = null, extra = {}) {
   const mapSize = 96;
   const r = mapSize / 2;
@@ -533,7 +542,7 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, player
     ctx.lineCap = "round";
     for (let i = 1; i < trail.length; i++) {
       const a = i / trail.length;
-      ctx.strokeStyle = `rgba(150, 155, 255, ${(a * 0.4).toFixed(3)})`;
+      ctx.strokeStyle = trailStyle(a * 0.4);
       ctx.beginPath();
       ctx.moveTo(ox + trail[i - 1].x * scale, oy + trail[i - 1].y * scale);
       ctx.lineTo(ox + trail[i].x * scale, oy + trail[i].y * scale);
@@ -553,11 +562,11 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, player
       ctx.fillStyle = e.color;
       ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
     } else if (playerRadius <= e.radius * eatRatio) {
-      ctx.fillStyle = `rgba(${TOO_BIG_RGB}, 0.8)`;
+      ctx.fillStyle = TOO_BIG_DOT;
       const s2 = Math.min(4, 1.5 + e.radius * scale);
       ctx.fillRect(ex - s2 / 2, ey - s2 / 2, s2, s2);
     } else {
-      ctx.fillStyle = e.color + "88";
+      ctx.fillStyle = e._mc || e.color + "88";
       ctx.fillRect(ex - 0.5, ey - 0.5, 1.5, 1.5);
     }
   }
@@ -574,22 +583,28 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, player
 // Uses math instead of save/translate/rotate/restore
 
 // Screen-space. Shows the nearest few off-screen edible objects, plus power-ups.
+// Nearest 6 kept by insertion into fixed slots (no per-frame arrays or sort).
+// Ties keep first-seen order, same as the old stable sort.
+const EDGE_N = 6, edgeE = new Array(EDGE_N), edgeD = new Float64Array(EDGE_N), edgeSX = new Float64Array(EDGE_N), edgeSY = new Float64Array(EDGE_N);
 export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius, zoom = 1, eatRatio = 0.88) {
   const margin = 20;
-  const picks = [];
+  let n = 0;
   for (const e of entities) {
     if (e.consuming) continue;
     const sx = (e.x - camX) * zoom + w / 2;
     const sy = (e.y - camY) * zoom + h / 2;
     if (sx > -10 && sx < w + 10 && sy > -10 && sy < h + 10) continue;
     if (!e.powerup && playerRadius <= e.radius * eatRatio) continue;
-    const d = Math.hypot(sx - w / 2, sy - h / 2);
-    picks.push({ e, sx, sy, d: e.powerup ? -1 : d });
+    const d = e.powerup ? -1 : hypot(sx - w / 2, sy - h / 2);
+    if (n === EDGE_N && d >= edgeD[EDGE_N - 1]) continue;
+    let j = n < EDGE_N ? n++ : EDGE_N - 1;
+    while (j > 0 && edgeD[j - 1] > d) { edgeE[j] = edgeE[j - 1]; edgeD[j] = edgeD[j - 1]; edgeSX[j] = edgeSX[j - 1]; edgeSY[j] = edgeSY[j - 1]; j--; }
+    edgeE[j] = e; edgeD[j] = d; edgeSX[j] = sx; edgeSY[j] = sy;
   }
-  picks.sort((a, b) => a.d - b.d);
 
-  for (let i = 0; i < picks.length && i < 6; i++) {
-    const { e, sx, sy } = picks[i];
+  for (let i = 0; i < n; i++) {
+    const e = edgeE[i], sx = edgeSX[i], sy = edgeSY[i];
+    edgeE[i] = null;
     const arrowSize = e.powerup ? 8 : 5;
     const angle = Math.atan2(sy - h / 2, sx - w / 2);
     const edgeX = w / 2 + Math.cos(angle) * (w / 2 - margin);
@@ -600,7 +615,7 @@ export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius
     ctx.lineTo(edgeX - cosA * arrowSize - sinA * arrowSize * 0.6, edgeY - sinA * arrowSize + cosA * arrowSize * 0.6);
     ctx.lineTo(edgeX - cosA * arrowSize + sinA * arrowSize * 0.6, edgeY - sinA * arrowSize - cosA * arrowSize * 0.6);
     ctx.closePath();
-    ctx.fillStyle = e.powerup ? e.color : e.color + "55";
+    ctx.fillStyle = e.powerup ? e.color : e._ec || e.color + "55";
     ctx.fill();
   }
 }
