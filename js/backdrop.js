@@ -15,7 +15,7 @@ const LNB = Math.log(B);
 // d: how strongly the layer follows zoom (0 = fixed, 1 = like the world)
 // par: how much it pans with camera movement
 const LAYERS = [
-  { id: "far",  d: 0.12, par: 0.04, cell: 170, occ: 0.12, size: [12, 30], alpha: 0.5, kind: "smudge", salt: 11 },
+  { id: "far",  d: 0.12, par: 0.04, cell: 170, occ: 0.12, size: [7, 16], alpha: 0.38, kind: "smudge", salt: 11 },
   { id: "neb",  d: 0.30, par: 0.12, cell: 280, occ: 0.45, size: [130, 280], alpha: 0.34, kind: "cloud", salt: 23 },
   { id: "mid",  d: 0.58, par: 0.30, cell: 64,  occ: 0.20, size: [1.2, 2.6], alpha: 0.55, kind: "star", salt: 37 },
   { id: "near", d: 0.92, par: 0.75, cell: 150, occ: 0.18, size: [4, 12], alpha: 0.22, kind: "mote", salt: 53 }
@@ -105,6 +105,25 @@ function glow(rgb, size, core = 0) {
   return c;
 }
 
+// v9: a faint streak of interstellar dust with a few specks (never a round blob)
+function wisp(rgb, size, seed) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d"), h = size / 2, r = srng(seed * 131 + 7);
+  g.translate(h, h); g.rotate(seed * 1.3 + 0.4);
+  g.save(); g.scale(1, 0.18);
+  const gr = g.createRadialGradient(0, 0, 0, 0, 0, h);
+  gr.addColorStop(0, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.35)`);
+  gr.addColorStop(1, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0)`);
+  g.fillStyle = gr; g.fillRect(-h, -h, size, size);
+  g.restore();
+  for (let i = 0; i < 4; i++) {
+    g.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${0.5 + r() * 0.5})`;
+    g.fillRect((r() - 0.5) * h * 1.3, (r() - 0.5) * h * 0.25, 1.2, 1.2);
+  }
+  return c;
+}
+
 function smudge(rgb, seed) {
   // A tiny far-away galaxy: tilted soft ellipse with a bright core
   const S = 48, c = document.createElement("canvas");
@@ -114,8 +133,8 @@ function smudge(rgb, seed) {
   g.rotate(seed * 1.7);
   g.scale(1, 0.4 + (seed % 3) * 0.15);
   const gr = g.createRadialGradient(0, 0, 0, 0, 0, S / 2);
-  gr.addColorStop(0, "rgba(255, 246, 225, 0.95)");
-  gr.addColorStop(0.18, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.55)`);
+  gr.addColorStop(0, "rgba(255, 246, 225, 0.6)");
+  gr.addColorStop(0.12, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.4)`);
   gr.addColorStop(1, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0)`);
   g.fillStyle = gr;
   g.beginPath(); g.arc(0, 0, S / 2, 0, TAU); g.fill();
@@ -132,7 +151,7 @@ function buildSprites(lite) {
     // v8: stellar colour temperatures, hot blue-white to cool orange
     star: [glow([255, 255, 255], 12, 0.25), glow([190, 212, 255], 12, 0.25), glow([255, 238, 205], 12, 0.25),
       glow([255, 208, 160], 12, 0.25), glow([170, 196, 255], 12, 0.25), glow([255, 250, 235], 12, 0.25)],
-    mote: soft.map(p => glow(p, 32, 0.3))
+    mote: soft.map((p, i) => wisp(p, 32, i))   // v9: drifting dust streaks, not round glows
   };
   spritesLite = lite;
 }

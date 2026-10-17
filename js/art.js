@@ -455,7 +455,7 @@ Object.assign(PAINTERS, {
     // the drifting wisp the grains ride in: elongated, off-centre, faint
     g.save();
     g.rotate(ang);
-    const wl = R * (1.25 + r() * 0.35), wa = kind === 3 ? 0.34 : kind === 2 ? 0.22 : 0.17;
+    const wl = R * (1.35 + r() * 0.3), wa = kind === 3 ? 0.36 : kind === 2 ? 0.24 : 0.2;
     for (let i = 0; i < 3; i++) {
       const t = i - 1 + (r() - 0.5) * 0.5;
       const x = t * wl * 0.55, y = Math.sin(t * 1.5) * curve * R * 0.3;
@@ -469,7 +469,7 @@ Object.assign(PAINTERS, {
     for (let i = 0; i < n; i++) {
       const t = (r() * 2 - 1);
       const x = t * wl * 0.62, y = Math.sin(t * 1.5) * curve * R * 0.3 + (r() - 0.5) * R * (kind === 2 ? 1.1 : 0.6);
-      const s = Math.max(0.7, R * (i === big ? 0.2 : 0.07 + r() * 0.09));
+      const s = Math.max(0.8, R * (i === big ? 0.24 : 0.09 + r() * 0.1));
       const c = pick(r, PAL);
       if (kind === 2) {
         // soot: tiny dark-cored fluff
