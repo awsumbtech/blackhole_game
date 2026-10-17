@@ -1430,7 +1430,7 @@ function frame(now) {
     updateWorlds(state, dt, worldDt);
     updateEntities(state.entities, state.bounds, worldDt);
     updateWisp(state, dt, state.settings.reduceMotion);
-    if ((state.tier || 0) === 0 && state.run.time > 2.5 && !state.seenHints.newborn && !state.tierBanner) {
+    if ((state.tier || 0) === 0 && state.run.time > 8.5 && !state.seenHints.newborn && !state.tierBanner) {
       hint("newborn", "You've just been born. Drift and gather the dust.", 5200);
     }
     if (!state.seenHints.wisp_intro && state.run.time > 25 && !state.tierBanner) {
