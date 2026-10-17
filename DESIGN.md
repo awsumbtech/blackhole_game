@@ -142,7 +142,7 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 - **Logbook** (`js/logbook.js`): opened from the title screen or Stats. Found entries show name, line and when; unfound show "???" per biome.
 - **Wisp:** `wispReact(state, "catch"|"discovery")` twirls it; in breathers it rests close with a slow curl and gives no hints; it perks up near a discovery (`state.discoveryNear`).
 - **Melodic bites** (`js/audio.js`): an 8-note pentatonic phrase in the biome key, one note per bite, one note drifts every 12 bites, restarts after a 2.5s pause, new phrase per galaxy (`newPhrase`). Bite volume lowered.
-- **End-of-galaxy ritual:** new transition phase `ritual` between `implode` and `summary`. The star map opens in ritual mode: the newest star drifts up and settles (Reduce Motion: fades in place), one line about discoveries or best catch, a low slow chord. Tap after 1.2s or wait ~7.5s.
+- **End-of-galaxy ritual:** (v6–v8; dropped in v9, folded into the in-play galaxy flow: a soft chime and the galaxy caption, the star joins the map silently.)
 - Codex: four new "What's that?" entries (golden halo, shimmer, wisp, a new star).
 
 ## 7c. v7.0 — two modes, each with one job
@@ -157,55 +157,57 @@ back to real life. It must never trap Brian. No rewards, streaks, Dark Matter, "
 or saves. It ends with three slow breaths and "What's the one thing you're doing next?" (optional,
 kept locally only), then a send-off back to the title.
 
-### Prestige design (`js/ascension.js`, `js/rivals.js`, `js/constellation.js`)
+### Prestige design (v9: one loop) (`js/ascension.js`, `js/rivals.js`, `js/constellation.js`)
+Born → grow → collapse → reborn stronger. One reset (Collapse), one meta currency (Dark Matter),
+one upgrade screen (the constellation). There is no in-run currency or shop (stardust was removed
+in v9; saves refund it, see below).
+- **Inside a run, growth is the progression.** Tier-ups and depth-layer merges are the rewards.
+- **Galaxy flow** (`galaxyComplete` / `updateTransition` in game.js). At the target size the galaxy
+  is credited quietly (stats, records, `galaxyLog` star, run depth). Phase `flowout` (90 frames)
+  softly veils the view toward the next galaxy's colour while you keep drifting and eating. The
+  next galaxy is built under the veil (`initGalaxy(n, null, true)` keeps your drift), then `flowin`
+  (130 frames) lifts it with a caption ("GALAXY N", biome, line; the tier-banner style) and a soft
+  chime. Play never stops; no modal. The star map lives in the pause menu and on the title.
 - **Run depth** = galaxy number in the current run. Per depth d:
-  - growth needed ×`1.18^(d-1)` (`DEPTH.CLIMB_GROWTH`; breathers ×0.85 of that with Cradle).
+  - growth needed ×`CLIMB_GROWTH^(d-1)` (`DEPTH.CLIMB_GROWTH`; breathers ×0.85 of that with Quiet Cradle).
   - food density `1 - 0.035(d-1)`, floor 0.62.
   - calm rival holes from depth 3: 1 + floor((d-3)/2), max 3, size 1.5 + 0.12(d-3) × yours.
     Rivals eat food and ease you aside. They never take mass. Once outgrown they turn gold and
     can be swallowed.
-- **Collapse** (pause menu or summary, from 3 cleared). Resets the run to Galaxy 1 and the stardust
-  shop. Dark Matter = `3·cleared^1.5 + 2·peakTier` + finds bonus (f6) + 5/golden galaxy, × Fortune.
-  Depth 6 ≈ 58 DM, depth 10 ≈ 115, depth 15 ≈ 205.
-- **Constellation:** 27 nodes in three branches (Reach, Appetite, Fortune). There are 7 tiers per
-  branch. Tiers 3 and 5 are forks: the two options pull different ways, so buying one is a real
-  choice. Tier costs are 8 / 16 / 28 / 45 / 70 / 100 / 150. There are also 7 galaxy perks, earned
-  with 3 stars on that galaxy's goal.
-- **Stardust stays** as the in-run currency for the 6 shop upgrades. The shop is the short-term
-  "this run" layer and resets on collapse. Dark Matter is the permanent layer. Keeping both gives
-  every galaxy a reward and every collapse a bigger one. Milestones and Fortune let some
-  upgrades survive a collapse.
-- **Galaxy goals:** each biome has its own goal (graze reefs, ride rivers, eat orbiting worlds,
-  hull crumbs, aurora bites, full blooms, bites in beams), rated 1–3 stars. The best rating is kept.
-- **Milestones** by collapse count:
+- **Collapse** (from 3 cleared). Offered, never forced: when growth clearly slows (over 5 min in
+  a galaxy and on pace for 12+; breathers 2 / 5 min) a soft "Growth is slowing · Collapse?" pill
+  appears under the HUD (`checkCollapseNudge`). Always available from the pause menu. The confirm
+  card shows the Dark Matter breakdown, then the singularity, then the constellation, then the
+  rebirth: the same newborn intro as the first launch ("Collapse N." / "Reborn." / "Grow.", then
+  the birth) at Galaxy 1 as dust. Dark Matter = `3·cleared^1.5 + 2·peakTier` + finds bonus (f6)
+  + 5/golden galaxy, × Fortune.
+- **Constellation:** 27 nodes in three branches (Reach, Appetite, Fortune), 7 tiers each. Tiers
+  3 and 5 are forks (a real choice). Tier costs 8 / 16 / 28 / 45 / 70 / 100 / 150. The old shop
+  and galaxy perks are folded in: Solar Wind (speed, was Thrusters + Current Rider), Momentum
+  (combo cap and window, was Momentum + Patient Bloom), Second Helping (power-up length and
+  frequency, was Power Surge + Aurora Heart), Quiet Cradle (f3b, breathers need 15% less growth,
+  was Cradle Blessing), Star Reader (f5b, goal stars give double DM). Reach/pull nodes cover the
+  old Event Horizon and Gravity Well. Seed Mass, Salvager and Pulsar Core are gone.
+- **Galaxy goals are optional discoveries:** each biome has its own goal (graze reefs, ride rivers,
+  eat orbiting worlds, hull crumbs, aurora bites, full blooms, bites in beams), rated 1–3 stars,
+  shown on the HUD and in the logbook. Each new best star gives +2 DM (`GOAL_DM`, ×2 Star Reader).
+  No perks hang on them.
+- **Milestones** by collapse count (only the ones that change what you see):
 
   | Collapses | Unlock |
   |---|---|
-  | 1 | golden galaxies (8%, ×3 stardust) + Ember skin |
-  | 2 | keep Seed Mass |
+  | 1 | golden galaxies (8%, +5 DM each) + Ember skin |
   | 3 | supernova runs (12% of runs, bites ×1.5) + Aurora skin |
-  | 4 | deep variants |
-  | 5 | head start |
   | 6 | Pearl skin |
-  | 8 | keep all upgrades |
 
-- **Tuning numbers** (`tools/collapse-sim.mjs`, run `node tools/collapse-sim.mjs`):
-  - Bot time ≈ v6 base × climbK^0.72, a fit to v7 bot runs at depths 1–7. Humans are about 1.2× the bot.
-  - The wall is reached when the next galaxy would take more than 9.5 minutes.
+- **v9 save migration (SAVE_VERSION 8):** unspent stardust plus the cost of every bought upgrade
+  level becomes Dark Matter at 25 stardust each (a maxed shop ≈ 125 DM); each galaxy perk owned
+  gives 8 DM and is removed (f3b/f5b keep their ids with the new effects). v1 saves' legacy
+  stardust bonus is included. A one-time title hint says what came back.
+- **Tuning numbers** (`tools/collapse-sim.mjs`, run `node tools/collapse-sim.mjs`): see the v9
+  table below.
 
-  | Cycle | Depth | Min | DM | Perks | Power |
-  |---|---|---|---|---|---|
-  | 1 | 6 | 30 | 58 | 0 | 1.00 |
-  | 2 | 8 | 39 | 103 | 5 | 1.29 |
-  | 3 | 10 | 44 | 140 | 9 | 1.57 |
-  | 4 | 10 | 37 | 140 | 13 | 1.88 |
-  | 5 | 10 | 35 | 183 | 15 | 2.00 |
-  | 6 | 13 | 49 | 264 | 18 | 2.27 |
-  | 7 | 13 | 46 | 264 | 21 | 2.40 |
-  | 8 | 15 | 48 | 450 | 24 | 3.23 |
-  | 9 | 17 | 43 | 806 | 27 | 4.75 |
-
-  The tree fills in about 9 collapses (about 6 hours). After that, galaxy stars, milestones and skins carry it.
+TUNING_TABLE_V9
 
 ### Zen design (`js/zen.js`)
 - **Arc:**
@@ -265,7 +267,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
-- **v1–v2:** core eat-and-grow, stardust upgrade shop (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
+- **v1–v2:** core eat-and-grow, stardust upgrade shop (removed in v9) (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
 - **Joystick:** the floating thumbstick became the default.
 - **v3.0 Calm & Themed:** Zen default, telegraphed events, Void Gift, biome rhythm with breathers, breathing pulse, codex.
 - **v4.0 Feels Finished:** title screen, first-launch intro, drift-in, pause menu, painterly art, new black hole, quality setting.
@@ -298,13 +300,13 @@ js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
 js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
 js/depth.js         v8.3 back depth layers + tier merge
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
-js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
+js/wisp.js          companion wisp       js/starmap.js     star map
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
 js/ascension.js     v7 prestige logic    js/constellation.js perk screen
 js/rivals.js        calm rival holes     js/zen.js          Zen sessions + exit
 tools/collapse-sim.mjs  collapse-curve model (node)   tools/audio-analyze.py  offline audio render + metrics
-js/powerups.js      power-ups            js/progression.js upgrades, stardust, summary, BREATHER_TARGET
-js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex, shop
+js/powerups.js      power-ups            js/progression.js base mods, run records, formatting
+js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex
 js/input.js         thumbstick, follow-finger, mouse, keyboard
 ```
 
