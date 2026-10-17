@@ -1,63 +1,13 @@
 // ─── PROGRESSION ───
-// Stardust economy, permanent upgrades, galaxy targets and personal records.
+// Run records and number formatting. (v9: the stardust shop is gone. Growth is
+// the progression inside a run; Dark Matter and the constellation are the only
+// meta layer, see ascension.js.)
 
-
-export const MAX_LEVEL = 5;
-
-// Stardust cost to buy level 1..5 (scaled per upgrade by costMult).
-const BASE_COSTS = [25, 50, 85, 130, 190];
-
-const START_BONUS = [0, 0.05, 0.1, 0.15, 0.2, 0.25];  // v5: head start above your floor
-
-export const UPGRADES = [
-  {
-    id: "startMass", name: "Seed Mass", costMult: 1.2,
-    desc: l => l ? `Start each galaxy ${Math.round(START_BONUS[l] * 100)}% heavier than you left the last` : "Start each galaxy a little heavier"
-  },
-  {
-    id: "thrusters", name: "Thrusters", costMult: 1,
-    desc: l => `+${l * 8}% move speed`
-  },
-  {
-    id: "reach", name: "Event Horizon", costMult: 1.3,
-    desc: l => `Swallow things up to ${Math.round(100 / eatRatioFor(l))}% of your size`
-  },
-  {
-    id: "gravity", name: "Gravity Well", costMult: 1,
-    desc: l => `+${l * 20}% pull range, +${l * 15}% pull strength`
-  },
-  {
-    id: "combo", name: "Momentum", costMult: 1,
-    desc: l => `Combo window ${(comboWindowFor(l) / 60).toFixed(2)}s (combos add up to +25% mass)`
-  },
-  {
-    id: "surge", name: "Power Surge", costMult: 1,
-    desc: l => `Power-ups last +${l * 15}% and show up ${l * 10}% more often`
-  }
-];
-
-export function eatRatioFor(level) { return 0.88 - 0.03 * level; }
-export function comboWindowFor(level) { return 75 * (1 + 0.2 * level); }
-export function startBonusFor(level) { return START_BONUS[Math.min(level, MAX_LEVEL)]; }
-
-export function upgradeCost(upg, level) {
-  if (level >= MAX_LEVEL) return null;
-  return Math.round(BASE_COSTS[level] * upg.costMult);
-}
-
-/** Derived gameplay modifiers from upgrade levels. */
-export function computeMods(upgrades) {
-  const u = upgrades;
+// Base gameplay modifiers before constellation perks (what the old shop's level 0 was).
+export function baseMods() {
   return {
-    startBonus: startBonusFor(u.startMass || 0),
-    thrust: 1 + 0.08 * (u.thrusters || 0),
-    eatRatio: eatRatioFor(u.reach || 0),
-    reachBonus: 0.1 * (u.reach || 0),
-    pullRange: 1 + 0.2 * (u.gravity || 0),
-    pullStrength: 1 + 0.15 * (u.gravity || 0),
-    comboWindow: comboWindowFor(u.combo || 0),
-    surgeDuration: 1 + 0.15 * (u.surge || 0),
-    surgeFrequency: 1 + 0.1 * (u.surge || 0)
+    thrust: 1, eatRatio: 0.88, reachBonus: 0, pullRange: 1, pullStrength: 1,
+    comboWindow: 75, surgeDuration: 1, surgeFrequency: 1
   };
 }
 
@@ -71,44 +21,11 @@ export function freshRun(stats) {
   return { time: 0, eaten: 0, bestCombo: 0, bigFish: 0, powerups: 0, bumps: 0, found: 0, foundNames: [], bestCatch: null, startBestCombo: stats.bestCombo || 0 };
 }
 
-/** Called once when a galaxy is cleared. Updates records + stardust, returns summary. */
+/** Called once when a galaxy is passed: personal records only. */
 export function finishGalaxy(state) {
-  const g = state.galaxy;
-  const run = state.run;
-  const rec = state.records;
-  const time = Math.round(run.time * 10) / 10;
-
-  // No clock since v7: no speed bonus or time records (old ones are still shown)
-  const newCombo = run.bestCombo > run.startBestCombo && run.bestCombo > 0;
-  const newEaten = run.eaten > rec.mostEaten;
-  if (newEaten) rec.mostEaten = run.eaten;
-  const newBig = run.bigFish > rec.mostBigFish;
-  if (newBig) rec.mostBigFish = run.bigFish;
-
-  const parts = [
-    ["Galaxy bonus", 12 + g * 4],
-    ["Objects eaten", Math.floor(run.eaten / 4)],
-    ["Best combo", Math.floor(run.bestCombo / 2)],
-    ["Big catches", run.bigFish],
-    ["Calm bonus", 10]
-  ].filter(p => p[1] > 0);
-  const earned = parts.reduce((s, p) => s + p[1], 0);
-
-  state.stardust += earned;
-  state.stats.stardustEarned += earned;
-  if (earned > rec.bestStardust) rec.bestStardust = earned;
-
-  return {
-    galaxy: g,
-    biome: state.biome ? state.biome.name : "",
-    time, mass: state.mass,
-    breather: !!(state.biome && state.biome.breather),
-    eaten: run.eaten, newEaten,
-    bestCombo: run.bestCombo, newCombo,
-    bigFish: run.bigFish, newBig,
-    powerups: run.powerups,
-    parts, earned
-  };
+  const run = state.run, rec = state.records;
+  if (run.eaten > rec.mostEaten) rec.mostEaten = run.eaten;
+  if (run.bigFish > rec.mostBigFish) rec.mostBigFish = run.bigFish;
 }
 
 export function fmtTime(sec) {

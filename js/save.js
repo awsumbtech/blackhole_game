@@ -1,9 +1,9 @@
 // ─── SAVE SYSTEM ───
-// localStorage persistence, stats, records, upgrades and mid-galaxy progress.
+// localStorage persistence, stats, records and mid-galaxy progress.
 // v2 keeps the original key so existing v1 saves load and migrate in place.
 
 const SAVE_KEY = "blackhole_galaxy_v3";
-export const SAVE_VERSION = 7;   // v7: asc (Ascension: Dark Matter, perks, goals, collapses)
+export const SAVE_VERSION = 8;   // v7: asc (Ascension). v8: no stardust or shop (refunded as Dark Matter)
 import { normalizeAsc } from "./ascension.js";
 import { floorMassForLegacyGalaxy } from "./tiers.js";
 
@@ -14,7 +14,6 @@ export function defaultStats() {
     highestMass: 0,
     bestCombo: 0,
     timePlayed: 0,        // seconds
-    stardustEarned: 0,
     bigFishEaten: 0,
     powerupsCollected: 0,
     bumps: 0
@@ -26,21 +25,37 @@ export function defaultRecords() {
     fastest: {},          // galaxy number -> fastest clear time (seconds)
     mostEaten: 0,         // most objects eaten in one galaxy
     mostBigFish: 0,
-    bestStardust: 0,      // most stardust from one galaxy
     galaxyLog: {},        // v5.2: galaxy number -> { b: biome, d: date, t: tier, est? } for the star map
     discoveries: {}       // v6: discovery id -> { g: galaxy first found, d: date, n: times found }
   };
 }
 
-export function defaultUpgrades() {
-  return { startMass: 0, thrusters: 0, reach: 0, gravity: 0, combo: 0, surge: 0 };
+// ─── v8 migration: the stardust shop is gone ───
+// Everything a save had in stardust (unspent, plus what its upgrade levels
+// cost) comes back as Dark Matter at 25 stardust each. Galaxy perks (3-star
+// rewards) were folded into constellation nodes; each one owned gives 8 DM.
+const OLD_COSTS = [25, 50, 85, 130, 190];
+const OLD_MULT = { startMass: 1.2, thrusters: 1, reach: 1.3, gravity: 1, combo: 1, surge: 1 };
+export const STARDUST_PER_DM = 25;
+export const GALAXY_PERK_DM = 8;
+export function stardustRefund(raw) {
+  let spent = 0;
+  const u = raw.upgrades || {};
+  for (const k in OLD_MULT) {
+    const lvl = Math.max(0, Math.min(5, u[k] | 0));
+    for (let l = 0; l < lvl; l++) spent += Math.round(OLD_COSTS[l] * OLD_MULT[k]);
+  }
+  const unspent = Math.max(0, Math.floor(raw.stardust || 0));
+  const gperks = Object.keys((raw.asc && raw.asc.perks) || {}).filter(id => id.startsWith("g_") && raw.asc.perks[id]).length;
+  const dm = Math.round((spent + unspent) / STARDUST_PER_DM) + gperks * GALAXY_PERK_DM;
+  return { dm, spent, unspent, gperks };
 }
 
 export function save(state) {
   // v7: a Zen session never touches your journey; it was saved before the session began
   if (state.mode === "zen") return;
   try {
-    // Once a galaxy is credited (summary showing), save as if already in the
+    // Once a galaxy is credited (flowing into the next), save as if already in the
     // next galaxy so a reload can't re-earn the same rewards.
     const credited = !!state.galaxyCredited;
     const inPlay = !state.transitioning || state.transitionPhase === "fadein";
@@ -53,11 +68,8 @@ export function save(state) {
       volume: state.volume,
       stats: state.stats,
       records: state.records,
-      stardust: state.stardust,
-      upgrades: state.upgrades,
       seenHints: state.seenHints,
       settings: state.settings,
-      legacyPending: state.legacyBonusPending || 0,
       lastActive: Date.now(),
       floorMass: state.floorMass,
       bestTier: state.bestTier || 0,
@@ -107,12 +119,9 @@ function normalize(raw) {
     volume: raw.volume ?? 0.4,
     stats,
     records: { ...defaultRecords(), ...(raw.records || {}) },
-    stardust: raw.stardust || 0,
-    upgrades: { ...defaultUpgrades(), ...(raw.upgrades || {}) },
     seenHints: raw.seenHints || {},
     settings: raw.settings || {},
     run: raw.run || null,
-    legacyBonus: raw.legacyPending || 0,  // only used for the one-time summary note
     lastActive: raw.lastActive || 0,
     // v5: your size carries over between galaxies. Older saves start at a
     // tier that matches how far they'd got; a half-played galaxy restarts.
@@ -130,11 +139,20 @@ function normalize(raw) {
   const disc = data.records.discoveries;
   data.records.discoveries = disc && typeof disc === "object" && !Array.isArray(disc) ? { ...disc } : {};
 
-  // Thank-you for galaxies cleared before stardust existed.
-  if (fromV1) {
-    const cleared = Math.max(stats.galaxiesCleared, data.galaxy - 1);
-    data.legacyBonus = Math.min(400, cleared * 20);
-    data.stardust += data.legacyBonus;
+  // v1 saves got a thank-you for galaxies cleared before stardust existed;
+  // it becomes part of the refund below.
+  const sd = { stardust: raw.stardust || 0, upgrades: raw.upgrades, asc: raw.asc };
+  if (fromV1) sd.stardust += Math.min(400, Math.max(stats.galaxiesCleared, data.galaxy - 1) * 20);
+
+  // v8: stardust and the shop are gone. Refund them (and folded galaxy perks) as Dark Matter.
+  if ((raw.version || 1) < 8) {
+    const r = stardustRefund(sd);
+    for (const id of Object.keys(data.asc.perks)) if (id.startsWith("g_")) delete data.asc.perks[id];
+    if (r.dm > 0) {
+      data.asc.dm = (data.asc.dm || 0) + r.dm;
+      data.asc.dmTotal = (data.asc.dmTotal || 0) + r.dm;
+    }
+    data.v9Refund = r;
   }
   return data;
 }

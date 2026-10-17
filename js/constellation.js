@@ -4,7 +4,7 @@
 // stars side by side: either one opens the next tier. Galaxy perks (earned
 // with 3 goal stars) circle the core. Tap a star to read it and buy it.
 
-import { PERKS, GALAXY_PERKS, BRANCHES, perkState, buyPerk, nextMilestone } from "./ascension.js";
+import { PERKS, BRANCHES, perkState, buyPerk, nextMilestone } from "./ascension.js";
 const $ = id => document.getElementById(id);
 
 const TAU = Math.PI * 2;
@@ -33,10 +33,6 @@ function layout() {
     }
     nodes.push({ p, x, y, rgb: BRANCHES[p.b].rgb, r: 7 + p.t * 0.6 });
   }
-  GALAXY_PERKS.forEach((p, i) => {
-    const a = Math.PI * (0.12 + 0.76 * i / (GALAXY_PERKS.length - 1));
-    nodes.push({ p, x: cx + Math.cos(a) * 64, y: cy + Math.sin(a) * 40 + 8, rgb: "200, 230, 255", r: 5.5, gal: true });
-  });
   nodes.core = { x: cx, y: cy };
 }
 
@@ -79,8 +75,7 @@ function draw(now) {
   // lines: core -> tier 0, tier n -> tier n+1
   g.lineCap = "round";
   for (const n of nodes) {
-    if (n.gal) continue;
-    const prev = n.p.t === 0 ? [c] : nodes.filter(m => !m.gal && m.p.b === n.p.b && m.p.t === n.p.t - 1);
+    const prev = n.p.t === 0 ? [c] : nodes.filter(m => m.p.b === n.p.b && m.p.t === n.p.t - 1);
     const own = !!asc.perks[n.p.id];
     for (const m of prev) {
       const mOwn = m === c || !!asc.perks[m.p.id];
@@ -107,7 +102,7 @@ function draw(now) {
   // branch names
   g.font = "600 10px Outfit, system-ui, sans-serif"; g.textAlign = "center";
   for (const b of Object.keys(BRANCHES)) {
-    const top = nodes.filter(n => !n.gal && n.p.b === b && n.p.t === 6)[0];
+    const top = nodes.filter(n => n.p.b === b && n.p.t === 6)[0];
     if (!top) continue;
     g.fillStyle = `rgba(${BRANCHES[b].rgb}, 0.7)`;
     g.fillText(BRANCHES[b].name.toUpperCase(), top.x, top.y - 22);
@@ -129,10 +124,10 @@ function showCard(n) {
       ${opts.newRun ? `<div class="row"><button id="btn-const-run" class="big-btn">Begin a new run</button></div>` : ""}`;
   } else {
     const st = perkState(asc, n.p);
-    const br = n.p.galaxy ? { name: "Galaxy perk", rgb: n.rgb } : BRANCHES[n.p.b];
+    const br = BRANCHES[n.p.b];
     card.style.setProperty("--c", `rgb(${n.rgb})`);
     card.style.setProperty("--rgb", n.rgb);
-    card.innerHTML = `<span class="br">${esc(br.name)}${n.p.galaxy ? "" : ` · tier ${n.p.t + 1}`}</span><b class="n">${esc(n.p.name)}</b>${esc(n.p.desc)}
+    card.innerHTML = `<span class="br">${esc(br.name)} · tier ${n.p.t + 1}</span><b class="n">${esc(n.p.name)}</b>${esc(n.p.desc)}
       <div class="why">${st.owned ? "Yours, permanently." : st.ok ? `Costs ${st.cost} Dark Matter` : esc(st.why)}</div>
       <div class="row">${st.ok ? `<button id="btn-const-buy" class="big-btn">Light it · ${st.cost}</button>` : ""}
       <button id="btn-const-close" class="soft-btn">${opts.newRun ? "Back" : "Close"}</button></div>`;
