@@ -7,7 +7,9 @@
 
 const TAU = Math.PI * 2;
 let w = null;
-let sprite = null;
+let sprite = null, shade = null;
+let hx = 0, hy = 0;   // home point (written by homePoint, no per-frame objects)
+const TRAIL_N = 16;   // floats (8 points)
 
 function makeSprite() {
   const c = document.createElement("canvas");
@@ -22,6 +24,19 @@ function makeSprite() {
   g.fillRect(0, 0, 64, 64);
   return c;
 }
+// v8: a soft dark backing so the glow stays readable over bright stars and nebulae
+function makeShade() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(4, 8, 18, 0.55)");
+  gr.addColorStop(0.5, "rgba(4, 8, 18, 0.25)");
+  gr.addColorStop(1, "rgba(4, 8, 18, 0)");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  return c;
+}
 
 export function resetWisp(state) {
   const a = Math.random() * TAU;
@@ -29,17 +44,20 @@ export function resetWisp(state) {
   w = {
     x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d,
     vx: 0, vy: 0, ang: a, mode: "follow", modeT: 0,
-    nextHint: 900 + Math.random() * 600, target: null, trail: [], trailT: 0, age: 0, joy: 0, perk: 0
+    nextHint: 900 + Math.random() * 600, target: null, trail: new Float64Array(TRAIL_N), trailLen: 0, trailT: 0, age: 0, joy: 0, perk: 0
   };
 }
 
 function homePoint(state) {
-  // Orbit gently a little off the hole's shoulder (at least ~22px out on screen)
-  const rest = state.biome && state.biome.breather;
-  let d = Math.max(state.radius * (rest ? 1.9 : 2.6), (rest ? 17 : 22) / state.zoom);
+  // Orbit gently a little off the hole's shoulder (at least ~22px out on screen).
+  // v8 Zen: a closer, steady orbit right beside the hole (it's the breath guide).
+  const zen = state.mode === "zen";
+  const rest = !zen && state.biome && state.biome.breather;
+  let d = zen ? Math.max(state.radius * 2.1, 20 / state.zoom) : Math.max(state.radius * (rest ? 1.9 : 2.6), (rest ? 17 : 22) / state.zoom);
   // Resting: a slow little curl (a loop within the loop), like a cat settling
   if (rest) d *= 1 + 0.18 * Math.sin(w.ang * 3);
-  return { x: state.playerX + Math.cos(w.ang) * d, y: state.playerY + Math.sin(w.ang) * d * 0.8 };
+  hx = state.playerX + Math.cos(w.ang) * d;
+  hy = state.playerY + Math.sin(w.ang) * d * 0.8;
 }
 
 /** v6: moments the wisp reacts to ("catch" after a big catch, "discovery" on a find). */
@@ -69,19 +87,24 @@ export function updateWisp(state, dt, reduceMotion) {
   // Happy twirl after a catch; slow, settled orbit in breathers
   const spin = w.joy > 0 && !reduceMotion ? 0.012 * Math.min(1, w.joy / 40) : 0;
   w.ang += ((reduceMotion ? 0.0015 : 0.003) * (rest ? 0.55 : 1) + spin) * dt;
-  let goal = homePoint(state);
-  // Perk up near a hidden discovery: lean toward it from the hole's shoulder
-  const dn = state.discoveryNear;
+  const zen = state.mode === "zen";
+  homePoint(state);
+  let gx = hx, gy = hy;
+  // Perk up near a hidden discovery: lean toward it from the hole's shoulder (never in Zen)
+  const dn = zen ? null : state.discoveryNear;
   const perkGoal = dn && dn.q > 0 ? Math.min(1, dn.q) : 0;
   w.perk += (perkGoal - w.perk) * Math.min(1, 0.02 * dt);
   if (w.perk > 0.05 && dn) {
     const a = Math.atan2(dn.y - state.playerY, dn.x - state.playerX);
     const d = Math.max(state.radius * 3.4, 30 / state.zoom);
-    const lean = { x: state.playerX + Math.cos(a) * d, y: state.playerY + Math.sin(a) * d };
-    goal = { x: goal.x + (lean.x - goal.x) * w.perk, y: goal.y + (lean.y - goal.y) * w.perk };
+    gx += (state.playerX + Math.cos(a) * d - gx) * w.perk;
+    gy += (state.playerY + Math.sin(a) * d - gy) * w.perk;
   }
 
-  if (w.mode === "follow") {
+  if (zen) {
+    // Zen: never wanders off to hint at food; it stays at your side
+    w.mode = "follow"; w.target = null;
+  } else if (w.mode === "follow") {
     w.nextHint -= dt;
     if (w.nextHint <= 0 && rest) w.nextHint = 600;   // resting: no hints in breathers
     else if (w.nextHint <= 0) {
@@ -97,36 +120,36 @@ export function updateWisp(state, dt, reduceMotion) {
     } else {
       // hover just beside it, never on top
       const side = Math.max(t.radius * 1.8, 14 / state.zoom);
-      goal = { x: t.x + Math.cos(w.ang * 3) * side, y: t.y + Math.sin(w.ang * 3) * side };
+      gx = t.x + Math.cos(w.ang * 3) * side; gy = t.y + Math.sin(w.ang * 3) * side;
     }
   }
 
   // Soft spring toward the goal (frame-rate independent)
-  const k = (w.mode === "hint" ? 0.0035 : 0.006) * dt;
-  w.vx += (goal.x - w.x) * k;
-  w.vy += (goal.y - w.y) * k;
+  const k = (zen ? 0.014 : w.mode === "hint" ? 0.0035 : 0.006) * dt;
+  w.vx += (gx - w.x) * k;
+  w.vy += (gy - w.y) * k;
   const damp = Math.pow(0.9, dt);
   w.vx *= damp; w.vy *= damp;
   w.x += w.vx * dt; w.y += w.vy * dt;
 
   // Snap back if it got left far behind (new galaxy, a big pull-back)
   const far = Math.hypot(w.x - state.playerX, w.y - state.playerY);
-  if (far > Math.max(state.viewW, state.viewH)) { const h = homePoint(state); w.x = h.x; w.y = h.y; w.vx = w.vy = 0; w.trail = []; }
+  if (far > Math.max(state.viewW, state.viewH)) { homePoint(state); w.x = hx; w.y = hy; w.vx = w.vy = 0; w.trailLen = 0; }
 
   if (!reduceMotion) {
     w.trailT += dt;
     if (w.trailT >= 4) {
       w.trailT = 0;
-      w.trail.push(w.x, w.y);
-      if (w.trail.length > 16) w.trail.splice(0, 2);
+      if (w.trailLen === TRAIL_N) { w.trail.copyWithin(0, 2); w.trailLen -= 2; }
+      w.trail[w.trailLen++] = w.x; w.trail[w.trailLen++] = w.y;
     }
-  } else if (w.trail.length) w.trail = [];
+  } else w.trailLen = 0;
 }
 
 /** Inside the world transform (camera already applied by the caller via cam offsets). */
 export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
   if (!w) return;
-  if (!sprite) sprite = makeSprite();
+  if (!sprite) { sprite = makeSprite(); shade = makeShade(); }
   const z = state.zoom;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
   // Grows a little with each scale tier, in screen pixels
@@ -141,12 +164,15 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
     : reduceMotion ? 1 : 0.85 + breath * 0.3 + w.perk * 0.12 * Math.sin(w.age * 0.08);
   const fade = Math.min(1, w.age / 120);
   const s = px * pulse / z;
-  for (let i = 0; i < w.trail.length; i += 2) {
-    const a = (i / w.trail.length) * 0.25 * fade;
-    const ts = s * (0.4 + 0.5 * i / w.trail.length);
+  const n = w.trailLen;
+  for (let i = 0; i < n; i += 2) {
+    const a = (i / n) * 0.25 * fade;
+    const ts = s * (0.4 + 0.5 * i / n);
     ctx.globalAlpha = a;
     ctx.drawImage(sprite, w.trail[i] + ox - ts, w.trail[i + 1] + oy - ts, ts * 2, ts * 2);
   }
+  ctx.globalAlpha = 0.8 * fade;
+  ctx.drawImage(shade, w.x + ox - s * 3, w.y + oy - s * 3, s * 6, s * 6);
   ctx.globalAlpha = Math.min(1, (zenB ? 0.55 + breath * 0.45 : 0.7 + breath * 0.25) * (rest ? 0.8 : 1) + 0.25 * joyK + 0.2 * w.perk) * fade;
   ctx.drawImage(sprite, w.x + ox - s * 2, w.y + oy - s * 2, s * 4, s * 4);
   ctx.globalAlpha = 1;
