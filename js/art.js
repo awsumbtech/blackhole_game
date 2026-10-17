@@ -562,8 +562,8 @@ Object.assign(PAINTERS, {
   comet(g, R, e, r, v, look) {
     const coma = [[150, 225, 255], [150, 255, 200], [225, 240, 255]][look % 3];
     const gr = g.createRadialGradient(0, 0, 0, 0, 0, R * 2.3);
-    gr.addColorStop(0, css(mx3(coma, K1, 0.7), 0.7));
-    gr.addColorStop(0.16, css(coma, 0.42));
+    gr.addColorStop(0, css(mx3(coma, K1, 0.8), 0.9));
+    gr.addColorStop(0.16, css(coma, 0.5));
     gr.addColorStop(0.45, css(coma, 0.12));
     gr.addColorStop(1, css(coma, 0));
     g.fillStyle = gr;
@@ -586,7 +586,7 @@ Object.assign(PAINTERS, {
     g.fillStyle = ng; g.fillRect(-nr, -nr, nr * 2, nr * 2);
     if (R > 8) speck(g, nr, Math.round(nr * 3), [[255, 255, 255], [80, 90, 110]], r, 0.2, 0.5, 0.06, 0.14);
     g.restore();
-    softBlob(g, LX * nr * 0.35, LY * nr * 0.35, nr * 0.7, [255, 255, 255], 0.55);
+    softBlob(g, LX * nr * 0.3, LY * nr * 0.3, nr * 0.9, [255, 255, 255], 0.7);
   },
 
   // Moons: cratered, no air. Grey maria, icy cracked, volcanic, dark dusty, bright icy, rusty.
@@ -1077,7 +1077,7 @@ function bodyFill(g, R, base, min, r, hi) {
       g.save(); g.translate(LX * R * 0.35, LY * R * 0.35); g.scale(1.4, 0.7); softBlob(g, 0, 0, R * 0.32, [240, 244, 255], 0.35); g.restore();
     }
   }
-  shade(g, R, 0.9, true);
+  shade(g, R, 0.78, true);
 }
 function smoothSub(g, pts, ox, oy) {
   const n = pts.length;
