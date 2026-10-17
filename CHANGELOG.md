@@ -2,6 +2,19 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.6 A real beginning (Oct 2026)
+
+- **Starting over now begins in the dark.** In v8.5, "Start completely over" did play the intro, but it was a few faint words over the galaxy behind the title. It looked like you'd just been dropped into a galaxy.
+- **The beginning now:**
+  - The screen fades to a dark void and the galaxy is gone.
+  - "Black Hole · Galaxy Eater" appears, then "Drift.", "Eat what's smaller." and "Grow."
+  - The void slowly lifts, and your newborn hole is born in place, growing from a speck among the dust.
+  - Then the controls tip and "You've just been born."
+- **Same beginning on first launch.**
+- **It can't be lost.** If the app is closed or reloaded before the beginning has played, it plays the next time you open the app.
+- **Starting over also closes any open menu or pause screen first.**
+- **Updates arrive reliably.** An installed app now checks for a new version every time you return to it. When one arrives, the game saves and reloads at a calm moment (on the title screen or while the app is in the background), then comes back to where you were.
+
 ## v8.5 True fresh start (Oct 2026)
 
 - **"Start completely over" on the title screen now really starts from the beginning.** After you confirm, the first-launch intro plays ("Drift. Eat what's smaller. Grow."), then the drift-in. You begin as a newborn hole with only dust, in galaxy 1. Before, it dropped you straight into a galaxy.

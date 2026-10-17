@@ -22,8 +22,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, galaxy goals, rivals.
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v8.5**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.5"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v8.6**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.6"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -266,6 +266,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v8.6 A real beginning:** the intro is a dark void that hides the galaxy (wordmark, then "Drift. / Eat what's smaller. / Grow."), then the void lifts over ~2.8s while the newborn hole is born in the play view (`state.birth` scales the drawn hole). `seenHints.intro` is set only when the intro has played, and boot shows the intro whenever it is unset, so an interrupted start-over resumes at the beginning. SW updates: `reg.update()` whenever the app returns to the front; on `controllerchange` the game saves and reloads at a calm moment (title or hidden), coming back to the title.
 - **v8.5 True fresh start:** title "Start completely over" (`startCompletelyOver` in game.js) wipes progress, Ascension, the star map's galaxy log and all `seenHints` (onboarding, codex seen flags, tier/merge captions), ends any Zen session, then replays the first-launch intro and drift-in into a newborn dust-only galaxy 1. Settings, lifetime stats, fastest times, the logbook and Zen notes stay.
 - **v8.4 Still tiny:** big inedible objects in play are at most ~1 tier up (`homeTier` filter on big types and biome signatures; bigger-fish 1.3–2.2× your radius; rough rock only at Grit & Pebbles); Debris Reef reefs are back-layer haze at tier 0 and merge in at tier 1 (caption waits, `minTier`); newborn opening hint.
 - **v8.3 Growth you can feel:** North Star (§0); a fresh game is dust only, bigger tiers wait in blurred back depth layers and merge into play on tier-up (`js/depth.js`, §5b); the hole visibly outgrows its food; rivals drift in from the back; reef tendrils (the "snakes") removed.
