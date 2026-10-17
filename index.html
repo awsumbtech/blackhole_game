@@ -220,6 +220,7 @@
 
   <!-- First-launch intro -->
   <div id="intro-screen" class="screen hidden" aria-live="polite">
+    <div id="intro-mark" class="intro-mark"><div class="title-name">Black Hole</div><div class="title-sub">Galaxy Eater</div></div>
     <div id="intro-line" class="intro-line"></div>
     <button id="btn-skip-intro" class="skip-btn">Skip</button>
   </div>
@@ -247,7 +248,18 @@
   <script>
     if ("serviceWorker" in navigator) {
       // Relative path so it works from a subfolder (e.g. GitHub Pages /blackhole_game/)
-      navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(reg => {
+        // v8.6: an installed app resumed from the background never navigates, so
+        // check for a new version every time it comes back to the front
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+      }).catch(() => {});
+      // A new version took over (it skips waiting). The game reloads at a calm moment.
+      const hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController) return;   // first install, nothing old is running
+        window.__bhUpdateReady = true;
+        window.dispatchEvent(new Event("bh-update"));
+      });
     }
   </script>
 </body>

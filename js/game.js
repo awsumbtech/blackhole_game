@@ -34,7 +34,7 @@ import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassF
 import { fillAround, DENSITY, densityInfo, spawnFood } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "8.5";
+const VERSION = "8.6";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -96,7 +96,7 @@ const state = {
   transitioning: false, transitionPhase: "", transitionTimer: 0,
   galaxyCredited: false, summary: null,
 
-  paused: false, menuOpen: false,
+  paused: false, menuOpen: false, birth: 0,
   audioEnabled: true, volume: 0.4,
 
   totalConsumed: 0,
@@ -993,10 +993,10 @@ let firstPlayStart = true;
 function showScreenEl(el) {
   el.classList.remove("hidden", "fading");
 }
-function fadeOutScreenEl(el) {
+function fadeOutScreenEl(el, ms = 1400) {
   if (el.classList.contains("hidden")) return;
   el.classList.add("fading");
-  setTimeout(() => { if (el.classList.contains("fading")) el.classList.add("hidden"); }, 1400);
+  setTimeout(() => { if (el.classList.contains("fading")) el.classList.add("hidden"); }, ms);
 }
 
 function showTitle() {
@@ -1014,35 +1014,68 @@ function showTitle() {
     state.v7Welcome = false;
     setTimeout(() => showHint(`New: Ascension. Your journey is now a run, ${state.asc.run.cleared} galaxies deep. Collapse any time (pause menu) to earn Dark Matter for permanent perks.`, 7000), 1200);
   }
+  if (applyUpdateIfCalm()) return;
   showScreenEl(titleEl);
   warmHole(state.radius * zoomTarget() * TITLE_ZOOM * screenDpr);
   save(state);
 }
 
+// v8.6: a real beginning. The intro is a dark void (the galaxy is hidden):
+// the wordmark, three lines, then the void lifts and a newborn hole is born
+// in place, in the play view. Used on first launch and after "Start completely over".
 const INTRO_LINES = ["Drift.", "Eat what's smaller.", "Grow."];
+const INTRO_MARK_MS = 3400, INTRO_LINE_MS = 3000, BIRTH_FRAMES = 170;
 let introTimers = [];
 function showIntro() {
+  introTimers.forEach(clearTimeout);
+  introTimers = [];
   state.screen = "intro";
+  state.drift = null;
+  state.birth = 0;
   state.camMul = TITLE_ZOOM;
   updateCameraScale(true);
   input.setEnabled(false);
   document.body.classList.add("on-title");
-  state.seenHints.intro = true;
+  introEl.classList.remove("birth");
   showScreenEl(introEl);
-  const line = $("intro-line");
+  const line = $("intro-line"), mark = $("intro-mark");
+  line.classList.remove("on");
+  line.textContent = "";
+  introTimers.push(setTimeout(() => mark.classList.add("on"), 500));
+  introTimers.push(setTimeout(() => mark.classList.remove("on"), 500 + INTRO_MARK_MS - 900));
+  const first = 500 + INTRO_MARK_MS + 300;
   INTRO_LINES.forEach((txt, i) => {
-    const at = 900 + i * 3600;
+    const at = first + i * INTRO_LINE_MS;
     introTimers.push(setTimeout(() => { line.textContent = txt; line.classList.add("on"); }, at));
-    introTimers.push(setTimeout(() => line.classList.remove("on"), at + 2500));
+    introTimers.push(setTimeout(() => line.classList.remove("on"), at + INTRO_LINE_MS - 900));
   });
-  introTimers.push(setTimeout(endIntro, 900 + INTRO_LINES.length * 3600));
+  introTimers.push(setTimeout(endIntro, first + INTRO_LINES.length * INTRO_LINE_MS));
 }
 function endIntro() {
   if (state.screen !== "intro") return;
   introTimers.forEach(clearTimeout);
   introTimers = [];
-  fadeOutScreenEl(introEl);
-  startDrift("fresh");
+  $("intro-mark").classList.remove("on");
+  state.seenHints.intro = true;   // only once the beginning has actually played
+  // Swap to the play camera under the void, then lift it while the hole is born
+  state.screen = "play";
+  state.camMul = 1;
+  updateCameraScale(true);
+  document.body.classList.remove("on-title");
+  titleEl.classList.add("hidden");
+  state.birth = 0.001;
+  lastTime = performance.now();
+  introEl.classList.add("birth");
+  fadeOutScreenEl(introEl, 2600);
+  save(state);
+}
+function updateBirth(dt) {
+  state.birth += dt / (state.settings.reduceMotion ? 60 : BIRTH_FRAMES);
+  if (state.birth >= 1) {
+    state.birth = 0;
+    input.setEnabled(true);
+    onPlayStart("fresh");
+  }
 }
 $("btn-skip-intro").addEventListener("click", () => { audio.playClick(); endIntro(); });
 
@@ -1140,6 +1173,10 @@ $("btn-newgame-yes").addEventListener("click", () => {
 // Then the first-launch intro and drift-in play, into a newborn dust-only start.
 function startCompletelyOver() {
   if (state.mode === "zen") zenRestore();
+  if (ui.isStatsOpen()) ui.closeStats();
+  state.paused = false;
+  state.menuOpen = false;
+  $("pause-menu").classList.add("hidden");
   state.mode = "ascension";
   state.zen = null;
   state.drift = null;
@@ -1428,6 +1465,7 @@ function frame(now) {
   if (state.transitioning && inPlay) updateTransition(dt);
   if (!inPlay) updateBackdrop(dt);
   if (state.drift) updateDrift(dt);
+  if (state.birth > 0) updateBirth(dt);
 
   const playing = inPlay && (!state.transitioning || state.transitionPhase === "fadein");
   const worldDt = dt * slowFactor(state);
@@ -1505,7 +1543,8 @@ function frame(now) {
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, PT_OPTS);
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
-  drawBlackHole(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, now,
+  drawBlackHole(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2,
+    state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius, now,
     { vx: state.playerVX, vy: state.playerVY }, {
       zoom: z,
       dpr: screenDpr,
@@ -1664,7 +1703,7 @@ const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentC
 
 function setPaused(p) {
   if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
-  if (state.screen !== "play" || state.drift) return;
+  if (state.screen !== "play" || state.drift || state.birth > 0) return;
   state.paused = p;
   input.setEnabled(!p);
   const btn = $("btn-pause");
@@ -1768,6 +1807,20 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 window.addEventListener("pagehide", () => { if (!resetting) save(state); });
+
+// v8.6: apply a new version as soon as it's calm: right away on the title or
+// while hidden, otherwise the next time you're back on the title or return to the app.
+function applyUpdateIfCalm() {
+  if (!window.__bhUpdateReady || resetting) return false;
+  const calm = document.hidden || (state.screen === "title" && !state.drift);
+  if (!calm) return false;
+  save(state);
+  resetting = true;
+  location.reload();
+  return true;
+}
+window.addEventListener("bh-update", applyUpdateIfCalm);
+document.addEventListener("visibilitychange", applyUpdateIfCalm);
 
 // ─── INIT ───
 
@@ -1898,7 +1951,7 @@ initGalaxy(state.galaxy, resumeRun);
 // Fresh install: short intro. Away > 10 min (or never seen v4): title screen.
 // Otherwise drop straight back in where you were.
 const awayMs = savedData ? Date.now() - (savedData.lastActive || 0) : Infinity;
-if (!savedData && !state.seenHints.intro) {
+if (!state.seenHints.intro) {
   showIntro();
 } else if (awayMs > TITLE_AFTER_MS) {
   showTitle();

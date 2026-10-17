@@ -656,7 +656,13 @@ body.soft-palette #game { filter: saturate(0.72) brightness(0.96); }
 .confirm small { display: block; opacity: 0.65; font-size: 0.75rem; margin-bottom: 10px; }
 .confirm-row { display: flex; gap: 8px; }
 .confirm-row .title-btn { flex: 1; height: 46px; font-size: 0.86rem; }
-#intro-screen { justify-content: center; }
+/* v8.6: the beginning is a dark void that lifts as the hole is born */
+#intro-screen { justify-content: center; background: #020308; animation: introVoid 0.9s ease backwards; }
+#intro-screen.fading.birth { transition: opacity 2.6s ease; }
+@keyframes introVoid { from { opacity: 0; } to { opacity: 1; } }
+.intro-mark { position: absolute; top: 40%; left: 0; right: 0; text-align: center; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+.intro-mark.on { opacity: 1; }
+body.reduce-motion #intro-screen { animation-duration: 0.3s; }
 .intro-line {
   font-family: var(--font); font-weight: 300; font-size: 1.7rem; letter-spacing: 0.08em; color: #eef0ff;
   text-shadow: 0 0 24px rgba(150, 150, 255, 0.4); text-align: center; margin-top: 46vh;
