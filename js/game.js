@@ -34,7 +34,7 @@ import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassF
 import { fillAround, DENSITY, densityInfo, spawnFood } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "8.3";
+const VERSION = "8.4";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -1430,6 +1430,9 @@ function frame(now) {
     updateWorlds(state, dt, worldDt);
     updateEntities(state.entities, state.bounds, worldDt);
     updateWisp(state, dt, state.settings.reduceMotion);
+    if ((state.tier || 0) === 0 && state.run.time > 2.5 && !state.seenHints.newborn && !state.tierBanner) {
+      hint("newborn", "You've just been born. Drift and gather the dust.", 5200);
+    }
     if (!state.seenHints.wisp_intro && state.run.time > 25 && !state.tierBanner) {
       hint("wisp_intro", `A little light has found you. ${state.settings.wispName || "Wisp"} will drift along, and now and then point out something tasty.`, 6000);
     }

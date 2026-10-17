@@ -8,6 +8,7 @@
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
+import { MERGE_FRAMES } from "./depth.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -18,6 +19,7 @@ export const MECHANICS = {
   "Debris Reef": {
     name: "Regrowing reefs",
     first: "Reefs of rock gather here and slowly regrow after you graze them.",
+    minTier: 1,   // v8.4: a newborn sees the reefs only as haze in the back layer
     codex: "Soft teal reefs hold clusters of rock. Graze one, drift off, and it quietly regrows. Meteor showers reseed the reefs faster.",
     pairs: { meteorShower: "the shower is reseeding the reefs" }
   },
@@ -193,10 +195,13 @@ const SETUP = {
     const names = ["The Shoals", "Pebble Reach", "Old Reef", "Driftstone"];
     const spots = ringSpots(r, 4, b0 * 0.32, b0 * 0.7);
     spots.forEach(([x, y], i) => {
-      const reef = { x, y, r: b0 * (0.17 + r() * 0.06), want: 10, regrow: 0 };
+      // v8.4: at tier 0 the reefs are back-layer haze (no rock, no regrowth);
+      // the next set, at tier 1, merges in with rock and fades up
+      const haze = (state.tier || 0) === 0;
+      const reef = { x, y, r: b0 * (0.17 + r() * 0.06), want: 10, regrow: 0, haze, born: W.timer || 0 };
       W.reefs.push(reef);
       W.lms.push(landmark(setName(names[i]), "reef", x, y, reef.r, "120, 220, 200"));
-      for (let k = 0; k < 6; k++) {
+      for (let k = 0; k < (haze ? 0 : 6); k++) {
         const a = r() * TAU, d = Math.sqrt(r()) * reef.r * 0.85;
         const e = spawnFood(state, false, { pos: { x: px(x) + Math.cos(a) * d, y: py(y) + Math.sin(a) * d } });
         e.vx *= 0.3; e.vy *= 0.3;
@@ -372,7 +377,9 @@ export function updateWorlds(state, dt, worldDt) {
 
   // First-time caption for this galaxy's mechanic
   if (W.introTimer > 0) {
-    W.introTimer -= dt;
+    // v8.4: a mechanic with minTier waits until its layer has merged in
+    if (W.mech && (state.tier || 0) < (W.mech.minTier || 0)) W.introTimer = 330;
+    else W.introTimer -= dt;
     if (W.introTimer <= 0 && W.mech) state.worldHint?.("mech_" + W.biome, W.mech.first, 5600);
   }
 
@@ -468,7 +475,7 @@ const UPDATE = {
     }
     const every = W.boost > 0 ? 70 : 240;          // ~4s, ~1.2s during a shower
     W.reefs.forEach((rf, i) => {
-      if (counts[i] >= rf.want) { rf.regrow = 0; return; }
+      if (rf.haze || counts[i] >= rf.want) { rf.regrow = 0; return; }
       rf.regrow += dt;
       if (rf.regrow < every) return;
       rf.regrow = 0;
@@ -855,8 +862,9 @@ const DRAW = {
     for (const rf of W.reefs) {
       const x = px(rf.x), y = py(rf.y), r = wx(rf.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      drawGlow(ctx, "90, 200, 180", x, y, r * 1.45, 0.1 + fx.breath * 0.03);
-      ctx.globalAlpha = AM * (0.75 + fx.breath * 0.15);
+      const q = rf.haze ? 0.3 : smooth(((W.timer || 0) - rf.born) / MERGE_FRAMES);
+      drawGlow(ctx, "90, 200, 180", x, y, r * 1.45, (0.1 + fx.breath * 0.03) * q);
+      ctx.globalAlpha = AM * (0.75 + fx.breath * 0.15) * q;
       ctx.drawImage(lmSprite("reef"), x - r * 1.4, y - r * 1.4, r * 2.8, r * 2.8);
     }
   },
