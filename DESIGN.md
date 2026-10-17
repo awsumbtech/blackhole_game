@@ -72,6 +72,15 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
     - The sky replaces the background fill (no extra full-screen layer).
     - Glow and extra passes are High only; motion is off under Reduce Motion.
   - **Icons:** regenerate with `python3 tools/make-icons.py`.
+- **v9 art (every type its own little painting).** Brian: "the space dust looks like mobs", "planets and meteors need different graphics for everything".
+  - **Looks:** each type has a set of looks (`LOOKS` in art.js); `lookOf(e)` takes `e.look` if >= 0, else the seed. Types in `OWN` paint their own palette, so their cache key is `type||look|variant` (planet keeps variant for rings/moon). One look always paints the same.
+  - **Dust** is never a round blob: a faint drift of gas carrying grains and glints (silicate grit, ice glints, carbon soot, pink gas wisp). **Grit & pebbles:** low-poly lit chips, gravel handfuls, ice flakes, glassy basalt, rust. **Asteroids** (`meteor` type): lumpy potatoes and contact binaries in stony, iron (metal sheen), carbon and rusty tones, lit craters. **Meteors** are shower rocks with `e.hot = 1` (set in living-world `streamEvent`): a glowing entry streak (`tailFor(.., hot)`) and a heated leading edge (`heatFor`), both rotated to the velocity and fading as it slows. No meteor showers at tier 0.
+  - **Comets:** dark icy nucleus, cyan / C2-green / white coma, soft sunward jets, warm dust tail + blue ion tail. **Moons:** grey maria, icy cracked (Europa), volcanic (Io), dark dusty (Callisto), bright tiger-striped, rusty with one big crater. **Planets:** 10 archetypes (`planetPalette`): rocky, ocean, desert, ice, lava, banded gas giant with a storm, ice giant, ringed, cloud-wrapped, exotic; 30 looks. Atmosphere halo is thicker on the lit side and the limb glow is hidden by night.
+  - **Stars** by spectral type (`SPECTRA`, M to B, spots on cool stars); the Cradle sun is pinned to `look: 0` (G). **Systems:** sun by type, tilted orbits, little lit worlds, sometimes a companion star or a belt. **Nebulae:** emission, blue reflection, planetary ring, dark pillars (only where the glow is), supernova filaments. **Clusters:** globular or open. **Galaxies:** spiral, barred, elliptical, irregular, edge-on.
+  - **Light:** always upper left (`LX, LY`). Rocks sway (sin of rotation, ±0.35 rad) instead of spinning so their light stays put. `shade()` gives a curved terminator; `facets()` lights chips.
+  - **Back layers** use 8 looks per type; an object merging forward keeps the look it had in the haze.
+  - **Sky/backdrop:** the near "mote" layer is faint dust streaks, far galaxies are dim small smudges with no bright eye-like core (they read as creatures/food before).
+  - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
 
 ## 4. Controls
 
