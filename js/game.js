@@ -473,6 +473,7 @@ function initGalaxy(galaxyNum, resume = null, flow = false) {
   audio.newPhrase();
   audio.setMusicLayers(state.tier, biome);
   syncHud(true);
+  perfGrace();
 }
 
 // ─── PLAYER MOVEMENT ───
@@ -1056,6 +1057,7 @@ function updateDrift(dt) {
     if (p >= 1) {
       state.drift = null;
       input.setEnabled(true);
+      perfGrace();
       onPlayStart(d.kind);
     }
   }
@@ -1319,7 +1321,9 @@ $("btn-title-zen").addEventListener("click", () => {
 // on Auto, if the average stays above ~6.5ms for 2s we drop to Lite.
 // Also watches the real frame interval against the display's own vsync (the
 // fastest interval seen lately) to catch GPU-bound slowdowns JS timing misses.
-const perf = { ema: 0, ring: new Float32Array(240), n: 0, over: 0, drops: 0, vsync: 0, iEma: 0, slow: 0 };
+const perf = { ema: 0, ring: new Float32Array(240), n: 0, over: 0, drops: 0, vsync: 0, iEma: 0, slow: 0, grace: 0 };
+// v9: a new galaxy paints its sprites in the first few seconds; don't judge the device on that warm-up
+function perfGrace() { perf.grace = 300; perf.slow = 0; perf.over = 0; perf.iEma = 0; }
 function trackPerf(ms, dt, interval) {
   perf.ring[perf.n++ % perf.ring.length] = ms;
   perf.ema = perf.ema ? perf.ema * 0.95 + ms * 0.05 : ms;
@@ -1328,6 +1332,7 @@ function trackPerf(ms, dt, interval) {
     perf.iEma = perf.iEma ? perf.iEma * 0.95 + interval * 0.05 : interval;
   }
   if (state.settings.quality !== "auto" || getArtQuality() !== "high" || state.screen !== "play" || state.drift) return;
+  if (perf.grace > 0) { perf.grace -= dt; return; }
   perf.over = perf.ema > 6.5 ? perf.over + dt : 0;
   perf.slow = perf.iEma > perf.vsync * 1.45 ? perf.slow + dt : 0;
   if (perf.over > 120 || perf.slow > 240) {
