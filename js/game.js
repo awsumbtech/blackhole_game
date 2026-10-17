@@ -7,6 +7,7 @@ import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles,
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
+import { drawDepth, startMerge, resetDepth, layerName, layersInfo } from "./depth.js";
 import { setSky } from "./sky.js";
 const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
 import { drawRevealFx } from "./art.js";
@@ -30,10 +31,10 @@ import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, s
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
 import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
-import { fillAround, DENSITY, densityInfo } from "./living-world.js";
+import { fillAround, DENSITY, densityInfo, spawnFood } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "8.1";
+const VERSION = "8.3";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -187,8 +188,26 @@ function checkTier() {
   state.stats.tierReveals = (state.stats.tierReveals || 0) + 1;
   audio.playTierChime();
   audio.setMusicLayers(t, state.biome);
+  // v8.3: the tier you just grew into steps forward out of its back layer
+  if (state.screen === "play") {
+    const z = state.zoom, hp = state.anchorSmooth * z;
+    const n = startMerge(state, screenW, screenH, hp, mergeSpawn);
+    if (n) hint("merge_" + t, `You're big enough now. The ${layerName(t)} drift closer.`, 4600);
+  }
   onWorldTier(state);
   state.onTierReveal?.(t);
+}
+
+// A back-layer object becomes a real one: same spot on screen, starting at its
+// hazy apparent size, then drifting forward (depthT 0 -> 1, ~2.5 s)
+function mergeSpawn(id, sx, sy, rad) {
+  const z = state.zoom;
+  const e = spawnFood(state, false, { type: id, pos: { x: state.camX + (sx - screenW / 2) / z, y: state.camY + (sy - screenH / 2) / z } });
+  e.depthT = 0;
+  e.depthK0 = clamp(rad / (e.radius * z), 0.3, 2.5);
+  e.vx *= 0.4; e.vy *= 0.4;
+  e._spawnAge = 60; e._spawnAlpha = 1;
+  state.entities.push(e);
 }
 
 function updateCameraScale(snap = false) {
@@ -426,6 +445,7 @@ function initGalaxy(galaxyNum, resume = null) {
   state.tier = tierIndexForR(state.radius);
   state.bestTier = Math.max(state.bestTier || 0, state.tier);
   state.anchorR = state.anchorSmooth = state.radius;
+  resetDepth(state);
   state.reveal = null;
   state.tierBanner = null;
   state.trail = [];
@@ -550,6 +570,7 @@ function tryConsume(dt) {
       if (e.consumeProgress >= 1) e.consumed = true;
       continue;
     }
+    if (e.depthT < 1) continue;   // v8.3: still drifting in from a back layer
 
     const dx = e.x - state.playerX;
     const dy = e.y - state.playerY;
@@ -580,7 +601,7 @@ function tryConsume(dt) {
       const cap = Math.max(MIN_BITE_CAP, state.mass * biteK) * pace * (MEATY.capBiome[state.biome.name] ?? MEATY.cap);
       const gk = (state.biome.breather ? 0.5 : REGULAR_GAIN) * meatyK() * pace;
       // biome.gainK evens out pacing for galaxies whose mechanic adds a lot of food
-      let gain = Math.min(e.mass * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
+      let gain = Math.min(e.mass * e.gainK * gk * (state.biome.gainK || 1) * comboBonus, cap) * dbl * worldMassMul();
       // v7 Ascension: perks (Appetite), supernova runs, and big-catch perks
       if (state.mode !== "zen") {
         gain *= state.ascMods.gain * (state.asc.run.supernova ? 1.5 : 1);
@@ -1450,6 +1471,7 @@ function frame(now) {
   drawBackdrop(ctx, w, h, z, state.bgX, state.bgY, breath, BD_OPTS);
   drawLivingWorldBG(ctx, state, w, h);
   beginArtFrame();
+  if (state.screen === "play") drawDepth(ctx, w, h, state, state.anchorSmooth * z, screenDpr, state.paused ? 0 : dt);
   if (getArtQuality() === "high") {
     drawLens(ctx, (state.playerX - state.camX) * state.zoom + w / 2, (state.playerY - state.camY) * state.zoom + h / 2, state.radius * state.zoom);
   }
@@ -1876,7 +1898,7 @@ requestAnimationFrame(frame);
 const DEV = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("debug");
 if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
-  perf: perfReport, worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
+  perf: perfReport, layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),

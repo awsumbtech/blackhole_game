@@ -292,6 +292,9 @@ export function createEntity(type, x, y, scale = 1) {
     consumed: false, swallow: false,
     _spawnAge: 60, _spawnAlpha: 1, _pullCap: 0, _crumbleCd: 0,
     _sp: null, _artBase: null,
+    // v8.3 growth: depthT < 1 while drifting in from a back layer (non-interactive),
+    // depthK0 = apparent size it starts at; gainK keeps bite value when food is drawn smaller
+    depthT: 1, depthK0: 1, gainK: 1,
     _mc: color + "88", _ec: color + "55"   // minimap dot / edge arrow colours
   };
 }

@@ -11,7 +11,7 @@ export const START_R = 8;          // a brand-new hole starts here, partway into
 // food / big: type weights for what drifts around at this tier
 export const TIERS = [
   { name: "Space Dust", line: "Specks of dust, drifting. Everything starts here.",
-    food: { dust: 6, junk: 1 }, big: { junk: 3, meteor: 1 } },
+    food: { dust: 1 }, big: { junk: 3, meteor: 1 } },   // v8.3: a newborn hole sees only dust; pebbles wait in the back layer
   { name: "Grit & Pebbles", line: "The dust has gathered into grit and pebbles.",
     food: { dust: 3, junk: 4, meteor: 1 }, big: { meteor: 3, junk: 1 } },
   { name: "Asteroids", line: "Stones the size of mountains drift into reach.",
@@ -84,7 +84,7 @@ export function floorMassForLegacyGalaxy(galaxy) {
  */
 export function foodWeights(state) {
   const t = tier(state.tier || 0);
-  const w = flavour(t.food, state.biome);
+  const w = flavour(t.food, state.biome, (state.tier || 0) === 0);
   const p = state.galaxyProgress || 0;
   if (p < 0.12) w.dust = (w.dust || 0) + 8 * (1 - p / 0.12);
   return w;
@@ -92,7 +92,7 @@ export function foodWeights(state) {
 export function bigWeights(state) {
   return flavour(tier(state.tier || 0).big, state.biome);
 }
-function flavour(base, biome) {
+function flavour(base, biome, noSig) {
   const out = {};
   const bw = (biome && biome.weights) || {};
   for (const [id, v] of Object.entries(base)) {
@@ -100,7 +100,7 @@ function flavour(base, biome) {
     out[id] = v * (b == null ? 1 : 0.5 + Math.min(2, b / 4));
   }
   // Each biome keeps a hint of its signature object at any scale
-  if (biome && biome.signature && !out[biome.signature]) out[biome.signature] = 0.8;
+  if (!noSig && biome && biome.signature && !out[biome.signature]) out[biome.signature] = 0.8;
   return out;
 }
 

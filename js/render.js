@@ -1,3 +1,4 @@
+import { blurFor } from "./depth.js";
 import { drawSky } from "./sky.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
@@ -359,6 +360,18 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
     const sp = spriteFor(e, rpx);
     let d = sp.k * r;
+    if (e.depthT < 1) {
+      // v8.3: drifting in from a back layer: starts hazy, dim and at its apparent
+      // size, then sharpens, brightens and grows into the play layer
+      const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
+      const dd = d * (e.depthK0 + (1 - e.depthK0) * q);
+      const bl = blurFor(sp.c, still ? 2 : 3), pd = dd * (1 + 2 * bl._pad);
+      ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
+      ctx.drawImage(bl, sx - pd / 2, sy - pd / 2, pd, pd);
+      ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * q;
+      ctx.drawImage(sp.c, sx - dd / 2, sy - dd / 2, dd, dd);
+      continue;
+    }
     if (e.type === "star" || e.type === "neutron") {
       alpha *= twinkle;
       d *= 0.98 + breath * 0.04;

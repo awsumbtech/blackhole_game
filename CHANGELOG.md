@@ -2,6 +2,24 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.3 Growth you can feel (Oct 2026)
+
+The game now puts one thing first: feeling yourself grow. DESIGN.md opens with a North Star section that every change is checked against. Saves from v1 to v8.1 still load, and galaxy clear times are unchanged within normal run-to-run variation.
+
+**A layered world**
+- A fresh game starts with only dust in play. You're a newborn, minuscule hole.
+- Everything bigger waits in soft background depth layers (new `js/depth.js`). These are blurred, hazy, dimmer, smaller and slower-moving, and you can't touch them. Pebbles sit just behind, meteors and comets further back, then moons, planets and stars.
+- When you grow big enough to eat a tier, its layer merges into play. The objects drift forward and sharpen over about 2.5 seconds, along with the usual camera pull-back. The first time, a quiet chime plays with a caption such as "You're big enough now. The pebbles drift closer."
+- Each new galaxy starts the same way, with fine food at your scale and the bigger things behind.
+- Large things you can't eat yet are rarer, and they drift in from the back layer instead of popping in.
+- Rivals also drift in from the back. They fade in over about 2.5 seconds and only interact once fully arrived.
+
+**You visibly outgrow your food**
+- Between tier-ups, new food is sized from a slowly lagging reference, so the hole grows visibly larger than the crumbs around it. Bite values compensate, so pace is unchanged.
+
+**Calmer level 1**
+- Removed the branching, glowing "tendrils" from the Debris Reef. These were the snake-like trails, from both the reef landmark sprite and the reef sky. The reef keeps its soft teal banks, with a few faint glints in their place.
+
 ## v8.1 Painterly, bolder (Oct 2026)
 
 A second, much bolder art pass. Gameplay, balance, audio and saves are unchanged, and saves from v1 to v7 still load.

@@ -6,6 +6,7 @@ import { weightedType, createEntity, rand, typeAvgRadius, typeById, isBreather }
 import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
+import { MERGE_FRAMES } from "./depth.js";
 import { foodWeights, bigWeights, eventType, eventBigType } from "./tiers.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
@@ -50,9 +51,10 @@ export const CFG = {
 };
 
 
+// v8.3: inedibly large things in the play layer are rare (they drift in from the back layer)
 export function minBigFish(galaxy) {
   if (isBreather(galaxy)) return galaxy >= 9 ? 2 : 1;
-  return 3 + Math.min(2, Math.floor(galaxy / 3));
+  return 3 + Math.min(1, Math.floor(galaxy / 4));
 }
 
 // ─── MODULE STATE ───
@@ -102,6 +104,7 @@ export function updateLivingWorld(state, dt, worldDt = dt) {
   updateAmbientBackground(state, dt);
 
   for (const e of state.entities) {
+    if (e.depthT < 1) e.depthT = Math.min(1, e.depthT + dt / MERGE_FRAMES);
     if (e._spawnAge != null && e._spawnAge < 60) {
       e._spawnAge += dt;
       e._spawnAlpha = Math.min(1, e._spawnAge / 60);
@@ -143,7 +146,7 @@ function updateGravityWell(state, dt) {
   const py = state.playerY;
 
   for (const e of state.entities) {
-    if (e.consuming) continue;
+    if (e.consuming || e.depthT < 1) continue;
     if (!e.powerup && R <= e.radius * state.eatRatio) continue;
 
     const dx = px - e.x;
@@ -210,10 +213,15 @@ function aimAtPlayer(state, e, spread, speed) {
  * forceScale lets bigger fish shrink below the type's natural size early on.
  */
 export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
-  const desired = rand(ratioMin, ratioMax) * state.radius;
-  const raw = desired / typeAvgRadius(type);
+  const k = rand(ratioMin, ratioMax), avg = typeAvgRadius(type);
+  // v8.3: food is sized from a lagging reference (opts.ref) so you visibly outgrow it
+  // within a tier; gainK gives back the bite value the smaller size would lose.
+  const ref = opts.ref || state.radius;
+  const raw = k * ref / avg, rawFull = k * state.radius / avg;
   const scale = opts.forceScale ? raw : Math.max(1, raw);
+  const full = opts.forceScale ? rawFull : Math.max(1, rawFull);
   const e = createEntity(type, 0, 0, scale);
+  e.gainK = (full / scale) * (full / scale);
   const pos = opts.pos || pickSpawnPos(state, opts.near ?? true, e.radius);
   e.x = pos.x;
   e.y = pos.y;
@@ -225,7 +233,7 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
 export function spawnFood(state, near, opts = {}) {
   const type = opts.type ? typeById(opts.type) : weightedType(foodWeights(state), 99);
   const k = opts.sizeK || 1;
-  const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined };
+  const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined, ref: growRef(state) };
   // v5.1: the vast kinds (systems, nebulae, clusters, galaxies) are drawn bigger
   // but lighter, so a bite still weighs the same but reads as what it is
   const vk = VAST_FOOD.has(type.id) ? VAST_K : 1;
@@ -238,6 +246,13 @@ export function spawnFood(state, near, opts = {}) {
   }
   if (vk !== 1) { e.mass /= vk * vk; e.density /= vk * vk; }
   return e;
+}
+// Lagging size reference: at a tier line it equals your radius; as you grow
+// through the tier it falls behind (R^0.4), so new food is relatively smaller
+// and the hole visibly outgrows what's around it before the camera pulls back.
+export function growRef(state) {
+  const a = state.anchorR || state.radius, R = state.radius;
+  return R <= a ? R : a * Math.pow(R / a, 0.4);
 }
 const VAST_FOOD = new Set(["system", "nebula", "cluster", "galaxy"]);
 const VAST_K = 1.7;
@@ -252,6 +267,7 @@ function spawnBigFish(state) {
   e.x = pos.x;
   e.y = pos.y;
   e.bigFish = true;
+  e.depthT = 0; e.depthK0 = 0.45;   // drifts in from the back layer
   e.baseSpeed = rand(0.2, 0.45) * Math.sqrt(state.speedScale);
   aimAtPlayer(state, e, 0.9, e.baseSpeed);
   return e;
@@ -316,7 +332,7 @@ function updateDynamicSpawning(state, dt) {
   world.bigTimer += dt;
   if (world.bigTimer >= CFG.BIG_CHECK_INTERVAL) {
     world.bigTimer = 0;
-    const want = minBigFish(state.galaxy) - big;
+    const want = ((state.tier || 0) === 0 ? 0 : minBigFish(state.galaxy)) - big;
     for (let i = 0; i < Math.min(2, want) && ents.length < HARD_CAP + 8; i++) {
       ents.push(spawnBigFish(state));
       world.bigCount++;

@@ -45,7 +45,7 @@ export function updateRivals(state, dt, onSwallow) {
       continue;
     }
     if (rv.wait > 0) { rv.wait -= dt; continue; }
-    rv.fade = Math.min(1, rv.fade + dt / 120);
+    rv.fade = Math.min(1, rv.fade + dt / 150);   // v8.3: drifts in from the back layer
     rv.phase += 0.004 * dt;
     const pdx = state.playerX - rv.x, pdy = state.playerY - rv.y, pd = hypot(pdx, pdy) || 1;
     if (pd > V * 2.6) { place(state, rv); continue; }
@@ -82,7 +82,7 @@ export function updateRivals(state, dt, onSwallow) {
       }
     }
     // You and a rival
-    const touch = pd < R + rv.r * 0.85;
+    const touch = rv.fade >= 1 && pd < R + rv.r * 0.85;
     if (!touch) continue;
     if (R > rv.r * state.eatRatio) {
       rv.gone = RESPAWN;
@@ -112,7 +112,8 @@ export function drawRivals(ctx, state, vw, vh, time, reduceMotion) {
     const edible = R > r * state.eatRatio;
     // v8.1: a painted violet hole with its own disk and lensed arc (gold once you've outgrown it)
     const sp = rivalSprite(r * zoomPx, edible);
-    const d = sp.k * r;
+    const q = a * a * (3 - 2 * a);
+    const d = sp.k * r * (0.5 + 0.5 * q);
     ctx.globalAlpha = a * (reduceMotion ? 1 : 0.92 + 0.08 * Math.sin(rv.phase * 2));
     ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
     ctx.globalAlpha = 1;

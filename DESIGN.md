@@ -22,8 +22,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, galaxy goals, rivals.
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v6.0.1**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v6.0.1"` in `sw.js`, `SAVE_VERSION = 6` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v8.3**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.3"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -87,6 +87,21 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **No edges.** Objects spawn in a band just outside the view and recycle at about 2 view radii, keeping a steady density (~25–40 visible, ~60 nearby).
 - Radar is centred on you, with a trail and rim markers for out-of-range landmarks.
 - Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
+
+### 5b. Growth you can feel (v8.3, `js/depth.js`). This serves the North Star.
+- **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are rare (2–3 per regular galaxy, 1 in breathers), and they drift in from the back layer.
+- **Back depth layers show the next 3 tiers** (layers for tiers t+1, t+2 and t+3; Lite shows 2).
+  - They are hazy, dimmer, sparser and on slower parallax, using pre-blurred cached sprites (`blurFor`).
+  - Deeper layers look bigger but blurrier: they are huge things far away.
+  - They are hashed in screen space, so there is no per-object state. They never interact.
+- **Merge on tier-up.** The layer for the tier you just reached steps forward. Up to 14 of its visible objects become real food at the same screen spots.
+  - Each one starts at its hazy apparent size (`depthK0`), then sharpens, brightens and grows in over `MERGE_FRAMES` (~2.5s). It is non-interactive while `depthT` < 1.
+  - Deeper layers glide forward one step at the same time, and the camera pull-back plays together with the merge.
+  - The first time for each tier: the tier chime plus the caption "You're big enough now. The <things> drift closer."
+- **You visibly outgrow food within a tier.** Food is sized from a lagging reference: `growRef` = anchor·(R/anchor)^0.4. Fresh food therefore gets relatively smaller as you grow, until the next reveal.
+  - `e.gainK` = (full/actual size)² gives back the bite value, so balance is unchanged.
+- **Rivals** fade and scale in from the back over 2.5s and can't touch you until fully arrived. **Galaxy start** resets the layers (fine dust at your scale, bigger things behind).
+- When adding tiers or types, check `layerTypes()` picks a sensible representative (it scores what is newly prominent at that tier).
 
 ## 6. The 7 galaxy mechanics (`js/worlds.js`)
 
@@ -250,6 +265,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v8.3 Growth you can feel:** North Star (§0); a fresh game is dust only, bigger tiers wait in blurred back depth layers and merge into play on tier-up (`js/depth.js`, §5b); the hole visibly outgrows its food; rivals drift in from the back; reef tendrils (the "snakes") removed.
 - **v8.1 Painterly, bolder:** Interstellar hole, painted per-biome skies, detailed sprites, spaghettification, reveal ring, violet rivals, unique discoveries, richer landmarks, new icon + splash.
 - **v8.0 Painterly:** graphics uplift (doppler disk, bloom, painterly nebulae with dust lanes, coloured twinkling stars, planet terminators/scattering, vignette + grade, glass UI); wisp drawn on top, stays beside the hole in Zen.
 - **v7.2 Lean:** refactor with no gameplay change. Cut the dead Zen/timed toggle and its timer, par and bump-loss code, Reset All, shake and unused code. Hot loops are allocation-light (about 40% less garbage). Fixed the hidden Settings Done button on the title screen.
@@ -269,6 +285,7 @@ js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
 js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
+js/depth.js         v8.3 back depth layers + tier merge
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
