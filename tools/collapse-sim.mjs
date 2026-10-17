@@ -3,12 +3,12 @@
 // baseline and the measured depth curve (bot time ~ base * climbK^0.72),
 // applies constellation perks, and collapses when the next galaxy would take a
 // human (1.2x the bot) longer than WALL minutes. Goal stars add a little DM.
-// Usage: node tools/collapse-sim.mjs [cycles=10] [wallMin=9.5]
+// Usage: node tools/collapse-sim.mjs [cycles=10] [wallMin=9]  (9 = the in-game collapse nudge)
 import { DEPTH, TIER_COST, depthInfo, dmFor, ascMods, defaultAsc, freshAscRun, PERKS, perkState, buyPerk, MILESTONES } from "../js/ascension.js";
-const BASE = [186, 263, 100, 262, 166, 104, 204];        // v9 bot seconds per biome at depth 1 (Reef..Forge), back-fitted from v9 runs
+const BASE = [186, 263, 93, 262, 147, 84, 204];        // v9 bot seconds per biome at depth 1 (Reef..Forge), back-fitted from v9 runs
 const BREATHER = [false, false, true, false, false, true, false];
 const HUMAN = 1.2, EXP = 0.72;
-const cycles = +(process.argv[2] || 10), WALL = +(process.argv[3] || 9.5) * 60;
+const cycles = +(process.argv[2] || 10), WALL = +(process.argv[3] || 9) * 60;
 if (process.env.CLIMB) DEPTH.CLIMB_GROWTH = +process.env.CLIMB;
 if (process.env.COST) TIER_COST.splice(0, 7, ...JSON.parse(process.env.COST));
 

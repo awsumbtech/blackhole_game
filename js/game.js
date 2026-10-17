@@ -136,10 +136,11 @@ const BREATHER_PACE = 0.095;
 // gain scales what a bite gives, cap lifts the per-bite ceiling so big morsels count.
 // Per-galaxy factors keep each galaxy's v5.2 clear time (bot-measured, within ~10%).
 const MEATY = { gain: 1, breatherGain: 1, cap: 2, byBiome: {
-  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.48, "Ruined Armada": 0.53,
-  "Void Rift": 0.69, "Star Meadow": 0.48, "Neutron Forge": 0.62 },
+  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.56, "Ruined Armada": 0.53,
+  "Void Rift": 0.85, "Star Meadow": 0.56, "Neutron Forge": 0.62 },
   // bite ceiling per galaxy (breathers and Armada are ceiling-bound, so this sets their pace)
-  capBiome: { "Planet Nursery": 1, "Star Meadow": 1, "Ruined Armada": 1.2 } };
+  // v9: Nursery, Void Rift and Meadow a little quicker (first collapse ~30 min); Comet and Armada stay the walls
+  capBiome: { "Planet Nursery": 1.15, "Star Meadow": 1.15, "Ruined Armada": 1.2 } };
 function meatyK() { return (MEATY.byBiome[state.biome.name] ?? 0.62) * (state.biome.breather ? MEATY.breatherGain : MEATY.gain); }
 
 // ─── HELPERS ───
@@ -878,9 +879,9 @@ function checkCollapseNudge() {
   if (state.asc.run.cleared < COLLAPSE_MIN_CLEARED) return;
   const t = state.run.time, p = Math.max(0.04, state.galaxyProgress);
   const br = !!state.biome.breather;
-  // A while in this galaxy, and at this pace it would take 9+ minutes (breathers 4.5):
+  // 3+ min in this galaxy, and at this pace it would take 9+ minutes (breathers 4.5):
   // that's the wall the collapse curve is tuned around (tools/collapse-sim.mjs WALL).
-  if (t < (br ? 120 : 240) || t / p < (br ? 270 : 540)) return;
+  if (t < (br ? 120 : 180) || t / p < (br ? 270 : 540)) return;
   state.collapseNudge = true;
   $("collapse-pill").classList.remove("hidden");
   hint("collapse_nudge", "Growth is slowing. When it feels like a wall, you can collapse for Dark Matter and be reborn stronger. Or keep going: no rush.", 6500);

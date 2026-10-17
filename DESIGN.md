@@ -174,7 +174,7 @@ in v9; saves refund it, see below).
   - calm rival holes from depth 3: 1 + floor((d-3)/2), max 3, size 1.5 + 0.12(d-3) × yours.
     Rivals eat food and ease you aside. They never take mass. Once outgrown they turn gold and
     can be swallowed.
-- **Collapse** (from 3 cleared). Offered, never forced: when growth clearly slows (over 4 min in
+- **Collapse** (from 3 cleared). Offered, never forced: when growth clearly slows (over 3 min in
   a galaxy and on pace for 9+, the sim's wall; breathers 2 / 4.5 min) a soft "Growth is slowing · Collapse?" pill
   appears under the HUD (`checkCollapseNudge`). Always available from the pause menu. The confirm
   card shows the Dark Matter breakdown, then the singularity, then the constellation, then the
@@ -207,7 +207,26 @@ in v9; saves refund it, see below).
 - **Tuning numbers** (`tools/collapse-sim.mjs`, run `node tools/collapse-sim.mjs`): see the v9
   table below.
 
-TUNING_TABLE_V9
+  - Bot time ≈ base × climbK^0.72 (base back-fitted from v9 bot runs at depths 1–7: Reef 186s,
+    Comet 263, Nursery 93, Armada 262, Void 147, Meadow 84, Forge 204). Humans are about 1.2× the bot.
+  - The wall: the next galaxy would take more than 9 minutes (the same line as the in-game nudge).
+  - Comet Current and Ruined Armada stay the grind walls (Brian likes them); v9 made Nursery, Void
+    Rift and Meadow a little quicker (`MEATY.byBiome` / `capBiome`).
+
+  | Cycle | Depth | Min | DM | Perks | Power |
+  |---|---|---|---|---|---|
+  | 1 | 6 | 29 | 66 | 0 | 1.00 |
+  | 2 | 8 | 37 | 112 | 5 | 1.29 |
+  | 3 | 8 | 31 | 112 | 9 | 1.57 |
+  | 4 | 10 | 37 | 149 | 13 | 1.88 |
+  | 5 | 10 | 35 | 192 | 15 | 2.00 |
+  | 6 | 10 | 30 | 192 | 18 | 2.27 |
+  | 7 | 13 | 46 | 271 | 21 | 2.43 |
+  | 8 | 15 | 49 | 328 | 23 | 3.28 |
+  | 9 | 17 | 44 | 544 | 26 | 4.81 |
+
+  First collapse: ~29 min of cleared galaxies, and the prompt appears ~3 min into Neutron Forge
+  (depth 7). The tree fills in about 10 collapses (~6.5 hours).
 
 ### Zen design (`js/zen.js`)
 - **Arc:**
