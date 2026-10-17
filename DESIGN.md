@@ -5,10 +5,17 @@
 **The game is about FEELING yourself grow.** You start as a just-born, minuscule black hole eating
 dust, and you become something vast. Every change must strengthen that growth feeling.
 
+**One loop: Born → grow → collapse → reborn stronger.** (v9)
+- **Growth is THE progression.** Tier-ups and layer merges are the rewards. There is nothing else to grind for inside a run.
+- **Galaxies flow into each other** with a gentle in-play transition: a soft caption, a crossfade, a star quietly added to the star map. No summary screen, no shop, nothing interrupts play.
+- **Collapse is the ONLY reset.** **Dark Matter is the ONLY meta currency.** **The perk constellation is the ONLY upgrade screen.**
+- **Goal stars are optional discoveries.** They're noted in the logbook and give a little Dark Matter, with no separate perk track.
+- **Everything you meet fits your scale.** Every event and object only appears when it's edible or at most one tier up (no meteor showers in Space Dust). Anything bigger waits in the back depth layers.
+
 **Zen exists to calm and refocus, then let you go.** It never traps you.
 
 **Check every change against these three questions. If one gets a "no", rethink the change.**
-1. Does it make growth more *felt*? Think scale, the world shrinking around you, and the next layer arriving.
+1. Does it make growth more *felt*? Think scale, the world shrinking around you, and the next layer arriving. Does it fit the one loop, or does it add a second currency, screen or reset?
 2. Is it calm? No startles, no flashes, no clutter.
 3. Does it serve Zen's purpose? Calm, refocus, then a clean exit.
 
@@ -19,7 +26,7 @@ dust, and you become something vast. Every change must strengthen that growth fe
   - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint.
   - In every mode it is drawn above everything and is never covered.
 - **Zen level pacing is liked.** Keep Zen durations as they are.
-- **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, galaxy goals, rivals.
+- **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
 rules it follows, how it works, and how to ship changes. Current version: **v8.6**
