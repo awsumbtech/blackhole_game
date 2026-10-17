@@ -1,8 +1,8 @@
 // ─── PERK CONSTELLATION (v7) ───
 // Dark Matter buys permanent perks, drawn as a constellation rising from your
 // singularity: Reach (left), Appetite (up), Fortune (right). Forks are two
-// stars side by side: either one opens the next tier. Galaxy perks (earned
-// with 3 goal stars) circle the core. Tap a star to read it and buy it.
+// stars side by side: either one opens the next tier. (v9: the only
+// upgrade screen; galaxy perks were folded into the branches.) Tap a star to read it and buy it.
 
 import { PERKS, BRANCHES, perkState, buyPerk, nextMilestone } from "./ascension.js";
 const $ = id => document.getElementById(id);
@@ -107,8 +107,6 @@ function draw(now) {
     g.fillStyle = `rgba(${BRANCHES[b].rgb}, 0.7)`;
     g.fillText(BRANCHES[b].name.toUpperCase(), top.x, top.y - 22);
   }
-  g.fillStyle = "rgba(200, 225, 255, 0.45)";
-  g.fillText("GALAXY PERKS", c.x, c.y + 72);
 }
 
 function showCard(n) {
