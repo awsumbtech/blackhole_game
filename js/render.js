@@ -80,21 +80,47 @@ function renderStarsToCache(w, h, camX, camY) {
         const py = (wy * cell - camY) + h / 2 - offY + (hash % 7) * 6;
         const brightness = 0.15 + (hash % 50) / 100;
         const size = hash % 17 === 0 ? 2 : 1;
-
-        if (hash % 23 === 0) {
-          starCtx.fillStyle = `rgba(140, 200, 255, ${brightness})`;
-        } else if (hash % 31 === 0) {
-          starCtx.fillStyle = `rgba(255, 220, 140, ${brightness * 0.8})`;
-        } else {
-          starCtx.fillStyle = `rgba(200, 210, 240, ${brightness * 0.6})`;
+        // v8: colour temperature variety (O/B blue, A white, G yellow, K orange, M red)
+        const t = (hash * 7) % 29;
+        const col = t < 3 ? STAR_COL[0] : t < 6 ? STAR_COL[1] : t < 8 ? STAR_COL[3] : t < 9 ? STAR_COL[4] : t < 11 ? STAR_COL[2] : STAR_COL[5];
+        const a = col === STAR_COL[5] ? brightness * 0.6 : brightness * 0.85;
+        if (size === 2 && starHigh) {
+          // a soft halo around the brighter stars
+          starCtx.globalAlpha = a * 0.35;
+          starCtx.fillStyle = col;
+          starCtx.beginPath(); starCtx.arc(px + 1, py + 1, 2.6, 0, TAU); starCtx.fill();
         }
+        starCtx.globalAlpha = a;
+        starCtx.fillStyle = col;
         starCtx.fillRect(px, py, size, size);
       }
     }
   }
 
+  starCtx.globalAlpha = 1;
   starCachedCamX = camX;
   starCachedCamY = camY;
+}
+const STAR_COL = ["rgb(160, 196, 255)", "rgb(206, 222, 255)", "rgb(255, 236, 196)", "rgb(255, 204, 150)", "rgb(255, 170, 140)", "rgb(205, 212, 238)"];
+let starHigh = true;
+export function setStarQuality(high) { if (high !== starHigh) { starHigh = high; starCachedCamX = null; } }
+
+// v8: the biome glow is painted once per size/tint and stamped with a breathing alpha
+let tintCan = null, tintKey = "";
+function tintGlow(w, h, tint) {
+  const k = w + "x" + h + tint;
+  if (k === tintKey) return tintCan;
+  if (!tintCan) tintCan = document.createElement("canvas");
+  tintCan.width = w; tintCan.height = h;
+  const g = tintCan.getContext("2d");
+  const gr = g.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, Math.max(w, h) * 0.6);
+  gr.addColorStop(0, tint + "a0");
+  gr.addColorStop(0.55, tint + "40");
+  gr.addColorStop(1, tint + "00");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, w, h);
+  tintKey = k;
+  return tintCan;
 }
 
 function renderNebulaToCache(w, h, camX, camY) {
@@ -211,12 +237,10 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5, opts = 
 
   // Biome tint glow in center (cheap — one gradient, drawn every frame)
   // Breathing: the biome glow swells and settles on a slow 10s cycle
-  const grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, Math.max(w, h) * (0.55 + breath * 0.08));
-  const a = Math.round(0x70 + breath * 0x30).toString(16).padStart(2, "0");
-  grad.addColorStop(0, tint + a);
-  grad.addColorStop(1, "#00000000");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = (0x70 + breath * 0x30) / 0xa0;
+  const sc = 1 + breath * 0.06;
+  ctx.drawImage(tintGlow(w, h, tint), w / 2 * (1 - sc), h / 2 * (1 - sc), w * sc, h * sc);
+  ctx.globalAlpha = 1;
 
   // Ensure offscreen canvases
   ensureStarCanvases(w, h);

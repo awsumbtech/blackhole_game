@@ -20,6 +20,7 @@ const ASSETS = [
   "./js/art.js",
   "./js/tiers.js",
   "./js/wisp.js",
+  "./js/grade.js",
   "./js/starmap.js",
   "./js/backdrop.js",
   "./js/worlds.js",

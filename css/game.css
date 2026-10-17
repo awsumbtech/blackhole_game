@@ -809,3 +809,54 @@ body.reduce-motion .sing-point { animation: none; }
 #zen-cue{position:fixed;left:0;right:0;bottom:16%;text-align:center;font:300 15px 'Outfit',sans-serif;letter-spacing:.25em;color:#cfe8ff;pointer-events:none;z-index:6;transition:opacity .3s}
 .mix-slider{width:110px;accent-color:#8f88ff;margin-right:8px;vertical-align:middle}
 #stats { z-index: 65; } /* above the title screen (Settings from title) */
+
+/* ─── v8 "Painterly": glass panels, refined type, consistent spacing ─── */
+:root {
+  --glass: linear-gradient(180deg, rgba(22, 28, 64, 0.72) 0%, rgba(10, 13, 32, 0.78) 100%);
+  --glass-edge: rgba(170, 180, 255, 0.16);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --space: 12px;
+}
+.modal-card, .confirm, .starmap-card, .lb-item {
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi), 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 40px rgba(110, 114, 255, 0.08);
+  backdrop-filter: blur(12px) saturate(1.15); -webkit-backdrop-filter: blur(12px) saturate(1.15);
+}
+.modal-card { border-radius: 20px; padding: 20px 18px 18px; }
+.title-btn, .soft-btn, .skip-btn {
+  background: linear-gradient(180deg, rgba(26, 32, 72, 0.6), rgba(12, 15, 38, 0.62));
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi), 0 6px 20px rgba(0, 0, 0, 0.3);
+  transition: background 0.35s ease, border-color 0.35s ease, transform 0.2s ease, box-shadow 0.35s ease;
+}
+.title-btn:hover, .soft-btn:hover { border-color: rgba(180, 186, 255, 0.32); }
+.title-btn.primary {
+  background: linear-gradient(135deg, rgba(118, 120, 255, 0.85), rgba(150, 112, 255, 0.82) 60%, rgba(196, 130, 255, 0.78));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 34px rgba(110, 114, 255, 0.32);
+}
+.big-btn { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 26px rgba(110, 114, 255, 0.28); border-radius: 16px; }
+.soft-btn:active, .big-btn:active, .skip-btn:active { transform: scale(0.985); }
+.title-name {
+  font-weight: 300; white-space: nowrap;
+  background: linear-gradient(180deg, #ffffff 0%, #dfe2ff 55%, #b9b6ff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 0 18px rgba(150, 150, 255, 0.4));
+}
+.title-sub { letter-spacing: 0.55em; color: rgba(210, 214, 245, 0.62); }
+.modal-card h2, .starmap-top h2 { font-weight: 300; letter-spacing: 0.12em; }
+.title-menu { gap: var(--space); }
+.lb-item { margin-bottom: 10px; }
+.seg { border-color: var(--glass-edge); border-radius: 10px; }
+.seg button { transition: background 0.3s ease, color 0.3s ease; }
+body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+body.reduce-motion .title-btn, body.reduce-motion .soft-btn, body.reduce-motion .big-btn { transition: none; }
+#grade {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  --grade: rgba(20, 30, 60, 0);
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 50%, rgba(1, 2, 6, 0) 45%, rgba(1, 2, 6, 0.22) 75%, rgba(1, 2, 6, 0.52) 100%),
+    radial-gradient(ellipse 80% 70% at 50% 50%, rgba(0, 0, 0, 0) 30%, var(--grade) 100%);
+  transition: background 2s ease;
+}
+body.on-title #grade { opacity: 0.8; }

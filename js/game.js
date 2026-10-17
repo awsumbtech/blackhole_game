@@ -3,9 +3,11 @@
 
 import { createInput } from "./input.js";
 import { updateEntities, getBiome, rand, biomeCatalog } from "./entities.js";
-import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor, invalidateStarfield, setNebulaPalette, setSoftPalette, drawLens } from "./render.js";
+import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor, invalidateStarfield, setNebulaPalette, setSoftPalette, drawLens, setStarQuality } from "./render.js";
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
+import { setGrade } from "./grade.js";
+const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false };
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
@@ -1438,8 +1440,11 @@ function frame(now) {
 
   const breath = breathPhase(now);
   audio.setBreath(breath);
-  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath, { noNebula: true });
-  drawBackdrop(ctx, w, h, z, state.bgX, state.bgY, breath, { lite: getArtQuality() !== "high" });
+  const hiQ = getArtQuality() === "high";
+  setStarQuality(hiQ);
+  drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath, SF_OPTS);
+  BD_OPTS.lite = !hiQ; BD_OPTS.time = now; BD_OPTS.reduceMotion = state.settings.reduceMotion;
+  drawBackdrop(ctx, w, h, z, state.bgX, state.bgY, breath, BD_OPTS);
   drawLivingWorldBG(ctx, state, w, h);
   beginArtFrame();
   if (getArtQuality() === "high") {
@@ -1453,7 +1458,6 @@ function frame(now) {
   drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
   drawRivals(ctx, state, vw, vh, now, state.settings.reduceMotion);
   drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion);
-  if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
@@ -1472,6 +1476,8 @@ function frame(now) {
       breathGuide: state.settings.breathGuide && state.mode !== "zen",   // v7.1: no ring in Zen; the wisp breathes instead
       filter: skinFilter()
     });
+  // v8: the wisp draws last in the world so nothing ever covers it
+  if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   ctx.restore();
 
   // Slow-Mo tint
@@ -1484,6 +1490,7 @@ function frame(now) {
     ctx.fillRect(0, 0, w, h);
   }
 
+  setGrade(state.biome, hiQ);   // v8: vignette + biome grade (CSS layer under the HUD)
   if (inPlay) {
     drawLivingWorldOverlay(ctx, state, w, h);
     drawWorldsOverlay(ctx, state, w, h, breath);

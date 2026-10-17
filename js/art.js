@@ -194,6 +194,7 @@ const PAINTERS = {
     g.lineWidth = Math.max(0.6, R * 0.09);
     g.strokeStyle = light(e.color, 0.5, 0.3);
     g.stroke();
+    rimLight(g, R, pts);
     if (R > 6) {
       g.save(); path(g, pts); g.clip();
       g.strokeStyle = dark(e.color, 0.5, 0.35);
@@ -227,6 +228,7 @@ const PAINTERS = {
     rg.addColorStop(1, dark(e.color, 0.55));
     g.fillStyle = rg;
     g.fill();
+    if (quality === "high" && R > 4) { g.save(); smoothPath(g, pts); g.clip(); litSphere(g, R, e.color, 0); g.restore(); }
     if (R > 5) {
       g.save(); smoothPath(g, pts); g.clip();
       const craters = 2 + Math.floor(r() * 3);
@@ -353,16 +355,8 @@ const PAINTERS = {
     g.rotate(0);
     g.restore();
 
-    // Lit from the upper left
-    g.save();
-    g.beginPath(); g.arc(0, 0, R, 0, TAU); g.clip();
-    const sh = g.createRadialGradient(-R * 0.45, -R * 0.45, R * 0.05, -R * 0.1, -R * 0.1, R * 1.45);
-    sh.addColorStop(0, "rgba(255, 252, 235, 0.22)");
-    sh.addColorStop(0.42, "rgba(0, 0, 0, 0)");
-    sh.addColorStop(1, "rgba(2, 3, 14, 0.85)");
-    g.fillStyle = sh;
-    g.fillRect(-R, -R, R * 2, R * 2);
-    g.restore();
+    // v8: lit from the upper left with a soft terminator and atmospheric scattering
+    litSphere(g, R, bands[1] || bands[0], 1);
 
     if (variant === 0) ring(true);
     if (variant === 1) {
@@ -545,6 +539,59 @@ Object.assign(PAINTERS, {
   }
 });
 
+// v8 lighting helpers (paint time only; never per frame)
+// Day/night terminator from the upper left, a thin scattered-light limb on the
+// lit edge, and a faint bounce of space-blue on the night side.
+function litSphere(g, R, atmo, strength) {
+  g.save();
+  g.beginPath(); g.arc(0, 0, R, 0, TAU); g.clip();
+  const lx = -0.62, ly = -0.55;
+  const tg = g.createLinearGradient(lx * R, ly * R, -lx * R, -ly * R);
+  tg.addColorStop(0, "rgba(255, 250, 232, 0.16)");
+  tg.addColorStop(0.42, "rgba(0, 0, 0, 0)");
+  tg.addColorStop(0.62, "rgba(2, 3, 14, 0.55)");
+  tg.addColorStop(1, "rgba(2, 3, 14, 0.9)");
+  g.fillStyle = tg;
+  g.fillRect(-R, -R, R * 2, R * 2);
+  // limb darkening
+  const ld = g.createRadialGradient(0, 0, R * 0.55, 0, 0, R);
+  ld.addColorStop(0, "rgba(0, 0, 0, 0)");
+  ld.addColorStop(1, "rgba(2, 3, 14, 0.35)");
+  g.fillStyle = ld;
+  g.fillRect(-R, -R, R * 2, R * 2);
+  if (strength > 0) {
+    // scattered light along the lit limb (a crescent of atmosphere)
+    const sc = g.createRadialGradient(R * 0.22, R * 0.2, R * 0.78, 0, 0, R * 1.02);
+    sc.addColorStop(0, light(atmo, 0.5, 0));
+    sc.addColorStop(1, light(atmo, 0.6, 0.55 * strength));
+    g.globalCompositeOperation = "lighter";
+    g.fillStyle = sc;
+    g.beginPath(); g.arc(0, 0, R, Math.PI * 0.75, Math.PI * 1.85); g.lineTo(0, 0); g.fill();
+    // faint night-side bounce light
+    const bl = g.createRadialGradient(R * 0.7, R * 0.7, 0, R * 0.7, R * 0.7, R * 0.6);
+    bl.addColorStop(0, "rgba(90, 120, 200, 0.10)");
+    bl.addColorStop(1, "rgba(90, 120, 200, 0)");
+    g.fillStyle = bl;
+    g.fillRect(-R, -R, R * 2, R * 2);
+  }
+  g.restore();
+}
+
+// Thin rim light on the upper-left edges of a hard-edged shape
+function rimLight(g, R, pts) {
+  if (quality !== "high" || R < 5) return;
+  g.save();
+  path(g, pts); g.clip();
+  g.globalCompositeOperation = "lighter";
+  g.lineWidth = Math.max(0.8, R * 0.14);
+  const lg = g.createLinearGradient(-R, -R, R * 0.2, R * 0.2);
+  lg.addColorStop(0, "rgba(255, 244, 225, 0.42)");
+  lg.addColorStop(1, "rgba(255, 244, 225, 0)");
+  g.strokeStyle = lg;
+  path(g, pts); g.stroke();
+  g.restore();
+}
+
 function path(g, pts) {
   g.beginPath();
   g.moveTo(pts[0][0], pts[0][1]);
@@ -660,8 +707,77 @@ function diskTexture(palette, b, layer) {
   return d;
 }
 
-let spinOuter = 0, spinInner = 0;
+let spinOuter = 0, spinInner = 0, shimmerT = 0;
 let glowSprite = null, glowB = 0, ringSprite = null, ringB = 0;
+let dopSprite = null, dopB = 0, bloomSprite = null, bloomB = 0;
+
+// v8: relativistic beaming. The side of the disk turning toward us is brighter
+// and whiter, the receding side dimmer. Painted once per size, in disk-plane
+// coordinates (it doesn't rotate: the bright side stays put while the disk spins).
+function dopplerSprite(b) {
+  if (dopB === b) return dopSprite;
+  const R = b * DISK_OUT, size = Math.ceil(R * 2) + 2;
+  dopSprite = makeCanvas(size);
+  const g = dopSprite.getContext("2d");
+  g.translate(size / 2, size / 2);
+  const lg = g.createLinearGradient(-R, 0, R, 0);
+  lg.addColorStop(0, "rgba(255, 236, 205, 0.0)");
+  lg.addColorStop(0.12, "rgba(255, 242, 220, 0.95)");
+  lg.addColorStop(0.4, "rgba(255, 220, 180, 0.3)");
+  lg.addColorStop(0.7, "rgba(255, 200, 160, 0.0)");
+  g.fillStyle = lg;
+  g.beginPath();
+  g.arc(0, 0, b * 2.0, 0, TAU);
+  g.arc(0, 0, b * DISK_IN, TAU, 0, true);
+  g.fill();
+  // soften the annulus edges
+  g.globalCompositeOperation = "destination-in";
+  const m = g.createRadialGradient(0, 0, b * DISK_IN, 0, 0, b * 2.0);
+  m.addColorStop(0, "rgba(0,0,0,0)");
+  m.addColorStop(0.25, "rgba(0,0,0,1)");
+  m.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = m;
+  g.fillRect(-R, -R, R * 2, R * 2);
+  dopB = b;
+  return dopSprite;
+}
+
+// v8: soft wide bloom around the disk (High only)
+function bloomFor(b) {
+  if (bloomB === b) return bloomSprite;
+  const R = b * 3.4, size = Math.ceil(R * 2);
+  bloomSprite = makeCanvas(size);
+  const g = bloomSprite.getContext("2d");
+  g.translate(size / 2, size / 2);
+  const gr = g.createRadialGradient(0, 0, b * 1.1, 0, 0, R);
+  gr.addColorStop(0, "rgba(255, 214, 170, 0.22)");
+  gr.addColorStop(0.3, "rgba(240, 170, 140, 0.08)");
+  gr.addColorStop(1, "rgba(200, 140, 160, 0)");
+  g.fillStyle = gr;
+  g.fillRect(-R, -R, R * 2, R * 2);
+  bloomB = b;
+  return bloomSprite;
+}
+
+// Disk halves (module function: no per-frame closure)
+function drawDisk(ctx, tex, ang, alpha, radius) {
+  const s = tex.k * radius;
+  ctx.save();
+  ctx.scale(1, TILT);
+  ctx.rotate(ang);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(tex.c, -s / 2, -s / 2, s, s);
+  ctx.restore();
+}
+function drawDoppler(ctx, spr, alpha, radius) {
+  const s = DISK_OUT * 2 * radius;
+  ctx.save();
+  ctx.scale(1, TILT);
+  ctx.globalAlpha = alpha;
+  ctx.globalCompositeOperation = "lighter";
+  ctx.drawImage(spr, -s / 2, -s / 2, s, s);
+  ctx.restore();
+}
 
 function holeSprites(b) {
   if (glowB !== b) {
@@ -691,10 +807,26 @@ function holeSprites(b) {
     g.beginPath(); g.arc(0, 0, b * 1.12, 0, TAU); g.fill();
     const pr = g.createRadialGradient(0, 0, b * 0.97, 0, 0, b * 1.14);
     pr.addColorStop(0, "rgba(255, 238, 220, 0)");
-    pr.addColorStop(0.35, "rgba(255, 238, 220, 0.75)");
+    pr.addColorStop(0.3, "rgba(255, 242, 226, 0.9)");
+    pr.addColorStop(0.55, "rgba(255, 214, 170, 0.35)");
     pr.addColorStop(1, "rgba(255, 238, 220, 0)");
     g.fillStyle = pr;
     g.beginPath(); g.arc(0, 0, b * 1.14, 0, TAU); g.fill();
+    // v8: lensing asymmetry, the approaching (left) side of the ring is brighter
+    const asym = g.createLinearGradient(-b * 1.14, 0, b * 1.14, 0);
+    asym.addColorStop(0, "rgba(255, 246, 232, 0.35)");
+    asym.addColorStop(0.5, "rgba(255, 246, 232, 0)");
+    g.globalCompositeOperation = "source-atop";
+    g.fillStyle = asym;
+    g.fillRect(-b * 1.14, -b * 1.14, b * 2.28, b * 2.28);
+    g.globalCompositeOperation = "source-over";
+    // re-darken the shadow core so the asymmetry only tints the ring
+    const core = g.createRadialGradient(0, 0, 0, 0, 0, b * 0.97);
+    core.addColorStop(0, "rgba(1, 1, 4, 1)");
+    core.addColorStop(0.9, "rgba(1, 1, 4, 1)");
+    core.addColorStop(1, "rgba(1, 1, 4, 0)");
+    g.fillStyle = core;
+    g.beginPath(); g.arc(0, 0, b * 0.97, 0, TAU); g.fill();
     ringB = b;
   }
 }
@@ -724,6 +856,8 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   const inner = diskTexture(palette, b, 0);
   const outer = high ? diskTexture(palette, b, 1) : null;
   const glowA = 0.85 + breath * 0.15 + gulp * 0.2;
+  const dop = dopplerSprite(b);
+  if (!fx.reduceMotion) shimmerT += 0.035 * dt;
 
   ctx.save();
   ctx.translate(x, y);
@@ -753,23 +887,24 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   const gs = radius * 3.0 * (1 + (breath - 0.5) * 0.08);
   ctx.globalAlpha = glowA;
   ctx.drawImage(glowSprite, -gs, -gs, gs * 2, gs * 2);
+  if (high) {
+    const bl = bloomFor(b), bs = radius * 3.4 * (1 + gulp * 0.05);
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = 0.7 + breath * 0.2;
+    ctx.save(); ctx.scale(1, 0.62);
+    ctx.drawImage(bl, -bs, -bs, bs * 2, bs * 2);
+    ctx.restore();
+    ctx.globalCompositeOperation = "source-over";
+  }
 
   const half = radius * DISK_OUT * 1.1;
-  const drawDisk = (tex, ang, alpha) => {
-    const s = tex.k * radius;
-    ctx.save();
-    ctx.scale(1, TILT);
-    ctx.rotate(ang);
-    ctx.globalAlpha = alpha;
-    ctx.drawImage(tex.c, -s / 2, -s / 2, s, s);
-    ctx.restore();
-  };
 
   // Far half of the disk (behind the hole)
   ctx.save();
   ctx.beginPath(); ctx.rect(-half, -half, half * 2, half); ctx.clip();
-  if (outer) drawDisk(outer, spinOuter, 0.8 * glowA);
-  drawDisk(inner, spinInner, glowA);
+  if (outer) drawDisk(ctx, outer, spinOuter, 0.8 * glowA, radius);
+  drawDisk(ctx, inner, spinInner, glowA, radius);
+  drawDoppler(ctx, dop, 0.75 * glowA, radius);
   ctx.restore();
 
   // Light from the far side, bent up and over the shadow (the lensed arc)
@@ -805,12 +940,22 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   const rs = radius * 1.3 * g;
   ctx.globalAlpha = 1;
   ctx.drawImage(ringSprite, -rs, -rs, rs * 2, rs * 2);
+  if (high && !fx.reduceMotion) {
+    // Heat shimmer: a faint second photon ring breathing a hair in and out of phase
+    const sh = rs * (1.015 + 0.012 * Math.sin(shimmerT));
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = 0.12 + 0.06 * Math.sin(shimmerT * 1.7);
+    ctx.drawImage(ringSprite, -sh, -sh * 0.985, sh * 2, sh * 1.97);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+  }
 
   // Near half of the disk (in front of the hole)
   ctx.save();
   ctx.beginPath(); ctx.rect(-half, 0, half * 2, half); ctx.clip();
-  if (outer) drawDisk(outer, spinOuter, 0.8 * glowA);
-  drawDisk(inner, spinInner, glowA);
+  if (outer) drawDisk(ctx, outer, spinOuter, 0.8 * glowA, radius);
+  drawDisk(ctx, inner, spinInner, glowA, radius);
+  drawDoppler(ctx, dop, glowA, radius);
   ctx.restore();
 
   ctx.restore();
