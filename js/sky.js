@@ -50,13 +50,11 @@ function dustLane(g, x, y, len, wid, ang, a) {
 function farGalaxy(g, r, x, y, s, c) {
   g.save(); g.translate(x, y); g.rotate(r() * TAU); g.scale(1, 0.35 + r() * 0.4);
   const gr = g.createRadialGradient(0, 0, 0, 0, 0, s);
-  gr.addColorStop(0, "rgba(255, 246, 228, 0.7)");
-  gr.addColorStop(0.2, rgba(c, 0.35));
+  // v9: a faint, distant smudge (no bright eye-like core or arcs: never mistaken for food)
+  gr.addColorStop(0, "rgba(255, 246, 228, 0.32)");
+  gr.addColorStop(0.25, rgba(c, 0.16));
   gr.addColorStop(1, rgba(c, 0));
   g.fillStyle = gr; g.beginPath(); g.arc(0, 0, s, 0, TAU); g.fill();
-  g.strokeStyle = rgba(c, 0.18); g.lineWidth = Math.max(0.5, s * 0.1);
-  g.beginPath(); g.arc(0, 0, s * 0.55, 0.2, 2.6); g.stroke();
-  g.beginPath(); g.arc(0, 0, s * 0.55, 3.3, 5.7); g.stroke();
   g.restore();
 }
 function stars(g, r, W, H, n, bright) {
@@ -156,7 +154,7 @@ function paint(W, H, high) {
   g.filter = "none";
   // distant galaxies and stars
   g.globalCompositeOperation = "lighter";
-  for (let i = 0; i < (high ? 6 : 3); i++) farGalaxy(g, r, r() * W, r() * H, m * (0.015 + r() * 0.03), P[i % 3]);
+  for (let i = 0; i < (high ? 6 : 3); i++) farGalaxy(g, r, r() * W, r() * H, m * (0.01 + r() * 0.018), P[i % 3]);
   stars(g, r, W, H, (style === "meadow" ? 900 : 260) * soft * (W * H) / (400 * 900), style === "meadow" ? 1 : 0.8);
   g.globalCompositeOperation = "source-over";
 }

@@ -295,6 +295,9 @@ export function createEntity(type, x, y, scale = 1) {
     // v8.3 growth: depthT < 1 while drifting in from a back layer (non-interactive),
     // depthK0 = apparent size it starts at; gainK keeps bite value when food is drawn smaller
     depthT: 1, depthK0: 1, gainK: 1,
+    // v9 art (visual only): look = painted look (-1: from the seed); hot = a meteor
+    // entering hot (glowing streak and leading edge), set by meteor showers
+    look: -1, hot: 0,
     _mc: color + "88", _ec: color + "55"   // minimap dot / edge arrow colours
   };
 }
