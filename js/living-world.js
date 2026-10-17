@@ -411,9 +411,9 @@ function updateEventSystem(state, dt) {
   if (Math.random() > CFG.EVENT_FIRE_CHANCE) return;
 
   const pool = (state.biome && state.biome.events) || DEFAULT_EVENTS;
-  const id = pickWeighted(pool);
-  if (id === "meteorShower" && !(state.tier >= 1)) return;   // v9: no meteors while you are still eating dust
-  fireEvent(state, id);
+  // v9: no meteors while you are still eating dust: fireEvent swaps a shower for a
+  // Dust Drift until meteors are edible (eventFor in tiers.js)
+  fireEvent(state, pickWeighted(pool));
 }
 
 function pickWeighted(pool) {

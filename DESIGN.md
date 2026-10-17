@@ -29,8 +29,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v8.6**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.6"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.0**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.0"` in `sw.js`, `SAVE_VERSION = 8` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -81,7 +81,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Icons:** regenerate with `python3 tools/make-icons.py`.
 - **v9 art (every type its own little painting).** Brian: "the space dust looks like mobs", "planets and meteors need different graphics for everything".
   - **Looks:** each type has a set of looks (`LOOKS` in art.js); `lookOf(e)` takes `e.look` if >= 0, else the seed. Types in `OWN` paint their own palette, so their cache key is `type||look|variant` (planet keeps variant for rings/moon). One look always paints the same.
-  - **Dust** is never a round blob: a faint drift of gas carrying grains and glints (silicate grit, ice glints, carbon soot, pink gas wisp). **Grit & pebbles:** low-poly lit chips, gravel handfuls, ice flakes, glassy basalt, rust. **Asteroids** (`meteor` type): lumpy potatoes and contact binaries in stony, iron (metal sheen), carbon and rusty tones, lit craters. **Meteors** are shower rocks with `e.hot = 1` (set in living-world `streamEvent`): a glowing entry streak (`tailFor(.., hot)`) and a heated leading edge (`heatFor`), both rotated to the velocity and fading as it slows. No meteor showers at tier 0.
+  - **Dust** is never a round blob: a faint drift of gas carrying grains and glints (silicate grit, ice glints, carbon soot, pink gas wisp). **Grit & pebbles:** low-poly lit chips, gravel handfuls, ice flakes, glassy basalt, rust. **Asteroids** (`meteor` type): lumpy potatoes and contact binaries in stony, iron (metal sheen), carbon and rusty tones, lit craters. **Meteors** are shower rocks with `e.hot = 1` (set in living-world `streamEvent`): a glowing entry streak (`tailFor(.., hot)`) and a heated leading edge (`heatFor`), both rotated to the velocity and fading as it slows. No meteor showers at tier 0 (a Dust Drift stands in; see tier gating in §7c).
   - **Comets:** dark icy nucleus, cyan / C2-green / white coma, soft sunward jets, warm dust tail + blue ion tail. **Moons:** grey maria, icy cracked (Europa), volcanic (Io), dark dusty (Callisto), bright tiger-striped, rusty with one big crater. **Planets:** 10 archetypes (`planetPalette`): rocky, ocean, desert, ice, lava, banded gas giant with a storm, ice giant, ringed, cloud-wrapped, exotic; 30 looks. Atmosphere halo is thicker on the lit side and the limb glow is hidden by night.
   - **Stars** by spectral type (`SPECTRA`, M to B, spots on cool stars); the Cradle sun is pinned to `look: 0` (G). **Systems:** sun by type, tilted orbits, little lit worlds, sometimes a companion star or a belt. **Nebulae:** emission, blue reflection, planetary ring, dark pillars (only where the glow is), supernova filaments. **Clusters:** globular or open. **Galaxies:** spiral, barred, elliptical, irregular, edge-on.
   - **Light:** always upper left (`LX, LY`). Rocks sway (sin of rotation, ±0.35 rad) instead of spinning so their light stays put. `shade()` gives a curved terminator; `facets()` lights chips.
@@ -177,6 +177,11 @@ in v9; saves refund it, see below).
   next galaxy is built under the veil (`initGalaxy(n, null, true)` keeps your drift), then `flowin`
   (130 frames) lifts it with a caption ("GALAXY N", biome, line; the tier-banner style) and a soft
   chime. Play never stops; no modal. The star map lives in the pause menu and on the title.
+- **Tier gating** (`js/tiers.js`): `fitType(state, id)` swaps any explicitly spawned type more than
+  one tier up for the biggest food of your tier; `eventFor(state, id)` swaps stream events whose
+  content isn't edible yet (meteor shower / comet stream / derelict flotilla → meteor shower or
+  Dust Drift) and Stellar Birth below tier 6 for a Soft Bloom. All `fireEvent` and mechanic spawns
+  pass through these.
 - **Run depth** = galaxy number in the current run. Per depth d:
   - growth needed ×`CLIMB_GROWTH^(d-1)` (`DEPTH.CLIMB_GROWTH`; breathers ×0.85 of that with Quiet Cradle).
   - food density `1 - 0.035(d-1)`, floor 0.62.
@@ -303,6 +308,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
 - **v8.6 A real beginning:** the intro is a dark void that hides the galaxy (wordmark, then "Drift. / Eat what's smaller. / Grow."), then the void lifts over ~2.8s while the newborn hole is born in the play view (`state.birth` scales the drawn hole). `seenHints.intro` is set only when the intro has played, and boot shows the intro whenever it is unset, so an interrupted start-over resumes at the beginning. SW updates: `reg.update()` whenever the app returns to the front; on `controllerchange` the game saves and reloads at a calm moment (title or hidden), coming back to the title.
 - **v8.5 True fresh start:** title "Start completely over" (`startCompletelyOver` in game.js) wipes progress, Ascension, the star map's galaxy log and all `seenHints` (onboarding, codex seen flags, tier/merge captions), ends any Zen session, then replays the first-launch intro and drift-in into a newborn dust-only galaxy 1. Settings, lifetime stats, fastest times, the logbook and Zen notes stay.
 - **v8.4 Still tiny:** big inedible objects in play are at most ~1 tier up (`homeTier` filter on big types and biome signatures; bigger-fish 1.3–2.2× your radius; rough rock only at Grit & Pebbles); Debris Reef reefs are back-layer haze at tier 0 and merge in at tier 1 (caption waits, `minTier`); newborn opening hint.

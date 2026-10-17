@@ -2,6 +2,23 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.0 One loop (Oct 2026)
+
+- **One loop: born, grow, collapse, reborn stronger.** Growing (tier-ups and new layers arriving) is the progression inside a run. Collapse is the only reset, Dark Matter the only currency, the constellation the only upgrade screen.
+- **No more stardust or shop.** What you had (unspent stardust plus everything you'd spent on upgrades) came back as Dark Matter, 25 stardust each. Galaxy perks you'd earned give 8 Dark Matter each. Their best effects now live on the constellation:
+  - Solar Wind: +15% speed.
+  - Momentum: bigger combos and a longer combo window.
+  - Second Helping: power-ups last longer and show up more often.
+  - Quiet Cradle: breather galaxies need less growth.
+  - Star Reader: goal stars give double Dark Matter.
+- **Galaxies flow into each other.** No summary screen: when you outgrow a galaxy, the view softly fades toward the next one while you keep drifting, and it opens around you with its name and a soft chime. The star joins your map quietly. The star map is now also in the pause menu.
+- **Collapse when it feels heavy.** When growth clearly slows, a soft "Growth is slowing · Collapse?" appears (also in the pause menu). Collapse shows your Dark Matter, then the constellation, then you are reborn: the newborn beginning plays again ("Collapse 1. Reborn. Grow.").
+- **Goal stars are optional.** Each new best star gives +2 Dark Matter and is noted in your logbook. No perks hang on them.
+- **Milestones trimmed** to golden galaxies, supernova runs and skins.
+- **Everything fits your size.** Events only bring things you can eat or that are one size up. In Space Dust a meteor shower becomes a gentle Dust Drift, and a stellar birth becomes a Soft Bloom.
+- **Pacing:** Planet Nursery, Void Rift and Star Meadow are a little quicker. Comet Current and Ruined Armada stay the slow walls. First collapse comes after about half an hour.
+- **New art:** every kind of object has its own painted looks. Dust is soft drifting grains, asteroids are lumpy and lit, shower meteors arrive glowing, comets have tails, and moons, planets (10 kinds), stars, nebulae and galaxies all vary.
+
 ## v8.6 A real beginning (Oct 2026)
 
 - **Starting over now begins in the dark.** In v8.5, "Start completely over" did play the intro, but it was a few faint words over the galaxy behind the title. It looked like you'd just been dropped into a galaxy.
