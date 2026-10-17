@@ -3,7 +3,7 @@ import { drawSky } from "./sky.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
-import { spriteFor, tailFor, drawBlackHoleArt, getArtQuality } from "./art.js";
+import { spriteFor, tailFor, heatFor, drawBlackHoleArt, getArtQuality } from "./art.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -318,7 +318,8 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     const spawnAlpha = e._spawnAlpha ?? 1;
     let alpha = spawnAlpha;
     let r = e.radius;
-    let rot = ROTATES[e.type] ? e.rotation : 0;
+    // v9: rocks tumble gently (a sway, not a spin) so their light stays upper left
+    let rot = ROTATES[e.type] ? (e.type === "craft" ? e.rotation : Math.sin(e.rotation) * 0.35) : 0;
     if (e.consuming) {
       // Spiral down into the hole (v6: big catches stretch and swirl slowly)
       const p = e.consumeProgress;
@@ -356,6 +357,22 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       }
       ctx.rotate(-ang);
       ctx.translate(-sx, -sy);
+    }
+
+    // v9: a meteor entering hot: a glowing entry streak behind it (cools as it slows)
+    let heat = 0, hang = 0;
+    if (e.hot && !e.consuming && e.depthT >= 1) {
+      const speed = hypot(e.vx, e.vy);
+      heat = Math.min(1, speed / (e.baseSpeed || 1) * 0.9) * (still ? 0.6 : 1);
+      if (heat > 0.05) {
+        const t = tailFor(e.color, rpx, false, true);
+        hang = Math.atan2(e.vy, e.vx);
+        const len = r * (6 + Math.min(4, speed * 4)), hgt = r * 1.6;
+        ctx.globalAlpha = alpha * 0.85 * heat;
+        ctx.translate(sx, sy); ctx.rotate(hang + Math.PI);
+        ctx.drawImage(t.c, r * 0.2, -hgt / 2, len, hgt);
+        ctx.rotate(-hang - Math.PI); ctx.translate(-sx, -sy);
+      }
     }
 
     const sp = spriteFor(e, rpx);
@@ -400,6 +417,16 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.translate(-sx, -sy);
     } else {
       ctx.drawImage(sp.c, sx - d / 2, sy - d / 2, d, d);
+    }
+    if (heat > 0.05) {
+      // the heated leading edge faces where it is going
+      const hs = heatFor(rpx), hd = hs.k * r;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = alpha * heat * 0.9;
+      ctx.translate(sx, sy); ctx.rotate(hang);
+      ctx.drawImage(hs.c, -hd / 2, -hd / 2, hd, hd);
+      ctx.rotate(-hang); ctx.translate(-sx, -sy);
+      ctx.globalCompositeOperation = "source-over";
     }
 
     // v6 big catches: a soft gold halo as you near something's size, steady once it fits
