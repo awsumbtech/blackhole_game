@@ -2,6 +2,36 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.0 Painterly (Oct 2026)
+
+A visual pass with no gameplay change. Balance, audio and saves are the same; saves from v1 to v7 still load.
+
+**Wisp**
+- In Zen the wisp stays in a close, steady orbit beside the hole and keeps breathing (4 in / 6 out). It no longer drifts off to hint at food or lean toward discoveries.
+- In all modes the wisp is drawn last in the world, above every object, particle and the hole, with a soft dark backing so it reads against bright stars.
+
+**Black hole**
+- The approaching side of the disk is brighter and whiter (relativistic beaming). The photon ring is brighter and asymmetric, with a wide soft bloom (High only).
+- A faint heat shimmer on the photon ring (High only; off with Reduce Motion).
+
+**Sky**
+- Nebula clouds are painted from many soft puffs in two biome hues, with a glowing heart and dark dust lanes. There are 5 cloud shapes on High and 3 smaller ones on Lite.
+- Stars come in colour temperatures from blue-white to orange-red. Brighter stars get a soft halo (High), and some parallax stars twinkle slowly (High; off with Reduce Motion).
+- A soft vignette and a gentle per-biome colour grade. This is a GPU-composited CSS layer, so it costs no canvas time. Lite keeps the vignette and drops the grade.
+
+**Objects**
+- Planets and moons have a day/night terminator, limb darkening, a crescent of scattered light on the lit limb and a faint night-side bounce light. Meteors get the terminator (High), and rocky debris gets a rim light (High).
+- All of it is painted once into the sprite cache, so nothing extra runs per frame.
+
+**UI**
+- Glass panels with a top highlight and blur; refined buttons with a gradient primary; a gradient title wordmark; consistent spacing. Transitions are skipped under Reduce Motion.
+
+**Perf** (headless, 20 s at galaxy 5, JS ms per frame)
+- High: 0.95 avg / 1.3 p95 (v7.2: 0.84 / 1.1).
+- Lite: 0.48 / 0.6 (v7.2: 0.43 / 0.6).
+- Auto stayed on High with 0 drops.
+- The per-frame biome-glow gradient is now a cached canvas.
+
 ## v7.2 Lean (Oct 2026)
 
 A refactor with no gameplay change. Behaviour, balance, audio and saves are the same, and saves
