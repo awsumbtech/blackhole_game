@@ -1131,7 +1131,18 @@ $("btn-newgame-no").addEventListener("click", () => {
 $("btn-newgame-yes").addEventListener("click", () => {
   audio.playClick();
   $("newgame-confirm").classList.add("hidden");
-  // Fresh journey: galaxy 1, no stardust or upgrades. Settings, records, codex stay.
+  startCompletelyOver();
+});
+// v8.5: a true fresh game. Progress, Ascension and every first-time caption
+// (onboarding, codex "seen" flags, tier and merge captions) are wiped; settings,
+// lifetime stats (incl. highest galaxy), fastest times, the discovery logbook
+// and Zen notes stay.
+// Then the first-launch intro and drift-in play, into a newborn dust-only start.
+function startCompletelyOver() {
+  if (state.mode === "zen") zenRestore();
+  state.mode = "ascension";
+  state.zen = null;
+  state.drift = null;
   state.galaxy = 1;
   state.floorMass = massForR(START_R);
   state.bestTier = 0;
@@ -1139,16 +1150,19 @@ $("btn-newgame-yes").addEventListener("click", () => {
   state.upgrades = defaultUpgrades();
   state.asc = defaultAsc();   // v7: a full start-over also clears Ascension
   state.legacyBonusPending = 0;
+  state.v7Welcome = false;
   state.galaxyCredited = false;
   state.transitioning = false;
   state.transitionPhase = "";
+  state.seenHints = {};
+  state.records.galaxyLog = {};   // the star map starts over with the journey
+  firstPlayStart = true;
   $("transition-overlay").classList.add("hidden");
   initGalaxy(1);
-  state.camMul = TITLE_ZOOM;
-  updateCameraScale(true);
   save(state);
-  startDrift("new");
-});
+  fadeOutScreenEl(titleEl);
+  showIntro();
+}
 $("btn-title-settings").addEventListener("click", () => {
   audio.playClick();
   ui.showStats(state, () => {}, { settingsOnly: true });
