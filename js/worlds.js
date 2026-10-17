@@ -228,7 +228,7 @@ const SETUP = {
     const cx = Math.cos(a) * d, cy = Math.sin(a) * d;
     const sunR = b0 * 0.075;
     W.cradle = { x: cx, y: cy, sunR, rings: [2.4, 3.6, 5.0, 6.5].map(k => k * sunR),
-      sun: { type: "star", color: "#ffd86d", seed: 4242, variant: 0, radius: sunR } };
+      sun: { type: "star", color: "#ffd86d", seed: 4242, variant: 0, look: 0, radius: sunR } };
     W.lms.push(landmark(setName("The Cradle"), "cradle", cx, cy, sunR * 6.8, "255, 216, 140"));
     // Little worlds (of this tier) on slow orbits
     for (let i = 0; i < 18; i++) {

@@ -400,7 +400,9 @@ function updateEventSystem(state, dt) {
   if (Math.random() > CFG.EVENT_FIRE_CHANCE) return;
 
   const pool = (state.biome && state.biome.events) || DEFAULT_EVENTS;
-  fireEvent(state, pickWeighted(pool));
+  const id = pickWeighted(pool);
+  if (id === "meteorShower" && !(state.tier >= 1)) return;   // v9: no meteors while you are still eating dust
+  fireEvent(state, id);
 }
 
 function pickWeighted(pool) {
@@ -503,6 +505,7 @@ function streamEvent(state, opts) {
         e.vx = Math.cos(inward) * speed;
         e.vy = Math.sin(inward) * speed;
         e.baseSpeed = speed;
+        if (type.id === "meteor") e.hot = 1;   // v9 art: shower meteors arrive glowing
         st.entities.push(e);
       }
     }

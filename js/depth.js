@@ -75,7 +75,7 @@ const samples = new Map();
 function sampleFor(id, v) {
   const key = id + v;
   let e = samples.get(key);
-  if (!e) { e = createEntity(typeById(id), 0, 0, 1); e.variant = v; e.seed = 1000 + v * 7919 + id.length * 31; samples.set(key, e); }
+  if (!e) { e = createEntity(typeById(id), 0, 0, 1); e.variant = v & 3; e.look = v * 7 + id.length; samples.set(key, e); }
   return e;
 }
 
@@ -116,7 +116,7 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       const sx = (gx + r2) * C - ox, sy = (gy + r3) * C - oy;
       if (sx < -C || sy < -C || sx > w + C || sy > h + C) continue;
       const rad = rad0 * (0.65 + 0.7 * (r / occ));
-      const id = types[(r2 * 997 | 0) % types.length], v = (r3 * 991 | 0) % 4;
+      const id = types[(r2 * 997 | 0) % types.length], v = (r3 * 991 | 0) % 8;   // v9: 8 looks per layer type
       if (cb) { cb(sx, sy, rad, id, v); continue; }
       const e = sampleFor(id, v);
       const sp = spriteFor(e, rad * dpr);
@@ -161,10 +161,13 @@ export function startMerge(state, w, h, holePx, spawn) {
   mergeTier = L;
   shift = 1;
   let n = 0;
-  mergeCb = (sx, sy, rad, id) => {
+  mergeCb = (sx, sy, rad, id, v) => {
     if (n >= MAX_MERGE || sx < 0 || sy < 0 || sx > w || sy > h) return;
     n++;
     spawn(id, sx, sy, rad);
+    // v9: the thing that steps forward keeps the look it had in the haze
+    const ents = state.entities, e = ents && ents[ents.length - 1];
+    if (e && e.type === id) { const s = sampleFor(id, v); e.look = s.look; e.variant = s.variant; e._artBase = null; e._sp = null; }
   };
   walk(null, L, 1, w, h, holePx, 1, 1, mergeCb);
   mergeCb = null;
