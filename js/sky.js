@@ -1,6 +1,6 @@
 // ─── SKY (v8.1) ───
 // One big painted nebula per biome, so every galaxy has its own look at a
-// glance: reef tendrils, icy currents, nursery pillars, armada smoke, the
+// glance: soft reef banks, icy currents, nursery pillars, armada smoke, the
 // rift, the golden meadow and the forge's shock shells. Painted once per
 // biome + screen size into a half-res canvas, then stamped (opaque, so it
 // also replaces the old background fill) with a slow parallax drift.
@@ -47,12 +47,6 @@ function dustLane(g, x, y, len, wid, ang, a) {
   g.fillRect(-len, -len, len * 2, len * 2);
   g.restore();
 }
-function tendril(g, r, x, y, len, c, w, a) {
-  g.beginPath(); g.moveTo(x, y);
-  let ang = r() * TAU;
-  for (let i = 0; i < 14; i++) { ang += (r() - 0.5) * 0.9; x += Math.cos(ang) * len / 14; y += Math.sin(ang) * len / 14; g.lineTo(x, y); }
-  g.strokeStyle = rgba(c, a); g.lineWidth = w; g.lineCap = "round"; g.lineJoin = "round"; g.stroke();
-}
 function farGalaxy(g, r, x, y, s, c) {
   g.save(); g.translate(x, y); g.rotate(r() * TAU); g.scale(1, 0.35 + r() * 0.4);
   const gr = g.createRadialGradient(0, 0, 0, 0, 0, s);
@@ -93,7 +87,6 @@ function paint(W, H, high) {
     case "reef": {
       cloudBank(g, r, W * 0.3, H * 0.75, W * 0.9, H * 0.45, 40 * n, [P[0], P[2]], 0.12, m * 0.35);
       cloudBank(g, r, W * 0.8, H * 0.2, W * 0.6, H * 0.35, 24 * n, [P[1], P[0]], 0.1, m * 0.3);
-      for (let i = 0; i < 22 * n; i++) tendril(g, r, r() * W, H * (0.4 + r() * 0.6), m * (0.2 + r() * 0.35), P[i % 3], m * 0.012, 0.16);
       break;
     }
     case "current": {

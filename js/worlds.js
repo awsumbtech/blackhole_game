@@ -792,16 +792,10 @@ function lmSprite(kind) {
   g.globalCompositeOperation = "lighter";
   const blob = (x, y, rr, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(${col}, ${a})`); gr.addColorStop(1, `rgba(${col}, 0)`); g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); };
   if (kind === "reef") {
-    // soft coral: branching luminous tendrils over a teal bed
+    // a soft teal bed with a few glints
     for (let i = 0; i < 14; i++) blob((r() - 0.5) * h, (r() - 0.5) * h, h * (0.25 + r() * 0.3), i % 2 ? "80, 200, 180" : "110, 150, 230", 0.12);
-    g.lineCap = "round";
-    for (let i = 0; i < 18; i++) {
-      let x = (r() - 0.5) * h * 0.6, y = (r() - 0.5) * h * 0.6, a = r() * TAU;
-      g.beginPath(); g.moveTo(x, y);
-      for (let k = 0; k < 8; k++) { a += (r() - 0.5) * 0.8; x += Math.cos(a) * h * 0.06; y += Math.sin(a) * h * 0.06; g.lineTo(x, y); }
-      g.strokeStyle = `rgba(${i % 3 ? "140, 240, 210" : "255, 190, 170"}, 0.22)`; g.lineWidth = S * 0.012; g.stroke();
-      blob(x, y, S * 0.025, "220, 255, 240", 0.5);
-    }
+    // v8.3: no tendrils (they read as wriggling "snakes" in galaxy 1); just a few soft glints
+    for (let i = 0; i < 9; i++) blob((r() - 0.5) * h * 0.9, (r() - 0.5) * h * 0.9, S * 0.02, "220, 255, 240", 0.35);
   } else if (kind === "meadow") {
     // a field of tiny golden blossoms
     blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
