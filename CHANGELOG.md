@@ -11,7 +11,7 @@ The game now puts one thing first: feeling yourself grow. DESIGN.md opens with a
 - Everything bigger waits in soft background depth layers (new `js/depth.js`). These are blurred, hazy, dimmer, smaller and slower-moving, and you can't touch them. Pebbles sit just behind, meteors and comets further back, then moons, planets and stars.
 - When you grow big enough to eat a tier, its layer merges into play. The objects drift forward and sharpen over about 2.5 seconds, along with the usual camera pull-back. The first time, a quiet chime plays with a caption such as "You're big enough now. The pebbles drift closer."
 - Each new galaxy starts the same way, with fine food at your scale and the bigger things behind.
-- Large things you can't eat yet are rarer, and they drift in from the back layer instead of popping in.
+- Large things you can't eat yet never appear while you're a newborn (tier 0), and they drift in from the back layer instead of popping in.
 - Rivals also drift in from the back. They fade in over about 2.5 seconds and only interact once fully arrived.
 
 **You visibly outgrow your food**

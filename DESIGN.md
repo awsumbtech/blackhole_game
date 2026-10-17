@@ -89,7 +89,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
 
 ### 5b. Growth you can feel (v8.3, `js/depth.js`). This serves the North Star.
-- **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are rare (2–3 per regular galaxy, 1 in breathers), and they drift in from the back layer.
+- **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are kept to the minimum pace needs (3–4 per regular galaxy from tier 1 on, 1–2 in breathers; v8.3 bot checks showed cutting them to 2 slowed Comet Current ~15%), and they drift in from the back layer.
 - **Back depth layers show the next 3 tiers** (layers for tiers t+1, t+2 and t+3; Lite shows 2).
   - They are hazy, dimmer, sparser and on slower parallax, using pre-blurred cached sprites (`blurFor`).
   - Deeper layers look bigger but blurrier: they are huge things far away.
