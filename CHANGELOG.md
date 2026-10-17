@@ -2,6 +2,18 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.5 True fresh start (Oct 2026)
+
+- **"Start completely over" on the title screen now really starts from the beginning.** After you confirm, the first-launch intro plays ("Drift. Eat what's smaller. Grow."), then the drift-in. You begin as a newborn hole with only dust, in galaxy 1. Before, it dropped you straight into a galaxy.
+- **Every first-time moment comes back:**
+  - The controls tip and the "You've just been born" line.
+  - Wisp's introduction.
+  - The tier and merge captions.
+  - Galaxy mechanic captions.
+  - The codex "seen" entries.
+- **What resets:** your run, Dark Matter, perks, goal stars, collapses and the star map. Any Zen session also ends.
+- **What stays:** settings, lifetime records, fastest times, the discovery logbook and Zen notes.
+
 ## v8.4 Still tiny (Oct 2026)
 
 Right after your first growth step, the play area no longer shows moon- or planet-sized things you can't eat. Pacing and saves are unchanged.
