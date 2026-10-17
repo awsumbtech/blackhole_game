@@ -1,5 +1,5 @@
 // ─── GAME MAIN ───
-// State, main loop, consume logic, zoom camera, galaxy transitions + summary.
+// State, main loop, consume logic, zoom camera, in-play galaxy flow, collapse.
 
 import { createInput } from "./input.js";
 import { updateEntities, getBiome, rand, biomeCatalog } from "./entities.js";
@@ -13,20 +13,20 @@ const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMoti
 import { drawRevealFx } from "./art.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
-import { save, load, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
+import { save, load, defaultStats, defaultRecords, exportCode, parseCode, writeBackup } from "./save.js";
 import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo } from "./discoveries.js";
 import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import { openLogbook } from "./logbook.js";
 import { openConstellation } from "./constellation.js";
 import * as zen from "./zen.js";
-import { depthInfo, ascMods, defaultAsc, freshAscRun, dmFor, GOALS, starsFor, GALAXY_PERKS, COLLAPSE_MIN_CLEARED, rollGolden, rollDeep, rollSupernova, keptUpgrades, milestonesAt, hasMilestone, SKINS, RARE_FIND_CHANCE } from "./ascension.js";
+import { depthInfo, ascMods, defaultAsc, freshAscRun, dmFor, GOALS, starsFor, noteGoalStar, COLLAPSE_MIN_CLEARED, rollGolden, rollSupernova, milestonesAt, hasMilestone, SKINS, RARE_FIND_CHANCE } from "./ascension.js";
 import { initRivals, updateRivals, drawRivals } from "./rivals.js";
 import {
   initLivingWorld, updateLivingWorld, drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay,
   pullRange, fireEvent, activeEventInfo, EVENT_INFO
 } from "./living-world.js";
-import { computeMods, freshRun, finishGalaxy, UPGRADES, upgradeCost, fmtTime } from "./progression.js";
+import { baseMods, freshRun, finishGalaxy, fmtTime } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
@@ -34,7 +34,7 @@ import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassF
 import { fillAround, DENSITY, densityInfo, spawnFood } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "8.6";
+const VERSION = "9.0";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -94,7 +94,7 @@ const state = {
   comboCount: 0, comboTimer: 0,
 
   transitioning: false, transitionPhase: "", transitionTimer: 0,
-  galaxyCredited: false, summary: null,
+  galaxyCredited: false, collapseNudge: false,
 
   paused: false, menuOpen: false, birth: 0,
   audioEnabled: true, volume: 0.4,
@@ -102,8 +102,6 @@ const state = {
   totalConsumed: 0,
   stats: defaultStats(),
   records: defaultRecords(),
-  upgrades: defaultUpgrades(),
-  stardust: 0,
   seenHints: {},
   // Zen is on by default: no clock/par, bumps cost nothing
   mode: "ascension", asc: defaultAsc(), zenNotes: [], densityK: 1, breathPull: 1, rivals: [],
@@ -111,9 +109,8 @@ const state = {
 
   // v4 screens: "play" | "title" | "intro"; camMul zooms the camera (title close-up)
   screen: "play", camMul: 1, drift: null,
-  legacyBonusPending: 0,
 
-  mods: computeMods(defaultUpgrades()),
+  mods: baseMods(),
   eatRatio: 0.88,
   run: null,
   active: freshActive(), activeMax: freshActive(),
@@ -261,7 +258,10 @@ function bumpGoal(n) {
     state.goalStarsShown = st;
     audio.playGoalStar(st);
     floater(state.playerX, state.playerY - state.radius * 2.2, "★".repeat(st) + "☆".repeat(3 - st), "#ffe3a0", 18);
-    hint("goal_star", "A goal star! Each galaxy type has its own goal. 3 stars unlocks its perk.", 4200);
+    // v9: goals are optional discoveries. A new best star for this galaxy type gives a little Dark Matter.
+    const dm = noteGoalStar(state.asc, state.ascMods, state.biome.name, st);
+    if (dm) setTimeout(() => floater(state.playerX, state.playerY - state.radius * 2.2, `New best · +${dm} Dark Matter`, "#d9ccff", 15), 700);
+    hint("goal_star", `A goal star: ${state.goal.name.toLowerCase()}. Each galaxy type has its own optional goal, written in your logbook.`, 4600);
   }
 }
 function updateAscension(dt) {
@@ -303,32 +303,13 @@ function onRivalSwallow(rv) {
   hint("rival_eat", "You outgrew a rival. Another, a little bigger, will drift in later.", 4000);
 }
 
-/** After a galaxy clears: depth, goal stars, galaxy perks, golden rewards. */
+/** After a galaxy is passed: run depth, peak scale, golden count. */
 function onAscensionClear() {
-  const a = state.asc, r = a.run, sum = state.summary;
+  const a = state.asc, r = a.run;
   r.cleared += 1;
   r.peakTier = Math.max(r.peakTier || 0, state.tier, tierIndexForR(state.radius));
   a.bestDepth = Math.max(a.bestDepth || 0, r.cleared);
-  sum.depth = r.cleared;
-  // Golden galaxy: triple stardust. Salvager perk: +30%.
-  let extra = 0;
-  if (state.golden) { r.goldenCleared = (r.goldenCleared || 0) + 1; extra += sum.earned * 2; sum.parts.push(["Golden galaxy ×3", sum.earned * 2]); }
-  if (state.ascMods.stardustMul > 1) { const x = Math.round((sum.earned + extra) * (state.ascMods.stardustMul - 1)); extra += x; sum.parts.push(["Salvager", x]); }
-  if (extra) { state.stardust += extra; state.stats.stardustEarned += extra; sum.earned += extra; }
-  // Goal stars (best per galaxy type)
-  if (state.goal) {
-    const st = starsFor(state.goal, state.goalCount);
-    const key = state.biome.name;
-    const prev = a.goalStars[key] || 0;
-    a.goalStars[key] = Math.max(prev, st);
-    sum.goal = { name: state.goal.name, stars: st, best: a.goalStars[key], count: Math.floor(state.goalCount), unit: state.goal.unit, need: state.goal.stars };
-    const gp = GALAXY_PERKS.find(p => p.galaxy === key);
-    if (st >= 3 && gp && !a.perks[gp.id]) { a.perks[gp.id] = true; sum.unlocked = gp; }
-  }
-  sum.dmPreview = dmFor(r, state.ascMods).total;
-  sum.canCollapse = r.cleared >= COLLAPSE_MIN_CLEARED;
-  // The soft wall: when a galaxy took much longer than this galaxy type usually does
-  sum.heavy = r.cleared >= COLLAPSE_MIN_CLEARED && state.run.time > (state.biome.breather ? 150 : 400);
+  if (state.golden) r.goldenCleared = (r.goldenCleared || 0) + 1;
 }
 
 // ─── v6: DISCOVERIES ───
@@ -340,7 +321,7 @@ function onDiscovery(def, f) {
   if (state.mode !== "zen") {
     state.asc.run.finds = (state.asc.run.finds || 0) + 1;
     // Rare, shining finds: +3 Dark Matter on the spot
-    if (hasMilestone(state.asc, "golden") && Math.random() < RARE_FIND_CHANCE * state.ascMods.rareMul * (state.deep ? 2 : 1)) {
+    if (hasMilestone(state.asc, "golden") && Math.random() < RARE_FIND_CHANCE * state.ascMods.rareMul) {
       state.asc.dm += 3; state.asc.dmTotal += 3;
       setTimeout(() => { floater(state.playerX, state.playerY - state.radius * 2, "Shining find · +3 Dark Matter", "#d9ccff", 17); audio.playGoalStar(3); }, 900);
     }
@@ -385,7 +366,7 @@ function drawTierBanner(w, h) {
   ctx.shadowBlur = 8;
   ctx.font = "500 11px system-ui, sans-serif";
   ctx.fillStyle = `rgba(190, 196, 255, ${0.55 * a})`;
-  ctx.fillText("A WIDER VIEW", w / 2, y - 24);
+  ctx.fillText(b.head || "A WIDER VIEW", w / 2, y - 24);
   ctx.font = "300 26px system-ui, sans-serif";
   ctx.fillStyle = `rgba(236, 238, 255, ${0.9 * a})`;
   ctx.fillText(b.name, w / 2, y);
@@ -396,11 +377,11 @@ function drawTierBanner(w, h) {
 }
 
 // ─── INIT GALAXY ───
-function initGalaxy(galaxyNum, resume = null) {
+function initGalaxy(galaxyNum, resume = null, flow = false) {
   const biome = getBiome(galaxyNum);
 
-  state.mods = computeMods(state.upgrades);
-  // v7 Ascension: permanent perks layer on top of the in-run stardust upgrades
+  state.mods = baseMods();
+  // v7 Ascension: permanent perks (the only upgrades since v9)
   const zen = state.mode === "zen";
   const am = state.ascMods = ascMods(state.asc);
   if (!zen) {
@@ -417,13 +398,12 @@ function initGalaxy(galaxyNum, resume = null) {
   const dinfo = state.depth = depthInfo(zen ? 1 : galaxyNum);
   state.densityK = zen ? 1 : dinfo.density;
   state.golden = !zen && !resume && rollGolden(state.asc, am);
-  state.deep = !zen && !resume && !state.golden && rollDeep(state.asc);
   state.goal = zen ? null : GOALS[biome.name] || null;
   state.goalCount = resume && typeof resume.goalCount === "number" ? resume.goalCount : 0;
   state.goalStarsShown = starsFor(state.goal, state.goalCount);
-  // v5: start where the last galaxy ended (your floor), plus Seed Mass
+  // v5: start where the last galaxy ended (your floor)
   state.floorMass = Math.max(massForR(START_R), state.floorMass || 0);
-  state.startMass = state.floorMass * (1 + (state.mods.startBonus || 0));
+  state.startMass = state.floorMass;
   state.targetMass = zen ? Infinity : targetMassFrom(state.floorMass, !!biome.breather, dinfo.climbK * (biome.breather ? am.breatherClimb : 1));
   state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
 
@@ -432,8 +412,8 @@ function initGalaxy(galaxyNum, resume = null) {
   state.baseBounds = 1000;
   state.initialCount = DENSITY.regular;
 
-  // Golden galaxies glow warm gold; deep variants go night-blue
-  const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : state.deep ? tintNebula(biome.nebula, [30, 40, 110], 0.5) : biome.nebula;
+  // Golden galaxies glow warm gold
+  const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : biome.nebula;
   setNebulaPalette(neb);
   setBackdropPalette(neb);
   setSky(biome.name, neb, biome.tint);
@@ -460,15 +440,14 @@ function initGalaxy(galaxyNum, resume = null) {
 
   state.playerX = (Math.random() - 0.5) * 150;
   state.playerY = (Math.random() - 0.5) * 150;
-  state.playerVX = 0;
-  state.playerVY = 0;
+  if (!flow) { state.playerVX = 0; state.playerVY = 0; }   // flowing on: keep your drift
   state.camX = state.playerX;
   state.camY = state.playerY;
   updateCameraScale(true);
 
   state.particles = [];
   state.ripples = [];
-  state.floaters = [];
+  if (!flow) state.floaters = [];
   state.comboCount = 0;
   state.comboTimer = 0;
   state.active = freshActive();
@@ -486,8 +465,9 @@ function initGalaxy(galaxyNum, resume = null) {
   ui.updatePowerupBar(state);
 
   setHaloFrom(zen ? 0.82 : am.haloFrom);
-  if (state.golden) setTimeout(() => showHint("A golden galaxy. Everything here shines: triple stardust when you clear it.", 5000), 2500);
-  else if (state.deep) setTimeout(() => showHint("A deep variant: night-blue, and rare finds shine more often here.", 4500), 2500);
+  if (state.golden) setTimeout(() => showHint("A golden galaxy. Everything here shines: +5 Dark Matter for passing through it.", 5000), 2500);
+  state.collapseNudge = false;
+  $("collapse-pill").classList.add("hidden");
   audio.startDrone(biome);
   audio.newPhrase();
   audio.setMusicLayers(state.tier, biome);
@@ -840,114 +820,69 @@ function updateParticles(dt) {
   if (state.particles.length > pCap) state.particles.splice(0, state.particles.length - pCap);
 }
 
-// ─── GALAXY TRANSITION ───
+// ─── GALAXY FLOW (v9) ───
+// No summary screen and no shop: at the target size the galaxy is credited
+// quietly (a star joins your map), the view softly veils toward the next
+// galaxy's colour while you keep drifting, and the next galaxy opens around
+// you with a gentle caption. Collapse is the only reset.
+const FLOW_OUT = 90, FLOW_IN = 130;
 
 function galaxyComplete() {
   state.transitioning = true;
-  state.transitionPhase = "implode";
+  state.transitionPhase = "flowout";
   state.transitionTimer = 0;
-  state.active = freshActive();
-  ui.updatePowerupBar(state);
-
   audio.playGalaxyComplete();
   state.stats.galaxiesCleared += 1;
-  state.summary = finishGalaxy(state);
+  finishGalaxy(state);
   onAscensionClear();
   // v5: the next galaxy starts at the most you reached here
   state.floorMass = Math.max(state.floorMass, state.mass);
-  // v5.2: a star for the star map
-  // v7: keyed by journey order (galaxies cleared), since runs restart at Galaxy 1 after a collapse
+  // v5.2: a star for the star map (v7: keyed by journey order)
   state.records.galaxyLog[Math.max(state.stats.galaxiesCleared, state.galaxy)] = { b: state.biome.name, gold: state.golden || undefined, d: Date.now(), t: Math.max(state.tier, tierIndexForR(rForMass(state.mass))) };
   state.galaxyCredited = true;
-  save(state);
-}
-
-function buyUpgrade(id) {
-  const upg = UPGRADES.find(u => u.id === id);
-  const lvl = state.upgrades[id] || 0;
-  const cost = upgradeCost(upg, lvl);
-  if (cost == null || state.stardust < cost) {
-    audio.playDenied();
-    return;
-  }
-  state.stardust -= cost;
-  state.upgrades[id] = lvl + 1;
-  audio.playPurchase();
+  const nb = getBiome(state.galaxy + 1).nebula[0];
+  state.flowRgb = `${Math.round(nb[0] * 0.25)}, ${Math.round(nb[1] * 0.25)}, ${Math.round(nb[2] * 0.25)}`;
   save(state);
 }
 
 function updateTransition(dt) {
   state.transitionTimer += dt;
-
-  if (state.transitionPhase === "implode") {
-    if (state.transitionTimer > 60) {
-      // v6: a calm moment first. The new star joins your sky, then the summary.
-      state.transitionPhase = "ritual";
-      state.transitionTimer = 0;
-      input.setEnabled(false);
-      audio.playRitual();
-      openStarMap(starEntries(), {
-        reduceMotion: state.settings.reduceMotion,
-        ritual: ritualText(),
-        onClose: showGalaxySummary
-      });
-    }
-  } else if (state.transitionPhase === "warp") {
-    if (state.transitionTimer > 100) {
-      state.transitionPhase = "fadein";
-      state.transitionTimer = 0;
+  if (state.transitionPhase === "flowout") {
+    if (state.transitionTimer > FLOW_OUT) {
+      state.floorMass = Math.max(state.floorMass, Math.min(state.mass, state.targetMass * 1.05));
       state.galaxy += 1;
       state.galaxyCredited = false;
       state.bestGalaxy = Math.max(state.bestGalaxy, state.galaxy);
-      initGalaxy(state.galaxy);
+      initGalaxy(state.galaxy, null, true);
+      audio.playRitual();   // a soft chime as the new galaxy opens
+      state.transitionPhase = "flowin";
+      state.transitionTimer = 0;
+      const b = state.biome;
+      state.tierBanner = { age: 0, head: `GALAXY ${state.galaxy}${state.golden ? " · GOLDEN" : ""}`, name: b.name, line: b.description };
+      if (state.mode !== "zen" && state.stats.galaxiesCleared >= 1) {
+        setTimeout(() => hint("starmap_v9", "Each galaxy you pass becomes a star. Your star map is in the pause menu and on the title screen.", 5200), 6500);
+      }
       save(state);
     }
-  } else if (state.transitionPhase === "fadein") {
-    if (state.transitionTimer > 60) {
-      $("transition-overlay").classList.add("hidden");
+  } else if (state.transitionPhase === "flowin") {
+    if (state.transitionTimer > FLOW_IN) {
       state.transitioning = false;
       state.transitionPhase = "";
     }
   }
 }
 
-function showGalaxySummary() {
-  if (state.transitionPhase !== "ritual") return;
-  state.transitionPhase = "summary";
-  state.transitionTimer = 0;
-  ui.showSummary(state.summary, state, {
-    onBuy: buyUpgrade,
-    onContinue: startWarp,
-    onCollapse: openCollapse
-  });
-}
-
-const CATCH_NAMES = { rival: "a rival black hole", planet: "a whole planet", star: "a sleeping star", craft: "an old derelict hull", meteor: "a great meteor",
-  junk: "a drifting rock", moon: "a moon", comet: "a comet", neutron: "a neutron star", system: "a star system",
-  nebula: "a nebula", cluster: "a star cluster", galaxy: "a galaxy" };
-function ritualText() {
-  const r = state.run || {};
-  const found = r.foundNames || [];
-  let line;
-  if (found.length) line = `You found ${found.length > 1 ? found.slice(0, -1).join(", ") + " and " + found[found.length - 1] : "the " + found[0]}.`;
-  else if (r.bestCatch) line = `Your best catch here was ${CATCH_NAMES[r.bestCatch.type] || "something big"}.`;
-  else line = `${r.eaten || 0} gentle bites, and a new star.`;
-  if (found.length && r.bestCatch) line += ` Best catch: ${CATCH_NAMES[r.bestCatch.type] || "something big"}.`;
-  return { title: "A new star", sub: `Galaxy ${state.galaxy} · ${state.biome.name} joins your sky`, line };
-}
-
-function startWarp() {
-  audio.playClick();
-  input.setEnabled(true);
-  state.transitionPhase = "warp";
-  state.transitionTimer = 0;
-  const nextGalaxy = state.galaxy + 1;
-  const biome = getBiome(nextGalaxy);
-  $("transition-galaxy").textContent = `Galaxy ${nextGalaxy}`;
-  $("transition-biome").textContent = biome.name;
-  $("transition-count").textContent = biome.description;
-  $("transition-overlay").classList.remove("hidden");
-  lastTime = performance.now();
+/** v9: when growth has clearly slowed, softly offer a collapse (never forced). */
+function checkCollapseNudge() {
+  if (state.collapseNudge || state.mode === "zen" || state.transitioning) return;
+  if (state.asc.run.cleared < COLLAPSE_MIN_CLEARED) return;
+  const t = state.run.time, p = Math.max(0.04, state.galaxyProgress);
+  const br = !!state.biome.breather;
+  // Long in this galaxy, and at this pace it would take much longer still
+  if (t < (br ? 120 : 300) || t / p < (br ? 300 : 720)) return;
+  state.collapseNudge = true;
+  $("collapse-pill").classList.remove("hidden");
+  hint("collapse_nudge", "Growth is slowing. When it feels like a wall, you can collapse for Dark Matter and be reborn stronger. Or keep going: no rush.", 6500);
 }
 
 // ─── HUD ───
@@ -1014,6 +949,10 @@ function showTitle() {
     state.v7Welcome = false;
     setTimeout(() => showHint(`New: Ascension. Your journey is now a run, ${state.asc.run.cleared} galaxies deep. Collapse any time (pause menu) to earn Dark Matter for permanent perks.`, 7000), 1200);
   }
+  if (state.v9Refund) {
+    const r = state.v9Refund; state.v9Refund = null;
+    if (r.dm > 0) setTimeout(() => showHint(`New in v9: one loop. Stardust and its shop are gone; what you had came back as ${r.dm} Dark Matter for the constellation.`, 8000), 1400);
+  }
   if (applyUpdateIfCalm()) return;
   showScreenEl(titleEl);
   warmHole(state.radius * zoomTarget() * TITLE_ZOOM * screenDpr);
@@ -1025,8 +964,10 @@ function showTitle() {
 // in place, in the play view. Used on first launch and after "Start completely over".
 const INTRO_LINES = ["Drift.", "Eat what's smaller.", "Grow."];
 const INTRO_MARK_MS = 3400, INTRO_LINE_MS = 3000, BIRTH_FRAMES = 170;
-let introTimers = [];
-function showIntro() {
+let introTimers = [], introKind = "fresh";
+function showIntro(o = {}) {
+  introKind = o.kind || "fresh";
+  const lines = o.lines || INTRO_LINES;
   introTimers.forEach(clearTimeout);
   introTimers = [];
   state.screen = "intro";
@@ -1044,12 +985,12 @@ function showIntro() {
   introTimers.push(setTimeout(() => mark.classList.add("on"), 500));
   introTimers.push(setTimeout(() => mark.classList.remove("on"), 500 + INTRO_MARK_MS - 900));
   const first = 500 + INTRO_MARK_MS + 300;
-  INTRO_LINES.forEach((txt, i) => {
+  lines.forEach((txt, i) => {
     const at = first + i * INTRO_LINE_MS;
     introTimers.push(setTimeout(() => { line.textContent = txt; line.classList.add("on"); }, at));
     introTimers.push(setTimeout(() => line.classList.remove("on"), at + INTRO_LINE_MS - 900));
   });
-  introTimers.push(setTimeout(endIntro, first + INTRO_LINES.length * INTRO_LINE_MS));
+  introTimers.push(setTimeout(endIntro, first + lines.length * INTRO_LINE_MS));
 }
 function endIntro() {
   if (state.screen !== "intro") return;
@@ -1074,7 +1015,7 @@ function updateBirth(dt) {
   if (state.birth >= 1) {
     state.birth = 0;
     input.setEnabled(true);
-    onPlayStart("fresh");
+    onPlayStart(introKind === "reborn" ? "newrun" : "fresh");
   }
 }
 $("btn-skip-intro").addEventListener("click", () => { audio.playClick(); endIntro(); });
@@ -1133,16 +1074,14 @@ function onPlayStart(kind) {
   }
   if (kind === "newrun") {
     const sn = state.asc.run.supernova;
-    showHint(sn ? "A supernova run! Every bite counts 50% more, all run long." : `Run ${state.asc.runsStarted}. Galaxy ${state.galaxy}: ${state.biome.name}`, 4500);
+    showHint(sn ? "A supernova run! Every bite counts 50% more, all run long." : `Run ${state.asc.runsStarted}. Reborn stronger: your perks travel with you.`, 4500);
     return;
   }
   if (kind === "resume") showHint(`Welcome back! Galaxy ${state.galaxy}: ${state.biome.name}`);
   else showHint(`Galaxy ${state.galaxy}: ${state.biome.name}`);
   if (!firstPlayStart) return;
   firstPlayStart = false;
-  if (state.legacyBonusPending) {
-    setTimeout(() => showHint(`+${state.legacyBonusPending} stardust legacy bonus! Spend it after this galaxy`, 4000), 3000);
-  } else if (kind === "fresh") {
+  if (kind === "fresh") {
     const touch = matchMedia("(pointer: coarse)").matches;
     setTimeout(() => showHint(touch ? "Touch anywhere and drag to steer. Eat smaller things!" : "Move with the mouse or WASD. Eat smaller things!", 4000), 2600);
   }
@@ -1183,10 +1122,7 @@ function startCompletelyOver() {
   state.galaxy = 1;
   state.floorMass = massForR(START_R);
   state.bestTier = 0;
-  state.stardust = 0;
-  state.upgrades = defaultUpgrades();
   state.asc = defaultAsc();   // v7: a full start-over also clears Ascension
-  state.legacyBonusPending = 0;
   state.v7Welcome = false;
   state.galaxyCredited = false;
   state.transitioning = false;
@@ -1194,7 +1130,6 @@ function startCompletelyOver() {
   state.seenHints = {};
   state.records.galaxyLog = {};   // the star map starts over with the journey
   firstPlayStart = true;
-  $("transition-overlay").classList.add("hidden");
   initGalaxy(1);
   save(state);
   fadeOutScreenEl(titleEl);
@@ -1249,22 +1184,17 @@ function doCollapse() {
   a.collapses = (a.collapses || 0) + 1;
   a.history.push({ n: a.collapses, depth: r.cleared, dm, min: Math.round((r.time || 0) / 60), d: Date.now() });
   const unlocked = milestonesAt(a.collapses);
-  // What resets, what stays
-  state.upgrades = { ...defaultUpgrades(), ...keptUpgrades(a, mods, state.upgrades) };
-  state.stardust = mods.startStardust || 0;
-  const head = hasMilestone(a, "headstart");
+  // Everything in the run resets: reborn as dust at Galaxy 1
   state.floorMass = massForR(START_R);
-  if (head) state.floorMass = targetMassFrom(state.floorMass, false);
-  state.galaxy = head ? 2 : 1;
+  state.galaxy = 1;
   a.run = freshAscRun();
-  if (head) a.run.cleared = 1;
   a.run.supernova = rollSupernova(a, ascMods(a));
   a.runsStarted = (a.runsStarted || 1) + 1;
   state.galaxyCredited = false;
   state.transitioning = false;
   state.transitionPhase = "";
   state.paused = false;
-  ["collapse", "summary", "pause-menu", "transition-overlay"].forEach(id => $(id).classList.add("hidden"));
+  ["collapse", "pause-menu", "collapse-pill"].forEach(id => $(id).classList.add("hidden"));
   ui.closeStats?.();
   input.setEnabled(false);
   state.screen = "collapse";
@@ -1288,13 +1218,13 @@ function doCollapse() {
   setTimeout(next, unlocked.length ? 7000 : 5200);
 }
 
+// v9: after the constellation, the rebirth: the same newborn sequence as the
+// very first beginning (void, a few lines, the birth), then play.
 function startNewRun() {
   initGalaxy(state.galaxy);
-  state.camMul = TITLE_ZOOM;
-  updateCameraScale(true);
   save(state);
-  state.screen = "title";
-  startDrift("newrun");
+  const a = state.asc;
+  showIntro({ kind: "reborn", lines: [`Collapse ${a.collapses}.`, a.run.supernova ? "A supernova." : "Reborn.", "Grow."] });
 }
 
 // Zen session: a separate, calm space. Your journey is saved first and comes
@@ -1467,7 +1397,7 @@ function frame(now) {
   if (state.drift) updateDrift(dt);
   if (state.birth > 0) updateBirth(dt);
 
-  const playing = inPlay && (!state.transitioning || state.transitionPhase === "fadein");
+  const playing = inPlay;   // v9: the galaxy flow happens in play
   const worldDt = dt * slowFactor(state);
 
   if (playing) {
@@ -1498,7 +1428,7 @@ function frame(now) {
     if (state.mode === "zen") updateZen(dt, now);
     if (state.discoveryNear && state.discoveryNear.q > 0.3) hint("discovery_near", "Something rare is shimmering nearby. Follow the soft glow.", 4200);
     state.galaxyProgress = galaxyProgressNow();
-    if (!state.transitioning) checkTier();
+    if (!state.transitioning) { checkTier(); checkCollapseNudge(); }
     updateTrail(dt);
     ui.updatePowerupBar(state);
     syncHud();
@@ -1588,30 +1518,13 @@ function frame(now) {
     drawFloaters(w, h, z);
   }
 
+  // v9 galaxy flow: a soft veil toward the next galaxy's colour, then it lifts
   if (state.transitioning) {
-    if (state.transitionPhase === "implode") {
-      const alpha = Math.min(1, state.transitionTimer / 60);
-      ctx.fillStyle = `rgba(2, 3, 8, ${alpha * 0.8})`;
-      ctx.fillRect(0, 0, w, h);
-    } else if (state.transitionPhase === "summary" || state.transitionPhase === "ritual") {
-      ctx.fillStyle = "rgba(2, 3, 8, 0.8)";
-      ctx.fillRect(0, 0, w, h);
-    } else if (state.transitionPhase === "warp") {
-      ctx.fillStyle = "rgba(2, 3, 8, 0.85)";
-      ctx.fillRect(0, 0, w, h);
-      const progress = state.transitionTimer / 100;
-      for (let i = 0; i < 10; i++) {
-        const ringProgress = (i / 10 + progress * 2) % 1;
-        const r = ringProgress * Math.max(w, h) * 0.7;
-        ctx.beginPath();
-        ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(130, 140, 255, ${(1 - ringProgress) * 0.18})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    } else if (state.transitionPhase === "fadein") {
-      const alpha = 1 - Math.min(1, state.transitionTimer / 60);
-      ctx.fillStyle = `rgba(2, 3, 8, ${alpha * 0.8})`;
+    const ph = state.transitionPhase, t = state.transitionTimer;
+    let a = ph === "flowout" ? Math.min(1, t / FLOW_OUT) : ph === "flowin" ? 1 - Math.min(1, t / FLOW_IN) : 0;
+    a = a * a * (3 - 2 * a) * 0.82;
+    if (a > 0.004) {
+      ctx.fillStyle = `rgba(${state.flowRgb || "2, 3, 8"}, ${a})`;
       ctx.fillRect(0, 0, w, h);
     }
   }
@@ -1702,7 +1615,6 @@ const PAUSE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="current
 const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><polygon points="5,3 15,9 5,15"/></svg>';
 
 function setPaused(p) {
-  if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
   if (state.screen !== "play" || state.drift || state.birth > 0) return;
   state.paused = p;
   input.setEnabled(!p);
@@ -1731,13 +1643,20 @@ $("btn-pause-title").addEventListener("click", () => {
   showTitle();
 });
 $("btn-pause-collapse").addEventListener("click", () => { audio.playClick(); openCollapse(); });
+$("btn-pause-starmap").addEventListener("click", () => state.openStarMap());
+$("collapse-pill").addEventListener("click", () => {
+  if (state.screen !== "play" || state.transitioning) return;
+  audio.playClick();
+  setPaused(true);
+  openCollapse();
+});
 $("btn-pause-endzen").addEventListener("click", () => { audio.playClick(); setPaused(false); zenBeginExit(); });
 
 $("btn-pause").addEventListener("click", () => setPaused(!state.paused));
 
 $("btn-restart").addEventListener("click", () => {
   if (state.transitioning) {
-    showHint("Hang on, warping…");
+    showHint("Hang on, drifting on…");
     return;
   }
   initGalaxy(state.galaxy);
@@ -1764,7 +1683,6 @@ $("volume-slider").addEventListener("input", e => {
 
 $("btn-stats").addEventListener("click", () => {
   if (ui.isStatsOpen()) { ui.closeStats(); return; }
-  if (state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual")) return;
   state.menuOpen = true;
   input.setEnabled(false);
   ui.showStats(state, () => {
@@ -1801,7 +1719,7 @@ document.addEventListener("visibilitychange", () => {
   lastTime = performance.now();
   // Back after a long break: greet with the title screen instead of mid-galaxy
   if (hiddenAt && Date.now() - hiddenAt > TITLE_AFTER_MS && state.screen === "play" && !state.drift &&
-      !(state.transitioning && (state.transitionPhase === "summary" || state.transitionPhase === "ritual"))) {
+      !state.transitioning) {
     if (state.paused) setPaused(false);
     showTitle();
   }
@@ -1835,12 +1753,10 @@ if (savedData) {
   state.volume = savedData.volume;
   state.stats = savedData.stats;
   state.records = savedData.records;
-  state.upgrades = savedData.upgrades;
-  state.stardust = savedData.stardust;
   state.seenHints = savedData.seenHints;
   state.settings = { ...state.settings, ...(savedData.settings || {}) };
   delete state.settings.zen;   // v7: the old Zen/timed toggle is gone (Ascension is always calm)
-  state.legacyBonusPending = savedData.legacyBonus || 0;
+  if (savedData.v9Refund) state.v9Refund = savedData.v9Refund;
   state.floorMass = savedData.floorMass;
   state.bestTier = savedData.bestTier || 0;
   state.asc = savedData.asc;
@@ -1909,13 +1825,18 @@ state.openStarMap = () => {
   openStarMap(starEntries(), { reduceMotion: state.settings.reduceMotion });
 };
 $("btn-title-starmap").addEventListener("click", () => state.openStarMap());
+function goalEntries() {
+  const out = {};
+  for (const b in GOALS) out[b] = { name: GOALS[b].name, unit: GOALS[b].unit, need: GOALS[b].stars, stars: state.asc.goalStars[b] || 0 };
+  return out;
+}
 state.openLogbook = () => {
   audio.playClick();
-  openLogbook(state.records.discoveries);
+  openLogbook(state.records.discoveries, { goals: goalEntries() });
 };
 $("btn-title-logbook").addEventListener("click", () => state.openLogbook());
 
-const backupLabel = d => `Galaxy ${d.galaxy} · ${tierName(tierIndexForR(rForMass(d.floorMass)))} · ${Math.floor(d.stardust)} stardust`;
+const backupLabel = d => `Galaxy ${d.galaxy} · ${tierName(tierIndexForR(rForMass(d.floorMass)))} · ${Math.floor(d.asc.dm || 0)} Dark Matter`;
 state.exportSave = () => exportCode(state);
 state.checkBackup = code => {
   const r = parseCode(code);

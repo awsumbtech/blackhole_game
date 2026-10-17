@@ -8,6 +8,13 @@ const $ = id => document.getElementById(id);
 let onCloseCb = null;
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
+// v9: each galaxy type's optional goal, with your best stars
+function goalRow(g) {
+  if (!g) return "";
+  return `<div class="lb-goal">Goal: ${esc(g.name)}<span class="st">${"★".repeat(g.stars)}${"☆".repeat(3 - g.stars)}</span>
+    <small>${g.need.join(" / ")} ${esc(g.unit)} · each new best star gives a little Dark Matter</small></div>`;
+}
+
 export function openLogbook(log, opts = {}) {
   const el = $("logbook");
   const body = $("logbook-body");
@@ -15,7 +22,7 @@ export function openLogbook(log, opts = {}) {
   const found = ALL_DISCOVERIES.filter(d => log[d.id]).length;
   $("logbook-count").textContent = `${found} of ${ALL_DISCOVERIES.length} discoveries`;
   body.innerHTML = (found ? "" : `<p class="lb-biome" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:13px">Rare things hide in every galaxy. When something shimmers nearby, drift into it.</p>`) +
-    Object.entries(DISCOVERIES).map(([biome, list]) => `<div class="lb-biome">${esc(biome)}</div>` + list.map(d => {
+    Object.entries(DISCOVERIES).map(([biome, list]) => `<div class="lb-biome">${esc(biome)}</div>` + goalRow(opts.goals && opts.goals[biome]) + list.map(d => {
       const e = log[d.id];
       if (!e) return `<div class="lb-item unfound"><i class="gem"></i><div><b>???</b><p>Something rare still hides in ${esc(biome)}.</p></div></div>`;
       const when = e.d ? new Date(e.d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";

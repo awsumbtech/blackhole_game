@@ -45,44 +45,14 @@
       </div>
     </div>
 
-    <!-- Galaxy transition overlay -->
-    <div id="transition-overlay" class="transition-overlay hidden">
-      <div class="transition-content">
-        <div id="transition-galaxy" class="transition-galaxy">Galaxy 2</div>
-        <div id="transition-biome" class="transition-biome">Comet Current</div>
-        <div id="transition-count" class="transition-count">62 objects</div>
-      </div>
-    </div>
+    <!-- v9: soft collapse prompt when growth slows -->
+    <button id="collapse-pill" class="collapse-pill hidden" aria-label="Growth is slowing. Collapse?">Growth is slowing · Collapse?</button>
 
     <!-- Active power-up timers -->
     <div id="powerup-bar" class="powerup-bar"></div>
 
     <!-- Hint toast -->
     <div id="hint-toast" class="hint-toast hidden"></div>
-
-    <!-- Between-galaxy summary + upgrade shop -->
-    <div id="summary" class="modal hidden" role="dialog" aria-labelledby="sum-title">
-      <div class="modal-card">
-        <div class="sum-head">
-          <div id="sum-title" class="sum-title">Galaxy 1 devoured</div>
-          <div id="sum-sub" class="sum-sub">Debris Reef</div>
-        </div>
-        <div id="sum-grid" class="sum-grid"></div>
-        <div id="sum-asc" class="sum-asc"></div>
-        <div class="sum-stardust">
-          <div class="sum-earned"><span class="sd">✦</span> +<b id="sum-earned">0</b> stardust</div>
-          <div id="sum-breakdown" class="sum-breakdown"></div>
-          <div id="sum-legacy" class="sum-legacy hidden"></div>
-        </div>
-        <div class="shop-head">
-          <span>Upgrades</span>
-          <span class="balance"><span class="sd">✦</span> <b id="shop-balance">0</b></span>
-        </div>
-        <div id="shop-list" class="shop-list"></div>
-        <button id="btn-continue" class="big-btn">Continue</button>
-        <button id="btn-sum-collapse" class="soft-btn collapse-btn hidden">Collapse into a singularity…</button>
-      </div>
-    </div>
 
     <!-- Pause menu -->
     <div id="pause-menu" class="modal hidden" role="dialog" aria-label="Paused">
@@ -91,6 +61,7 @@
         <button id="btn-resume" class="big-btn">Resume</button>
         <button id="btn-pause-collapse" class="soft-btn collapse-btn hidden">Collapse into a singularity…</button>
         <button id="btn-pause-endzen" class="soft-btn hidden">End session gently</button>
+        <button id="btn-pause-starmap" class="soft-btn">Star map</button>
         <button id="btn-pause-settings" class="soft-btn">Settings</button>
         <button id="btn-pause-title" class="soft-btn">Title screen</button>
       </div>
@@ -172,7 +143,7 @@
     <div class="modal-card collapse-card">
       <div class="sum-head"><div class="sum-title">Collapse into a singularity?</div>
         <div class="sum-sub" id="collapse-sub"></div></div>
-      <p class="collapse-text">Your run folds inward and becomes <b>Dark Matter</b>. Perks you buy with it are yours forever, so the next run reaches further. You keep goal stars, the star map, the logbook and your records. Your size, stardust and upgrades reset.</p>
+      <p class="collapse-text">Your run folds inward and becomes <b>Dark Matter</b>. Perks you buy with it are yours forever, so the next run reaches further. You keep goal stars, the star map, the logbook and your records. Your size and run start over: you are reborn as dust, stronger.</p>
       <div id="collapse-break" class="collapse-break"></div>
       <div id="collapse-mile" class="collapse-mile"></div>
       <button id="btn-collapse-yes" class="big-btn">Collapse</button>
