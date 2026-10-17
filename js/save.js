@@ -42,10 +42,10 @@ export function stardustRefund(raw) {
   let spent = 0;
   const u = raw.upgrades || {};
   for (const k in OLD_MULT) {
-    const lvl = Math.max(0, Math.min(5, u[k] | 0));
+    const lvl = Math.max(0, Math.min(5, Number(u[k]) | 0));
     for (let l = 0; l < lvl; l++) spent += Math.round(OLD_COSTS[l] * OLD_MULT[k]);
   }
-  const unspent = Math.max(0, Math.floor(raw.stardust || 0));
+  const unspent = Math.max(0, Math.floor(Number(raw.stardust) || 0));
   const gperks = Object.keys((raw.asc && raw.asc.perks) || {}).filter(id => id.startsWith("g_") && raw.asc.perks[id]).length;
   const dm = Math.round((spent + unspent) / STARDUST_PER_DM) + gperks * GALAXY_PERK_DM;
   return { dm, spent, unspent, gperks };
@@ -141,7 +141,7 @@ function normalize(raw) {
 
   // v1 saves got a thank-you for galaxies cleared before stardust existed;
   // it becomes part of the refund below.
-  const sd = { stardust: raw.stardust || 0, upgrades: raw.upgrades, asc: raw.asc };
+  const sd = { stardust: Number(raw.stardust) || 0, upgrades: raw.upgrades, asc: raw.asc };
   if (fromV1) sd.stardust += Math.min(400, Math.max(stats.galaxiesCleared, data.galaxy - 1) * 20);
 
   // v8: stardust and the shop are gone. Refund them (and folded galaxy perks) as Dark Matter.
