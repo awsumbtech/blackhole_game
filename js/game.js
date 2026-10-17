@@ -7,7 +7,9 @@ import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles,
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
-const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false };
+import { setSky } from "./sky.js";
+const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
+import { drawRevealFx } from "./art.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
 import { save, load, defaultStats, defaultRecords, defaultUpgrades, exportCode, parseCode, writeBackup } from "./save.js";
@@ -415,6 +417,7 @@ function initGalaxy(galaxyNum, resume = null) {
   const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : state.deep ? tintNebula(biome.nebula, [30, 40, 110], 0.5) : biome.nebula;
   setNebulaPalette(neb);
   setBackdropPalette(neb);
+  setSky(biome.name, neb, biome.tint);
   invalidateStarfield();
   if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 
@@ -1455,10 +1458,12 @@ function frame(now) {
   ctx.save();
   ctx.scale(z, z);
   drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr: screenDpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
-  drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath);
+  drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, screenDpr, breath,
+    state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.settings.reduceMotion);
   drawRivals(ctx, state, vw, vh, now, state.settings.reduceMotion);
   drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion);
-  drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, { reduceMotion: state.settings.reduceMotion });
+  PT_OPTS.reduceMotion = state.settings.reduceMotion;
+  drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, PT_OPTS);
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
   drawBlackHole(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, now,
@@ -1476,6 +1481,7 @@ function frame(now) {
       breathGuide: state.settings.breathGuide && state.mode !== "zen",   // v7.1: no ring in Zen; the wisp breathes instead
       filter: skinFilter()
     });
+  if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);
   // v8: the wisp draws last in the world so nothing ever covers it
   if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
   ctx.restore();

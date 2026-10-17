@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000">
+<canvas id="c" width="1024" height="1024"></canvas>
+<script type="module">
+// Renders the app icon with the game's own black-hole painter. Used by
+// tools/make-icons.py (headless) to write icons/*.png.
+import { drawBlackHoleArt, setArtQuality } from "../js/art.js";
+setArtQuality("high");
+function paint(S, holeK) {
+  const c = document.createElement("canvas"); c.width = c.height = S;
+  const g = c.getContext("2d");
+  const bg = g.createRadialGradient(S * 0.5, S * 0.46, 0, S * 0.5, S * 0.5, S * 0.75);
+  bg.addColorStop(0, "#2a1d52"); bg.addColorStop(0.45, "#120c2c"); bg.addColorStop(1, "#04050c");
+  g.fillStyle = bg; g.fillRect(0, 0, S, S);
+  g.globalCompositeOperation = "lighter";
+  const puff = (x, y, r, c, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${c},${a})`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); };
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 40; i++) puff(r() * S, r() * S, S * (0.08 + r() * 0.2), i % 3 ? "120,90,220" : "60,160,200", 0.08);
+  for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,${230 + r() * 25 | 0},${210 + r() * 45 | 0},${0.3 + r() * 0.6})`; const z = r() < 0.1 ? S / 300 : S / 600; g.fillRect(r() * S, r() * S, z, z); }
+  g.globalCompositeOperation = "source-over";
+  const R = S * holeK;
+  drawBlackHoleArt(g, S / 2, S / 2, R, 0, { zoom: 1, dpr: 150 / R, dt: 0, breath: 0.6 });
+  return c;
+}
+window.icon = (S, k) => paint(S, k).toDataURL("image/png");
+window.ready = true;
+</script>

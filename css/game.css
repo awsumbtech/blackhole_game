@@ -860,3 +860,18 @@ body.reduce-motion .title-btn, body.reduce-motion .soft-btn, body.reduce-motion 
   transition: background 2s ease;
 }
 body.on-title #grade { opacity: 0.8; }
+
+/* ─── v8.1: splash + smooth screen fades ─── */
+#splash {
+  position: fixed; inset: 0; z-index: 2000; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  background: radial-gradient(ellipse at 50% 45%, #1c1440 0%, #08081a 55%, #030409 100%);
+  animation: splashOut 1.1s 0.9s ease forwards;
+}
+#splash img { width: min(46vw, 220px); height: auto; border-radius: 28%; box-shadow: 0 0 60px rgba(255, 190, 140, 0.25); }
+#splash div { font: 200 1.4rem Outfit, system-ui, sans-serif; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(236, 232, 255, 0.85); }
+@keyframes splashOut { to { opacity: 0; visibility: hidden; } }
+@keyframes v81In { from { opacity: 0; } to { opacity: 1; } }
+.modal:not(.hidden), #logbook:not(.hidden), #constellation:not(.hidden), #starmap:not(.hidden) { animation: v81In 0.5s ease both; }
+body.reduce-motion #splash { animation-duration: 0.3s; }
+@media (prefers-reduced-motion: reduce) { .modal:not(.hidden), #logbook:not(.hidden), #constellation:not(.hidden), #starmap:not(.hidden) { animation: none; } }
