@@ -30,8 +30,8 @@ export const CFG = {
   BREATHER_FOOD_MAX: 0.55,
 
   // Bigger fish: always keep a few things on the field you can't eat yet
-  BIG_RATIO_MIN: 1.4,
-  BIG_RATIO_MAX: 2.6,
+  BIG_RATIO_MIN: 1.3,    // v8.4: soon-edible, at most ~1 tier up (was 1.4-2.6)
+  BIG_RATIO_MAX: 2.2,
   BIG_CHECK_INTERVAL: 30,
 
   // Population

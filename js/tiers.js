@@ -11,9 +11,9 @@ export const START_R = 8;          // a brand-new hole starts here, partway into
 // food / big: type weights for what drifts around at this tier
 export const TIERS = [
   { name: "Space Dust", line: "Specks of dust, drifting. Everything starts here.",
-    food: { dust: 1 }, big: { junk: 3, meteor: 1 } },   // v8.3: a newborn hole sees only dust; pebbles wait in the back layer
+    food: { dust: 1 }, big: { junk: 1 } },   // v8.3: a newborn hole sees only dust; pebbles wait in the back layer
   { name: "Grit & Pebbles", line: "The dust has gathered into grit and pebbles.",
-    food: { dust: 3, junk: 4, meteor: 1 }, big: { meteor: 3, junk: 1 } },
+    food: { dust: 3, junk: 4, meteor: 1 }, big: { junk: 1 } },   // v8.4: rough rock only (the round meteor sprite read as a moon at this size)
   { name: "Asteroids", line: "Stones the size of mountains drift into reach.",
     food: { junk: 3, meteor: 4, comet: 1 }, big: { meteor: 3, craft: 1 } },
   { name: "Comets & Ice", line: "Ice and old wrecks. The quiet is getting wider.",
@@ -84,23 +84,34 @@ export function floorMassForLegacyGalaxy(galaxy) {
  */
 export function foodWeights(state) {
   const t = tier(state.tier || 0);
-  const w = flavour(t.food, state.biome, (state.tier || 0) === 0);
+  const w = flavour(t.food, state.biome, (state.tier || 0) === 0, state.tier || 0);
   const p = state.galaxyProgress || 0;
   if (p < 0.12) w.dust = (w.dust || 0) + 8 * (1 - p / 0.12);
   return w;
 }
+// v8.4: the tier where each type first shows up as food. Nothing more than one
+// tier above you is allowed in the play layer; bigger things stay in the back
+// depth layers (js/depth.js) until you grow into them.
+const HOME = {};
+TIERS.forEach((t, i) => { for (const id in t.food) if (HOME[id] == null) HOME[id] = i; });
+export function homeTier(id) { return HOME[id] ?? 0; }
+
 export function bigWeights(state) {
-  return flavour(tier(state.tier || 0).big, state.biome);
+  const t = state.tier || 0;
+  const w = flavour(tier(t).big, state.biome, false, t);
+  for (const id in w) if (homeTier(id) > t + 1) delete w[id];
+  return w;
 }
-function flavour(base, biome, noSig) {
+function flavour(base, biome, noSig, t = 99) {
   const out = {};
   const bw = (biome && biome.weights) || {};
   for (const [id, v] of Object.entries(base)) {
     const b = bw[id];
     out[id] = v * (b == null ? 1 : 0.5 + Math.min(2, b / 4));
   }
-  // Each biome keeps a hint of its signature object at any scale
-  if (!noSig && biome && biome.signature && !out[biome.signature]) out[biome.signature] = 0.8;
+  // Each biome keeps a hint of its signature object, once it's within a tier of you
+  const sig = biome && biome.signature;
+  if (!noSig && sig && !out[sig] && homeTier(sig) <= t + 1) out[sig] = 0.8;
   return out;
 }
 
