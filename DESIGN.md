@@ -174,8 +174,8 @@ in v9; saves refund it, see below).
   - calm rival holes from depth 3: 1 + floor((d-3)/2), max 3, size 1.5 + 0.12(d-3) × yours.
     Rivals eat food and ease you aside. They never take mass. Once outgrown they turn gold and
     can be swallowed.
-- **Collapse** (from 3 cleared). Offered, never forced: when growth clearly slows (over 5 min in
-  a galaxy and on pace for 12+; breathers 2 / 5 min) a soft "Growth is slowing · Collapse?" pill
+- **Collapse** (from 3 cleared). Offered, never forced: when growth clearly slows (over 4 min in
+  a galaxy and on pace for 9+, the sim's wall; breathers 2 / 4.5 min) a soft "Growth is slowing · Collapse?" pill
   appears under the HUD (`checkCollapseNudge`). Always available from the pause menu. The confirm
   card shows the Dark Matter breakdown, then the singularity, then the constellation, then the
   rebirth: the same newborn intro as the first launch ("Collapse N." / "Reborn." / "Grow.", then

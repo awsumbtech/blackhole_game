@@ -878,8 +878,9 @@ function checkCollapseNudge() {
   if (state.asc.run.cleared < COLLAPSE_MIN_CLEARED) return;
   const t = state.run.time, p = Math.max(0.04, state.galaxyProgress);
   const br = !!state.biome.breather;
-  // Long in this galaxy, and at this pace it would take much longer still
-  if (t < (br ? 120 : 300) || t / p < (br ? 300 : 720)) return;
+  // A while in this galaxy, and at this pace it would take 9+ minutes (breathers 4.5):
+  // that's the wall the collapse curve is tuned around (tools/collapse-sim.mjs WALL).
+  if (t < (br ? 120 : 240) || t / p < (br ? 270 : 540)) return;
   state.collapseNudge = true;
   $("collapse-pill").classList.remove("hidden");
   hint("collapse_nudge", "Growth is slowing. When it feels like a wall, you can collapse for Dark Matter and be reborn stronger. Or keep going: no rush.", 6500);
