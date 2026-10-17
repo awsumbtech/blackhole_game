@@ -1,3 +1,4 @@
+import { drawSky } from "./sky.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
@@ -232,6 +233,15 @@ export function invalidateStarfield() {
 
 export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5, opts = {}) {
   // Dark background
+  // v8.1: the painted biome sky replaces the flat fill + tint glow
+  drawSky(ctx, w, h, camX, camY, starHigh);
+  if (opts.noNebula) {
+    ensureStarCanvases(w, h);
+    if (starCachedCamX === null || Math.abs(camX - starCachedCamX) > STAR_REDRAW_THRESHOLD || Math.abs(camY - starCachedCamY) > STAR_REDRAW_THRESHOLD) renderStarsToCache(w, h, camX, camY);
+    lastStarDX = starCachedCamX - camX; lastStarDY = starCachedCamY - camY;
+    ctx.drawImage(starCanvas, lastStarDX - STAR_BUFFER, lastStarDY - STAR_BUFFER);
+    return;
+  }
   ctx.fillStyle = "#04060c";
   ctx.fillRect(0, 0, w, h);
 
@@ -287,7 +297,7 @@ export function drawStarfield(ctx, w, h, camX, camY, tint, breath = 0.5, opts = 
 // v4: painted sprites from art.js (cached by type/variant/size), soft tails.
 const ROTATES = { junk: true, meteor: true, craft: true };
 
-export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5) {
+export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false) {
   const pxScale = zoom * dpr;
   const twinkle = 0.9 + breath * 0.1;
 
@@ -335,8 +345,14 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       const hgt = r * 2.4;
       ctx.globalAlpha = alpha * 0.9;
       ctx.translate(sx, sy);
-      ctx.rotate(ang);
-      ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);
+      ctx.rotate(ang + 0.12);
+      ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);   // curved dust tail, a little off-axis
+      ctx.rotate(-0.12);
+      if (e.type === "comet") {
+        const it = tailFor(e.color, rpx, true);
+        ctx.globalAlpha = alpha * 0.8;
+        ctx.drawImage(it.c, 0, -r * 0.6, len * 1.35, r * 1.2);   // straight blue ion tail
+      }
       ctx.rotate(-ang);
       ctx.translate(-sx, -sy);
     }
@@ -348,7 +364,22 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       d *= 0.98 + breath * 0.04;
     }
     ctx.globalAlpha = alpha;
-    if (rot) {
+    if (e.consuming && e.swallow && !still) {
+      // v8.1 spaghettification: a big catch stretches toward the hole and glows as it goes in
+      const p = e.consumeProgress, q = p * p * (3 - 2 * p);
+      const ang = Math.atan2(hy - sy, hx - sx);
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(ang);
+      ctx.translate(q * e.radius * 0.8, 0);
+      ctx.scale(1 + q * 2.6, Math.max(0.15, 1 - q * 0.7));
+      ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = Math.sin(p * Math.PI) * 0.5;
+      const gs = swallowGlow(), gd = e.radius * 2.6;
+      ctx.drawImage(gs, -gd, -gd, gd * 2, gd * 2);
+      ctx.restore();
+    } else if (rot) {
       ctx.translate(sx, sy);
       ctx.rotate(rot);
       ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
@@ -398,6 +429,20 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     }
   }
   ctx.globalAlpha = 1;
+}
+
+let swGlow = null;
+function swallowGlow() {
+  if (swGlow) return swGlow;
+  swGlow = document.createElement("canvas");
+  swGlow.width = swGlow.height = 64;
+  const g = swGlow.getContext("2d");
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255, 236, 200, 0.9)");
+  gr.addColorStop(0.35, "rgba(255, 190, 140, 0.35)");
+  gr.addColorStop(1, "rgba(255, 170, 120, 0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return swGlow;
 }
 
 const PU_STYLE = {
@@ -466,7 +511,8 @@ export function drawBlackHole(ctx, x, y, radius, time, velocity, fx = {}) {
 // v4: soft glowing streaks (additive), length follows velocity. Reduce Motion
 // draws short soft dots instead.
 export function drawParticles(ctx, particles, w, h, camX, camY, opts = {}) {
-  const trail = opts.reduceMotion ? 0.6 : (getArtQuality() === "high" ? 5 : 3);
+  const trail = opts.reduceMotion ? 0.6 : (getArtQuality() === "high" ? 6 : 3);
+  const glow = getArtQuality() === "high" && !opts.reduceMotion;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.lineCap = "round";
@@ -475,13 +521,19 @@ export function drawParticles(ctx, particles, w, h, camX, camY, opts = {}) {
     const sy = p.y - camY + h / 2;
     if (sx < -20 || sx > w + 20 || sy < -20 || sy > h + 20) continue;
     const life = 1 - p.age / p.maxAge;
-    ctx.globalAlpha = life * p.alpha * 0.85;
+    const ex = sx - p.vx * trail - 0.01, ey = sy - p.vy * trail;
+    // v8.1: a gently curved streak (it bends like it's spiralling in), with a soft glow pass on High
+    const cx = (sx + ex) / 2 - p.vy * trail * 0.35, cy = (sy + ey) / 2 + p.vx * trail * 0.35;
+    const lw = Math.max(0.5, p.size * (0.4 + life * 0.8));
     ctx.strokeStyle = p.color;
-    ctx.lineWidth = Math.max(0.5, p.size * (0.4 + life * 0.8));
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx - p.vx * trail - 0.01, sy - p.vy * trail);
-    ctx.stroke();
+    if (glow) {
+      ctx.globalAlpha = life * p.alpha * 0.22;
+      ctx.lineWidth = lw * 3.2;
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+    }
+    ctx.globalAlpha = life * p.alpha * 0.9;
+    ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
   }
   ctx.restore();
 }

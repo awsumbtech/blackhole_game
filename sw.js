@@ -21,6 +21,8 @@ const ASSETS = [
   "./js/tiers.js",
   "./js/wisp.js",
   "./js/grade.js",
+  "./js/sky.js",
+  "./icons/icon-maskable-512.png",
   "./js/starmap.js",
   "./js/backdrop.js",
   "./js/worlds.js",
