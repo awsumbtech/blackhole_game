@@ -1816,6 +1816,7 @@ function applyUpdateIfCalm() {
   if (!calm) return false;
   save(state);
   resetting = true;
+  try { if (state.screen === "title") sessionStorage.setItem("bh-title", "1"); } catch {}
   location.reload();
   return true;
 }
@@ -1950,10 +1951,12 @@ initGalaxy(state.galaxy, resumeRun);
 
 // Fresh install: short intro. Away > 10 min (or never seen v4): title screen.
 // Otherwise drop straight back in where you were.
+let backToTitle = false;   // v8.6: an update reload from the title comes back to the title
+try { backToTitle = sessionStorage.getItem("bh-title") === "1"; sessionStorage.removeItem("bh-title"); } catch {}
 const awayMs = savedData ? Date.now() - (savedData.lastActive || 0) : Infinity;
 if (!state.seenHints.intro) {
   showIntro();
-} else if (awayMs > TITLE_AFTER_MS) {
+} else if (awayMs > TITLE_AFTER_MS || backToTitle) {
   showTitle();
 } else {
   onPlayStart(resumeRun ? "resume" : "continue");
