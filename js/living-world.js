@@ -7,7 +7,7 @@ import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
 import { MERGE_FRAMES } from "./depth.js";
-import { foodWeights, bigWeights, eventType, eventBigType } from "./tiers.js";
+import { foodWeights, bigWeights, eventType, eventBigType, fitType, eventFor, topFood } from "./tiers.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -231,7 +231,8 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
 
 /** opts: { type: id, pos: {x, y}, sizeK } (v4.1: worlds.js plants food in reefs, rivers...) */
 export function spawnFood(state, near, opts = {}) {
-  const type = opts.type ? typeById(opts.type) : weightedType(foodWeights(state), 99);
+  // v9: a mechanic's own type only appears once it's at most one tier up
+  const type = opts.type ? typeById(fitType(state, opts.type)) : weightedType(foodWeights(state), 99);
   const k = opts.sizeK || 1;
   const o = { near, pos: opts.pos ? clampInBounds(state, opts.pos.x, opts.pos.y, 10) : undefined, ref: growRef(state) };
   // v5.1: the vast kinds (systems, nebulae, clusters, galaxies) are drawn bigger
@@ -373,6 +374,16 @@ export const EVENT_INFO = {
     first: "A new star is forming nearby. It's bigger than you for now, so grow into it.",
     codex: "Light gathers, then a young star blooms with a sprinkle of dust. Grow into it for a big catch."
   },
+  dustDrift: {
+    name: "Dust Drift", rgb: "200, 210, 240",
+    first: "A soft drift of dust is coming in from the glow. All of it is food.",
+    codex: "Fine dust drifts in from a glowing edge. The newborn's version of a meteor shower."
+  },
+  dustBloom: {
+    name: "Soft Bloom", rgb: "255, 232, 190",
+    first: "Light is gathering nearby. It will bloom into fresh food.",
+    codex: "Light gathers, then softly blooms and scatters fresh food your size around it."
+  },
   gravitationalWave: {
     name: "Gravity Wave", rgb: "140, 170, 255",
     first: "A gravity wave is rolling through. Things will sway for a moment.",
@@ -412,6 +423,7 @@ function pickWeighted(pool) {
 
 /** Start an event (with its warning phase). Exported for tests/debugging. */
 export function fireEvent(state, id) {
+  id = eventFor(state, id);   // v9: only what fits your scale (no meteor showers in Space Dust)
   const make = EVENT_MAKERS[id];
   if (!make || !world) return null;
   const ev = make(state);
@@ -522,6 +534,11 @@ const EVENT_MAKERS = {
     typeId: "craft", count: Math.floor(rand(4, 7)), duration: 90, window: 60,
     spread: 0.15, aimJitter: 0.2, ratioMin: 0.2, ratioMax: 0.4, speedMin: 0.2, speedMax: 0.35
   }),
+  dustDrift: st => streamEvent(st, {
+    typeId: "dust", count: Math.floor(rand(7, 11)), duration: 160, window: 120,
+    spread: 0.35, aimJitter: 0.4, ratioMin: 0.12, ratioMax: 0.26, speedMin: 0.4, speedMax: 0.7
+  }),
+  dustBloom: st => makeStellarBirth(st, true),
   voidPulse: makeVoidGift,
   stellarBirth: makeStellarBirth,
   gravitationalWave: makeGravityWave
@@ -594,7 +611,7 @@ function makeVoidGift(state) {
 
 // ─── EVENT: STELLAR BIRTH ───
 // Light gathers (the warning), then a soft bloom (no flash) and a new star.
-function makeStellarBirth(state) {
+function makeStellarBirth(state, soft = false) {
   const angle = rand(0, TAU);
   const dist = viewRadius(state) * rand(0.35, 0.6);
   const sf = Math.max(1, state.radius / 12);
@@ -607,16 +624,22 @@ function makeStellarBirth(state) {
       this.spawned = true;
       const pos = clampInBounds(st, this.cx, this.cy, st.radius * 1.5);
       this.cx = pos.x; this.cy = pos.y;
-      const star = spawnScaled(st, typeById(eventBigType(st)), 0.95, 1.4, { pos, near: false, forceScale: true });
-      star.vx = star.vy = 0;
-      star.baseSpeed = 0.1;
-      star.bigFish = true;
-      star._spawnAge = 0;
-      star._spawnAlpha = 0;
-      st.entities.push(star);
-      const fragCount = Math.floor(rand(5, 10));
+      // v9: a Soft Bloom (below star scale) scatters food of your scale and no big star
+      if (!soft) {
+        const star = spawnScaled(st, typeById(eventBigType(st)), 0.95, 1.4, { pos, near: false, forceScale: true });
+        star.vx = star.vy = 0;
+        star.baseSpeed = 0.1;
+        star.bigFish = true;
+        star._spawnAge = 0;
+        star._spawnAlpha = 0;
+        st.entities.push(star);
+      }
+      const fragCount = Math.floor(soft ? rand(9, 14) : rand(5, 10));
+      const fragType = typeById(soft ? topFood(st.tier || 0) : "dust");
       for (let i = 0; i < fragCount; i++) {
-        const frag = spawnScaled(st, typeById("dust"), 0.08, 0.2, { pos: { x: this.cx, y: this.cy }, near: false });
+        const frag = soft
+          ? spawnFood(st, false, { pos: { x: this.cx, y: this.cy } })
+          : spawnScaled(st, fragType, 0.08, 0.2, { pos: { x: this.cx, y: this.cy }, near: false });
         const a = rand(0, TAU);
         const speed = rand(0.3, 0.8) * st.speedScale;
         frag.vx = Math.cos(a) * speed;

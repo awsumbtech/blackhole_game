@@ -9,6 +9,7 @@ import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
 import { MERGE_FRAMES } from "./depth.js";
+import { fitType } from "./tiers.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -33,7 +34,7 @@ export const MECHANICS = {
     name: "The Cradle",
     first: "A young sun sits in this galaxy. Little worlds circle it, slow and patient.",
     codex: "A warm young sun with planets on slow orbits. Come close and they drift out of orbit toward you. Stellar births add new worlds to the rings.",
-    pairs: { stellarBirth: "new worlds are joining the orbits" }
+    pairs: { stellarBirth: "new worlds are joining the orbits", dustBloom: "new worlds are joining the orbits" }
   },
   "Ruined Armada": {
     name: "Breakable hulls",
@@ -51,7 +52,7 @@ export const MECHANICS = {
     name: "Blooming stars",
     first: "Star buds grow in the meadows. Eat them now, or wait and they bloom bigger.",
     codex: "Little star buds grow in golden meadows and bloom over about half a minute. Patient bites are bigger. A stellar birth makes the nearest meadow bloom all at once.",
-    pairs: { stellarBirth: "the meadow is blooming" }
+    pairs: { stellarBirth: "the meadow is blooming", dustBloom: "the meadow is blooming" }
   },
   "Neutron Forge": {
     name: "Pulsar beams",
@@ -292,7 +293,7 @@ function putInOrbit(e, ring, ang) {
 }
 
 function addHull(state, x, y, kMin, kMax) {
-  const e = spawnScaled(state, typeById("craft"), kMin, kMax, { near: false, pos: { x, y }, forceScale: true });
+  const e = spawnScaled(state, typeById(fitType(state, "craft")), kMin, kMax, { near: false, pos: { x, y }, forceScale: true });
   e.x = x; e.y = y;
   e.vx *= 0.3; e.vy *= 0.3;
   e.bigFish = true;

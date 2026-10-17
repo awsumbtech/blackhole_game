@@ -127,8 +127,38 @@ export function eventType(state, base) {
   return best;
 }
 export function eventBigType(state) {
-  const big = tier(state.tier || 0).big;
-  let best = "star", bv = -1;
-  for (const [id, v] of Object.entries(big)) if (v > bv) { bv = v; best = id; }
+  const t = state.tier || 0, big = tier(t).big;
+  let best = topFood(t), bv = -1;
+  for (const id in big) if (big[id] > bv && homeTier(id) <= t + 1) { bv = big[id]; best = id; }
   return best;
+}
+
+// ─── v9: everything you meet fits your scale ───
+// The most common food at a tier (what "this scale" looks like).
+export function topFood(t) {
+  const food = tier(t).food;
+  let best = "dust", bv = -1;
+  for (const id in food) if (food[id] > bv) { bv = food[id]; best = id; }
+  return best;
+}
+/** A mechanic or event asks for a type; it only appears if it's at most one tier up. */
+export function fitType(state, id) {
+  const t = state.tier || 0;
+  return homeTier(id) <= t + 1 ? id : topFood(t);
+}
+// What each event brings, and the tier it needs (its content must be edible now).
+// Stellar Birth makes a big star, so it waits until stars are one tier up.
+const EVENT_NEEDS = { meteorShower: "meteor", cometStream: "comet", derelictFlotilla: "craft" };
+const EVENT_MIN_TIER = { stellarBirth: () => homeTier("star") - 1 };
+/** The event that fits right now: the one asked for, or a calmer stand-in at this scale. */
+export function eventFor(state, id) {
+  const t = state.tier || 0;
+  const need = EVENT_NEEDS[id];
+  if (need && homeTier(need) > t) {
+    if (id !== "meteorShower" && homeTier("meteor") <= t) return "meteorShower";
+    return "dustDrift";
+  }
+  const min = EVENT_MIN_TIER[id];
+  if (min && t < min()) return "dustBloom";
+  return id;
 }
