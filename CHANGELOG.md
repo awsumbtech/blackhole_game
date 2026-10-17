@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.4 Still tiny (Oct 2026)
+
+Right after your first growth step, the play area no longer shows moon- or planet-sized things you can't eat. Pacing and saves are unchanged.
+
+- **Big objects in play are at most about one tier above you.** Anything two or more tiers up stays in the soft back layers until you grow into it. This also applies to each galaxy's signature object, so for example there are no tiny planets drifting around a pebble-sized hole.
+- **"Bigger fish" are now 1.3–2.2× your size** (they were 1.4–2.6×), so they read as things you'll eat soon. At Grit & Pebbles they are rough rocks only.
+- **The Debris Reef reefs start as faint haze while you're newborn.** They merge in with their rock when you reach Grit & Pebbles, and their caption waits until then.
+- **New opening line** for a fresh game: "You've just been born. Drift and gather the dust."
+
 ## v8.3 Growth you can feel (Oct 2026)
 
 The game now puts one thing first: feeling yourself grow. DESIGN.md opens with a North Star section that every change is checked against. Saves from v1 to v8.1 still load, and galaxy clear times are unchanged within normal run-to-run variation.

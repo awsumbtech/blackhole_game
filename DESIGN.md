@@ -22,8 +22,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, galaxy goals, rivals.
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v8.3**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.3"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v8.4**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v8.4"` in `sw.js`, `SAVE_VERSION = 7` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -89,7 +89,8 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
 
 ### 5b. Growth you can feel (v8.3, `js/depth.js`). This serves the North Star.
-- **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are kept to the minimum pace needs (3–4 per regular galaxy from tier 1 on, 1–2 in breathers; v8.3 bot checks showed cutting them to 2 slowed Comet Current ~15%), and they drift in from the back layer.
+- **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are kept to the minimum pace needs (3–4 per regular galaxy from tier 1 on, 1–2 in breathers; cutting them to 2 slowed Comet Current ~15%), and they drift in from the back layer. **At most ~1 tier above you (v8.4):** a big type or biome signature whose home tier (the first tier it is food) is more than one above yours never enters play (`homeTier` in tiers.js); bigger fish are 1.3–2.2× your radius (one tier is 2.6×), and at Grit & Pebbles they are rough rock only. Anything 2+ tiers up stays in the back depth layers.
+- **Landmarks follow the layers too.** At tier 0 the Debris Reef reefs are faint haze with no rock; the tier-1 set merges in (fades up over `MERGE_FRAMES`) with rock, and its caption (`minTier: 1` in `MECHANICS`) waits until then. A fresh game opens with "You've just been born. Drift and gather the dust."
 - **Back depth layers show the next 3 tiers** (layers for tiers t+1, t+2 and t+3; Lite shows 2).
   - They are hazy, dimmer, sparser and on slower parallax, using pre-blurred cached sprites (`blurFor`).
   - Deeper layers look bigger but blurrier: they are huge things far away.
@@ -265,6 +266,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v8.4 Still tiny:** big inedible objects in play are at most ~1 tier up (`homeTier` filter on big types and biome signatures; bigger-fish 1.3–2.2× your radius; rough rock only at Grit & Pebbles); Debris Reef reefs are back-layer haze at tier 0 and merge in at tier 1 (caption waits, `minTier`); newborn opening hint.
 - **v8.3 Growth you can feel:** North Star (§0); a fresh game is dust only, bigger tiers wait in blurred back depth layers and merge into play on tier-up (`js/depth.js`, §5b); the hole visibly outgrows its food; rivals drift in from the back; reef tendrils (the "snakes") removed.
 - **v8.1 Painterly, bolder:** Interstellar hole, painted per-biome skies, detailed sprites, spaghettification, reveal ring, violet rivals, unique discoveries, richer landmarks, new icon + splash.
 - **v8.0 Painterly:** graphics uplift (doppler disk, bloom, painterly nebulae with dust lanes, coloured twinkling stars, planet terminators/scattering, vignette + grade, glass UI); wisp drawn on top, stays beside the hole in Zen.
