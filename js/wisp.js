@@ -7,7 +7,7 @@
 
 const TAU = Math.PI * 2;
 let w = null;
-let sprite = null, shade = null;
+let sprite = null, shade = null, halo = null, mote = null;
 let hx = 0, hy = 0;   // home point (written by homePoint, no per-frame objects)
 const TRAIL_N = 16;   // floats (8 points)
 
@@ -22,6 +22,38 @@ function makeSprite() {
   gr.addColorStop(1, "rgba(120, 220, 200, 0)");
   g.fillStyle = gr;
   g.fillRect(0, 0, 64, 64);
+  return c;
+}
+// v8.1: a wide, faint outer aura (second glow layer) and a tiny mote
+function makeHalo() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 96;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(48, 48, 0, 48, 48, 48);
+  gr.addColorStop(0, "rgba(170, 245, 225, 0.35)");
+  gr.addColorStop(0.4, "rgba(140, 220, 255, 0.12)");
+  gr.addColorStop(1, "rgba(140, 200, 255, 0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 96, 96);
+  // four soft rays, faint
+  g.globalCompositeOperation = "lighter";
+  g.translate(48, 48);
+  for (let i = 0; i < 4; i++) {
+    g.rotate(Math.PI / 4 + (i ? Math.PI / 2 - Math.PI / 4 : 0));
+    const lg = g.createLinearGradient(0, 0, 44, 0);
+    lg.addColorStop(0, "rgba(255, 250, 230, 0.3)"); lg.addColorStop(1, "rgba(255, 250, 230, 0)");
+    g.fillStyle = lg; g.beginPath(); g.ellipse(22, 0, 22, 1.6, 0, 0, TAU); g.fill();
+  }
+  return c;
+}
+function makeMote() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 16;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(8, 8, 0, 8, 8, 8);
+  gr.addColorStop(0, "rgba(255, 252, 230, 1)");
+  gr.addColorStop(0.4, "rgba(190, 250, 230, 0.5)");
+  gr.addColorStop(1, "rgba(160, 230, 220, 0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 16, 16);
   return c;
 }
 // v8: a soft dark backing so the glow stays readable over bright stars and nebulae
@@ -149,7 +181,7 @@ export function updateWisp(state, dt, reduceMotion) {
 /** Inside the world transform (camera already applied by the caller via cam offsets). */
 export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
   if (!w) return;
-  if (!sprite) { sprite = makeSprite(); shade = makeShade(); }
+  if (!sprite) { sprite = makeSprite(); shade = makeShade(); halo = makeHalo(); mote = makeMote(); }
   const z = state.zoom;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
   // Grows a little with each scale tier, in screen pixels
@@ -166,14 +198,26 @@ export function drawWisp(ctx, state, vw, vh, breath, reduceMotion) {
   const s = px * pulse / z;
   const n = w.trailLen;
   for (let i = 0; i < n; i += 2) {
-    const a = (i / n) * 0.25 * fade;
+    const a = (i / n) * 0.3 * fade;
     const ts = s * (0.4 + 0.5 * i / n);
     ctx.globalAlpha = a;
     ctx.drawImage(sprite, w.trail[i] + ox - ts, w.trail[i + 1] + oy - ts, ts * 2, ts * 2);
+    // trailing motes, drifting a little off the path
+    if (!reduceMotion && i + 2 < n) {
+      const k = i * 1.7 + w.age * 0.02;
+      const mx = w.trail[i] + ox + Math.sin(k) * s * 0.9, my = w.trail[i + 1] + oy + Math.cos(k * 1.3) * s * 0.9, ms = s * 0.35;
+      ctx.globalAlpha = a * 1.6;
+      ctx.drawImage(mote, mx - ms, my - ms, ms * 2, ms * 2);
+    }
   }
   ctx.globalAlpha = 0.8 * fade;
   ctx.drawImage(shade, w.x + ox - s * 3, w.y + oy - s * 3, s * 6, s * 6);
   ctx.globalAlpha = Math.min(1, (zenB ? 0.55 + breath * 0.45 : 0.7 + breath * 0.25) * (rest ? 0.8 : 1) + 0.25 * joyK + 0.2 * w.perk) * fade;
+  const hs = s * 4.2;
+  const ga = ctx.globalAlpha;
+  ctx.globalAlpha = ga * 0.7;
+  ctx.drawImage(halo, w.x + ox - hs, w.y + oy - hs, hs * 2, hs * 2);
+  ctx.globalAlpha = ga;
   ctx.drawImage(sprite, w.x + ox - s * 2, w.y + oy - s * 2, s * 4, s * 4);
   ctx.globalAlpha = 1;
 }

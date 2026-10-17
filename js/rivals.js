@@ -1,3 +1,4 @@
+import { rivalSprite } from "./art.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 // ─── RIVAL HOLES (v7 Ascension depth) ───
 // From Galaxy 3 of a run, a few calm rival black holes drift through space.
@@ -102,38 +103,18 @@ export function drawRivals(ctx, state, vw, vh, time, reduceMotion) {
   const rs = state.rivals;
   if (!rs || !rs.length) return;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
-  const R = state.radius;
+  const R = state.radius, zoomPx = (state.zoom || 1) * (window.devicePixelRatio || 1);
   for (const rv of rs) {
     if (rv.gone > 0 || rv.wait > 0) continue;
     const x = rv.x + ox, y = rv.y + oy, r = rv.r;
     if (x < -r * 4 || y < -r * 4 || x > vw + r * 4 || y > vh + r * 4) continue;
     const a = rv.fade || 0;
     const edible = R > r * state.eatRatio;
-    // soft outer glow (violet; warm gold once you've outgrown it)
-    const rgb = edible ? "255, 214, 140" : "170, 140, 240";
-    const g = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 2.6);
-    g.addColorStop(0, `rgba(${rgb}, ${0.32 * a})`);
-    g.addColorStop(0.45, `rgba(${rgb}, ${0.1 * a})`);
-    g.addColorStop(1, `rgba(${rgb}, 0)`);
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, TAU); ctx.fill();
-    // tilted accretion ring, slowly turning
-    const rot = reduceMotion ? 0.3 : rv.phase;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(-0.35);
-    ctx.globalAlpha = 0.55 * a;
-    ctx.strokeStyle = `rgba(${rgb}, 0.8)`;
-    ctx.lineWidth = Math.max(1, r * 0.16);
-    ctx.beginPath(); ctx.ellipse(0, 0, r * 1.6, r * 0.5, 0, rot % TAU, rot % TAU + Math.PI * 1.4); ctx.stroke();
-    ctx.restore();
-    ctx.globalAlpha = a;
-    const core = ctx.createRadialGradient(x, y, 0, x, y, r);
-    core.addColorStop(0, "rgba(2, 2, 6, 1)");
-    core.addColorStop(0.85, "rgba(6, 4, 14, 1)");
-    core.addColorStop(1, `rgba(${rgb}, 0.6)`);
-    ctx.fillStyle = core;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    // v8.1: a painted violet hole with its own disk and lensed arc (gold once you've outgrown it)
+    const sp = rivalSprite(r * zoomPx, edible);
+    const d = sp.k * r;
+    ctx.globalAlpha = a * (reduceMotion ? 1 : 0.92 + 0.08 * Math.sin(rv.phase * 2));
+    ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
     ctx.globalAlpha = 1;
   }
 }

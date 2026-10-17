@@ -115,6 +115,82 @@ export function updateDiscoveries(state, dt, onFound) {
   state.discoveryNear = near;
 }
 
+// v8.1: each find gets its own painted sprite (cached once per find), a unique
+// glyph from its id: petals, rings, facets or a comet head. Drawn rotated slowly.
+const findSprites = new Map();
+let tailSprite = null;
+function hashId(id) { let h = 7; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return h; }
+function findSprite(def) {
+  let c = findSprites.get(def.id);
+  if (c) return c;
+  const S = 128, h = S / 2, R = S * 0.12;
+  c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  g.translate(h, h);
+  const H = hashId(def.id), rgb = def.rgb;
+  const halo = g.createRadialGradient(0, 0, 0, 0, 0, h);
+  halo.addColorStop(0, `rgba(${rgb}, 0.5)`);
+  halo.addColorStop(0.25, `rgba(${rgb}, 0.18)`);
+  halo.addColorStop(1, `rgba(${rgb}, 0)`);
+  g.fillStyle = halo; g.fillRect(-h, -h, S, S);
+  g.globalCompositeOperation = "lighter";
+  if (def.kind === "ring") {
+    const n = 1 + (H % 3);
+    for (let i = 0; i < n; i++) {
+      g.save(); g.rotate(-0.4 + i * 1.05);
+      g.strokeStyle = `rgba(${rgb}, ${0.55 - i * 0.12})`;
+      g.lineWidth = 2;
+      g.beginPath(); g.ellipse(0, 0, R * (2.6 + i * 0.5), R * (0.85 + i * 0.15), 0, 0, TAU); g.stroke();
+      g.restore();
+    }
+  } else if (def.kind === "orb") {
+    const petals = 5 + (H % 4), len = R * (2 + (H % 5) * 0.25);
+    for (let i = 0; i < petals; i++) {
+      g.save(); g.rotate(i * TAU / petals + (H % 7) * 0.1);
+      const pg = g.createLinearGradient(0, 0, len, 0);
+      pg.addColorStop(0, `rgba(${rgb}, 0.5)`);
+      pg.addColorStop(1, `rgba(${rgb}, 0)`);
+      g.fillStyle = pg;
+      g.beginPath(); g.ellipse(len * 0.5, 0, len * 0.55, R * 0.42, 0, 0, TAU); g.fill();
+      g.restore();
+    }
+  }
+  // core
+  const cg = g.createRadialGradient(-R * 0.25, -R * 0.25, 0, 0, 0, R * 1.2);
+  cg.addColorStop(0, "rgba(255, 253, 245, 1)");
+  cg.addColorStop(0.45, `rgba(${rgb}, 0.95)`);
+  cg.addColorStop(1, `rgba(${rgb}, 0)`);
+  g.fillStyle = cg; g.beginPath(); g.arc(0, 0, R * 1.2, 0, TAU); g.fill();
+  // fine four-point sparkle
+  g.strokeStyle = "rgba(255, 250, 235, 0.6)";
+  g.lineWidth = 1.2;
+  g.beginPath();
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; g.moveTo(Math.cos(a) * R * 0.4, Math.sin(a) * R * 0.4); g.lineTo(Math.cos(a) * R * 3.2, Math.sin(a) * R * 3.2); }
+  g.stroke();
+  // orbiting motes
+  for (let i = 0; i < 3 + (H % 3); i++) {
+    const a = i * 2.1 + H, d = R * (2.2 + (i % 2) * 0.9);
+    g.fillStyle = "rgba(255, 250, 235, 0.8)";
+    g.beginPath(); g.arc(Math.cos(a) * d, Math.sin(a) * d, 1.4, 0, TAU); g.fill();
+  }
+  findSprites.set(def.id, c);
+  return c;
+}
+function tail() {
+  if (tailSprite) return tailSprite;
+  const L = 256, H = 48;
+  tailSprite = document.createElement("canvas");
+  tailSprite.width = L; tailSprite.height = H;
+  const g = tailSprite.getContext("2d");
+  const lg = g.createLinearGradient(0, 0, L, 0);
+  lg.addColorStop(0, "rgba(255, 255, 255, 0.7)");
+  lg.addColorStop(1, "rgba(255, 255, 255, 0)");
+  g.fillStyle = lg;
+  g.beginPath(); g.moveTo(0, H / 2 - 10); g.quadraticCurveTo(L * 0.4, H / 2 - 8, L, H / 2); g.quadraticCurveTo(L * 0.4, H / 2 + 8, 0, H / 2 + 10); g.fill();
+  return tailSprite;
+}
+
 /** World-space draw (inside the camera transform, like the wisp). */
 export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion) {
   if (!state.finds) return;
@@ -126,42 +202,24 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion) {
     if (x < -r * 8 || y < -r * 8 || x > vw + r * 8 || y > vh + r * 8) continue;
     const fade = Math.min(1, f.age / 90);
     const tw = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(time * 0.0021 + f.at);
-    const rgb = f.def.rgb;
     if (f.def.kind === "comet") {
       const ang = time * 0.0002 + f.at;
-      const tx = Math.cos(ang), ty = Math.sin(ang);
-      const tg = ctx.createLinearGradient(x, y, x - tx * r * 6, y - ty * r * 6);
-      tg.addColorStop(0, `rgba(${rgb}, ${0.45 * fade})`);
-      tg.addColorStop(1, `rgba(${rgb}, 0)`);
-      ctx.strokeStyle = tg;
-      ctx.lineWidth = r * 0.9;
-      ctx.lineCap = "round";
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - tx * r * 6, y - ty * r * 6); ctx.stroke();
+      const len = r * 7, hgt = r * 1.4;
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(ang + Math.PI);
+      ctx.globalAlpha = 0.6 * fade;
+      ctx.globalCompositeOperation = "lighter";
+      ctx.drawImage(tail(), 0, -hgt / 2, len, hgt);
+      ctx.restore();
     }
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3.2);
-    g.addColorStop(0, `rgba(255, 252, 240, ${0.95 * fade})`);
-    g.addColorStop(0.18, `rgba(${rgb}, ${0.8 * fade * tw})`);
-    g.addColorStop(0.5, `rgba(${rgb}, ${0.18 * fade * tw})`);
-    g.addColorStop(1, `rgba(${rgb}, 0)`);
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r * 3.2, 0, TAU); ctx.fill();
-    if (f.def.kind === "ring") {
-      ctx.strokeStyle = `rgba(${rgb}, ${0.5 * fade})`;
-      ctx.lineWidth = Math.max(1, r * 0.12);
-      ctx.beginPath(); ctx.ellipse(x, y, r * 1.7, r * 0.6, -0.4, 0, TAU); ctx.stroke();
-    }
-    // Four-point sparkle, turning slowly (still in Reduce Motion)
-    const s = r * 1.6 * tw, rot = reduceMotion ? 0.4 : time * 0.0004 + f.at;
-    ctx.strokeStyle = `rgba(255, 250, 235, ${0.55 * fade})`;
-    ctx.lineWidth = Math.max(0.6, r * 0.07);
-    ctx.beginPath();
-    for (let i = 0; i < 4; i++) {
-      const a = rot + i * Math.PI / 2;
-      ctx.moveTo(x + Math.cos(a) * r * 0.3, y + Math.sin(a) * r * 0.3);
-      ctx.lineTo(x + Math.cos(a) * s, y + Math.sin(a) * s);
-    }
-    ctx.stroke();
+    const sp = findSprite(f.def), d = r * 8.3 * (0.96 + 0.04 * tw);
+    const rot = reduceMotion ? 0.4 : time * 0.0003 + f.at;
+    ctx.globalAlpha = fade * (0.85 + 0.15 * tw);
+    ctx.translate(x, y); ctx.rotate(rot);
+    ctx.drawImage(sp, -d / 2, -d / 2, d, d);
+    ctx.rotate(-rot); ctx.translate(-x, -y);
   }
+  ctx.globalAlpha = 1;
 }
 
 /** Screen-space cue: a soft glow at the screen edge toward an off-screen find. */

@@ -778,6 +778,52 @@ function glow(rgb) {
   return c;
 }
 
+// v8.1: painted landmark sprites (cached once per kind)
+const LM = {};
+function lmRng(seed) { let t = seed >>> 0; return () => { t = (t + 0x6D2B79F5) >>> 0; let x = Math.imul(t ^ (t >>> 15), t | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; }
+function lmSprite(kind) {
+  if (LM[kind]) return LM[kind];
+  const S = getArtQuality() === "high" ? 256 : 160, h = S / 2;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  g.translate(h, h);
+  const r = lmRng(kind.length * 131);
+  g.globalCompositeOperation = "lighter";
+  const blob = (x, y, rr, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(${col}, ${a})`); gr.addColorStop(1, `rgba(${col}, 0)`); g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); };
+  if (kind === "reef") {
+    // soft coral: branching luminous tendrils over a teal bed
+    for (let i = 0; i < 14; i++) blob((r() - 0.5) * h, (r() - 0.5) * h, h * (0.25 + r() * 0.3), i % 2 ? "80, 200, 180" : "110, 150, 230", 0.12);
+    g.lineCap = "round";
+    for (let i = 0; i < 18; i++) {
+      let x = (r() - 0.5) * h * 0.6, y = (r() - 0.5) * h * 0.6, a = r() * TAU;
+      g.beginPath(); g.moveTo(x, y);
+      for (let k = 0; k < 8; k++) { a += (r() - 0.5) * 0.8; x += Math.cos(a) * h * 0.06; y += Math.sin(a) * h * 0.06; g.lineTo(x, y); }
+      g.strokeStyle = `rgba(${i % 3 ? "140, 240, 210" : "255, 190, 170"}, 0.22)`; g.lineWidth = S * 0.012; g.stroke();
+      blob(x, y, S * 0.025, "220, 255, 240", 0.5);
+    }
+  } else if (kind === "meadow") {
+    // a field of tiny golden blossoms
+    blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
+    for (let i = 0; i < 70; i++) {
+      const a = r() * TAU, d = Math.sqrt(r()) * h * 0.8;
+      blob(Math.cos(a) * d, Math.sin(a) * d, S * (0.012 + r() * 0.025), i % 4 ? "255, 230, 160" : "200, 255, 180", 0.7);
+    }
+  } else if (kind === "cradle") {
+    // a dusty protoplanetary disk around the young sun
+    g.save(); g.scale(1, 0.42);
+    for (let i = 0; i < 120; i++) {
+      const a0 = r() * TAU, rr = h * (0.3 + r() * 0.65);
+      g.strokeStyle = `rgba(${i % 3 ? "255, 214, 160" : "180, 240, 190"}, ${0.04 + r() * 0.08})`;
+      g.lineWidth = S * (0.006 + r() * 0.02);
+      g.beginPath(); g.arc(0, 0, rr, a0, a0 + 0.5 + r() * 2); g.stroke();
+    }
+    g.restore();
+  }
+  LM[kind] = c;
+  return c;
+}
+
 function drawGlow(ctx, rgb, x, y, r, a) {
   a *= AM;
   if (a <= 0.005) return;
@@ -816,7 +862,8 @@ const DRAW = {
       const x = px(rf.x), y = py(rf.y), r = wx(rf.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
       drawGlow(ctx, "90, 200, 180", x, y, r * 1.45, 0.1 + fx.breath * 0.03);
-      drawGlow(ctx, "120, 160, 220", x + r * 0.3, y - r * 0.2, r * 0.8, 0.06);
+      ctx.globalAlpha = AM * (0.75 + fx.breath * 0.15);
+      ctx.drawImage(lmSprite("reef"), x - r * 1.4, y - r * 1.4, r * 2.8, r * 2.8);
     }
   },
 
@@ -829,17 +876,20 @@ const DRAW = {
     ctx.lineJoin = "round";
     for (const rv of W.rivers) {
       ctx.globalAlpha = AM * (1);
-      ctx.strokeStyle = `rgba(120, 200, 255, ${0.05 + (W.boost > 0 ? 0.02 : 0)})`;
+      ctx.strokeStyle = W.boost > 0 ? "rgba(120, 200, 255, 0.11)" : "rgba(120, 200, 255, 0.09)";
       ctx.lineWidth = rv.w * 2;
       ctx.stroke(rv.path);
-      ctx.strokeStyle = "rgba(170, 225, 255, 0.05)";
+      ctx.strokeStyle = "rgba(170, 225, 255, 0.08)";
       ctx.lineWidth = rv.w * 1.1;
+      ctx.stroke(rv.path);
+      ctx.strokeStyle = "rgba(225, 245, 255, 0.07)";
+      ctx.lineWidth = rv.w * 0.35;
       ctx.stroke(rv.path);
       // Slow drifting streaks show which way it flows
       const speed = fx.reduceMotion ? 0.012 : 0.035;
       ctx.setLineDash([rv.w * 0.5, rv.w * 1.4]);
       ctx.lineDashOffset = -fx.time * speed;
-      ctx.strokeStyle = "rgba(210, 240, 255, 0.13)";
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.22)";
       ctx.lineWidth = Math.max(2 / (fx.zoom * f), rv.w * 0.04);
       ctx.stroke(rv.path);
       if (!lite) {
@@ -860,7 +910,7 @@ const DRAW = {
     const x = px(c.x), y = py(c.y);
     ctx.lineWidth = 1.2 / fx.zoom;
     for (const rr of c.rings) {
-      ctx.globalAlpha = AM * (0.16);
+      ctx.globalAlpha = AM * (0.22);
       ctx.beginPath();
       ctx.arc(x, y, wx(rr), 0, TAU);
       ctx.strokeStyle = "rgba(200, 240, 200, 1)";
@@ -869,6 +919,8 @@ const DRAW = {
     const sr = wx(c.sunR);
     if (!onScreen(state, x, y, sr * 4, vw, vh)) return;
     drawGlow(ctx, "255, 220, 150", x, y, sr * 5.5, 0.12 + fx.breath * 0.04);
+    ctx.globalAlpha = AM * 0.8;
+    ctx.drawImage(lmSprite("cradle"), x - sr * 6, y - sr * 6, sr * 12, sr * 12);
     c.sun.radius = sr;
     const sp = spriteFor(c.sun, sr * fx.zoom * fx.dpr);
     const d = sp.k * sr * (0.98 + fx.breath * 0.04);
@@ -883,7 +935,7 @@ const DRAW = {
     drawGlow(ctx, "180, 150, 230", x, y, s * 2, 0.08);
     const sp = spriteFor(fl.art, s * fx.zoom * fx.dpr);
     const d = sp.k * s;
-    ctx.globalAlpha = AM * (0.28);
+    ctx.globalAlpha = AM * (0.45);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(fl.rot + fx.time * 0.000004);
@@ -914,6 +966,17 @@ const DRAW = {
       ctx.stroke(au.path);
       ctx.restore();
     }
+    if (!lite) {
+      // v8.1 curtains: faint layers rising off the ribbon
+      for (let k = 1; k <= 3; k++) {
+        ctx.save();
+        ctx.translate(0, -wide * 0.22 * k);
+        ctx.strokeStyle = k === 2 ? "rgba(190, 120, 255, 0.03)" : "rgba(90, 240, 190, 0.035)";
+        ctx.lineWidth = wide * (0.5 - k * 0.1);
+        ctx.stroke(au.path);
+        ctx.restore();
+      }
+    }
     ctx.strokeStyle = `rgba(170, 255, 225, ${(0.1 + fx.breath * 0.05) * glowK})`;
     ctx.lineWidth = Math.max(2 / (fx.zoom * f), wide * 0.06);
     ctx.stroke(au.path);
@@ -925,6 +988,8 @@ const DRAW = {
       const x = px(m.x), y = py(m.y), r = wx(m.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
       drawGlow(ctx, "255, 205, 110", x, y, r * 1.4, 0.09 + fx.breath * 0.03);
+      ctx.globalAlpha = AM * (0.6 + fx.breath * 0.2);
+      ctx.drawImage(lmSprite("meadow"), x - r * 1.2, y - r * 1.2, r * 2.4, r * 2.4);
     }
     // Soft bloom halos around growing buds
     const lite = getArtQuality() !== "high";
@@ -966,10 +1031,17 @@ const DRAW = {
       ctx.rotate(p.ang);
       ctx.globalAlpha = AM * (0.85 + fx.breath * 0.15);
       ctx.fillStyle = p.grad;
-      for (const side of [0, Math.PI]) {
+      for (let k = 0; k < 2; k++) {
+        const side = k * Math.PI;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, L, side - hw, side + hw);
+        ctx.closePath();
+        ctx.fill();
+        // v8.1: a brighter core inside each beam
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, L * 0.85, side - hw * 0.25, side + hw * 0.25);
         ctx.closePath();
         ctx.fill();
       }
