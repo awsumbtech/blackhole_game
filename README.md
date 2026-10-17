@@ -38,12 +38,14 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
   stars in Star Meadow, sit in Neutron Forge's pulsar beams for +50%... Every third galaxy is a
   quick, generous breather. Gentle events (with a soft warning first) are explained in Stats >
   "What's that?".
-- **Stardust** from each galaxy buys upgrades between galaxies.
+- **One loop: born, grow, collapse, reborn stronger.** Outgrow a galaxy and the next one opens
+  around you while you keep drifting. When growth slows, you can **Collapse** (a soft prompt, or
+  the pause menu) for **Dark Matter**, light permanent perks on the **constellation**, and be
+  reborn as dust, stronger. Each galaxy type also has an optional goal (up to 3 stars).
 - **Your wisp** drifts along with you, now and then floats toward something worth eating, twirls
   after a big catch, rests during breathers and perks up near a discovery.
-- **Star map** (title screen or Stats): a star for every galaxy you've cleared. Tap one. At the end
-  of each galaxy you'll see its new star settle into your sky before the summary.
-- **Pause** (top-left button or Esc / P) for Resume, Settings, Title.
+- **Star map** (title screen, pause menu or Stats): a star for every galaxy you've passed. Tap one.
+- **Pause** (top-left button or Esc / P) for Resume, Collapse, Star map, Settings, Title.
 
 ## Settings worth knowing
 
@@ -96,9 +98,9 @@ js/discoveries.js rare biome-themed finds (v6)
 js/logbook.js     the logbook screen (v6)
 js/audio.js       procedural WebAudio drone, music layers and sounds
 js/powerups.js    power-ups
-js/progression.js upgrades, stardust, galaxy summary
+js/progression.js base mods, run records, formatting
 js/save.js        localStorage save, migration, backup codes
-js/ui.js          HUD, stats, settings, codex, shop
+js/ui.js          HUD, stats, settings, codex
 js/input.js       thumbstick, follow-finger, mouse, keyboard
 ```
 

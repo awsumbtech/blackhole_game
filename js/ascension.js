@@ -144,7 +144,7 @@ export function noteGoalStar(asc, mods, biome, stars) {
 
 // ─── COLLAPSE MILESTONES (permanent unlocks by number of collapses) ───
 export const MILESTONES = [
-  { at: 1, id: "golden", name: "Golden galaxies", desc: "Now and then a galaxy shines gold: +5 Dark Matter when you pass through it" },
+  { at: 1, id: "golden", name: "Golden galaxies", desc: "Now and then a galaxy shines gold: passing through it adds +5 Dark Matter to your next collapse" },
   { at: 1, id: "skin_ember", name: "Ember skin", desc: "A warm ember accretion disk (Settings > Hole skin)" },
   { at: 3, id: "supernova", name: "Supernova runs", desc: "Some runs begin as a supernova: every bite counts 50% more for the whole run" },
   { at: 3, id: "skin_aurora", name: "Aurora skin", desc: "A soft green-violet aurora disk" },

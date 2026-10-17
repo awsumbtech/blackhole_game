@@ -465,7 +465,7 @@ function initGalaxy(galaxyNum, resume = null, flow = false) {
   ui.updatePowerupBar(state);
 
   setHaloFrom(zen ? 0.82 : am.haloFrom);
-  if (state.golden) setTimeout(() => showHint("A golden galaxy. Everything here shines: +5 Dark Matter for passing through it.", 5000), 2500);
+  if (state.golden) setTimeout(() => showHint("A golden galaxy. Everything here shines: pass through it for +5 Dark Matter at your next collapse.", 5000), 2500);
   state.collapseNudge = false;
   $("collapse-pill").classList.add("hidden");
   audio.startDrone(biome);
