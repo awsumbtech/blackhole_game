@@ -1,5 +1,26 @@
 # Black Hole: Galaxy Eater — Design & Handoff
 
+## 0. North Star (read before every change)
+
+**The game is about FEELING yourself grow.** You start as a just-born, minuscule black hole eating
+dust, and you become something vast. Every change must strengthen that growth feeling.
+
+**Zen exists to calm and refocus, then let you go.** It never traps you.
+
+**Check every change against these three questions. If one gets a "no", rethink the change.**
+1. Does it make growth more *felt*? Think scale, the world shrinking around you, and the next layer arriving.
+2. Is it calm? No startles, no flashes, no clutter.
+3. Does it serve Zen's purpose? Calm, refocus, then a clean exit.
+
+**Standing preferences (Brian)**
+- **Audio:** soft and research-based. See `docs/AUDIO_RESEARCH.md` and §7d. No harsh sounds; music must never cause headaches.
+- **Grindy galaxies are welcome as walls.** A slow, heavy galaxy is fine as a gate. There is no actual boss.
+- **The wisp:**
+  - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint.
+  - In every mode it is drawn above everything and is never covered.
+- **Zen level pacing is liked.** Keep Zen durations as they are.
+- **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, galaxy goals, rivals.
+
 Read this first if you're the bot picking up this game. It records what the game is for, the
 rules it follows, how it works, and how to ship changes. Current version: **v6.0.1**
 (`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v6.0.1"` in `sw.js`, `SAVE_VERSION = 6` in `js/save.js`).
