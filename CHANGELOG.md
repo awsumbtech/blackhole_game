@@ -2,6 +2,61 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v8.1 Painterly, bolder (Oct 2026)
+
+A second, much bolder art pass. Gameplay, balance, audio and saves are unchanged, and saves from v1 to v7 still load.
+
+**Black hole**
+- The disk is now Interstellar-style. It is a flat, thin, wide band out to 3.6× the hole's radius (it was 2.25×), with layered turbulent bands, dark lanes, and a gradient from white-hot inside through gold and ember to deep red.
+- The far side of the disk is lensed into a bright arc over the shadow and a thin arc under it.
+- The photon ring is crisp and brighter on the approaching side. Beaming, a warm wide bloom and shimmer (High only) remain.
+
+**Skies**
+- Every biome has its own painted sky (new `js/sky.js`), painted once per biome and screen size at half resolution. It replaces the flat background fill, so it costs no extra full-screen blit.
+  - Reef: tendrils over teal banks.
+  - Comet Current: icy flowing currents.
+  - Planet Nursery: green-gold glow with dust pillars.
+  - Ruined Armada: violet and amber smoke with heavy dust lanes.
+  - Void Rift: a glowing cleft.
+  - Star Meadow: golden haze and dense stars.
+  - Neutron Forge: shock shells.
+- Every sky also gets distant galaxies and dark dust lanes.
+- Slow parallax drift, on top of the existing parallax star, cloud and dust layers.
+
+**Objects** (consistent upper-left light)
+- Rocks: speckle grit and terminators.
+- Comets: an icy nucleus, a glowing coma and sunward jets, plus two tails (a curved dust tail and a straight blue ion tail).
+- Gas giants: more bands and storms, a shadow cast by the rings across the globe, the planet's shadow on the rings behind it, and a Cassini gap.
+- Stars: granulation, limb darkening and coronal streamers.
+- Nebula and galaxy food: more puffs, dust lanes, and more stars in spiral arms.
+
+**Effects**
+- Particles are curved, glowing spiral streaks (glow pass on High).
+- Big catches stretch toward the hole and glow as they go in (spaghettification); with Reduce Motion they simply shrink.
+- Tier reveal: a gentle bloom swell and an expanding dust ring (fixed size under Reduce Motion).
+- Rivals: painted violet holes with their own disk, lensed arc and ring. They turn gold once you can eat them.
+- Discoveries: each find has its own cached sprite (petals, rings, a comet head with tail, orbiting motes).
+- Landmarks:
+  - Reefs get painted coral.
+  - The Cradle gets a protoplanetary disk.
+  - Comet rivers are brighter.
+  - Armada hulls are more visible.
+  - The aurora gets curtains.
+  - Meadows get blossom fields.
+  - Pulsar beams get bright cores.
+- Wisp: an outer aura with faint rays, plus trailing motes.
+- Overlays fade in smoothly.
+
+**App**
+- A new icon (192, 512 and maskable 512), rendered from the game's own black hole (`tools/make-icons.py`).
+- A splash screen that fades out by itself.
+
+**Perf** (headless, 20 s at galaxy 5, JS ms per frame)
+- High: 1.11 avg / 1.6 p95.
+- Lite: 0.53 / 0.8.
+- Auto stayed on High with 0 drops (2 runs).
+- Allocation stays at about 1.8 MB/s. Some per-frame allocations were removed (tail keys, beam side array, particle options).
+
 ## v8.0 Painterly (Oct 2026)
 
 A visual pass with no gameplay change. Balance, audio and saves are the same; saves from v1 to v7 still load.

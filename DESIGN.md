@@ -42,6 +42,15 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
     - Keep extras High-only (Lite gets the cheap version), and switch movement off with Reduce Motion.
     - Full-screen effects go in CSS, not canvas: a full-screen canvas blit tipped headless Auto into Lite.
   - **The wisp draws last in the world.** In Zen it stays beside the hole.
+- **v8.1 (bolder).**
+  - **The hole:** an Interstellar-style thin, wide disk (`DISK_IN` 1.45, `DISK_OUT` 3.6, `TILT` 0.17), with lensed arcs over and under the shadow (`arcSprite`). It must read clearly at phone size.
+  - **Skies:** each biome has a painted sky in `js/sky.js` (a style per biome name). New biomes need a style there.
+  - **Rivals** use `rivalSprite`; **discoveries** have per-find sprites; **landmarks** use `lmSprite` in worlds.js.
+  - **Rules:**
+    - Every new visual is painted once and stamped.
+    - The sky replaces the background fill (no extra full-screen layer).
+    - Glow and extra passes are High only; motion is off under Reduce Motion.
+  - **Icons:** regenerate with `python3 tools/make-icons.py`.
 
 ## 4. Controls
 
@@ -220,6 +229,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v8.1 Painterly, bolder:** Interstellar hole, painted per-biome skies, detailed sprites, spaghettification, reveal ring, violet rivals, unique discoveries, richer landmarks, new icon + splash.
 - **v8.0 Painterly:** graphics uplift (doppler disk, bloom, painterly nebulae with dust lanes, coloured twinkling stars, planet terminators/scattering, vignette + grade, glass UI); wisp drawn on top, stays beside the hole in Zen.
 - **v7.2 Lean:** refactor with no gameplay change. Cut the dead Zen/timed toggle and its timer, par and bump-loss code, Reset All, shake and unused code. Hot loops are allocation-light (about 40% less garbage). Fixed the hidden Settings Done button on the title screen.
 - **v7.1 Calm Sound:** research-based audio rebuild (surf bed, sparse just-intonation sines, 1.8 kHz lowpass, Music/SFX sliders). No ring in Zen; the wisp breathes 4 in / 6 out.
@@ -237,7 +247,7 @@ js/game.js          main loop, state, camera, tiers/reveals, saves, wiring, VERS
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
-js/grade.js         v8 vignette/grade (CSS layer)
+js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map + end ritual
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
