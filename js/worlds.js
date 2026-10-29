@@ -5,6 +5,7 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
+import { upgradeShip } from "./ships.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
@@ -244,8 +245,14 @@ const SETUP = {
   "Ruined Armada"(state, r, b0) {
     const spots = ringSpots(r, 2, b0 * 0.35, b0 * 0.62);
     const [fx, fy] = spots[0];
+    // v9.4: the Flagship is a broken capital ship with its own slow debris field
     W.flagship = { x: fx, y: fy, size: b0 * 0.16, rot: r() * TAU,
-      art: { type: "craft", color: "#8f7fb0", seed: 777, variant: 2, radius: 1 } };
+      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: "#8f7fb0", radius: 1, _sp: null, _artBase: null },
+      debris: Array.from({ length: 7 }, (_, i) => {
+        const a = r() * TAU, d = 0.9 + r() * 0.8;
+        return { dx: Math.cos(a) * d, dy: Math.sin(a) * d * 0.7, s: 0.05 + r() * 0.07, rot: r() * TAU, spin: (r() - 0.5) * 0.00008, ph: r() * TAU,
+          art: { type: "craft", ship: "scrap", wreck: true, look: i, color: "#8f7fb0", radius: 1, _sp: null, _artBase: null } };
+      }) };
     W.lms.push(landmark(setName("The Flagship"), "flagship", fx, fy, b0 * 0.22, "205, 180, 255"));
     const [lx, ly] = spots[1];
     W.lms.push(landmark(setName("The Broken Line"), "line", lx, ly, b0 * 0.18, "215, 170, 120"));
@@ -300,6 +307,7 @@ function addHull(state, x, y, kMin, kMax) {
   e.bigFish = true;
   e.hull = true;
   e.baseSpeed = 0.08;
+  if (e.type === "craft") upgradeShip(e);   // v9.4: brittle hulls are a class bigger
   state.entities.push(e);
   return e;
 }
@@ -668,7 +676,7 @@ export function worldMassMul() {
 
 /** Ruined Armada: bumping a brittle hull crumbles a few edible pieces off it. */
 export function onWorldBump(state, e) {
-  if (!W || W.biome !== "Ruined Armada" || e.type !== "craft") return false;
+  if (!W || W.biome !== "Ruined Armada" || e.type !== "craft" || e.crumb) return false;
   if (e._crumbleCd > 0) return true;
   e._crumbleCd = 50;
   const dx = state.playerX - e.x, dy = state.playerY - e.y, d = hypot(dx, dy) || 1;
@@ -680,18 +688,22 @@ export function onWorldBump(state, e) {
     p.vy = Math.sin(a) * 0.5 * Math.sqrt(state.speedScale);
     p.color = e.color; p._mc = e._mc; p._ec = e._ec;
     p.crumb = true;   // v7: Armada goal counts these
-    p._artBase = null;
+    // v9.4: crumbs are torn hull plates from the wreck they came off
+    p.type = "craft"; p.ship = "scrap"; p.wreck = true; p.look = (Math.random() * 8) | 0;
+    p.rotation = Math.random() * TAU; p.rotSpeed = (Math.random() - 0.5) * 0.01;
+    p._artBase = null; p._sp = null;
     p._spawnAge = 30; p._spawnAlpha = 0.5;
     state.entities.push(p);
   }
   // Soft crumble: the hull shrinks a little each time
   e.radius *= 0.86;
   e.mass = Math.PI * e.radius * e.radius * e.density;
-  for (let i = 0; i < (state.settings.reduceMotion ? 5 : 12); i++) {
-    const a = Math.random() * TAU, sp = 0.2 + Math.random() * 0.6;
+  // a few slow motes of hull dust (v9.4: was a lavender confetti burst)
+  for (let i = 0; i < (state.settings.reduceMotion ? 3 : 6); i++) {
+    const a = Math.random() * TAU, sp = 0.1 + Math.random() * 0.3;
     state.particles.push({ x: e.x + Math.cos(a) * e.radius * 0.8, y: e.y + Math.sin(a) * e.radius * 0.8,
       vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: 1 + Math.random() * 1.6 * Math.max(1, state.radius * 0.04),
-      color: "#cdb9ef", alpha: 0.45, age: 0, maxAge: 70, gravity: 0 });
+      color: "#b8aaa0", alpha: 0.3, age: 0, maxAge: 80, gravity: 0 });
   }
   state.worldHint?.("hull_first", "The hull crumbles a little. Pieces are yours to eat.", 3600);
   return true;
@@ -927,15 +939,28 @@ const DRAW = {
     const fl = W.flagship;
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
-    drawGlow(ctx, "180, 150, 230", x, y, s * 2, 0.08);
+    drawGlow(ctx, "180, 160, 220", x, y, s * 2.2, 0.06);
+    // v9.4: a broken capital ship, slightly hazed (it sits just behind play), in a slow debris field
+    const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
+    const cr = Math.cos(rot), sr = Math.sin(rot);
+    for (const p of fl.debris) {
+      const t = fx.reduceMotion ? 0 : fx.time;
+      const bx = p.dx * s + Math.sin(t * 0.00005 + p.ph) * s * 0.03, by = p.dy * s;
+      const qx = x + bx * cr - by * sr, qy = y + bx * sr + by * cr, ps = p.s * s;
+      const dsp = spriteFor(p.art, ps * fx.zoom * fx.dpr), dd = dsp.k * ps, pr = p.rot + t * p.spin;
+      ctx.globalAlpha = AM * 0.5;
+      ctx.translate(qx, qy); ctx.rotate(pr);
+      ctx.drawImage(dsp.c, -dd / 2, -dd / 2, dd, dd);
+      ctx.rotate(-pr); ctx.translate(-qx, -qy);
+    }
     const sp = spriteFor(fl.art, s * fx.zoom * fx.dpr);
     const d = sp.k * s;
-    ctx.globalAlpha = AM * (0.45);
-    ctx.save();
+    ctx.globalAlpha = AM * 0.42;   // it sits back from play: the sky shows through
     ctx.translate(x, y);
-    ctx.rotate(fl.rot + fx.time * 0.000004);
+    ctx.rotate(rot);
     ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
-    ctx.restore();
+    ctx.rotate(-rot);
+    ctx.translate(-x, -y);
   },
 
   "Void Rift"(ctx, state, fx) {

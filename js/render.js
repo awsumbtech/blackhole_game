@@ -1,4 +1,5 @@
 import { blurFor } from "./depth.js";
+import { drawShip } from "./ships.js";
 import { drawSky } from "./sky.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
@@ -395,10 +396,13 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
         ctx.arc(sx, sy, dd * 0.85, 0, Math.PI * 2);
         ctx.fill();
       }
+      const tr = e.type === "craft" ? e.rotation : 0;   // ships keep their heading as they arrive
+      ctx.translate(sx, sy); ctx.rotate(tr);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
-      ctx.drawImage(bl, sx - pd / 2, sy - pd / 2, pd, pd);
+      ctx.drawImage(bl, -pd / 2, -pd / 2, pd, pd);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * q;
-      ctx.drawImage(sp.c, sx - dd / 2, sy - dd / 2, dd, dd);
+      ctx.drawImage(sp.c, -dd / 2, -dd / 2, dd, dd);
+      ctx.rotate(-tr); ctx.translate(-sx, -sy);
       continue;
     }
     if (e.type === "star" || e.type === "neutron") {
@@ -406,7 +410,10 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       d *= 0.98 + breath * 0.04;
     }
     ctx.globalAlpha = alpha;
-    if (e.consuming && e.swallow && !still) {
+    if (e.type === "craft") {
+      // v9.4: ships draw themselves (heading, engine glow, break-apart)
+      drawShip(ctx, e, sp, sx, sy, sp.k * e.radius, spawnAlpha, breath, still);
+    } else if (e.consuming && e.swallow && !still) {
       // v8.1 spaghettification: a big catch stretches toward the hole and glows as it goes in
       const p = e.consumeProgress, q = p * p * (3 - 2 * p);
       const ang = Math.atan2(hy - sy, hx - sx);
@@ -467,17 +474,6 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
       ctx.lineWidth = 1.8 / zoom;
       ctx.stroke();
-    }
-
-    // Slow blinking running light for derelicts
-    if (e.type === "craft" && !e.consuming && Math.sin(time * 0.002 + e.rotation * 10) > 0.8) {
-      const lx = sx + Math.cos(e.rotation) * e.radius * 0.95;
-      const ly = sy + Math.sin(e.rotation) * e.radius * 0.95;
-      ctx.globalAlpha = alpha * 0.8;
-      ctx.beginPath();
-      ctx.arc(lx, ly, Math.max(1, e.radius * 0.08), 0, TAU);
-      ctx.fillStyle = "#ffe9c4";
-      ctx.fill();
     }
   }
   ctx.globalAlpha = 1;

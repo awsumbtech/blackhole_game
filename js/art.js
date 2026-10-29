@@ -3,6 +3,8 @@
 // cached canvas keyed by type / colour / variant / on-screen size, then just
 // stamped each frame. Nothing here runs per-frame except cache lookups.
 
+import { paintShip, shipKey, shipExtent, SHIP_LOOKS } from "./ships.js";
+
 const TAU = Math.PI * 2;
 
 // ─── Quality ───
@@ -24,9 +26,10 @@ export function getArtQuality() { return quality; }
 
 // On-screen radius buckets (device px). Sprites are painted at the bucket at or
 // just above the real size, so they are always downscaled (crisp, never blurry).
-const BUCKETS = [3, 4, 6, 8, 11, 15, 20, 27, 36, 48, 64, 85, 112, 150];
-function bucketFor(rpx) {
-  const cap = quality === "high" ? 150 : 85;
+// v9.4: ships may paint larger (their detail is what sells scale)
+const BUCKETS = [3, 4, 6, 8, 11, 15, 20, 27, 36, 48, 64, 85, 112, 150, 200, 260];
+function bucketFor(rpx, big) {
+  const cap = quality === "high" ? (big ? 260 : 150) : (big ? 150 : 85);
   const r = Math.min(rpx, cap);
   for (const b of BUCKETS) if (b >= r * 0.9) return b;
   return BUCKETS[BUCKETS.length - 1];
@@ -98,7 +101,7 @@ function splitKey(k) { const i = k.lastIndexOf("|"); return [k.slice(0, i), +k.s
 // Every type has a set of looks (archetype + seeded details). The look comes from
 // the entity's seed (or an explicit e.look >= 0), so the cache holds one sprite
 // per type / look / size rather than one per object.
-const LOOKS = { dust: 8, junk: 10, meteor: 12, comet: 6, moon: 12, planet: 30, star: 12, system: 8, nebula: 10, cluster: 6, galaxy: 10 };
+const LOOKS = { craft: SHIP_LOOKS, dust: 8, junk: 10, meteor: 12, comet: 6, moon: 12, planet: 30, star: 12, system: 8, nebula: 10, cluster: 6, galaxy: 10 };
 // Types that paint their own palette from the look (e.color is only a minimap tint)
 const OWN = { dust: 1, junk: 1, meteor: 1, comet: 1, moon: 1, planet: 1, star: 1, system: 1 };
 export function lookOf(e) {
@@ -128,6 +131,7 @@ function extentFor(type, variant, look) {
 
 function baseKeyFor(e) {
   const L = lookOf(e), t = e.type;
+  if (t === "craft") return shipKey(e) + "|" + L;
   if (OWN[t]) return t + "||" + L + "|" + (t === "planet" ? e.variant || 0 : 0);
   return `${t}|${e.color}|${e.bands ? e.bands[0] : ""}|${e.variant || 0}|${L}`;
 }
@@ -138,7 +142,7 @@ export function spriteFor(e, rpx) {
   // so a slowly zooming camera doesn't repaint everything every few frames.
   const cur = e._sp;
   if (cur && cur.g === cacheGen && e._artBase && rpx <= cur.b * 1.05 && rpx >= cur.b * 0.62) { cur.used = frameNo; return cur; }
-  const b = bucketFor(rpx);
+  const b = bucketFor(rpx, e.type === "craft");
   const base = e._artBase || (e._artBase = baseKeyFor(e));
   const key = base + "|" + b;
   let s = cache.get(key);
@@ -173,7 +177,7 @@ function makeCanvas(size) {
 function paint(e, b) {
   generated++;
   const variant = e.variant || 0, look = lookOf(e);
-  const ext = extentFor(e.type, variant, look);
+  const ext = e.type === "craft" ? shipExtent(e.ship) : extentFor(e.type, variant, look);
   const size = Math.ceil(b * ext * 2) + 2;
   const c = makeCanvas(size);
   const g = c.getContext("2d");
@@ -189,43 +193,7 @@ function paint(e, b) {
 // ─── Painters (g is centred; R = radius in canvas px) ───
 
 const PAINTERS = {
-  craft(g, R, e, r) {
-    // A long, quiet hull: nose, body, two fins
-    const L = R * 1.15, W = R * (0.42 + r() * 0.12);
-    const pts = [[L, 0], [L * 0.35, -W], [-L * 0.55, -W * 0.95], [-L * 0.8, -W * 1.5], [-L, -W * 0.7],
-      [-L, W * 0.7], [-L * 0.8, W * 1.5], [-L * 0.55, W * 0.95], [L * 0.35, W]];
-    path(g, pts);
-    // Weathered, muted hull (the base colour is only a tint)
-    const hull = mix(e.color, [70, 74, 96], 0.6);
-    const lg = g.createLinearGradient(0, -W * 1.4, 0, W * 1.4);
-    lg.addColorStop(0, light(e.color, 0.12, 1));
-    lg.addColorStop(0.45, hull);
-    lg.addColorStop(1, dark(e.color, 0.65));
-    g.fillStyle = lg;
-    g.fill();
-    g.strokeStyle = light(e.color, 0.55, 0.3);
-    g.lineWidth = Math.max(0.6, R * 0.05);
-    g.stroke();
-    if (R > 7) {
-      g.save(); path(g, pts); g.clip();
-      g.strokeStyle = dark(e.color, 0.5, 0.4);
-      g.lineWidth = Math.max(0.5, R * 0.035);
-      for (let i = 1; i <= 3; i++) {
-        const x = L * 0.35 - i * L * 0.4;
-        g.beginPath(); g.moveTo(x, -W * 1.2); g.lineTo(x, W * 1.2); g.stroke();
-      }
-      g.restore();
-      // A few warm windows
-      for (let i = 0; i < 3; i++) {
-        const x = L * (0.2 - i * 0.28), y = (i % 2 ? -1 : 1) * W * 0.35;
-        const wg = g.createRadialGradient(x, y, 0, x, y, R * 0.12);
-        wg.addColorStop(0, "rgba(255, 226, 160, 0.85)");
-        wg.addColorStop(1, "rgba(255, 226, 160, 0)");
-        g.fillStyle = wg;
-        g.beginPath(); g.arc(x, y, R * 0.12, 0, TAU); g.fill();
-      }
-    }
-  },
+  craft(g, R, e) { paintShip(g, R, e); },   // v9.4: the ship system paints every class
 
   neutron(g, R, e) {
     const gl = g.createRadialGradient(0, 0, 0, 0, 0, R * 3.1);

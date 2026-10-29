@@ -53,7 +53,7 @@ export const objectTypes = [
   },
   {
     id: "craft",
-    label: "Derelict",
+    label: "Ship",
     colors: ["#c28eff", "#b07ae0", "#d4a2ff"],
     minR: 6, maxR: 11,
     density: 1.4,
@@ -298,6 +298,8 @@ export function createEntity(type, x, y, scale = 1) {
     // v9 art (visual only): look = painted look (-1: from the seed); hot = a meteor
     // entering hot (glowing streak and leading edge), set by meteor showers
     look: -1, hot: 0,
+    // v9.4 ships (ships.js): class, wreck (tumbles) or living (steers nose-first)
+    ship: "", wreck: false, steer: false,
     _mc: color + "88", _ec: color + "55"   // minimap dot / edge arrow colours
   };
 }
@@ -316,6 +318,12 @@ export function updateEntities(entities, bounds, dt) {
     e.x += e.vx * dt;
     e.y += e.vy * dt;
     e.rotation += e.rotSpeed * dt;
+    if (e.steer) {
+      // v9.4: living ships turn gently to face where they're gliding
+      let da = Math.atan2(e.vy, e.vx) - e.rotation;
+      da -= Math.round(da / 6.283185307179586) * 6.283185307179586;
+      e.rotation += da * Math.min(1, 0.03 * dt);
+    }
 
     // Bounce off circular boundary
     const dist = hypot(e.x, e.y);

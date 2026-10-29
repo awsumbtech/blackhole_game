@@ -8,6 +8,7 @@
 //
 // Screen space, hashed (no per-object state), pre-blurred cached sprites.
 
+import { shipClassFor } from "./ships.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
 import { spriteFor, getArtQuality } from "./art.js";
@@ -23,7 +24,7 @@ const alp = k => k <= 0 ? 0 : 0.62 * Math.pow(0.66, k - 1) * Math.min(1, Math.ma
 const blurLv = k => Math.max(1, Math.min(3, Math.round(k)));
 
 // Which objects represent a tier in the background: what's new at that tier
-const NAMES = { dust: "dust", junk: "pebbles", meteor: "asteroids", comet: "comets", craft: "old wrecks", moon: "moons",
+const NAMES = { dust: "dust", junk: "pebbles", meteor: "asteroids", comet: "comets", craft: "ships", moon: "moons",
   planet: "planets", star: "stars", neutron: "neutron stars", system: "star systems", nebula: "nebulae", cluster: "star clusters", galaxy: "galaxies" };
 const typesCache = new Map();
 export function layerTypes(L) {
@@ -72,10 +73,17 @@ export function blurFor(src, lv) {
 
 // Sample entities per layer type (for their painted look), made once
 const samples = new Map();
-function sampleFor(id, v) {
-  const key = id + v;
+function sampleFor(id, v, L = 0) {
+  // v9.4: distant ships are the class of the tier they belong to (wrecks drift, so they're
+  // shown as quiet derelict silhouettes in the haze)
+  const ship = id === "craft" ? shipClassFor(L, false, (v + 0.5) / 8) : "";
+  const key = id + v + ship;
   let e = samples.get(key);
-  if (!e) { e = createEntity(typeById(id), 0, 0, 1); e.variant = v & 3; e.look = v * 7 + id.length; samples.set(key, e); }
+  if (!e) {
+    e = createEntity(typeById(id), 0, 0, 1); e.variant = v & 3; e.look = v * 7 + id.length;
+    if (ship) { e.ship = ship; e.wreck = true; e.rotation = v * 0.8; }
+    samples.set(key, e);
+  }
   return e;
 }
 
@@ -84,6 +92,7 @@ const offX = new Float64Array(64), offY = new Float64Array(64);
 let lastBgX = 0, lastBgY = 0, shift = 0, mergeTier = -1;
 
 export function resetDepth(state) {
+  samples.clear();   // v9.4: ship samples carry the galaxy's light in their art key
   offX.fill(0); offY.fill(0);
   lastBgX = state.bgX || 0; lastBgY = state.bgY || 0;
   shift = 0; mergeTier = -1;
@@ -118,12 +127,16 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       const rad = rad0 * (0.65 + 0.7 * (r / occ));
       const id = types[(r2 * 997 | 0) % types.length], v = (r3 * 991 | 0) % 8;   // v9: 8 looks per layer type
       if (cb) { cb(sx, sy, rad, id, v); continue; }
-      const e = sampleFor(id, v);
+      const e = sampleFor(id, v, L);
       const sp = spriteFor(e, rad * dpr);
       const bl = blurFor(sp.c, lv);
       const d = sp.k * rad, pd = d * (1 + 2 * bl._pad);
       ctx.globalAlpha = a * (0.8 + 0.2 * r3);
-      ctx.drawImage(bl, sx - pd / 2, sy - pd / 2, pd, pd);
+      if (e.ship) {
+        ctx.translate(sx, sy); ctx.rotate(e.rotation);
+        ctx.drawImage(bl, -pd / 2, -pd / 2, pd, pd);
+        ctx.rotate(-e.rotation); ctx.translate(-sx, -sy);
+      } else ctx.drawImage(bl, sx - pd / 2, sy - pd / 2, pd, pd);
     }
   }
 }
@@ -167,7 +180,10 @@ export function startMerge(state, w, h, holePx, spawn) {
     spawn(id, sx, sy, rad);
     // v9: the thing that steps forward keeps the look it had in the haze
     const ents = state.entities, e = ents && ents[ents.length - 1];
-    if (e && e.type === id) { const s = sampleFor(id, v); e.look = s.look; e.variant = s.variant; e._artBase = null; e._sp = null; }
+    if (e && e.type === id) {
+      const s = sampleFor(id, v, L); e.look = s.look; e.variant = s.variant; e._artBase = null; e._sp = null;
+      if (s.ship) { e.ship = s.ship; e.rotation = s.rotation; }
+    }
   };
   walk(null, L, 1, w, h, holePx, 1, 1, mergeCb);
   mergeCb = null;

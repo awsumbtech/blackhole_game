@@ -1,6 +1,7 @@
 // ─── GAME MAIN ───
 // State, main loop, consume logic, zoom camera, in-play galaxy flow, collapse.
 
+import { setShipLight } from "./ships.js";
 import { createInput } from "./input.js";
 import { updateEntities, getBiome, rand, biomeCatalog } from "./entities.js";
 import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawCursor, invalidateStarfield, setNebulaPalette, setSoftPalette, drawLens, setStarQuality } from "./render.js";
@@ -385,6 +386,7 @@ function initGalaxy(galaxyNum, resume = null, flow = false) {
   setNebulaPalette(neb);
   setBackdropPalette(neb);
   setSky(biome.name, neb, biome.tint);
+  setShipLight(neb[1] || neb[0], biome.name + (state.golden ? "*" : ""));   // v9.4 ship rim bounce
   invalidateStarfield();
   if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 

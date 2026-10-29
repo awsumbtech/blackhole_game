@@ -18,6 +18,7 @@ const ASSETS = [
   "./js/powerups.js",
   "./js/ui.js",
   "./js/art.js",
+  "./js/ships.js",
   "./js/tiers.js",
   "./js/wisp.js",
   "./js/grade.js",
