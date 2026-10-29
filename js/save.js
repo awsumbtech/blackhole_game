@@ -3,7 +3,7 @@
 // v2 keeps the original key so existing v1 saves load and migrate in place.
 
 const SAVE_KEY = "blackhole_galaxy_v3";
-export const SAVE_VERSION = 8;   // v7: asc (Ascension). v8: no stardust or shop (refunded as Dark Matter)
+export const SAVE_VERSION = 9;   // v7: asc (Ascension). v8: no stardust or shop (refunded as Dark Matter). v9: wisp is an unlock (Companion)
 import { normalizeAsc } from "./ascension.js";
 import { floorMassForLegacyGalaxy } from "./tiers.js";
 
@@ -153,6 +153,12 @@ function normalize(raw) {
       data.asc.dmTotal = (data.asc.dmTotal || 0) + r.dm;
     }
     data.v9Refund = r;
+  }
+  // v9 (game v9.2): the wisp is the Companion perk. Anyone who has collapsed, or
+  // owned Hungry Wisp, already earned it: grant it free so nobody is stranded.
+  if ((raw.version || 1) < 9 && ((data.asc.collapses || 0) > 0 || data.asc.perks.a2)) {
+    data.asc.perks.aw = true;
+    data.v92Companion = true;
   }
   return data;
 }

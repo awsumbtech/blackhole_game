@@ -16,7 +16,7 @@ import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from 
 import * as audio from "./audio.js";
 import { save, load, defaultStats, defaultRecords, exportCode, parseCode, writeBackup } from "./save.js";
 import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo } from "./discoveries.js";
-import { resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
+import { wisp, resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
 import { openLogbook } from "./logbook.js";
 import { openConstellation } from "./constellation.js";
@@ -35,7 +35,7 @@ import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, r
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.1";
+const VERSION = "9.2";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -129,6 +129,7 @@ const growth = new Growth(state, {
   audio,
   hint: (k, m, ms) => hint(k, m, ms),
   onWorldTier,
+  onGrowth: (t, merged) => wispReact(state, merged ? "merge" : "tier"),   // v9.2 Growth Witness
   screenW: () => screenW,
   screenH: () => screenH
 });
@@ -424,6 +425,7 @@ function initGalaxy(galaxyNum, resume = null, flow = false) {
   initWorlds(state);
   fillAround(state, Math.max(20, Math.round((biome.breather ? DENSITY.breather : DENSITY.regular) * state.densityK) - state.entities.length));
   initRivals(state, zen ? 0 : dinfo.rivals, dinfo.rivalSize);
+  wisp.syncFromAsc(state.asc);   // v9.2: no wisp until Companion is lit
   resetWisp(state);
   initDiscoveries(state);
   initPowerups();
@@ -993,7 +995,7 @@ state.openConstellation = (o = {}) => {
   openConstellation(state.asc, {
     reduceMotion: state.settings.reduceMotion,
     newRun: !!o.newRun,
-    onBuy: () => { audio.playGoalStar(3); save(state); },
+    onBuy: p => { audio.playGoalStar(3); if (p && p.id === "aw") wisp.unlock(); save(state); },
     onClose: begin => { save(state); if (o.newRun) startNewRun(); }
   });
 };
@@ -1258,8 +1260,8 @@ function frame(now) {
     if ((state.tier || 0) === 0 && state.run.time > 8.5 && !state.seenHints.newborn && !state.tierBanner) {
       hint("newborn", "You've just been born. Drift and gather the dust.", 5200);
     }
-    if (!state.seenHints.wisp_intro && state.run.time > 25 && !state.tierBanner) {
-      hint("wisp_intro", `A little light has found you. ${state.settings.wispName || "Wisp"} will drift along, and now and then point out something tasty.`, 6000);
+    if (wisp.isActive() && !state.seenHints.wisp_witness && state.run.time > 4 && !state.tierBanner) {
+      hint("wisp_witness", `A little light has found you. ${state.settings.wispName || "Wisp"} will glow with you each time you grow into a new scale${state.mode === "zen" ? ", and breathe beside you here" : ""}.`, 6500);
     }
     if (updatePowerups(state, dt)) {
       audio.playPowerupSpawn();
@@ -1330,7 +1332,8 @@ function frame(now) {
       double: state.active.double > 0,
       gulp: state.gulp,
       breath,
-      breathGuide: state.settings.breathGuide && state.mode !== "zen",   // v7.1: no ring in Zen; the wisp breathes instead
+      // v7.1: in Zen the wisp is the breath guide; v9.2: until it's unlocked, Zen shows the ring
+      breathGuide: state.mode === "zen" ? !wisp.isActive() : state.settings.breathGuide,
       filter: skinFilter()
     });
   if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);

@@ -21,8 +21,8 @@ function skinRow(state) {
 // v6 codex entries for the new gentle things
 const V6_CODEX = [
   ["255, 214, 140", "Golden halo", "A soft gold glow around something big means you're nearly its size. When the halo turns steady, it fits: drift in for a slow, satisfying big catch."],
-  ["255, 240, 200", "Shimmer (discovery)", "Rare finds hide in every galaxy: a golden comet, a lost probe, a whale-shaped nebula. A faint glow at the screen edge (and your wisp leaning that way) means one is near. Drift into it to write it in your logbook."],
-  ["150, 235, 215", "Your wisp", "It twirls when you make a big catch, curls up to rest in breather galaxies, and perks up when a discovery is close."],
+  ["255, 240, 200", "Shimmer (discovery)", "Rare finds hide in every galaxy: a golden comet, a lost probe, a whale-shaped nebula. A faint glow at the screen edge (and your wisp leaning that way, once it's with you) means one is near. Drift into it to write it in your logbook."],
+  ["150, 235, 215", "Your companion wisp", "Light Companion on the constellation after your first collapse and a little wisp joins you for good. It witnesses your growth: when you grow into a new scale it glows, widens its orbit, and points once toward food your new size. It twirls after a big catch or a find, rests in breather galaxies, and in Zen breathes beside you (in for 4, out for 6). Rename it in Settings."],
   ["200, 210, 255", "A new star", "When you outgrow a galaxy, its star quietly joins your sky and the next galaxy opens around you. Your star map is in the pause menu and on the title screen."],
   ["170, 140, 240", "Ascension and collapse", "Each run starts from dust at Galaxy 1 and every galaxy deeper is a little bigger, sparser and slower. When growth slows, a soft prompt offers a Collapse (also in the pause menu, from depth 3): the run becomes Dark Matter, you choose perks, and you're reborn stronger."],
   ["210, 190, 255", "Dark Matter and the constellation", "Dark Matter is the only thing that carries over. It lights permanent perks on the constellation: Reach, Appetite and Fortune. Each tier opens the next; forks are a choice. Collapsing deeper earns much more."],
@@ -70,13 +70,13 @@ export function showStats(state, onClose, opts = {}) {
       ${skinRow(state)}
       ${setRow("Music", "Soft surf and slow notes", `<input type="range" class="mix-slider" data-mix="musicVol" min="0" max="100" value="${Math.round((state.settings.musicVol ?? 0.6) * 100)}" aria-label="Music volume">` + onOff("musicOn"))}
       ${setRow("Sound effects", "Bites and chimes", `<input type="range" class="mix-slider" data-mix="sfxVol" min="0" max="100" value="${Math.round((state.settings.sfxVol ?? 0.6) * 100)}" aria-label="Effects volume">` + onOff("sfxOn"))}
-      ${setRow("Breathing guide", "Ascension: a faint ring that grows as you breathe in (4s in, 6s out)", onOff("breathGuide"))}
+      ${setRow("Breathing guide", "A faint ring that grows as you breathe in (4s in, 6s out). In Zen your companion wisp breathes instead, once it's with you", onOff("breathGuide"))}
       ${setRow("Zen breath words", "Faint 'breathe in / out' words in Zen sessions", onOff("zenBreathCue"))}
       ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}
       ${setRow("Touch controls", "Thumbstick, or drift toward your finger", seg("touchMode", [["joystick", "Joystick"], ["follow", "Follow"]]))}
       ${setRow("Visual quality", "Auto lowers detail if your phone needs it", seg("quality", [["auto", "Auto"], ["high", "High"], ["balanced", "Lite"]]))}
-      ${setRow("Companion name", "The little wisp that drifts with you", `<input id="set-wisp-name" class="name-input" maxlength="16" value="${esc(state.settings.wispName || "Wisp")}" aria-label="Companion name">`)}
+      ${state.asc && state.asc.perks && state.asc.perks.aw ? setRow("Companion name", "The little wisp that drifts with you", `<input id="set-wisp-name" class="name-input" maxlength="16" value="${esc(state.settings.wispName || "Wisp")}" aria-label="Companion name">`) : ""}
     </div>
     <div class="stats-section"><h3>Save backup</h3>
       <div class="backup">
@@ -146,7 +146,7 @@ export function showStats(state, onClose, opts = {}) {
   });
   bindBackup(state);
   const nameEl = $("set-wisp-name");
-  nameEl.addEventListener("change", () => {
+  nameEl?.addEventListener("change", () => {
     const v = nameEl.value.replace(/[^\p{L}\p{N} '\-]/gu, "").trim().slice(0, 16) || "Wisp";
     nameEl.value = v;
     state.setSetting?.("wispName", v);

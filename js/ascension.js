@@ -58,7 +58,7 @@ export const TIER_COST = [8, 16, 28, 45, 70, 100, 150];
 
 export const BRANCHES = {
   reach: { name: "Reach", rgb: "140, 200, 255", line: "Pull range and event horizon" },
-  appetite: { name: "Appetite", rgb: "255, 190, 130", line: "Bite size and the wisp's hunger" },
+  appetite: { name: "Appetite", rgb: "255, 190, 130", line: "Bite size, and your companion wisp" },
   fortune: { name: "Fortune", rgb: "235, 215, 120", line: "Discoveries, rare finds and Dark Matter" }
 };
 
@@ -75,7 +75,11 @@ export const PERKS = [
   { id: "r7", b: "reach", t: 6, name: "Horizon of Everything", desc: "+25% pull range and strength, +8% reach" },
   // Appetite
   { id: "a1", b: "appetite", t: 0, name: "Hungry", desc: "Every bite +15%" },
-  { id: "a2", b: "appetite", t: 1, name: "Hungry Wisp", desc: "Your wisp nudges a crumb into you every few seconds" },
+  // v9.2: the wisp is an unlock. Growth Witness: it marks each new scale with you.
+  { id: "aw", b: "appetite", t: 0, name: "Companion", cost: 5, afterCollapse: true,
+    ownedLine: "Yours, permanently. A little light will find you as your next run begins.",
+    desc: "A little wisp joins you for good. It glows and widens its orbit when you grow into a new scale, points once toward food your new size, and in Zen breathes beside you" },
+  { id: "a2", b: "appetite", t: 1, name: "Hungry Wisp", req: "aw", desc: "Your companion nudges a crumb into you every few seconds" },
   { id: "a3a", b: "appetite", t: 2, name: "Big Appetite", desc: "Big catches give 60% more, and the golden halo shows sooner" },
   { id: "a3b", b: "appetite", t: 2, name: "Momentum", desc: "Combos add up to +40% (was +25%), and the combo window is 40% longer" },
   { id: "a4", b: "appetite", t: 3, name: "Feast", desc: "Every bite +20%" },
@@ -96,11 +100,13 @@ export const PERKS = [
 ];
 export const perkById = id => PERKS.find(p => p.id === id);
 
-export function perkCost(p) { return TIER_COST[p.t]; }
+export function perkCost(p) { return p.cost ?? TIER_COST[p.t]; }
 
 /** Can this perk be bought now? Returns { ok, why }. */
 export function perkState(asc, p) {
   if (asc.perks[p.id]) return { ok: false, owned: true, why: "Owned" };
+  if (p.afterCollapse && !(asc.collapses > 0)) return { ok: false, why: "Opens after your first collapse" };
+  if (p.req && !asc.perks[p.req]) return { ok: false, why: `Needs ${perkById(p.req).name} first` };
   if (p.t > 0 && !PERKS.some(q => q.b === p.b && q.t === p.t - 1 && asc.perks[q.id])) return { ok: false, why: "Needs the star before it" };
   const c = perkCost(p);
   if ((asc.dm || 0) < c) return { ok: false, why: `${c} Dark Matter`, cost: c };
@@ -207,7 +213,8 @@ export function ascMods(asc) {
     reachAdd: (P("r4") ? 0.12 : 0) + (P("r7") ? 0.08 : 0),
     speed: P("r5b") ? 1.15 : 1,
     rivalCalm: P("r3b"),
-    wispFeed: P("a2"),
+    companion: P("aw"),
+    wispFeed: P("aw") && P("a2"),
     bigCatch: P("a3a") ? 1.6 : 1, haloFrom: P("a3a") ? 0.72 : 0.82,
     comboCap: P("a3b") ? 40 : 25,
     puDur: P("a5a") ? 1.4 : 1,

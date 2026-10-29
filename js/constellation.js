@@ -126,7 +126,7 @@ function showCard(n) {
     card.style.setProperty("--c", `rgb(${n.rgb})`);
     card.style.setProperty("--rgb", n.rgb);
     card.innerHTML = `<span class="br">${esc(br.name)} · tier ${n.p.t + 1}</span><b class="n">${esc(n.p.name)}</b>${esc(n.p.desc)}
-      <div class="why">${st.owned ? "Yours, permanently." : st.ok ? `Costs ${st.cost} Dark Matter` : esc(st.why)}</div>
+      <div class="why">${st.owned ? esc(n.p.ownedLine || "Yours, permanently.") : st.ok ? `Costs ${st.cost} Dark Matter` : esc(st.why)}</div>
       <div class="row">${st.ok ? `<button id="btn-const-buy" class="big-btn">Light it · ${st.cost}</button>` : ""}
       <button id="btn-const-close" class="soft-btn">${opts.newRun ? "Back" : "Close"}</button></div>`;
     card.querySelector("#btn-const-buy")?.addEventListener("click", () => {

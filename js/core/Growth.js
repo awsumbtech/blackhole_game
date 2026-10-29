@@ -41,9 +41,11 @@ export class Growth {
     h.audio.playTierChime();
     h.audio.setMusicLayers(t, state.biome);
 
+    let merged = 0;
     if (state.screen === "play") {
       const z = state.zoom, hp = state.anchorSmooth * z;
       const n = startMerge(state, h.screenW(), h.screenH(), hp, (id, sx, sy, rad) => this.mergeSpawn(id, sx, sy, rad));
+      merged = n;
       if (n) {
         // Soft pulse: a calm inhale as the next layer arrives (Reduce Motion: skip)
         this.mergePulseMax = state.settings.reduceMotion ? 0 : 1;
@@ -53,6 +55,7 @@ export class Growth {
       }
     }
     h.onWorldTier(state);
+    h.onGrowth?.(t, merged);
     state.onTierReveal?.(t);
   }
 
