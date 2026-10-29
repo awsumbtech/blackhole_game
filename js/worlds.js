@@ -276,7 +276,8 @@ const SETUP = {
   "Neutron Forge"(state, r, b0) {
     const names = ["The Lighthouse", "Ember Pulsar"];
     ringSpots(r, 2, b0 * 0.3, b0 * 0.55).forEach(([x, y], i) => {
-      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * 0.0028,
+      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * 0.0019,   // v9.3: slower sweep (was 0.0028): calmer bands, easier to ride
+       
         art: { type: "neutron", color: i ? "#ffd2b0" : "#e0e8ff", seed: 99 + i, variant: 0, radius: b0 * 0.012 },
         rgb: i ? "255, 190, 140" : "200, 190, 255", grad: null });
       W.lms.push(landmark(setName(names[i]), "pulsar", x, y, b0 * 0.08, i ? "255, 190, 140" : "200, 190, 255"));
@@ -1015,8 +1016,8 @@ const DRAW = {
       if (!p.grad || p.gradL !== L || p.gradF !== (W.flare > 0)) {
         const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
         const k = W.flare > 0 ? 1.4 : 1;
-        g.addColorStop(0, `rgba(${p.rgb}, ${0.2 * k})`);
-        g.addColorStop(0.35, `rgba(${p.rgb}, ${0.07 * k})`);
+        g.addColorStop(0, `rgba(${p.rgb}, ${0.16 * k})`);   // v9.3: a little softer
+        g.addColorStop(0.35, `rgba(${p.rgb}, ${0.05 * k})`);
         g.addColorStop(1, `rgba(${p.rgb}, 0)`);
         p.grad = g; p.gradL = L; p.gradF = W.flare > 0;
       }

@@ -129,7 +129,7 @@ function paint(W, H, high) {
       const cx = W * 0.72, cy = H * 0.22;
       for (let i = 0; i < 9 * n; i++) {
         const rr = m * (0.25 + i * 0.12), a0 = r() * TAU;
-        g.strokeStyle = rgba(P[i % 2], 0.14); g.lineWidth = m * (0.01 + r() * 0.025);
+        g.strokeStyle = rgba(P[i % 2], 0.08); g.lineWidth = m * (0.01 + r() * 0.025);   // v9.3: quieter shells (was 0.14)
         g.beginPath(); g.arc(cx, cy, rr, a0, a0 + 1.2 + r() * 2); g.stroke();
       }
       puff(g, cx, cy, m * 0.3, [255, 220, 200], 0.16);
