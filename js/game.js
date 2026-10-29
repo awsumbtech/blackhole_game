@@ -36,7 +36,7 @@ import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, r
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.3";
+const VERSION = "9.4";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───

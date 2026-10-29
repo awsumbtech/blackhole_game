@@ -88,6 +88,16 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Light:** always upper left (`LX, LY`). Rocks sway (sin of rotation, ±0.35 rad) instead of spinning so their light stays put. `shade()` gives a curved terminator; `facets()` lights chips.
   - **Back layers** use 8 looks per type; an object merging forward keeps the look it had in the haze.
   - **Sky/backdrop:** the near "mote" layer is faint dust streaks, far galaxies are dim small smudges with no bright eye-like core (they read as creatures/food before).
+- **v9.4 ships (`js/ships.js`).** Brian: "the space ships need a lot of attention." Language, from Foss / Homeworld / The Expanse research:
+  - **Silhouette first.** Each class has its own outline, readable at 20 px: drone (pod + solar wings), shuttle (delta), freighter (container spine), cruiser (arrowhead), capital (spine + ring bar + vanes).
+  - **Detail hierarchy (big / medium / small):** main hull, then modules (engines, cargo, ring, radiators, bridge), then grouped greebles. Hulls are mirror-symmetric builds of boxes, prows and pods.
+  - **Layered plates:** each part is filled lit-from-above. It gets a warm key rim on its upper edge and a bounce rim in the galaxy's own colour (`setShipLight`) on the lower edge, so overlapping plates read as layers.
+  - **Panel seams, odd plates, warm window rows.** Windows sell scale, so capital ships carry dense rows. There is one muted accent stripe per look, Foss-style colour blocking.
+  - **Engines:** painted nozzles, plus a live glow that breathes with the galaxy breath (never flickers). Nav lights are steady red and green.
+  - **Wrecks:** darker, rust-warm hull with scorch and soot streaks. Torn plates are cut out with the frame ribs showing. Capital wrecks have their stern snapped off and rotated.
+  - **Light:** living ships are symmetric. They are flipped when heading left so their warm rim stays on top; wrecks keep their baked light and tumble slowly.
+  - Ship sprites may use the 200 and 260 px buckets (High), because detail is what sells scale.
+  - **Gallery:** `/tmp/gallery.py` paints every class × look.
   - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
 
 ## 4. Controls
@@ -303,6 +313,9 @@ js/core/
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
+js/ships.js             Ship system (v9.4): shipClassFor / adoptShip / setWreck / upgradeShip,
+                        paintShip (art.js PAINTERS.craft), drawShip (heading, breathing engines,
+                        plate break-apart), setShipLight (galaxy bounce rim). Entity fields: ship, wreck, steer
 js/entities.js          plain entity factory + biomes (data, not a class)
 js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
 js/worlds.js            per-galaxy mechanics & landmarks
@@ -353,6 +366,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
 - **v9.3 Calm currents + dev mode:** Comet Current sky bands (60 bright beziers) replaced by soft cloud + 3 faint lanes; rivers one faint ribbon with sparse, very slow streaks (static under Reduce Motion). Forge beams spin 0.0019 (was 0.0028) and are softer; forge sky shells fainter. Hidden `DevMode` sandbox (§7e) with save suspension.
+- **v9.4 Ships:** one ship system (`js/ships.js`, §3) with five seeded classes by tier (drone, shuttle, freighter, cruiser, capital), 8 looks each. Wrecks (Armada, flotillas) tumble slowly; living ships steer nose-first in small formations with breathing engine glow. The blinking light was removed. Eaten ships split into 4 plates that spiral in. The Flagship is a broken capital ship with a debris field. Armada crumbs are hull plates.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
@@ -378,6 +392,7 @@ js/game.js          orchestrator (~1.7k). js/core/ Camera, Growth, GalaxyFlow, F
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
+js/ships.js         v9.4 ship classes, painter, motion, break-apart
 js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
 js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds

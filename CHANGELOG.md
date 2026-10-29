@@ -2,6 +2,23 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.4 Ships (Oct 2026)
+
+- **Every ship is redrawn from scratch.** Before, every craft was the same flat lavender stencil with three yellow dots and a blinking light. Now there are five ship classes, each a small painting with plating, panel lines, rim light, tiny warm windows, engine nozzles and one muted colour stripe:
+  - **Survey drones:** a pod on solar-panel wings.
+  - **Shuttles:** swept lifting bodies with a canopy and twin drives.
+  - **Freighters:** a spine of coloured cargo containers, a bridge up front and a drive block with radiator vanes.
+  - **Cruisers:** long arrowhead warships with stepped armour plates, side sponsons and three drives.
+  - **Capital ships:** city-sized arks with an edge-on habitat ring, hangar decks with lit bays, radiator vanes and a bank of four drives.
+- **Ships get bigger as you do.** Drones and shuttles come first, freighters and cruisers next, and capital ships only at the top scales. Bigger catches are one class up.
+- **Wrecks vs living ships.** In the Ruined Armada (and in Derelict Flotillas) ships are dead: dark windows, scorch, torn plates with the frame showing, and capital wrecks snapped in two. They tumble very slowly. Elsewhere ships are alive: they turn to face where they're gliding, often fly with one or two wingmen, and their engines glow dimly and breathe slowly with the galaxy. **The blinking light is gone** (it flickered).
+- **Eating a ship:** it splits into four hull plates that spiral softly into the hole. No flash.
+- **The Flagship** is now a broken capital ship with its own slow debris field. It sits a little back from play (the sky shows through it).
+- **Ruined Armada hulls** now crumble off torn hull plates (they used to be generic pebbles), with a few slow motes of dust instead of a lavender confetti burst.
+- **Derelict Flotillas** drift in as one loose line on a shared heading.
+- **Far away:** ships in the hazy back layers are the class of that scale, and keep their heading as they drift forward into play.
+- Under the hood, all ship code lives in `js/ships.js`, with one surface for class, painter, motion and break-apart. Saves are unchanged.
+
 ## v9.3 Calm currents + dev mode (Oct 2026)
 
 - **Comet Current is calm now.** The "waves" were the painted sky (about 60 bright diagonal bands) plus wide glowing river ribbons with fast streaks. The sky is now soft cloud with three barely-there lanes; the rivers are one faint ribbon with a few sparse streaks that creep along very slowly (still under Reduce Motion). You can still see and ride them.
