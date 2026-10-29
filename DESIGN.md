@@ -97,7 +97,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Wrecks:** darker, rust-warm hull with scorch and soot streaks. Torn plates are cut out with the frame ribs showing. Capital wrecks have their stern snapped off and rotated.
   - **Light:** living ships are symmetric. They are flipped when heading left so their warm rim stays on top; wrecks keep their baked light and tumble slowly.
   - Ship sprites may use the 200 and 260 px buckets (High), because detail is what sells scale.
-  - **Gallery:** `/tmp/gallery.py` paints every class × look.
+  - **Gallery:** `/workspace/bhpt/shipgallery.py` paints every class × look.
   - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
 
 ## 4. Controls
