@@ -8,13 +8,13 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
 import { drawDepth, resetDepth, layersInfo } from "./depth.js";
-import { Camera, Fx, GalaxyFlow, Growth } from "./core/index.js";
+import { Camera, Fx, GalaxyFlow, Growth, DevMode } from "./core/index.js";
 import { setSky } from "./sky.js";
 const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
 import { drawRevealFx } from "./art.js";
 import { beginArtFrame, setArtQuality, getArtQuality, artStats, warmHole } from "./art.js";
 import * as audio from "./audio.js";
-import { save, load, defaultStats, defaultRecords, exportCode, parseCode, writeBackup } from "./save.js";
+import { save, load, defaultStats, defaultRecords, exportCode, parseCode, writeBackup, setSaveSuspended, SAVE_STORAGE_KEY } from "./save.js";
 import { initDiscoveries, updateDiscoveries, drawDiscoveries, drawDiscoveryCue, discoveriesInfo } from "./discoveries.js";
 import { wisp, resetWisp, updateWisp, drawWisp, wispInfo, wispReact } from "./wisp.js";
 import { openStarMap } from "./starmap.js";
@@ -31,7 +31,7 @@ import { baseMods, freshRun, finishGalaxy, fmtTime } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
-import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
+import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier, TIERS } from "./tiers.js";
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
@@ -344,7 +344,9 @@ function drawTierBanner(w, h) {
 
 // ─── INIT GALAXY ───
 function initGalaxy(galaxyNum, resume = null, flow = false) {
-  const biome = getBiome(galaxyNum);
+  // v9.3: a dev sandbox can pick the biome once (the next galaxy is back to normal)
+  const biome = (state.devBiome && biomeCatalog.find(b => b.name === state.devBiome)) || getBiome(galaxyNum);
+  state.devBiome = null;
 
   state.mods = baseMods();
   // v7 Ascension: permanent perks (the only upgrades since v9)
@@ -1072,12 +1074,12 @@ function startNewRun() {
 // Zen session: a separate, calm space. Your journey is saved first and comes
 // back exactly as it was. Nothing in a session is saved or rewarded.
 let zenSnap = null;
-function zenStart(min) {
+function zenStart(min, galaxy = 0) {
   save(state);
   zenSnap = { galaxy: state.galaxy, run: (load() || {}).run || null };
   state.mode = "zen";
   document.body.classList.add("mode-zen");
-  const zg = 1 + Math.floor(Math.random() * 7);
+  const zg = galaxy || 1 + Math.floor(Math.random() * 7);
   state.galaxy = zg;
   state.zen = { dur: min * 3600, t: 0, wound: false, ending: false, min };
   initGalaxy(zg);
@@ -1229,7 +1231,7 @@ function frame(now) {
   // rAF timestamps can be slightly earlier than a performance.now() taken in an
   // event handler (resume/continue), so clamp at 0 to avoid negative steps.
   const rawDt = (now - lastTime) / 16.67;
-  const dt = clamp(rawDt, 0, 3);
+  const dt = dev && dev.frozen ? 0 : clamp(rawDt, 0, 3);   // v9.3: dev "freeze time"
   lastTime = now;
 
   if (state.paused || state.menuOpen) return;
@@ -1583,6 +1585,7 @@ document.addEventListener("visibilitychange", applyUpdateIfCalm);
 
 // ─── INIT ───
 
+DevMode.recover(SAVE_STORAGE_KEY);   // v9.3: a sandbox that never exited puts the real save back first
 const savedData = load();
 let resumeRun = null;
 if (savedData) {
@@ -1724,6 +1727,60 @@ if (!state.seenHints.intro) {
 }
 save(state);
 
+// ─── v9.3: DEV MODE (hidden play-test sandbox; see js/core/DevMode.js) ───
+let dev = null;
+function devStart(c) {
+  introTimers.forEach(clearTimeout); introTimers = [];
+  ["pause-menu", "collapse", "newgame-confirm", "hint-toast"].forEach(id => $(id).classList.add("hidden"));
+  if (ui.isStatsOpen()) ui.closeStats();
+  if (state.mode === "zen") zenRestore();
+  state.paused = false; state.menuOpen = false;
+  state.drift = null; state.birth = 0;
+  state.transitioning = false; state.transitionPhase = ""; state.galaxyCredited = false;
+  state.asc.run.cleared = c.depth;
+  state.asc.perks.aw = !!c.wisp;
+  state.galaxy = c.galaxy;
+  state.floorMass = massForR(rForTier(c.tier) * 1.08);
+  state.devBiome = c.biome || null;
+  state.seenHints.intro = true;
+  if (c.zen) {
+    zenStart(3, c.galaxy);
+    return;
+  }
+  initGalaxy(c.galaxy);
+  state.screen = "play";
+  state.camMul = 1;
+  updateCameraScale(true);
+  document.body.classList.remove("on-title");
+  titleEl.classList.add("hidden");
+  introEl.classList.add("hidden");
+  input.setEnabled(true);
+  lastTime = performance.now();
+  perfGrace();
+  showHint(`Sandbox: Galaxy ${state.galaxy} · ${state.biome.name} · ${tierName(state.tier)}`, 3200);
+}
+dev = new DevMode({
+  saveKey: SAVE_STORAGE_KEY, setSaveSuspended,
+  biomes: biomeCatalog.map(b => b.name),
+  tiers: TIERS.map(t => t.name),
+  events: Object.keys(EVENT_INFO).map(id => ({ id, name: EVENT_INFO[id].name })),
+  biomeFor: g => getBiome(g).name,
+  current: () => ({ wisp: !!(state.asc.perks && state.asc.perks.aw) }),
+  start: devStart,
+  fireEvent: id => { if (state.screen === "play") fireEvent(state, id); },
+  tierUp: () => { if (state.screen !== "play") return; state.mass = massForR(rForTier(state.tier + 1) * 1.03); updateRadius(); },
+  setWisp: on => { state.asc.perks.aw = on; wisp.syncFromAsc(state.asc); resetWisp(state); },
+  collapse: () => { if (state.screen === "play") openCollapse(); },
+  perf: perfReport,
+  hint: t => showHint(t, 4200),
+  reloadToTitle: () => {
+    resetting = true;
+    try { sessionStorage.setItem("bh-title", "1"); } catch {}
+    location.reload();
+  }
+});
+state.onVersionTap = () => dev.tapVersion();
+
 requestAnimationFrame(frame);
 
 // Debug/automation hook (harmless; lets a test bot read state)
@@ -1734,7 +1791,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: perfReport, layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
-  camera, growth, galaxyFlow, fx,
+  camera, growth, galaxyFlow, fx, dev,
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
   // test helper: grow to just under the next tier line

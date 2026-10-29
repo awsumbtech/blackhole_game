@@ -146,6 +146,8 @@ export function showStats(state, onClose, opts = {}) {
   });
   bindBackup(state);
   const nameEl = $("set-wisp-name");
+  // v9.3: 7 taps on the version line unlock dev mode (hidden play-test panel)
+  document.querySelector("#stats-body .app-version")?.addEventListener("click", () => state.onVersionTap?.());
   nameEl?.addEventListener("change", () => {
     const v = nameEl.value.replace(/[^\p{L}\p{N} '\-]/gu, "").trim().slice(0, 16) || "Wisp";
     nameEl.value = v;

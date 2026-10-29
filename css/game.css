@@ -736,3 +736,40 @@ body.on-title .collapse-pill { display: none; }
 .lb-goal { margin: 2px 0 8px; font-size: 12px; opacity: 0.8; }
 .lb-goal .st { color: #ffe3a0; letter-spacing: 1px; margin-left: 6px; }
 .lb-goal small { opacity: 0.6; display: block; }
+
+/* ─── v9.3 DEV MODE (hidden play-test panel) ─── */
+.dev-badge { position: fixed; z-index: 2100; bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); left: 8px;
+  padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255, 210, 140, 0.35);
+  background: rgba(20, 16, 30, 0.55); color: rgba(255, 220, 170, 0.85);
+  font: 700 10px "Space Mono", monospace; letter-spacing: 0.08em; cursor: pointer;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.dev-badge.on { background: rgba(70, 44, 20, 0.6); border-color: rgba(255, 196, 120, 0.6); color: #ffd9a8; }
+.dev-badge.hidden, .dev-panel.hidden, .dev-perf.hidden { display: none; }
+.dev-panel { position: fixed; inset: 0; z-index: 2150; display: flex; align-items: flex-start; justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 84px) 12px 24px; background: rgba(4, 6, 14, 0.35); overflow-y: auto; }
+.dev-card { width: 100%; max-width: 380px; padding: 14px 14px 10px; border-radius: 18px;
+  background: rgba(18, 22, 44, 0.72); border: 1px solid rgba(190, 200, 255, 0.14);
+  backdrop-filter: blur(14px) saturate(1.1); -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  color: rgba(225, 230, 255, 0.9); font: 400 13px Outfit, system-ui, sans-serif; }
+.dev-head { display: flex; justify-content: space-between; align-items: center; font: 700 12px "Space Mono", monospace;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #ffd9a8; }
+.dev-x { background: none; border: 0; color: rgba(220, 225, 255, 0.6); font-size: 16px; padding: 4px 8px; cursor: pointer; }
+.dev-note { margin: 6px 0 4px; font-size: 12px; color: rgba(200, 206, 255, 0.6); line-height: 1.35; }
+.dev-sec { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 10px 0; border-top: 1px solid rgba(190, 200, 255, 0.08); }
+.dev-sec:first-of-type { border-top: 0; }
+.dev-sec label { font-size: 11px; color: rgba(200, 206, 255, 0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.dev-panel button, .dev-panel select { min-height: 38px; border-radius: 12px; border: 1px solid rgba(190, 200, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05); color: rgba(230, 234, 255, 0.92); font: 400 13px Outfit, system-ui, sans-serif; padding: 6px 10px; cursor: pointer; }
+.dev-panel select { width: 100%; appearance: auto; }
+.dev-panel select option { background: #141833; }
+.dev-step { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; text-align: center; }
+.dev-step b { font: 700 16px "Space Mono", monospace; }
+.dev-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dev-grid button { font-size: 12px; }
+.dev-panel .dev-tog.on { background: rgba(140, 200, 255, 0.16); border-color: rgba(140, 200, 255, 0.4); }
+.dev-panel .dev-go { background: rgba(140, 170, 255, 0.2); border-color: rgba(160, 185, 255, 0.45); font-weight: 600; }
+.dev-panel .dev-exit { background: rgba(255, 196, 120, 0.14); border-color: rgba(255, 196, 120, 0.4); color: #ffe2bd; }
+.dev-panel .dev-off { background: none; border-color: transparent; color: rgba(200, 206, 255, 0.5); font-size: 12px; }
+.dev-perf { position: fixed; z-index: 2050; left: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); padding: 3px 8px; border-radius: 8px;
+  background: rgba(8, 10, 20, 0.6); color: rgba(200, 240, 210, 0.85); font: 400 10px "Space Mono", monospace; pointer-events: none; }

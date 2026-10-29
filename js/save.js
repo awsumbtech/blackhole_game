@@ -51,7 +51,14 @@ export function stardustRefund(raw) {
   return { dm, spent, unspent, gperks };
 }
 
+// v9.3: the dev sandbox suspends every write to the real save (DevMode owns this).
+let suspended = false;
+export function setSaveSuspended(on) { suspended = !!on; }
+export function isSaveSuspended() { return suspended; }
+export const SAVE_STORAGE_KEY = SAVE_KEY;
+
 export function save(state) {
+  if (suspended) return;
   // v7: a Zen session never touches your journey; it was saved before the session began
   if (state.mode === "zen") return;
   try {
@@ -215,5 +222,6 @@ export function parseCode(code) {
 
 /** Replace the stored save with a checked backup (caller reloads). */
 export function writeBackup(json) {
+  if (suspended) return;
   localStorage.setItem(SAVE_KEY, json);
 }
