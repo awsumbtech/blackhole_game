@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.2 Growth Witness (Oct 2026)
+
+- **The wisp is now something you earn.** After your first collapse, light **Companion** on the constellation (Appetite, 5 Dark Matter) and a little wisp joins you for good.
+- **It has a purpose: it witnesses your growth.** When you grow into a new scale it glows and widens its orbit with the "world opens" moment, then drifts once toward food your new size. It still twirls after a big catch or a find and rests in breather galaxies. The old random food tours are gone.
+- **Zen:** once it's with you, it breathes beside the hole (in for 4, out for 6). Before that, Zen shows the soft breathing ring.
+- **Hungry Wisp** now needs Companion first.
+- **Saves:** if you've collapsed before, or owned Hungry Wisp, Companion is already lit for you.
+- Under the hood the wisp is a `Wisp` class with skin and animation hooks, so colours and new motions can come later without a rewrite.
+
 ## v9.1 Systems & a wider view (Oct 2026)
 
 - **Code you can upgrade piece by piece.** The messiest parts of the main loop are now small system classes in `js/core/` — Camera, Growth, GalaxyFlow, Fx — each with a clear public surface. Entities stay plain objects so the hot loops stay allocation-free. Swap or enhance one system without rewriting the rest.

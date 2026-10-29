@@ -22,15 +22,16 @@ dust, and you become something vast. Every change must strengthen that growth fe
 **Standing preferences (Brian)**
 - **Audio:** soft and research-based. See `docs/AUDIO_RESEARCH.md` and §7d. No harsh sounds; music must never cause headaches.
 - **Grindy galaxies are welcome as walls.** A slow, heavy galaxy is fine as a gate. There is no actual boss.
-- **The wisp:**
-  - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint.
+- **The wisp (v9.2: an unlock, the Growth Witness):**
+  - No wisp until you light **Companion** on the constellation (Appetite, tier 1, 5 DM, opens after your first collapse). Its purpose is to witness growth: a calm glow + wider orbit on every tier-up / layer merge, then ONE soft hint toward food your new size. No random food tours.
+  - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint. Before it's unlocked, Zen shows the breathing ring instead.
   - In every mode it is drawn above everything and is never covered.
 - **Zen level pacing is liked.** Keep Zen durations as they are.
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.1**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.1"` in `sw.js`, `SAVE_VERSION = 8` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.2**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.2"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -139,7 +140,7 @@ The rhythm runs Reef → Comet → *Nursery* → Armada → Void → *Meadow* �
 ## 7. v5.2 features
 
 - **Star map** (`js/starmap.js`, opened from the title screen or Stats): one drifting star per cleared galaxy, coloured by biome and joined by constellation lines. Tap a star for its name, clear date and peak scale. Older saves are back-filled. It only animates while open.
-- **Companion wisp** (`js/wisp.js`): breathes, grows with your tier and now and then drifts toward food worth eating as a hint. **Rename it in Settings.**
+- **Companion wisp** (`js/wisp.js`): since v9.2 an unlock (Companion perk) and a `Wisp` class; see §0. Rename it in Settings once it's with you.
 - **Save backup** (`js/save.js`): export as a code or a .txt file, and import with a checksum and version check plus a confirmation. Progress otherwise lives in the browser's localStorage, and saves carry forward through every version.
 - Cleanup: the `window.__bh` test hook only loads on localhost or with `?debug`. The version is shown in Settings.
 
@@ -312,6 +313,7 @@ js/art.js + render.js   Renderer (sprites, hole, entities, radar)
 js/input.js             Input (thumbstick / follow / mouse / keys)
 js/save.js              Save + migration
 js/zen.js               Zen sessions
+js/wisp.js              Wisp companion class: unlock / isActive / update / draw / react / setSkin / setAnim
 ```
 
 **Rule:** change one system's public methods or swap its file; leave the others alone. Migrate
@@ -337,6 +339,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
 - **v8.6 A real beginning:** the intro is a dark void that hides the galaxy (wordmark, then "Drift. / Eat what's smaller. / Grow."), then the void lifts over ~2.8s while the newborn hole is born in the play view (`state.birth` scales the drawn hole). `seenHints.intro` is set only when the intro has played, and boot shows the intro whenever it is unset, so an interrupted start-over resumes at the beginning. SW updates: `reg.update()` whenever the app returns to the front; on `controllerchange` the game saves and reloads at a calm moment (title or hidden), coming back to the title.
