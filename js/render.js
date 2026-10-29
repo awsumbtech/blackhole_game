@@ -380,9 +380,21 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     if (e.depthT < 1) {
       // v8.3: drifting in from a back layer: starts hazy, dim and at its apparent
       // size, then sharpens, brightens and grows into the play layer
+      // v9.1: a soft warm arrival rim while mergeGlow is set (calm, no flash)
       const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
       const dd = d * (e.depthK0 + (1 - e.depthK0) * q);
       const bl = blurFor(sp.c, still ? 2 : 3), pd = dd * (1 + 2 * bl._pad);
+      if (e.mergeGlow && !still) {
+        const ga = (1 - q) * 0.55 + q * 0.2;
+        const gr = ctx.createRadialGradient(sx, sy, dd * 0.35, sx, sy, dd * 0.85);
+        gr.addColorStop(0, `rgba(255, 220, 160, ${0.18 * ga})`);
+        gr.addColorStop(1, `rgba(255, 200, 120, 0)`);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = gr;
+        ctx.beginPath();
+        ctx.arc(sx, sy, dd * 0.85, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
       ctx.drawImage(bl, sx - pd / 2, sy - pd / 2, pd, pd);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * q;

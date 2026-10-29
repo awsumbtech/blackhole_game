@@ -7,7 +7,8 @@ import { drawStarfield, drawEntities, drawBlackHole, setHaloFrom, drawParticles,
 import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap,
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
-import { drawDepth, startMerge, resetDepth, layerName, layersInfo } from "./depth.js";
+import { drawDepth, resetDepth, layersInfo } from "./depth.js";
+import { Camera, Fx, GalaxyFlow, Growth } from "./core/index.js";
 import { setSky } from "./sky.js";
 const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
 import { drawRevealFx } from "./art.js";
@@ -30,11 +31,11 @@ import { baseMods, freshRun, finishGalaxy, fmtTime } from "./progression.js";
 import { initPowerups, updatePowerups, activatePowerup, freshActive, POWERUPS, slowFactor, powerupFade } from "./powerups.js";
 import * as ui from "./ui.js";
 import { drawBackdrop, setBackdropPalette } from "./backdrop.js";
-import { START_R, tier, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
-import { fillAround, DENSITY, densityInfo, spawnFood } from "./living-world.js";
+import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, rForTier } from "./tiers.js";
+import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.0";
+const VERSION = "9.1";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -120,6 +121,26 @@ const state = {
 
 const input = createInput(canvas);
 
+// ─── SYSTEMS (stable surfaces; upgrade / swap one at a time) ───
+const camera = new Camera(state);
+const fx = new Fx(state);
+const growth = new Growth(state, {
+  camera,
+  audio,
+  hint: (k, m, ms) => hint(k, m, ms),
+  onWorldTier,
+  screenW: () => screenW,
+  screenH: () => screenH
+});
+const galaxyFlow = new GalaxyFlow(state, {
+  audio,
+  hint: (k, m, ms) => hint(k, m, ms),
+  save,
+  onAscensionClear: () => onAscensionClear(),
+  initGalaxy: (n, r, f) => initGalaxy(n, r, f)
+});
+
+
 // Largest single bite as a share of your mass. Growth is exponential, so this
 // (more than the galaxy target) sets the pace: ~6% => roughly 2.5-4 min per galaxy for a person.
 const MAX_BITE = 0.042;     // v4.1: worlds add food (reefs, rivers, aurora), so bites are a little smaller
@@ -155,69 +176,10 @@ function updateRadius() {
 // v5: the camera is framed on an "anchor" size. Within a tier you visibly
 // grow on screen (13px -> ~34px); at each tier line the camera slowly pulls
 // back so you are small again and the next layer of the universe appears.
-const HOLE_PX = 13;
-const REVEAL_FRAMES = 160;   // ~2.7s pull-back
-function zoomTarget() {
-  const k = clamp(Math.min(screenW, screenH) / 420, 0.85, 1.5);
-  return HOLE_PX * k / state.anchorSmooth;
-}
-
-function updateAnchor(dt) {
-  const rv = state.reveal;
-  if (rv) {
-    rv.p = Math.min(1, rv.p + dt / rv.dur);
-    const e = 0.5 - 0.5 * Math.cos(Math.PI * rv.p);
-    state.anchorSmooth = rv.from * Math.pow(rv.to / rv.from, e);
-    if (rv.p >= 1) state.reveal = null;
-  } else {
-    state.anchorSmooth = state.anchorR;
-  }
-}
-
-function checkTier() {
-  const t = tierIndexForR(state.radius);
-  if (t <= state.tier) return;
-  state.tier = t;
-  state.bestTier = Math.max(state.bestTier || 0, t);
-  const dur = state.settings.reduceMotion ? REVEAL_FRAMES * 0.6 : REVEAL_FRAMES;
-  state.reveal = { from: state.anchorSmooth, to: state.radius, p: 0, dur };
-  state.anchorR = state.radius;
-  state.tierBanner = { name: tierName(t), line: tier(t).line, age: 0 };
-  state.stats.tierReveals = (state.stats.tierReveals || 0) + 1;
-  audio.playTierChime();
-  audio.setMusicLayers(t, state.biome);
-  // v8.3: the tier you just grew into steps forward out of its back layer
-  if (state.screen === "play") {
-    const z = state.zoom, hp = state.anchorSmooth * z;
-    const n = startMerge(state, screenW, screenH, hp, mergeSpawn);
-    if (n) hint("merge_" + t, `You're big enough now. The ${layerName(t)} drift closer.`, 4600);
-  }
-  onWorldTier(state);
-  state.onTierReveal?.(t);
-}
-
-// A back-layer object becomes a real one: same spot on screen, starting at its
-// hazy apparent size, then drifting forward (depthT 0 -> 1, ~2.5 s)
-function mergeSpawn(id, sx, sy, rad) {
-  const z = state.zoom;
-  const e = spawnFood(state, false, { type: id, pos: { x: state.camX + (sx - screenW / 2) / z, y: state.camY + (sy - screenH / 2) / z } });
-  e.depthT = 0;
-  e.depthK0 = clamp(rad / (e.radius * z), 0.3, 2.5);
-  e.vx *= 0.4; e.vy *= 0.4;
-  e._spawnAge = 60; e._spawnAlpha = 1;
-  state.entities.push(e);
-}
-
-function updateCameraScale(snap = false) {
-  const zt = zoomTarget() * state.camMul;
-  state.zoom = snap ? zt : state.zoom + (zt - state.zoom) * 0.04;
-  state.viewW = screenW / state.zoom;
-  state.viewH = screenH / state.zoom;
-  // World speeds scale with the camera framing, keeping on-screen speed steady;
-  // within a tier you speed up a little as you grow.
-  const A = state.anchorSmooth;
-  state.speedScale = (A / HOLE_PX) * Math.pow(Math.max(1, state.radius / A), 0.45);
-}
+function zoomTarget() { return camera.zoomTarget(screenW, screenH); }
+function updateAnchor(dt) { camera.updateAnchor(dt); }
+function updateCameraScale(snap = false) { camera.updateScale(screenW, screenH, snap); }
+function checkTier() { growth.check(); }
 
 function hint(key, msg, ms) {
   if (key) {
@@ -227,10 +189,7 @@ function hint(key, msg, ms) {
   showHint(msg, ms);
 }
 
-function floater(x, y, text, color = "#ffd27a", size = 16) {
-  state.floaters.push({ x, y, text, color, size, age: 0, maxAge: 70 });
-  if (state.floaters.length > 12) state.floaters.shift();
-}
+function floater(x, y, text, color = "#ffd27a", size = 16) { fx.floater(x, y, text, color, size); }
 
 // ─── v7: ASCENSION HOOKS ───
 function tintNebula(neb, rgb, k) {
@@ -374,6 +333,11 @@ function drawTierBanner(w, h) {
   ctx.font = "italic 300 14px system-ui, sans-serif";
   ctx.fillStyle = `rgba(210, 214, 240, ${0.7 * a})`;
   ctx.fillText(b.line, w / 2, y + 26);
+  if (b.sub) {
+    ctx.font = "500 12px system-ui, sans-serif";
+    ctx.fillStyle = `rgba(200, 210, 255, ${0.55 * a})`;
+    ctx.fillText(b.sub, w / 2, y + 48);
+  }
   ctx.restore();
 }
 
@@ -750,143 +714,15 @@ state.worldHint = (key, msg, ms) => hint(key, msg, ms);
 // Power-ups fade out over their last 3 seconds, so no end sound is needed
 state.onPowerupEnd = () => {};
 
-// ─── PARTICLES ───
+// ─── PARTICLES (owned by Fx) ───
+function spawnConsumeParticles(entity) { fx.spawnConsume(entity, getArtQuality()); }
+function spawnRipple(entity) { fx.spawnRipple(entity); }
+function updateParticles(dt) { fx.update(dt, getArtQuality()); }
 
-// v4: bits swirl around the hole and spiral in (tangential + inward pull)
-function spawnConsumeParticles(entity) {
-  const few = state.settings.reduceMotion || getArtQuality() !== "high";
-  const count = Math.floor((6 + Math.min(14, Math.floor(entity.radius * 0.8 / Math.max(1, state.radius * 0.05)))) * (few ? 0.6 : 1));
-  const sizeK = Math.max(1, entity.radius * 0.12);
-  const ss = state.speedScale;
-  const dx = entity.x - state.playerX, dy = entity.y - state.playerY;
-  const d = hypot(dx, dy) || 1;
-  const tx = -dy / d, ty = dx / d;            // swirl direction (counter-clockwise)
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = (0.3 + Math.random() * 1.2) * ss;
-    const swirl = (0.8 + Math.random() * 1.4) * ss;
-    state.particles.push({
-      x: entity.x + Math.cos(angle) * entity.radius * 0.5,
-      y: entity.y + Math.sin(angle) * entity.radius * 0.5,
-      vx: Math.cos(angle) * speed + tx * swirl, vy: Math.sin(angle) * speed + ty * swirl,
-      size: (0.8 + Math.random() * 1.8) * sizeK,
-      color: entity.color,
-      alpha: 0.5 + Math.random() * 0.35,
-      age: 0, maxAge: 40 + Math.random() * 25,
-      gravity: (0.05 + Math.random() * 0.04) * ss
-    });
-  }
-}
-
-function spawnRipple(entity) {
-  state.ripples.push({
-    x: entity.x, y: entity.y,
-    startRadius: entity.radius,
-    expandTo: 30 / state.zoom + entity.radius * 2,
-    color: entity.color, age: 0, maxAge: 25
-  });
-  if (state.ripples.length > 40) state.ripples.shift();
-}
-
-function updateParticles(dt) {
-  const drag = Math.pow(0.97, dt);
-  // In-place compaction (keeps order, no splice churn)
-  const ps = state.particles;
-  let live = 0;
-  for (let i = 0; i < ps.length; i++) {
-    const p = ps[i];
-    const dx = state.playerX - p.x;
-    const dy = state.playerY - p.y;
-    const dist = hypot(dx, dy);
-    if (dist > 5 && p.gravity) {
-      p.vx += (dx / dist) * p.gravity * dt;
-      p.vy += (dy / dist) * p.gravity * dt;
-    }
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vx *= drag;
-    p.vy *= drag;
-    p.age += dt;
-    if (p.age < p.maxAge) ps[live++] = p;
-  }
-  ps.length = live;
-  for (let i = state.ripples.length - 1; i >= 0; i--) {
-    state.ripples[i].age += dt;
-    if (state.ripples[i].age >= state.ripples[i].maxAge) state.ripples.splice(i, 1);
-  }
-  for (let i = state.floaters.length - 1; i >= 0; i--) {
-    state.floaters[i].age += dt;
-    if (state.floaters[i].age >= state.floaters[i].maxAge) state.floaters.splice(i, 1);
-  }
-  const pCap = getArtQuality() === "high" ? 300 : 160;
-  if (state.particles.length > pCap) state.particles.splice(0, state.particles.length - pCap);
-}
-
-// ─── GALAXY FLOW (v9) ───
-// No summary screen and no shop: at the target size the galaxy is credited
-// quietly (a star joins your map), the view softly veils toward the next
-// galaxy's colour while you keep drifting, and the next galaxy opens around
-// you with a gentle caption. Collapse is the only reset.
-const FLOW_OUT = 90, FLOW_IN = 130;
-
-function galaxyComplete() {
-  state.transitioning = true;
-  state.transitionPhase = "flowout";
-  state.transitionTimer = 0;
-  audio.playGalaxyComplete();
-  state.stats.galaxiesCleared += 1;
-  finishGalaxy(state);
-  onAscensionClear();
-  // v5: the next galaxy starts at the most you reached here
-  state.floorMass = Math.max(state.floorMass, state.mass);
-  // v5.2: a star for the star map (v7: keyed by journey order)
-  state.records.galaxyLog[Math.max(state.stats.galaxiesCleared, state.galaxy)] = { b: state.biome.name, gold: state.golden || undefined, d: Date.now(), t: Math.max(state.tier, tierIndexForR(rForMass(state.mass))) };
-  state.galaxyCredited = true;
-  const nb = getBiome(state.galaxy + 1).nebula[0];
-  state.flowRgb = `${Math.round(nb[0] * 0.25)}, ${Math.round(nb[1] * 0.25)}, ${Math.round(nb[2] * 0.25)}`;
-  save(state);
-}
-
-function updateTransition(dt) {
-  state.transitionTimer += dt;
-  if (state.transitionPhase === "flowout") {
-    if (state.transitionTimer > FLOW_OUT) {
-      state.floorMass = Math.max(state.floorMass, Math.min(state.mass, state.targetMass * 1.05));
-      state.galaxy += 1;
-      state.galaxyCredited = false;
-      state.bestGalaxy = Math.max(state.bestGalaxy, state.galaxy);
-      initGalaxy(state.galaxy, null, true);
-      audio.playRitual();   // a soft chime as the new galaxy opens
-      state.transitionPhase = "flowin";
-      state.transitionTimer = 0;
-      const b = state.biome;
-      state.tierBanner = { age: 0, head: `GALAXY ${state.galaxy}${state.golden ? " · GOLDEN" : ""}`, name: b.name, line: b.description };
-      if (state.mode !== "zen" && state.stats.galaxiesCleared >= 1) {
-        setTimeout(() => hint("starmap_v9", "Each galaxy you pass becomes a star. Your star map is in the pause menu and on the title screen.", 5200), 6500);
-      }
-      save(state);
-    }
-  } else if (state.transitionPhase === "flowin") {
-    if (state.transitionTimer > FLOW_IN) {
-      state.transitioning = false;
-      state.transitionPhase = "";
-    }
-  }
-}
-
-/** v9: when growth has clearly slowed, softly offer a collapse (never forced). */
-function checkCollapseNudge() {
-  if (state.collapseNudge || state.mode === "zen" || state.transitioning) return;
-  if (state.asc.run.cleared < COLLAPSE_MIN_CLEARED) return;
-  const t = state.run.time, p = Math.max(0.04, state.galaxyProgress);
-  const br = !!state.biome.breather;
-  // 3+ min in this galaxy, and at this pace it would take 9+ minutes (breathers 4.5):
-  // that's the wall the collapse curve is tuned around (tools/collapse-sim.mjs WALL).
-  if (t < (br ? 120 : 180) || t / p < (br ? 270 : 540)) return;
-  state.collapseNudge = true;
-  $("collapse-pill").classList.remove("hidden");
-  hint("collapse_nudge", "Growth is slowing. When it feels like a wall, you can collapse for Dark Matter and be reborn stronger. Or keep going: no rush.", 6500);
-}
+// ─── GALAXY FLOW (owned by GalaxyFlow) ───
+function galaxyComplete() { galaxyFlow.complete(); }
+function updateTransition(dt) { galaxyFlow.update(dt); }
+function checkCollapseNudge() { galaxyFlow.checkNudge(); }
 
 // ─── HUD ───
 
@@ -1444,6 +1280,7 @@ function frame(now) {
     state.tierBanner.age += dt;
     if (state.tierBanner.age > TIER_BANNER_FRAMES) state.tierBanner = null;
   }
+  growth.update(dt);
   updateParticles(dt);
   state.gulp *= Math.pow(0.9, dt);
 
@@ -1525,16 +1362,9 @@ function frame(now) {
     drawFloaters(w, h, z);
   }
 
-  // v9 galaxy flow: a soft veil toward the next galaxy's colour, then it lifts
-  if (state.transitioning) {
-    const ph = state.transitionPhase, t = state.transitionTimer;
-    let a = ph === "flowout" ? Math.min(1, t / FLOW_OUT) : ph === "flowin" ? 1 - Math.min(1, t / FLOW_IN) : 0;
-    a = a * a * (3 - 2 * a) * 0.82;
-    if (a > 0.004) {
-      ctx.fillStyle = `rgba(${state.flowRgb || "2, 3, 8"}, ${a})`;
-      ctx.fillRect(0, 0, w, h);
-    }
-  }
+  // Growth pulse (tier merge) then galaxy-flow veil
+  growth.drawPulse(ctx, w, h);
+  galaxyFlow.drawVeil(ctx, w, h);
 
   // Drift-in veil (title -> play)
   if (state.drift && state.drift.veil > 0) {
