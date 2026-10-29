@@ -302,6 +302,7 @@ js/core/
   Growth.js             tier-ups, depth-layer merge spectacle, banner
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
+  DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/entities.js          plain entity factory + biomes (data, not a class)
 js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
 js/worlds.js            per-galaxy mechanics & landmarks
@@ -329,6 +330,18 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 | Garbage collections per 20 s | 62–73 | 29–32 |
 | Load to title | 0.38–0.50 s | 0.37–0.45 s |
 
+### Dev mode (v9.3, `js/core/DevMode.js`) — play-test any level at will
+
+**Unlock (phone):** open the game URL with `?dev` once (e.g. `https://awsumbtech.github.io/blackhole_game/?dev`), **or** in the app: Settings → tap the grey version line at the very bottom 7 times quickly. A small **DEV** pill appears bottom-left (flag in localStorage `bh_dev`, separate from the save).
+
+**Use:** tap DEV → choose Galaxy (−/+), Biome (Auto or any of the 7), Scale (tier), Run depth, Zen, Companion → **Start sandbox run**. The pill turns amber "DEV · sandbox". Tap it again for live tools: fire any event, Tier up (reveal + merge), Wisp on/off, Freeze time, FPS overlay, Collapse prompt, Restart with new picks, **Exit sandbox** (reloads to the title with the real journey). **Turn dev mode off** hides everything.
+
+**Save safety:** on entry the raw save string is snapshotted to sessionStorage and `setSaveSuspended(true)` makes `save()`/`writeBackup()` no-ops. Exit restores the snapshot and reloads. If the page reloads mid-sandbox (crash, update), `DevMode.recover()` runs before `load()` and restores the snapshot. Tested: a full collapse inside the sandbox leaves the real save byte-identical.
+
+**Hooks:** game.js passes `start / fireEvent / tierUp / setWisp / collapse / perf / reloadToTitle`; `state.devBiome` overrides the biome for one `initGalaxy`; `dev.frozen` zeroes `dt`. `__bh.dev` exposes it for headless sweeps (`Object.assign(__bh.dev.cfg, {...}); __bh.dev.enter()`).
+
+**Calm check:** after visual changes, sweep the 7 biomes at a few tiers at 412×915 and look for large moving bands, snakes, or hard pulsing (v9.3 sweep: `/workspace/bh_v93_sweep.png`).
+
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (removed in v9) (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
@@ -339,6 +352,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v9.3 Calm currents + dev mode:** Comet Current sky bands (60 bright beziers) replaced by soft cloud + 3 faint lanes; rivers one faint ribbon with sparse, very slow streaks (static under Reduce Motion). Forge beams spin 0.0019 (was 0.0028) and are softer; forge sky shells fainter. Hidden `DevMode` sandbox (§7e) with save suspension.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).

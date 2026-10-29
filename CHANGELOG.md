@@ -2,6 +2,13 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.3 Calm currents + dev mode (Oct 2026)
+
+- **Comet Current is calm now.** The "waves" were the painted sky (about 60 bright diagonal bands) plus wide glowing river ribbons with fast streaks. The sky is now soft cloud with three barely-there lanes; the rivers are one faint ribbon with a few sparse streaks that creep along very slowly (still under Reduce Motion). You can still see and ride them.
+- **Neutron Forge is a bit quieter:** pulsar beams sweep about a third slower and are a little softer; the sky's shock shells are fainter.
+- **Dev mode (hidden play-test panel).** Open the game with `?dev`, or tap the version line at the bottom of Settings 7 times. A small **DEV** button appears bottom-left. From it: pick a galaxy, biome, scale, run depth, Zen and Companion, then start a sandbox run. Inside: fire any event, tier up (reveal + merge), wisp on/off, freeze time, FPS overlay, collapse prompt. **Your real save is never touched**: it is set aside on entry, every save is switched off inside, and "Exit sandbox" puts it back and returns to the title. "Turn dev mode off" hides it again.
+- Offline cache now includes the `js/core/` files.
+
 ## v9.2 Growth Witness (Oct 2026)
 
 - **The wisp is now something you earn.** After your first collapse, light **Companion** on the constellation (Appetite, 5 Dark Matter) and a little wisp joins you for good.
