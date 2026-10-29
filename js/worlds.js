@@ -878,31 +878,22 @@ const DRAW = {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const rv of W.rivers) {
-      ctx.globalAlpha = AM * (1);
-      ctx.strokeStyle = W.boost > 0 ? "rgba(120, 200, 255, 0.11)" : "rgba(120, 200, 255, 0.09)";
-      ctx.lineWidth = rv.w * 2;
+      // v9.3: calm rivers. One soft body and a faint core (no wide glowing
+      // bands), and a few sparse streaks that creep along very slowly (still
+      // under Reduce Motion) so you can read the flow without it pulling the eye.
+      ctx.globalAlpha = AM;
+      ctx.strokeStyle = W.boost > 0 ? "rgba(120, 200, 255, 0.06)" : "rgba(120, 200, 255, 0.045)";
+      ctx.lineWidth = rv.w * 1.3;
       ctx.stroke(rv.path);
-      ctx.strokeStyle = "rgba(170, 225, 255, 0.08)";
-      ctx.lineWidth = rv.w * 1.1;
+      ctx.strokeStyle = "rgba(200, 235, 255, 0.04)";
+      ctx.lineWidth = rv.w * 0.4;
       ctx.stroke(rv.path);
-      ctx.strokeStyle = "rgba(225, 245, 255, 0.07)";
-      ctx.lineWidth = rv.w * 0.35;
-      ctx.stroke(rv.path);
-      // Slow drifting streaks show which way it flows
-      const speed = fx.reduceMotion ? 0.012 : 0.035;
-      ctx.setLineDash([rv.w * 0.5, rv.w * 1.4]);
+      const speed = fx.reduceMotion ? 0 : 0.006;
+      ctx.setLineDash([rv.w * 0.25, rv.w * 2.2]);
       ctx.lineDashOffset = -fx.time * speed;
-      ctx.strokeStyle = "rgba(220, 245, 255, 0.22)";
-      ctx.lineWidth = Math.max(2 / (fx.zoom * f), rv.w * 0.04);
+      ctx.strokeStyle = "rgba(220, 245, 255, 0.11)";
+      ctx.lineWidth = Math.max(1.5 / (fx.zoom * f), rv.w * 0.025);
       ctx.stroke(rv.path);
-      if (!lite) {
-        ctx.save();
-        ctx.translate(rv.w * 0.3, rv.w * 0.25);
-        ctx.lineDashOffset = -fx.time * speed * 0.8 + rv.w;
-        ctx.strokeStyle = "rgba(210, 240, 255, 0.08)";
-        ctx.stroke(rv.path);
-        ctx.restore();
-      }
       ctx.setLineDash([]);
     }
     ctx.restore();

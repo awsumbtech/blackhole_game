@@ -88,12 +88,15 @@ function paint(W, H, high) {
       break;
     }
     case "current": {
-      for (let i = 0; i < 60 * n; i++) {
-        const y0 = r() * H * 1.4 - H * 0.2, c = P[i % 3];
-        g.strokeStyle = rgba(c, 0.05 + r() * 0.08); g.lineWidth = m * (0.02 + r() * 0.08); g.lineCap = "round";
-        g.beginPath(); g.moveTo(-W * 0.1, y0); g.bezierCurveTo(W * 0.3, y0 - H * 0.15, W * 0.6, y0 - H * 0.05, W * 1.1, y0 - H * 0.35); g.stroke();
+      // v9.3: calm icy sky. Soft cloud banks and three broad, barely-there
+      // lanes (was 60 bright bands that read as distracting waves).
+      cloudBank(g, r, W * 0.5, H * 0.5, W * 1.1, H * 1.1, 30 * n, [P[1], P[0], P[2]], 0.08, m * 0.4);
+      g.lineCap = "round";
+      for (let i = 0; i < 3; i++) {
+        const y0 = H * (0.25 + i * 0.3) + (r() - 0.5) * H * 0.1;
+        g.strokeStyle = rgba(P[i % 3], 0.025); g.lineWidth = m * 0.28;
+        g.beginPath(); g.moveTo(-W * 0.2, y0 + H * 0.12); g.bezierCurveTo(W * 0.3, y0, W * 0.7, y0 + H * 0.04, W * 1.2, y0 - H * 0.12); g.stroke();
       }
-      cloudBank(g, r, W * 0.5, H * 0.5, W, H, 18 * n, [P[1], P[0]], 0.08, m * 0.4);
       break;
     }
     case "nursery": {
