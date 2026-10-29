@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.1 Systems & a wider view (Oct 2026)
+
+- **Code you can upgrade piece by piece.** The messiest parts of the main loop are now small system classes in `js/core/` — Camera, Growth, GalaxyFlow, Fx — each with a clear public surface. Entities stay plain objects so the hot loops stay allocation-free. Swap or enhance one system without rewriting the rest.
+- **Growth feels bigger when a new scale arrives.** On a tier-up the next layer still drifts in from the haze, and now:
+  - A soft radial "world opens" pulse lifts around you (calm, no flash; off under Reduce Motion).
+  - Things arriving get a warm arrival rim while they sharpen.
+  - The banner names what drifted closer ("Asteroids drift closer").
+- Saves are unchanged (still v8). Zen, Ascension and the one loop are the same.
+
 ## v9.0 One loop (Oct 2026)
 
 - **One loop: born, grow, collapse, reborn stronger.** Growing (tier-ups and new layers arriving) is the progression inside a run. Collapse is the only reset, Dark Matter the only currency, the constellation the only upgrade screen.

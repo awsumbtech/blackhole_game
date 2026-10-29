@@ -29,8 +29,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.0**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.0"` in `sw.js`, `SAVE_VERSION = 8` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.1**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.1"` in `sw.js`, `SAVE_VERSION = 8` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -271,10 +271,13 @@ Brian got headaches from the v7.0 drone. Follow these rules for any new sound:
 - Check every audio change with `tools/audio-analyze.py`: peak, RMS, centroid, 2–5 kHz energy, and
   envelope roughness.
 
-## 7e. Code style (v7.2)
+## 7e. Code style & architecture (v7.2, classes since v9.1)
 
 The code should read the way a veteran game programmer would write it: lean and direct.
-- No classes, frameworks or build step. Plain modules and plain objects.
+- **No framework, no build step, no TypeScript.** Vanilla ES modules on canvas.
+- **Small purposeful classes + composition** (v9.1). Prefer a clear public surface per system
+  so you can upgrade, replace or enhance one piece at a time — or the whole thing. Not enterprise
+  piles of interfaces. Hot data stays plain objects.
 - **Hot loops** (`frame`, `updateEntities`, `updateGravityWell`, `tryConsume`, `draw*`) must not
   allocate. That means no array literals, closures, template strings or `splice` per frame.
   - Cache strings on the object (`e._mc`, `lm._mm`).
@@ -282,11 +285,37 @@ The code should read the way a veteran game programmer would write it: lean and 
   - Use the local 2-argument `hypot`.
 - **Entities have one shape.** Every field written in hot code is declared in `createEntity`
   with a default that means "unset". Don't add new per-entity fields elsewhere; add them there.
+  Entities stay plain objects (class instances would fight the hot-loop rule).
 - Use `$()` for `getElementById`.
 - Check changes with `/workspace/bhpt/perfbench.py` (frame time, allocation rate and garbage
   collections, plus optional CPU and allocation profiles) and `smoke_all.py` (every screen).
   - Save migration is checked by `migcmp.mjs`, which must produce identical output to the
     previous version.
+
+### Object map (v9.1) — upgrade / replace one system at a time
+
+```
+game.js                 orchestrator: state, main loop, screens, wiring
+js/core/
+  Camera.js             framing, zoom, tier reveal pull-back
+  Growth.js             tier-ups, depth-layer merge spectacle, banner
+  GalaxyFlow.js         in-play galaxy transition + collapse nudge
+  Fx.js                 particles, ripples, floaters
+js/entities.js          plain entity factory + biomes (data, not a class)
+js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
+js/worlds.js            per-galaxy mechanics & landmarks
+js/depth.js             DepthLayers (hazy back tiers + merge snapshot)
+js/ascension.js         Ascension / Dark Matter / perks / milestones
+js/constellation.js     Constellation screen
+js/audio.js             Audio (drone, layers, soft SFX)
+js/art.js + render.js   Renderer (sprites, hole, entities, radar)
+js/input.js             Input (thumbstick / follow / mouse / keys)
+js/save.js              Save + migration
+js/zen.js               Zen sessions
+```
+
+**Rule:** change one system's public methods or swap its file; leave the others alone. Migrate
+gradually — extract the next hotspot from `game.js` when you touch that area, don't rewrite everything overnight.
 
 Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless Chromium, 3 runs of 20 s each:
 
@@ -308,6 +337,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.0 Vast:** the tier ladder, no edges, camera reveals, parallax sky, local radar, music layers.
 - **v5.1 Polish:** mechanics follow you, regrowth, readable vast food, radar rim markers, pacing.
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
+- **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
 - **v8.6 A real beginning:** the intro is a dark void that hides the galaxy (wordmark, then "Drift. / Eat what's smaller. / Grow."), then the void lifts over ~2.8s while the newborn hole is born in the play view (`state.birth` scales the drawn hole). `seenHints.intro` is set only when the intro has played, and boot shows the intro whenever it is unset, so an interrupted start-over resumes at the beginning. SW updates: `reg.update()` whenever the app returns to the front; on `controllerchange` the game saves and reloads at a calm moment (title or hidden), coming back to the title.
 - **v8.5 True fresh start:** title "Start completely over" (`startCompletelyOver` in game.js) wipes progress, Ascension, the star map's galaxy log and all `seenHints` (onboarding, codex seen flags, tier/merge captions), ends any Zen session, then replays the first-launch intro and drift-in into a newborn dust-only galaxy 1. Settings, lifetime stats, fastest times, the logbook and Zen notes stay.
@@ -327,12 +357,12 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 index.html          HUD, title, overlays, star map + logbook screens
 manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
-js/game.js          main loop, state, camera, tiers/reveals, saves, wiring, VERSION (~1.5k lines)
+js/game.js          orchestrator (~1.7k). js/core/ Camera, Growth, GalaxyFlow, Fx
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
 js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
-js/depth.js         v8.3 back depth layers + tier merge
+js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map
 js/discoveries.js   rare finds (v6)      js/logbook.js     logbook screen (v6)
