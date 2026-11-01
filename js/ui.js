@@ -70,7 +70,7 @@ export function showStats(state, onClose, opts = {}) {
       ${skinRow(state)}
       ${setRow("Music", "Soft surf and slow notes", `<input type="range" class="mix-slider" data-mix="musicVol" min="0" max="100" value="${Math.round((state.settings.musicVol ?? 0.6) * 100)}" aria-label="Music volume">` + onOff("musicOn"))}
       ${setRow("Sound effects", "Bites and chimes", `<input type="range" class="mix-slider" data-mix="sfxVol" min="0" max="100" value="${Math.round((state.settings.sfxVol ?? 0.6) * 100)}" aria-label="Effects volume">` + onOff("sfxOn"))}
-      ${setRow("Breathing guide", "A faint ring that grows as you breathe in (4s in, 6s out). In Zen your companion wisp breathes instead, once it's with you", onOff("breathGuide"))}
+      ${setRow("Breathing guide", "A faint ring that grows as you breathe in (4s in, 6s out). Never shown in Zen; there your companion wisp breathes instead", onOff("breathGuide"))}
       ${setRow("Zen breath words", "Faint 'breathe in / out' words in Zen sessions", onOff("zenBreathCue"))}
       ${setRow("Soft palette", "Muted colours, amber rings instead of rose", onOff("softPalette"))}
       ${setRow("Reduce motion", "No screen shake, fewer particles", onOff("reduceMotion"))}

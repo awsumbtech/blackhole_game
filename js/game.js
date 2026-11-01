@@ -36,7 +36,7 @@ import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, r
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.5";
+const VERSION = "9.5.1";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -1345,13 +1345,13 @@ function frame(now) {
       dt: state.paused ? 0 : dt,
       reduceMotion: state.settings.reduceMotion,
       speedScale: state.speedScale,
-      magnet: state.active.magnet > 0,
+      magnet: state.active.magnet > 0 && state.mode !== "zen",   // v9.5.1: no ring around the hole in Zen
       pullRange: pullRange(state),
       double: state.active.double > 0,
       gulp: state.gulp,
       breath,
-      // v7.1: in Zen the wisp is the breath guide; v9.2: until it's unlocked, Zen shows the ring
-      breathGuide: state.mode === "zen" ? !wisp.isActive() : state.settings.breathGuide,
+      // v7.1: in Zen the wisp is the breath guide. v9.5.1 (Brian): never a ring around the hole in Zen
+      breathGuide: state.mode !== "zen" && state.settings.breathGuide,
       filter: skinFilter()
     });
   inflow.drawFront(ctx, holeX, holeY, holeR, z, screenDpr);

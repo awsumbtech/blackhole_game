@@ -2,7 +2,12 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
-## v9.5 Inflow (Nov 2026, branch `fx-pass`)
+## v9.5.1 No ring in Zen (Nov 2026)
+
+- **Zen never draws a ring around the hole.** The breathing-guide ring that showed in Zen before the wisp was unlocked is gone, and so is the magnet's dashed pull ring (the magnet still works). With the wisp, it still breathes beside you as before.
+- The Breathing guide setting still works outside Zen.
+
+## v9.5 Inflow (Nov 2026)
 
 - **The hole is fed.** A steady stream of glowing matter spirals in along two slowly turning arms. Grains speed up as they fall, and their soft streaks stretch along their motion as they near the disk (far grains are dots, near ones are streaks). Each bite tucks one grain in from where the food was, and the stream warms a little.
 - **Soft motes** drift up off the disk and fade, like embers rising.
