@@ -6,3 +6,4 @@ export { Growth } from "./Growth.js";
 export { DevMode } from "./DevMode.js";
 export { Inflow } from "./Inflow.js";
 export { HudControls, HUD_TAP } from "./HudControls.js";
+export { Flagship } from "./Flagship.js";

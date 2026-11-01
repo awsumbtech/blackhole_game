@@ -5,7 +5,8 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
-import { upgradeShip } from "./ships.js";
+import { upgradeShip, shipLight } from "./ships.js";
+import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
@@ -90,6 +91,7 @@ const px = v => W.ox + v * W.f;
 const py = v => W.oy + v * W.f;
 const B0K = 100;            // a set spans ~100 hole radii (at the tier's start)
 const SET_KEYS = ["b0", "ox", "oy", "lms", "reefs", "rivers", "cradle", "aurora", "meadows", "pulsars", "flagship", "grid", "setNo"];
+const FLAGSHIP = new Flagship();   // v9.6: one painter + sprite cache for every Flagship
 let AM = 1;                 // alpha multiplier while drawing older (receding) sets
 const PREFIX = ["Greater", "Outer", "High", "Far", "Grand", "Deep"];
 function setName(n) {
@@ -938,9 +940,11 @@ const DRAW = {
   "Ruined Armada"(ctx, state, fx, vw, vh) {
     const fl = W.flagship;
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
+    // v9.6: the hi-res Flagship (core/Flagship.js) paints over a few frames as you
+    // arrive, then fades in; until then nothing pops in on screen
+    const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high");
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
     drawGlow(ctx, "180, 160, 220", x, y, s * 2.2, 0.06);
-    // v9.4: a broken capital ship, slightly hazed (it sits just behind play), in a slow debris field
     const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
     const cr = Math.cos(rot), sr = Math.sin(rot);
     for (const p of fl.debris) {
@@ -953,14 +957,12 @@ const DRAW = {
       ctx.drawImage(dsp.c, -dd / 2, -dd / 2, dd, dd);
       ctx.rotate(-pr); ctx.translate(-qx, -qy);
     }
-    const sp = spriteFor(fl.art, s * fx.zoom * fx.dpr);
-    const d = sp.k * s;
-    ctx.globalAlpha = AM * 0.42;   // it sits back from play: the sky shows through
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
-    ctx.rotate(-rot);
-    ctx.translate(-x, -y);
+    if (!sp) return;
+    // It sits back from play, hazed; it clears a little as you come close (never fully)
+    const near = smooth(1 - (hypot(state.playerX - x, state.playerY - y) - s * 1.2) / (s * 3));
+    const fade = smooth((performance.now() - sp.born) / 1200);
+    const breath = fx.reduceMotion ? 0.5 : fx.breath;
+    FLAGSHIP.draw(ctx, sp, x, y, s, rot, AM * fade * (0.4 + near * 0.14), AM * fade * (0.42 + breath * 0.18));
   },
 
   "Void Rift"(ctx, state, fx) {
@@ -1208,7 +1210,7 @@ export function worldsFeature(state) { if (!W) return null; lastFD = featureDist
 /** For the automated tests (dev builds only) */
 export function worldsInfo() {
   if (!W) return null;
-  return { biome: W.biome, landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), visited: l.visited })),
+  return { biome: W.biome, landmarks: W.lms.map(l => ({ name: l.name, x: Math.round(px(l.x)), y: Math.round(py(l.y)), r: Math.round(wx(l.r)), visited: l.visited })),
     sets: 1 + W.old.length, tierNo: W.tierNo || 0, travelSets: W.travelSets || 0, featureDist: lastFD,
-    inBeam: W.inBeam, riding: !!W.riding };
+    inBeam: W.inBeam, riding: !!W.riding, flagship: W.flagship ? { size: Math.round(wx(W.flagship.size)), rot: W.flagship.rot, paint: FLAGSHIP.lastMs || 0 } : null };
 }

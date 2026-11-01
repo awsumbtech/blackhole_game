@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.5.2** (live on `main`)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.5.2"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.6**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.6"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -98,6 +98,10 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Light:** living ships are symmetric. They are flipped when heading left so their warm rim stays on top; wrecks keep their baked light and tumble slowly.
   - Ship sprites may use the 200 and 260 px buckets (High), because detail is what sells scale.
   - **Gallery:** `/workspace/bhpt/shipgallery.py` paints every class × look.
+- **v9.6 Flagship (`js/core/Flagship.js`).** The Ruined Armada landmark is a hi-res capital-class wreck, not a scaled-up ship sprite (the 260 px bucket made it blurry). Same language as §3 ships: warm key rim on top, galaxy bounce rim below (`shipLight()` from ships.js), layered plates with contact shadows, staggered plating, trenches, city blocks, mostly dark windows with a few lit warm clusters, an edge-on habitat ring torn open, a spine snapped in two (the aft half offset and turned), steady (never blinking) marker lights.
+  - **One job:** `layout(look)` is pure data, `paint()` is a generator that paints a 2048 px (Lite 1280 px) sprite a few ms per frame (each step flushed into a 1 px canvas so raster cost lands in that frame), `draw()` blits hull + an additive quarter-res ember layer. 2-entry cache keyed by look, galaxy light and quality.
+  - **Calm:** it fades in over 1.2 s once painted, drifts its rotation very slowly, embers breathe with the galaxy; under Reduce Motion it is static and embers hold. Haze alpha rises gently from 0.40 to 0.54 as you approach. It stays a backdrop: its hull wrecks carry eat / too-big.
+  - **Gallery:** `/workspace/bhpt/flaggallery.py`; shots `/workspace/bhpt/v96shots.py <port> <tag> [rm|zen|eat|g11]`.
   - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
 
 - **v9.5 Inflow (`js/core/Inflow.js`).** Brian liked a live-event visual (strong glow on bright things over a flat saturated background, particles lifting off the main object, a burst where a bass hit and the visuals land together, fast particles stretched into streaks). Adapted to the calm rules:
@@ -331,6 +335,7 @@ js/core/
   Growth.js             tier-ups, depth-layer merge spectacle, banner
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
+  Flagship.js           v9.6 Armada landmark: layout / paint (time-sliced) / draw, cached sprite
   Inflow.js             v9.5 accretion inflow, rising motes, impact burst (feed / burst / update / drawBack / drawFront)
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
@@ -390,6 +395,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.4 Ships:** one ship system (`js/ships.js`, §3) with five seeded classes by tier (drone, shuttle, freighter, cruiser, capital), 8 looks each. Wrecks (Armada, flotillas) tumble slowly; living ships steer nose-first in small formations with breathing engine glow. The blinking light was removed. Eaten ships split into 4 plates that spiral in. The Flagship is a broken capital ship with a debris field. Armada crumbs are hull plates.
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
+- **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
 - **v9.5.1 No Zen ring:** the breathing-guide ring (shown in Zen before the wisp was unlocked) and the magnet ring are never drawn in Zen. Brian's rule: no ring around the hole in Zen.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
@@ -412,7 +418,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 index.html          HUD, title, overlays, star map + logbook screens
 manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
-js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, DevMode, HudControls
+js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, Flagship, DevMode, HudControls
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky

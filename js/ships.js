@@ -53,6 +53,7 @@ export function upgradeShip(e) {
 // ─── Galaxy light (bounce rim colour) ───
 let bounce = [150, 170, 220], lightKey = "";
 export function setShipLight(rgb, key) { bounce = rgb.slice(0, 3); lightKey = key || ""; }
+export function shipLight() { return { rgb: bounce, key: lightKey }; }
 export function shipKey(e) { return `craft|${e.ship || "drone"}|${e.wreck ? 1 : 0}|${lightKey}`; }
 
 // ─── Design: a normalised parts list per class + look (cached) ───
