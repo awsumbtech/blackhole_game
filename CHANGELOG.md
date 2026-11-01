@@ -6,7 +6,9 @@ All notable changes to Black Hole: Galaxy Eater. Saves carry forward through eve
 
 - **The Flagship is back, and huge.** The Ruined Armada's landmark is repainted as a detailed, hi-res capital-class wreck instead of a blown-up ship sprite: a long armoured hull snapped in two behind its torn habitat ring, stepped prow plates, a bridge tower, hangar wings, radiator vanes, plated decks with dark city blocks and scattered warm windows, scorch and torn holes, and a drive bank where two drives still smoulder.
 - Lit like the v9.4 ships: warm light from above, the galaxy's own colour bouncing from below. Steady marker lights, no blinking; embers breathe slowly with the galaxy. Calm: it fades in softly and drifts very slowly.
-- Reduce Motion: it holds still and the embers stay steady. Zen: unchanged, no ring around the hole.
+- Reduce Motion: it holds still and the embers stay steady.
+- **Zen:** the Flagship is drawn without its habitat ring (just two short torn spars at the hub), so nothing ever reads as a ring around the hole.
+- The two still-warm drives glow soft and dim rather than orange.
 - Painted once into a cached picture a little at a time (no hitch), then drawn in one step, so frame cost is unchanged.
 
 ## v9.5.2 Touch pass (Nov 2026)

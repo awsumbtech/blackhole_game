@@ -942,7 +942,7 @@ const DRAW = {
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     // v9.6: the hi-res Flagship (core/Flagship.js) paints over a few frames as you
     // arrive, then fades in; until then nothing pops in on screen
-    const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high");
+    const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
     drawGlow(ctx, "180, 160, 220", x, y, s * 2.2, 0.06);
     const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);

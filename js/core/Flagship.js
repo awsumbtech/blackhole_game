@@ -119,12 +119,14 @@ export class Flagship {
    * The cached sprite for a look, galaxy light and quality ({ hull, ember, w, h, ppu, ms }),
    * or null while it is still being painted. Painting is spread over frames
    * (a few ms each) so arriving in the Armada never hitches.
+   * ring = false paints the Zen look: no habitat ring loop, only short stubs
+   * at the hub (Brian: never a ring around the hole in Zen).
    */
-  sprite(look, light, lite, budgetMs = 4) {
-    const key = `${look}|${light.key}|${lite ? 1 : 0}`;
+  sprite(look, light, lite, ring = true, budgetMs = 4) {
+    const key = `${look}|${light.key}|${lite ? 1 : 0}|${ring ? 1 : 0}`;
     const s = this.cache.get(key);
     if (s) return s;
-    if (!this.job || this.job.key !== key) this.job = { key, it: this.paint(layout(look), light.rgb, lite ? 1280 : 2048), ms: 0 };
+    if (!this.job || this.job.key !== key) this.job = { key, it: this.paint(layout(look), light.rgb, lite ? 1280 : 2048, ring), ms: 0 };
     const t0 = performance.now();
     let res;
     do res = this.job.it.next(); while (!res.done && performance.now() - t0 < budgetMs);
@@ -156,7 +158,7 @@ export class Flagship {
   }
 
   // ─── Painting (once, as a generator: one part per step) ───
-  *paint(L, bounce, W) {
+  *paint(L, bounce, W, hasRing = true) {
     const ppu = W / (X1 - X0), H = Math.ceil(YH * 2 * ppu);
     const c = document.createElement("canvas"); c.width = W; c.height = H;
     const g = c.getContext("2d");
@@ -170,13 +172,14 @@ export class Flagship {
     const tg = tap.getContext("2d"), flush = () => tg.drawImage(c, 0, 0, 1, 1, 0, 0, 1, 1);
 
     // the habitat ring, far half behind the hull
-    this.ring(g, L, base, bounce, px, r, false); flush(); yield;
+    if (hasRing) { this.ring(g, L, base, bounce, px, r, false); flush(); yield; }
     // stern first (it sits a touch further away), then the gap, then the fore hull
     for (const p of L.P) if (p.aft) { aftT(() => this.part(g, p, L, base, bounce, px, r)); flush(); yield; }
     aftT(() => this.drives(g, L, base, px));
     this.girders(g, L, base, bounce, px, r); flush(); yield;
     for (const p of L.P) if (!p.aft && !p.tower) { this.part(g, p, L, base, bounce, px, r); flush(); yield; }
-    this.ring(g, L, base, bounce, px, r, true); flush(); yield;
+    if (hasRing) this.ring(g, L, base, bounce, px, r, true); else this.stubs(g, L, base, bounce, px, r);
+    flush(); yield;
     for (const p of L.P) if (p.tower) { this.part(g, p, L, base, bounce, px, r); flush(); yield; }
     this.damage(g, L, base, px); flush(); yield;
     this.windows(g, L, px, r, aftT); flush(); yield;
@@ -333,6 +336,26 @@ export class Flagship {
     }
   }
 
+  stubs(g, L, base, bounce, px, r) {
+    // Zen look: the ring is gone; two short torn spars stand off the hub collar
+    // (short open arcs, never a loop), with dark ragged tips
+    const cx = L.ringX, th = 0.024;
+    g.lineCap = "butt";
+    for (const s of [-1, 1]) {
+      const y0 = s * (L.sw + 0.02), y1 = s * (L.sw + 0.02 + 0.1);
+      const lg = g.createLinearGradient(0, y0, 0, y1);
+      lg.addColorStop(0, c3(tone(base, 0.05), 1)); lg.addColorStop(1, c3(tone(base, -0.35), 1));
+      g.strokeStyle = lg; g.lineWidth = th;
+      g.beginPath(); g.moveTo(cx, y0); g.lineTo(cx + 0.012, y1); g.stroke();
+      g.strokeStyle = c3(tone(KEY, -0.1), s < 0 ? 0.4 : 0.15); g.lineWidth = 1.2 * px;
+      g.beginPath(); g.moveTo(cx - th / 2, y0); g.lineTo(cx + 0.012 - th / 2, y1); g.stroke();
+      g.fillStyle = "rgba(20, 14, 14, 0.9)";
+      g.beginPath(); g.ellipse(cx + 0.012, y1, th * 0.6, 0.006, 0, 0, TAU); g.fill();
+    }
+    const p = quad(cx - 0.035, cx + 0.035, L.sw + 0.025, L.sw + 0.025);
+    this.part(g, { p, t: 0.1, deck: 1, win: 0 }, L, base, bounce, px, r);
+  }
+
   girders(g, L, base, bounce, px, r) {
     // bare frame between the snapped halves: two rails, a zigzag truss, shards
     const a = L.brkX - 0.06, b = L.brkX + 0.05, w = L.sw * 0.7;
@@ -366,7 +389,7 @@ export class Flagship {
       g.fillStyle = c3(tone(base, -0.6), 1); g.fill();
       g.lineWidth = 2 * px; g.strokeStyle = c3(tone(base, 0.25), 0.75); g.stroke();
       g.beginPath(); g.ellipse(x - s * 0.08, y, s * 0.32, s * 0.72, 0, 0, TAU);
-      g.fillStyle = L.warm.includes(i) ? "rgba(120, 50, 30, 0.9)" : "rgba(10, 10, 20, 0.95)"; g.fill();
+      g.fillStyle = L.warm.includes(i) ? "rgba(96, 58, 48, 0.9)" : "rgba(10, 10, 20, 0.95)"; g.fill();
     }
   }
 
@@ -473,7 +496,7 @@ export class Flagship {
     for (const [x, y, cr] of L.lit) blob(x, y, cr * 1.1, [255, 190, 120], 0.16);
     blob(L.brkX, 0, 0.09, [255, 140, 80], 0.32);                      // the torn spine still smoulders
     blob(L.brkX + 0.02, 0.02, 0.04, [255, 180, 110], 0.4);
-    aftT(() => { for (const i of L.warm) { const [x, y, s] = L.drives[i]; blob(x - 0.01, y, s * 2.2, [255, 120, 70], 0.42); } });
+    aftT(() => { for (const i of L.warm) { const [x, y, s] = L.drives[i]; blob(x - 0.01, y, s * 2.4, [255, 168, 128], 0.26); } });
     for (const [x, y, col] of L.marks) blob(x, y, 0.025, col, 0.55);
     for (const [x, y, s] of L.holes) if (s > 0.035) blob(x, y, s * 1.2, [255, 130, 80], 0.12);
     return c;
