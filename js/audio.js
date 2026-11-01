@@ -12,6 +12,7 @@
 
 let ctx = null;
 let masterGain = null, musicBus = null, sfxBus = null, bedGain = null, bedFilter = null;
+let subBus = null;   // v9.5: the impact swell's own low path (skips the 150 Hz highpass)
 let enabled = true;
 let volume = 0.4;
 let mix = { music: 0.6, sfx: 0.6, musicOn: true, sfxOn: true };
@@ -29,6 +30,10 @@ export const RULES = {
   NOTE_LEVEL: 0.045,     // a music note at its peak
   NOTE_EVERY: [9, 7.5, 6.5, 5.5],   // seconds between music notes, by layer (<= 11 notes/min)
   BITE_LEVEL: 0.05,
+  SWELL_LEVEL: 0.07,     // v9.5 impact swell peak (sub + its two harmonics), before the Effects slider
+  SWELL_ATTACK: 0.06,    // s, slow enough to never click, quick enough to land with the burst
+  SWELL_LOWPASS: 190,    // Hz, the swell carries nothing above this
+  SUB_HIGHPASS: 32,      // Hz, the swell's own floor (keeps DC/rumble out)
   MIN_ATTACK: 0.02       // s, shortest fade-in on any sound
 };
 
@@ -52,12 +57,20 @@ function buildChain(c) {
   masterGain.connect(hp); hp.connect(lp); lp.connect(comp); comp.connect(c.destination);
   musicBus = c.createGain(); musicBus.connect(masterGain);
   sfxBus = c.createGain(); sfxBus.connect(masterGain);
+  // v9.5 sub path: swell -> lowpass 190 -> highpass 32 -> same gentle compressor.
+  // It skips the 150 Hz highpass on purpose: the 50-65 Hz body is felt on headphones,
+  // while its 3rd harmonic (150-195 Hz) is what a phone speaker actually plays.
+  subBus = c.createGain();
+  const slp = c.createBiquadFilter(); slp.type = "lowpass"; slp.frequency.value = RULES.SWELL_LOWPASS; slp.Q.value = 0.5;
+  const shp = c.createBiquadFilter(); shp.type = "highpass"; shp.frequency.value = RULES.SUB_HIGHPASS; shp.Q.value = 0.5;
+  subBus.connect(slp); slp.connect(shp); shp.connect(comp);
   applyMix();
 }
 function applyMix() {
   if (!musicBus) return;
   musicBus.gain.value = mix.musicOn ? mix.music : 0;
   sfxBus.gain.value = mix.sfxOn ? mix.sfx : 0;
+  subBus.gain.value = (mix.sfxOn ? mix.sfx : 0) * volume;
 }
 
 function ensureCtx() {
@@ -74,7 +87,7 @@ function ensureCtx() {
 export function init() { unlocked = true; ensureCtx(); resume(); }
 export function resume() { if (ctx && ctx.state === "suspended" && ctx.resume) ctx.resume(); }
 export function setEnabled(on) { enabled = on; if (!on) stopDrone(); }
-export function setVolume(v) { volume = v; if (masterGain) masterGain.gain.value = v; }
+export function setVolume(v) { volume = v; if (masterGain) masterGain.gain.value = v; applyMix(); }
 /** v7.1: separate Music / Effects levels (0..1) and on/off. */
 export function setMix(m) { mix = { ...mix, ...m }; applyMix(); }
 const ok = () => enabled && ensureCtx();
@@ -240,6 +253,50 @@ export function playClick() { blip(note(5), { attack: 0.02, decay: 0.12, vol: 0.
 export function playNearGoal() { blip(note(4), { attack: 0.2, decay: 1.5, vol: 0.018 }); }
 export function playTierChime() { [0, 5].forEach((d, i) => blip(note(d, -1), { start: i * 0.5, attack: 0.3, decay: 2.5, vol: 0.03 })); }
 
+// ─── v9.5 IMPACT SWELL: a low, soft "felt" swell under the tier-up / big-swallow burst ───
+// Root two octaves down (48-65 Hz) with its exact 2nd and 3rd harmonics: three sines
+// in whole-number ratios, so nothing beats. 60 ms linear attack from silence (no
+// click), then a slow ~2.5 s exponential fade. Under 190 Hz only: no mids at all.
+let lastSwellAt = -9;
+function swellAt(c, at, strength, bus) {
+  let f0 = musicRoot() / 4;            // musicRoot is 190-260 Hz
+  const vol = RULES.SWELL_LEVEL * Math.max(0.3, Math.min(1, strength));
+  const parts = [[1, 1], [2, 0.42], [3, 0.2]];
+  for (let i = 0; i < parts.length; i++) {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = "sine"; o.frequency.value = f0 * parts[i][0];
+    const peak = vol * parts[i][1];
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(peak, at + RULES.SWELL_ATTACK);
+    g.gain.setTargetAtTime(0, at + RULES.SWELL_ATTACK + 0.12, 0.55 + i * -0.1);
+    o.connect(g); g.connect(bus);
+    o.start(at); o.stop(at + 4);
+  }
+}
+/** Fire on the same frame as the visual burst. Strength 1 = tier-up, ~0.6 = big swallow. */
+export function playSwell(strength = 1) {
+  if (!ok()) return;
+  resume();
+  const now = ctx.currentTime;
+  if (now - lastSwellAt < 1.2) return;   // never stack swells
+  lastSwellAt = now;
+  swellAt(ctx, now, strength, subBus);
+}
+
+/** Offline: `seconds` of the bed with swells at the given times (the preview Brian hears). */
+export async function renderSwellPreview(seconds = 10, { rate = 44100, at = [1, 4.5, 7.5], strengths = [1, 0.6, 1], bed = true, root = 0 } = {}) {
+  const off = new OfflineAudioContext(1, Math.floor(seconds * rate), rate);
+  const keep = { ctx, masterGain, musicBus, sfxBus, subBus, bedGain, bedFilter, bedSrc, enabled, unlocked, scaleRoot };
+  ctx = off; enabled = true; unlocked = true; if (root) scaleRoot = root;
+  buildChain(off);
+  masterGain.gain.value = 0.4; subBus.gain.value = mix.sfx * 0.4;
+  if (bed) startBed(off, 0);
+  for (let i = 0; i < at.length; i++) swellAt(off, at[i], strengths[i] ?? 1, subBus);
+  const buf = await off.startRendering();
+  ({ ctx, masterGain, musicBus, sfxBus, subBus, bedGain, bedFilter, bedSrc, enabled, unlocked, scaleRoot } = keep);
+  return buf;
+}
+
 /** v7 Zen wind-down: the notes stop and one held root resolves (the surf stays). */
 export function playZenResolve() {
   if (!ok()) return;
@@ -253,7 +310,7 @@ export function playBreathTone() { blip(musicRoot(), { attack: 1.6, decay: 4.5, 
 /** Renders `seconds` of bed + music + bites, breathing 4 s in / 6 s out. Returns an AudioBuffer. */
 export async function renderPreview(seconds = 30, { rate = 44100, biteEvery = 1.4, seed = 7, layerIdx = 1, bed = true } = {}) {
   const off = new OfflineAudioContext(1, Math.floor(seconds * rate), rate);
-  const keep = { ctx, masterGain, musicBus, sfxBus, bedGain, bedFilter, bedSrc, enabled, unlocked, layer, nextNoteAt, lastNote, wound, lastConsumeAt };
+  const keep = { ctx, masterGain, musicBus, sfxBus, subBus, bedGain, bedFilter, bedSrc, enabled, unlocked, layer, nextNoteAt, lastNote, wound, lastConsumeAt };
   let s = seed; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   ctx = off; enabled = true; unlocked = true; layer = layerIdx; wound = false;
   buildChain(off);
@@ -276,6 +333,6 @@ export async function renderPreview(seconds = 30, { rate = 44100, biteEvery = 1.
     o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.5);
   }
   const buf = await off.startRendering();
-  ({ ctx, masterGain, musicBus, sfxBus, bedGain, bedFilter, bedSrc, enabled, unlocked, layer, nextNoteAt, lastNote, wound, lastConsumeAt } = keep);
+  ({ ctx, masterGain, musicBus, sfxBus, subBus, bedGain, bedFilter, bedSrc, enabled, unlocked, layer, nextNoteAt, lastNote, wound, lastConsumeAt } = keep);
   return buf;
 }

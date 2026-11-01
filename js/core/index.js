@@ -4,3 +4,4 @@ export { Fx } from "./Fx.js";
 export { GalaxyFlow, FLOW_OUT, FLOW_IN } from "./GalaxyFlow.js";
 export { Growth } from "./Growth.js";
 export { DevMode } from "./DevMode.js";
+export { Inflow } from "./Inflow.js";

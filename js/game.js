@@ -9,7 +9,7 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
 import { drawDepth, resetDepth, layersInfo } from "./depth.js";
-import { Camera, Fx, GalaxyFlow, Growth, DevMode } from "./core/index.js";
+import { Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow } from "./core/index.js";
 import { setSky } from "./sky.js";
 const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
 import { drawRevealFx } from "./art.js";
@@ -36,7 +36,7 @@ import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, r
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.4";
+const VERSION = "9.5";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -125,12 +125,18 @@ const input = createInput(canvas);
 // ─── SYSTEMS (stable surfaces; upgrade / swap one at a time) ───
 const camera = new Camera(state);
 const fx = new Fx(state);
+const inflow = new Inflow();   // v9.5: accretion inflow, motes, impact bloom
+/** v9.5 impact: the radial bloom and the low swell land on the same frame. */
+function impact(strength) {
+  inflow.burst(strength);
+  audio.playSwell(strength);
+}
 const growth = new Growth(state, {
   camera,
   audio,
   hint: (k, m, ms) => hint(k, m, ms),
   onWorldTier,
-  onGrowth: (t, merged) => wispReact(state, merged ? "merge" : "tier"),   // v9.2 Growth Witness
+  onGrowth: (t, merged) => { impact(1); wispReact(state, merged ? "merge" : "tier"); },   // v9.2 Growth Witness, v9.5 impact
   screenW: () => screenW,
   screenH: () => screenH
 });
@@ -261,6 +267,7 @@ function onRivalSwallow(rv) {
   if (!state.run.bestCatch || rv.r > state.run.bestCatch.r) state.run.bestCatch = { r: rv.r, type: "rival" };
   floater(rv.x, rv.y, "Rival swallowed", "#ffcf6e", 19);
   audio.playBigCatch();
+  impact(0.6);
   wispReact(state, "catch");
   hint("rival_eat", "You outgrew a rival. Another, a little bigger, will drift in later.", 4000);
 }
@@ -575,6 +582,7 @@ function tryConsume(dt) {
 
       spawnConsumeParticles(e);
       spawnRipple(e);
+      inflow.feed(Math.atan2(dy, dx), dist / state.radius);
 
       if (e.bigFish) {
         // v6: a slow, satisfying swallow (about a second) with a soft chime. No shake.
@@ -585,6 +593,7 @@ function tryConsume(dt) {
         floater(e.x, e.y, "Big catch", "#ffcf6e", 19);
         state.gulp = 1;
         audio.playBigCatch();
+        impact(0.6);
         wispReact(state, "catch");
         hint("bigcatch", "Big catch! Golden halos show what's almost in reach.", 3600);
       }
@@ -1288,6 +1297,8 @@ function frame(now) {
   }
   growth.update(dt);
   updateParticles(dt);
+  inflow.configure(getArtQuality() === "high", !!state.settings.reduceMotion);
+  inflow.update(state.paused ? 0 : dt);
   state.gulp *= Math.pow(0.9, dt);
 
   // ─── DRAW ───
@@ -1323,8 +1334,10 @@ function frame(now) {
   drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, PT_OPTS);
   drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);
   drawLivingWorldFG(ctx, state, vw, vh);
-  drawBlackHole(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2,
-    state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius, now,
+  const holeX = state.playerX - state.camX + vw / 2, holeY = state.playerY - state.camY + vh / 2;
+  const holeR = state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius;
+  inflow.drawBack(ctx, holeX, holeY, holeR, z);
+  drawBlackHole(ctx, holeX, holeY, holeR, now,
     { vx: state.playerVX, vy: state.playerVY }, {
       zoom: z,
       dpr: screenDpr,
@@ -1340,6 +1353,7 @@ function frame(now) {
       breathGuide: state.mode === "zen" ? !wisp.isActive() : state.settings.breathGuide,
       filter: skinFilter()
     });
+  inflow.drawFront(ctx, holeX, holeY, holeR, z);
   if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);
   // v8: the wisp draws last in the world so nothing ever covers it
   if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);
@@ -1770,6 +1784,7 @@ dev = new DevMode({
   current: () => ({ wisp: !!(state.asc.perks && state.asc.perks.aw) }),
   start: devStart,
   fireEvent: id => { if (state.screen === "play") fireEvent(state, id); },
+  bigBurst: () => { if (state.screen === "play") impact(0.6); },
   tierUp: () => { if (state.screen !== "play") return; state.mass = massForR(rForTier(state.tier + 1) * 1.03); updateRadius(); },
   setWisp: on => { state.asc.perks.aw = on; wisp.syncFromAsc(state.asc); resetWisp(state); },
   collapse: () => { if (state.screen === "play") openCollapse(); },
@@ -1793,7 +1808,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: perfReport, layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => { perf.n = 0; perf.ring.fill(0); }, art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
-  camera, growth, galaxyFlow, fx, dev,
+  camera, growth, galaxyFlow, fx, dev, inflow, impact,
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
   // test helper: grow to just under the next tier line

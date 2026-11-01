@@ -148,7 +148,7 @@ export class DevMode {
           <label>Events</label>
           <div class="dev-grid">${h.events.map(e => `<button data-a="ev" data-id="${e.id}">${e.name}</button>`).join("")}</div>
           <label>Grow</label>
-          <div class="dev-row"><button data-a="tier">Tier up (reveal + merge)</button><button data-a="collapse">Collapse prompt</button></div>
+          <div class="dev-row"><button data-a="tier">Tier up (reveal + merge)</button><button data-a="big">Big-swallow impact</button><button data-a="collapse">Collapse prompt</button></div>
           <label>Live</label>
           <div class="dev-row">${tog("liveWisp", this.h.current().wisp, "Wisp")}${tog("freeze", this.frozen, "Freeze time")}</div>
         </div>` : ""}
@@ -178,6 +178,7 @@ export class DevMode {
     } else if (a === "start") return this.enter();
     else if (a === "ev") { h.fireEvent(t.dataset.id); return this.close(); }
     else if (a === "tier") { h.tierUp(); return this.close(); }
+    else if (a === "big") { h.bigBurst?.(); return this.close(); }
     else if (a === "collapse") { this.close(); return h.collapse(); }
     else if (a === "exit") return this.exit();
     else if (a === "off") {
