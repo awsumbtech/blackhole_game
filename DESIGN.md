@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.2**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.2"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.5**
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.5"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -99,6 +99,13 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - Ship sprites may use the 200 and 260 px buckets (High), because detail is what sells scale.
   - **Gallery:** `/workspace/bhpt/shipgallery.py` paints every class × look.
   - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
+
+- **v9.5 Inflow (`js/core/Inflow.js`).** Brian liked a live-event visual (strong glow on bright things over a flat saturated background, particles lifting off the main object, a burst where a bass hit and the visuals land together, fast particles stretched into streaks). Adapted to the calm rules:
+  - **Inflow:** grains on the disk plane (flattening from a fatter cloud far out to the disk's 0.17 tilt), Kepler-ish (angular speed ∝ r^-1.5, infall ∝ r^-0.5), fed along two slowly turning arms so shear winds them into spiral streams. The streak length grows faster than speed, so far grains are dots and near ones are streaks. The far half draws before the hole, the near half after it.
+  - **Motes** rise off the disk and fade. **Impact** (tier-up 1.0, big swallow / rival 0.6): a radial spark burst plus a warm bloom, both eased in over ~4–6 frames to match the swell's 60 ms attack, fading over ~1.2 s. Warm cream-to-ember ramp, **never white**. Bursts within ~0.8 s merge.
+  - Everything is a stamped soft streak sprite (feathered ends, no hard "pill" strokes), additive, positions in hole radii so it follows and scales with the hole.
+  - Backgrounds are untouched: only the hole and its matter glow.
+  - **Rule:** visual + sound for an impact always go through `impact(strength)` in game.js, which calls `inflow.burst` and `audio.playSwell` in the same frame.
 
 ## 4. Controls
 
@@ -278,6 +285,10 @@ Brian got headaches from the v7.0 drone. Follow these rules for any new sound:
 - Keep the whole mix under a 1.8 kHz lowpass (ear-sensitive band) and above 150 Hz (phone speakers).
 - The bed is brown noise (surf), not a synth drone.
 - Effects: fade-in of at least 20 ms, in the key. Don't add new loud cues.
+- **One exception below 150 Hz (v9.5): the impact swell** (`playSwell`). Root/4 (48–65 Hz) + exact ×2, ×3 sines, 60 ms linear
+  fade-in, slow fade, its own path (lowpass 190 Hz, highpass 32 Hz) into the shared compressor. On a phone speaker you hear
+  the ×3 partial (145–195 Hz); on headphones you feel the body. Never two within 1.2 s. Measured: no energy above 300 Hz,
+  peak −23.7 dBFS at default volume, no clicks.
 - Music and Effects have separate volumes. Defaults stay low.
 - Check every audio change with `tools/audio-analyze.py`: peak, RMS, centroid, 2–5 kHz energy, and
   envelope roughness.
@@ -312,6 +323,7 @@ js/core/
   Growth.js             tier-ups, depth-layer merge spectacle, banner
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
+  Inflow.js             v9.5 accretion inflow, rising motes, impact burst (feed / burst / update / drawBack / drawFront)
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/ships.js             Ship system (v9.4): shipClassFor / adoptShip / setWreck / upgradeShip,
                         paintShip (art.js PAINTERS.craft), drawShip (heading, breathing engines,
@@ -367,6 +379,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v5.2 Star Map & Wisp:** star map, wisp, save backup, cleanup, README and CHANGELOG. Merged to `main` from `v2-fun-update` (that branch is kept).
 - **v9.3 Calm currents + dev mode:** Comet Current sky bands (60 bright beziers) replaced by soft cloud + 3 faint lanes; rivers one faint ribbon with sparse, very slow streaks (static under Reduce Motion). Forge beams spin 0.0019 (was 0.0028) and are softer; forge sky shells fainter. Hidden `DevMode` sandbox (§7e) with save suspension.
 - **v9.4 Ships:** one ship system (`js/ships.js`, §3) with five seeded classes by tier (drone, shuttle, freighter, cruiser, capital), 8 looks each. Wrecks (Armada, flotillas) tumble slowly; living ships steer nose-first in small formations with breathing engine glow. The blinking light was removed. Eaten ships split into 4 plates that spiral in. The Flagship is a broken capital ship with a debris field. Armada crumbs are hull plates.
+- **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
@@ -388,7 +401,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 index.html          HUD, title, overlays, star map + logbook screens
 manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
-js/game.js          orchestrator (~1.7k). js/core/ Camera, Growth, GalaxyFlow, Fx
+js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, DevMode
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky

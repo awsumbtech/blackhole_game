@@ -1336,7 +1336,7 @@ function frame(now) {
   drawLivingWorldFG(ctx, state, vw, vh);
   const holeX = state.playerX - state.camX + vw / 2, holeY = state.playerY - state.camY + vh / 2;
   const holeR = state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius;
-  inflow.drawBack(ctx, holeX, holeY, holeR, z);
+  inflow.drawBack(ctx, holeX, holeY, holeR, z, screenDpr);
   drawBlackHole(ctx, holeX, holeY, holeR, now,
     { vx: state.playerVX, vy: state.playerVY }, {
       zoom: z,
@@ -1353,7 +1353,7 @@ function frame(now) {
       breathGuide: state.mode === "zen" ? !wisp.isActive() : state.settings.breathGuide,
       filter: skinFilter()
     });
-  inflow.drawFront(ctx, holeX, holeY, holeR, z);
+  inflow.drawFront(ctx, holeX, holeY, holeR, z, screenDpr);
   if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);
   // v8: the wisp draws last in the world so nothing ever covers it
   if (state.screen === "play") drawWisp(ctx, state, vw, vh, breath, state.settings.reduceMotion);

@@ -13,7 +13,7 @@
 
 const TAU = Math.PI * 2;
 const DISK_TILT = 0.17;                  // art.js TILT: the inflow flattens into the disk plane
-const IN_MAX = 72, MOTE_MAX = 20, BURST_MAX = 96;
+const IN_MAX = 112, MOTE_MAX = 20, BURST_MAX = 96;
 const R_SPAWN0 = 5.2, R_SPAWN1 = 9.5, R_END = 1.32;
 const W0 = 0.24;                          // angular speed at r = 1 (rad/frame), ~ r^-1.5
 const V0 = 0.036;                         // infall speed at r = 1 (radii/frame), ~ r^-0.5
@@ -22,16 +22,17 @@ const V0 = 0.036;                         // infall speed at r = 1 (radii/frame)
 const RAMP = ["rgb(214,112,92)", "rgb(240,146,96)", "rgb(255,182,120)", "rgb(255,210,150)", "rgb(255,228,186)", "rgb(255,240,214)"];
 const rampIdx = r => { const i = Math.floor((R_SPAWN0 + 1.2 - r) / (R_SPAWN0 + 1.2 - R_END) * RAMP.length); return i < 0 ? 0 : i >= RAMP.length ? RAMP.length - 1 : i; };
 
-/** Stamp a streak sprite from tail (tx,ty) to head (hx,hy), `wd` thick (ctx left unchanged). */
-function stamp(ctx, spr, hx, hy, tx, ty, wd) {
-  const dx = hx - tx, dy = hy - ty;
-  let len = Math.sqrt(dx * dx + dy * dy);
-  const ang = Math.atan2(dy, dx);
-  if (len < wd * 0.6) len = wd * 0.6;
-  const L = len * 1.15;                   // the sprite's head sits at 90% of its length
-  ctx.translate(hx, hy); ctx.rotate(ang);
+/**
+ * Stamp a streak sprite from tail (tx,ty) to head (hx,hy), `wd` thick. k is the canvas
+ * scale (dpr * zoom; the world ctx has no translation), so one setTransform replaces
+ * translate + atan2 + rotate. Callers wrap the batch in save/restore.
+ */
+function stamp(ctx, k, spr, hx, hy, tx, ty, wd) {
+  const dx = hx - tx, dy = hy - ty, d = Math.sqrt(dx * dx + dy * dy);
+  const c = d > 1e-6 ? dx / d : 1, s = d > 1e-6 ? dy / d : 0;
+  const L = (d < wd * 0.6 ? wd * 0.6 : d) * 1.15;   // the sprite's head sits at 90% of its length
+  ctx.setTransform(k * c, k * s, -k * s, k * c, k * hx, k * hy);
   ctx.drawImage(spr, -L * 0.9, -wd / 2, L, wd);
-  ctx.rotate(-ang); ctx.translate(-hx, -hy);
 }
 const ysAt = r => { const q = (r - 3.6) / 4.5; return DISK_TILT + 0.26 * (q < 0 ? 0 : q > 1 ? 1 : q); };
 
@@ -83,6 +84,7 @@ export class Inflow {
     this.bloomAge = 1e9; this.bloomLife = 72; this.bloomK = 0;
     this.nIn = 0; this.nMote = 0; this.high = true; this.still = false;
     this.feedGlow = 0;
+    this.armA = 0;
     this.burstCount = 0;               // for tests
     for (let i = 0; i < IN_MAX; i++) this._seed(i, true);
     for (let i = 0; i < MOTE_MAX; i++) this._mote(i, true);
@@ -90,7 +92,10 @@ export class Inflow {
 
   _seed(i, scatter) {
     const r = scatter ? R_END + 0.4 + rnd() * (R_SPAWN1 - R_END) : R_SPAWN0 + rnd() * (R_SPAWN1 - R_SPAWN0);
-    this.ir[i] = r; this.ia[i] = rnd() * TAU; this.ia0[i] = this.ia[i];
+    // New grains feed in along two slowly turning arms; Kepler shear winds them into
+    // trailing spiral streams (scattered start: anywhere, so frame one isn't empty).
+    const arm = scatter ? rnd() * TAU : this.armA + (rnd() < 0.5 ? 0 : Math.PI) + (rnd() - 0.5) * 0.32;
+    this.ir[i] = r; this.ia[i] = arm; this.ia0[i] = arm;
     this.iage[i] = scatter ? 40 + rnd() * 200 : 0; this.isz[i] = 0.7 + rnd() * 0.9;
   }
   _mote(i, scatter) {
@@ -104,7 +109,7 @@ export class Inflow {
   /** Quality and Reduce Motion set the live counts (no reallocation). */
   configure(high, reduceMotion) {
     this.high = high; this.still = reduceMotion;
-    this.nIn = reduceMotion ? 18 : high ? IN_MAX : 36;
+    this.nIn = reduceMotion ? 18 : high ? IN_MAX : 44;
     this.nMote = reduceMotion ? 0 : high ? MOTE_MAX : 8;
   }
 
@@ -113,7 +118,7 @@ export class Inflow {
     if (this.still) return;
     this.feedGlow = Math.min(1, this.feedGlow + 0.12);
     const r = distR < R_SPAWN0 ? R_SPAWN0 : distR > R_SPAWN1 ? R_SPAWN1 : distR;
-    for (let k = 0; k < 2; k++) {
+    for (let k = 0; k < 1; k++) {
       let j = 0, best = -1;           // recycle the outermost grain
       for (let i = 0; i < this.nIn; i++) if (this.ir[i] > best) { best = this.ir[i]; j = i; }
       this.ir[j] = r * (0.92 + 0.16 * rnd()); this.ia[j] = ang + (rnd() - 0.5) * 0.5; this.ia0[j] = this.ia[j]; this.iage[j] = 0;
@@ -126,6 +131,8 @@ export class Inflow {
    */
   burst(strength = 1) {
     this.burstCount++;
+    // a tier-up and a merge can land within a second: never stack bursts, just keep the glow
+    if (this.bloomAge < 50) { this.bloomK = Math.max(this.bloomK, strength); return; }
     this.bloomAge = 0; this.bloomK = strength; this.bloomLife = this.still ? 110 : 72;
     if (this.still) return;
     const n = Math.round((this.high ? 40 : 22) * strength);
@@ -144,6 +151,7 @@ export class Inflow {
     if (this.bloomAge < 1e8) this.bloomAge += dt;
     this.feedGlow *= Math.pow(0.985, dt);
     if (this.still || dt <= 0) return;
+    this.armA += 0.0035 * dt;
     for (let i = 0; i < this.nIn; i++) {
       const r = this.ir[i];
       this.ia[i] += W0 / (r * Math.sqrt(r)) * dt;
@@ -171,11 +179,12 @@ export class Inflow {
   }
 
   /** Grains on the far side of the disk: draw before the hole. ctx is in world units. */
-  drawBack(ctx, x, y, R, zoom) { this._grains(ctx, x, y, R, zoom, -1); }
+  drawBack(ctx, x, y, R, zoom, dpr = 1) { this._grains(ctx, x, y, R, zoom, dpr, -1); }
 
   /** Near-side grains, motes and the impact: draw after the hole. */
-  drawFront(ctx, x, y, R, zoom) {
-    this._grains(ctx, x, y, R, zoom, 1);
+  drawFront(ctx, x, y, R, zoom, dpr = 1) {
+    this._grains(ctx, x, y, R, zoom, dpr, 1);
+    const k = zoom * dpr;
     sprites();
     const px = 1 / zoom;
     ctx.save();
@@ -208,18 +217,19 @@ export class Inflow {
         const q = age / life, a = (age < 6 ? age / 6 : 1) * (1 - q) * (1 - q);
         const hx = x + this.bx[i] * R, hy = y + this.by[i] * R;
         const tx = hx - this.bvx[i] * R * trail, ty = hy - this.bvy[i] * R * trail;
-        ctx.globalAlpha = a * 0.9;
-        stamp(ctx, streaks[q < 0.25 ? 3 : q < 0.55 ? 2 : 1], hx, hy, tx, ty, lw * this.bsz[i] * (this.high ? 3.4 : 2.4));
+        ctx.globalAlpha = a * 0.78;
+        stamp(ctx, k, streaks[q < 0.25 ? 3 : q < 0.55 ? 2 : 1], hx, hy, tx, ty, lw * this.bsz[i] * (this.high ? 3.4 : 2.4));
       }
     }
     ctx.restore();
   }
 
-  _grains(ctx, x, y, R, zoom, side) {
+  _grains(ctx, x, y, R, zoom, dpr, side) {
+    const k = zoom * dpr;
     if (!this.nIn) return;
     sprites();
     const px = 1 / zoom, trail = this.high ? 6 : 4;
-    const lw0 = Math.max(0.9 * px, R * 0.035);
+    const lw0 = Math.max(1.2 * px, R * 0.05);
     const warm = 1 + this.feedGlow * 0.35;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
@@ -232,22 +242,22 @@ export class Inflow {
       const fin = this.iage[i] < 40 ? this.iage[i] / 40 : 1;
       const qe = (r - R_END) / 0.9, fout = qe < 1 ? (qe < 0 ? 0 : qe) : 1;
       const near = 1 - (r - R_END) / (R_SPAWN1 - R_END);
-      const alpha = fin * fout * (0.16 + 0.78 * near * near) * warm;
+      const alpha = fin * fout * (0.26 + 0.8 * near * near) * warm;
       if (alpha < 0.02) continue;
       const spr = streaks[rampIdx(r)];
       const lw = lw0 * this.isz[i] * (0.7 + 0.6 / r);
       if (this.still) {
         ctx.globalAlpha = alpha * 0.8;
-        stamp(ctx, spr, hx, hy, hx - 0.01, hy, lw * 3);
+        stamp(ctx, k, spr, hx, hy, hx - 0.01, hy, lw * 3);
         continue;
       }
       // tail: where the grain was `trail` frames ago (analytic, so no history buffer)
       // stretch grows faster than speed, so far grains read as dots and near ones as streaks
-      const st = 2.6 / r, tr = trail * (st < 0.3 ? 0.3 : st > 2.4 ? 2.4 : st * Math.sqrt(st));
+      const st = 3.4 / r, tr = trail * (st < 0.55 ? 0.55 : st > 2.4 ? 2.4 : st * Math.sqrt(st));
       const w = W0 / (r * Math.sqrt(r)), rt = r + V0 / Math.sqrt(r) * tr, at = a - w * tr;
       const tx = x + Math.cos(at) * rt * R, ty = y + Math.sin(at) * rt * ysAt(rt) * R;
       ctx.globalAlpha = alpha;
-      stamp(ctx, spr, hx, hy, tx, ty, lw * (this.high ? 3.8 : 2.8));
+      stamp(ctx, k, spr, hx, hy, tx, ty, lw * (this.high ? 3.8 : 2.8));
     }
     ctx.restore();
   }

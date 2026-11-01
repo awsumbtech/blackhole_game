@@ -63,6 +63,7 @@ were still too harsh. It lists what the evidence says, then the concrete rules `
 | Brightness | 1.8 kHz lowpass on the whole mix, keeping the 2–5 kHz band near silent. |
 | Effects | Sine "water-drop" plucks, with an attack of at least 20 ms and a decay of 0.3–0.6 s, always in the key. Bites closer than 90 ms are dropped, and a combo chime plays only every 10th bite. |
 | Loudness | Peaks around −22 dBFS and RMS around −37 dBFS at the default volume. Music and Effects each have their own slider and on/off switch. |
+| Impact swell (v9.5) | The one sound below 150 Hz: root/4 (48–65 Hz) plus exact ×2 and ×3 sines (no beating), 60 ms linear fade-in (no click), ~2.5 s fade, lowpassed at 190 Hz, at most one per 1.2 s. Fires with the tier-up / big-swallow burst. Phones play mainly the ×3 partial (rule 7); headphones carry the body. |
 | Zen wind-down | The notes stop, one held root note fades in, and only the surf remains. |
 
 ## Measured (offline render, `tools/audio-analyze.py`, Playwright + numpy)
