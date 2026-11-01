@@ -7,6 +7,7 @@ All notable changes to Black Hole: Galaxy Eater. Saves carry forward through eve
 - **The hole is fed.** A steady stream of glowing matter spirals in along two slowly turning arms. Grains speed up as they fall, and their soft streaks stretch along their motion as they near the disk (far grains are dots, near ones are streaks). Each bite tucks one grain in from where the food was, and the stream warms a little.
 - **Soft motes** drift up off the disk and fade, like embers rising.
 - **Impact on tier-up and on a big swallow:** a radial bloom of streaked sparks (fast ones are long streaks that shorten as they slow) and a warm glow, landing on the same frame as a new **low, soft swell**: the key's root two octaves down (48–65 Hz) with its exact 2nd and 3rd harmonics, a 60 ms fade-in, a ~2.5 s fade-out and nothing above 190 Hz. No white flash, no shake. A tier-up and a merge never stack (one burst, one swell).
+- **Zen:** the impact (burst and swell together) is half strength.
 - **Reduce Motion:** a few still embers, no motes, and the impact is a still glow only (the swell still plays).
 - Quality: High 112 grains / 20 motes / 40 sparks per tier-up; Lite 44 / 8 / 22. All pooled in typed arrays with fixed caps: no objects, arrays, closures or strings created per frame.
 - Dev mode panel has a **Big-swallow impact** button next to Tier up.

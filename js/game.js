@@ -128,6 +128,7 @@ const fx = new Fx(state);
 const inflow = new Inflow();   // v9.5: accretion inflow, motes, impact bloom
 /** v9.5 impact: the radial bloom and the low swell land on the same frame. */
 function impact(strength) {
+  if (state.mode === "zen") strength *= 0.5;   // Zen: half-strength burst and swell (Brian)
   inflow.burst(strength);
   audio.playSwell(strength);
 }

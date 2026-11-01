@@ -105,7 +105,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Motes** rise off the disk and fade. **Impact** (tier-up 1.0, big swallow / rival 0.6): a radial spark burst plus a warm bloom, both eased in over ~4–6 frames to match the swell's 60 ms attack, fading over ~1.2 s. Warm cream-to-ember ramp, **never white**. Bursts within ~0.8 s merge.
   - Everything is a stamped soft streak sprite (feathered ends, no hard "pill" strokes), additive, positions in hole radii so it follows and scales with the hole.
   - Backgrounds are untouched: only the hole and its matter glow.
-  - **Rule:** visual + sound for an impact always go through `impact(strength)` in game.js, which calls `inflow.burst` and `audio.playSwell` in the same frame.
+  - **Rule:** visual + sound for an impact always go through `impact(strength)` in game.js, which calls `inflow.burst` and `audio.playSwell` in the same frame. **In Zen the strength is halved** (both together; Brian approved).
 
 ## 4. Controls
 
