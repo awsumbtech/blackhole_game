@@ -12,7 +12,13 @@
   --font: 'Outfit', system-ui, -apple-system, sans-serif;
   --mono: 'Space Mono', monospace;
   --gold: #ffd27a;
-  --bar-h: 48px;
+  /* v9.5.2 HUD layout constants, one place (HudControls.js mirrors --tap as HUD_TAP) */
+  --tap: 44px;          /* min touch target for every bar control */
+  --bar-h: 52px;        /* controls bar = tap + 4px air each side */
+  --hud-label: 11px;    /* GALAXY / SCALE caps labels (were 9.3px on phones) */
+  --hud-biome: 12px;    /* biome name under the top centre */
+  --hud-goal: 11.5px;   /* goal line */
+  --track-h: 4px;       /* visible volume track; the touch area is --tap tall */
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
@@ -75,10 +81,10 @@ canvas {
 }
 
 .hud-label {
-  font-size: 0.65rem;
+  font-size: var(--hud-label);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.5;
+  opacity: 0.66;
   font-weight: 600;
 }
 
@@ -98,7 +104,7 @@ canvas {
 }
 
 .hud-biome {
-  font-size: 0.78rem;
+  font-size: var(--hud-biome);
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--accent-glow);
@@ -154,17 +160,18 @@ canvas {
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  gap: 6px;
+  padding: 0 8px;
+  gap: 4px;
 }
 
 .ctrl-btn {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text);
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
+  border-radius: 10px;
+  width: var(--tap);
+  height: var(--tap);
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -189,35 +196,52 @@ canvas {
   margin: 0 4px;
 }
 
+/* 44px-tall touch area, 4px visible track (drawn by the track pseudo-element) */
 .volume-slider {
-  width: 80px;
-  height: 4px;
+  width: 88px;
+  height: var(--tap);
+  flex: none;
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  background: transparent;
   outline: none;
   cursor: pointer;
+  margin: 0 2px;
+  touch-action: pan-x;
 }
-
+.volume-slider::-webkit-slider-runnable-track {
+  height: var(--track-h);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+.volume-slider::-moz-range-track {
+  height: var(--track-h);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
 .volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+  margin-top: calc((var(--track-h) - 16px) / 2);
   background: var(--accent);
   border-radius: 50%;
   border: none;
   cursor: pointer;
 }
-
 .volume-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: var(--accent);
   border-radius: 50%;
   border: none;
   cursor: pointer;
 }
+.volume-slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(138, 141, 255, 0.35); }
+
+/* Restart lives alone at the far right, away from Pause; dimmer, it is rarely needed */
+.ctrl-restart { opacity: 0.72; font-size: 1.25rem; }
+.restart-card { max-width: 340px; }
 
 .ctrl-hint {
   font-size: 0.72rem;
@@ -231,8 +255,6 @@ canvas {
 @media (max-width: 700px) {
   #hud { padding: max(10px, env(safe-area-inset-top, 0px)) 12px 0; }
   .hud-value { font-size: 0.9rem; }
-  .hud-label { font-size: 0.58rem; }
-  .hud-biome { font-size: 0.7rem; }
   .hud-progress-wrap { width: 100px; }
   .transition-galaxy { font-size: 1.8rem; }
   .ctrl-hint { display: none; }
@@ -454,9 +476,9 @@ body.soft-palette #game { filter: saturate(0.72) brightness(0.96); }
 .codex-item .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
 .codex-item p { margin: 3px 0 0; opacity: 0.7; }
 .codex-item.unseen { opacity: 0.4; }
-@media (max-width: 420px) {
-  .volume-slider { width: 64px; }
-  }
+@media (max-width: 360px) {
+  .volume-slider { width: 72px; }
+}
 
 /* ─── v4: title screen, intro, pause menu ─── */
 .screen {
@@ -575,7 +597,7 @@ body.reduce-motion .title-top, body.reduce-motion .title-menu { animation: none;
 body.reduce-motion .starmap-card.ritual-card { animation-duration: 0.8s; }
 
 /* ─── v7 Ascension + Zen ─── */
-.hud-goal { margin-top: 4px; font: 400 10.5px Outfit, system-ui, sans-serif; color: rgba(255, 228, 170, 0.72); letter-spacing: 0.02em; white-space: nowrap; text-align: center; min-height: 12px; }
+.hud-goal { margin-top: 4px; font: 400 var(--hud-goal) Outfit, system-ui, sans-serif; color: rgba(255, 228, 170, 0.72); letter-spacing: 0.02em; white-space: nowrap; text-align: center; min-height: 12px; }
 .hud-goal .st { letter-spacing: 1px; color: #ffe3a0; }
 body.mode-zen #hud .hud-left, body.mode-zen #hud .hud-right, body.mode-zen .hud-progress-wrap, body.mode-zen .hud-goal, body.mode-zen #hud-biome { opacity: 0; pointer-events: none; }
 body.mode-zen #btn-restart, body.mode-zen #btn-stats { display: none; }
@@ -773,3 +795,12 @@ body.on-title .collapse-pill { display: none; }
 .dev-panel .dev-off { background: none; border-color: transparent; color: rgba(200, 206, 255, 0.5); font-size: 12px; }
 .dev-perf { position: fixed; z-index: 2050; left: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); padding: 3px 8px; border-radius: 8px;
   background: rgba(8, 10, 20, 0.6); color: rgba(200, 240, 210, 0.85); font: 400 10px "Space Mono", monospace; pointer-events: none; }
+
+/* ─── v9.5.2 touch pass: every tappable thing is at least --tap tall, without heavier visuals ─── */
+body.mode-zen .ctrl-sep-stats { display: none; }   /* Zen bar: Pause | Sound only (Stats/Restart already hidden) */
+.restart-card .sum-sub { text-transform: none; letter-spacing: 0.01em; font-size: 0.9rem; line-height: 1.45; color: rgba(205, 212, 245, 0.78); margin-top: 8px; }
+.seg button { min-height: var(--tap); min-width: var(--tap); }
+.set-row .seg { flex: none; }   /* long descriptions used to squeeze the Breathing guide toggle until "Off" was clipped */
+.mix-slider { height: var(--tap); }
+@media (max-width: 400px) { .mix-slider { width: 88px; } }
+.title-link { min-height: var(--tap); }

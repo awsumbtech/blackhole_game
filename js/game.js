@@ -9,7 +9,7 @@ import { initWorlds, updateWorlds, drawWorldsBG, drawWorldsOverlay, drawWorldsMi
   onWorldBump, onWorldEvent, onWorldTier, worldMassMul, worldFlags, eventPairText, worldsInfo, worldsFeature } from "./worlds.js";
 import { setGrade } from "./grade.js";
 import { drawDepth, resetDepth, layersInfo } from "./depth.js";
-import { Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow } from "./core/index.js";
+import { Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, HudControls } from "./core/index.js";
 import { setSky } from "./sky.js";
 const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
 import { drawRevealFx } from "./art.js";
@@ -36,7 +36,7 @@ import { START_R, tierIndexForR, tierName, massForR, rForMass, targetMassFrom, r
 import { fillAround, DENSITY, densityInfo } from "./living-world.js";
 const $ = id => document.getElementById(id);
 
-const VERSION = "9.5.1";
+const VERSION = "9.5.2";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 // ─── CANVAS SETUP ───
@@ -1470,15 +1470,12 @@ function drawFloaters(w, h, z) {
 
 // ─── CONTROLS BAR EVENTS ───
 
-const PAUSE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><rect x="4" y="3" width="3" height="12" rx="1"/><rect x="11" y="3" width="3" height="12" rx="1"/></svg>';
-const PLAY_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><polygon points="5,3 15,9 5,15"/></svg>';
 
 function setPaused(p) {
   if (state.screen !== "play" || state.drift || state.birth > 0) return;
   state.paused = p;
   input.setEnabled(!p);
-  const btn = $("btn-pause");
-  btn.innerHTML = p ? PLAY_SVG : PAUSE_SVG;
+  controls.setPaused(p);
   $("pause-menu").classList.toggle("hidden", !p);
   $("btn-pause-collapse").classList.toggle("hidden", !(state.mode !== "zen" && state.asc.run.cleared >= COLLAPSE_MIN_CLEARED));
   $("btn-pause-endzen").classList.toggle("hidden", state.mode !== "zen");
@@ -1511,36 +1508,13 @@ $("collapse-pill").addEventListener("click", () => {
 });
 $("btn-pause-endzen").addEventListener("click", () => { audio.playClick(); setPaused(false); zenBeginExit(); });
 
-$("btn-pause").addEventListener("click", () => setPaused(!state.paused));
-
-$("btn-restart").addEventListener("click", () => {
-  if (state.transitioning) {
-    showHint("Hang on, drifting on…");
-    return;
-  }
+// v9.5.2: the bar is its own system (js/core/HudControls.js); game.js only supplies the actions.
+function restartGalaxy() {
   initGalaxy(state.galaxy);
   save(state);
   showHint("Galaxy restarted");
-});
-
-$("btn-audio").addEventListener("click", () => {
-  state.audioEnabled = !state.audioEnabled;
-  audio.setEnabled(state.audioEnabled);
-  $("btn-audio").classList.toggle("audio-off", !state.audioEnabled);
-  if (state.audioEnabled) {
-    audio.init();
-    audio.startDrone(state.biome);
-  }
-  save(state);
-});
-
-$("volume-slider").addEventListener("input", e => {
-  state.volume = Number(e.target.value) / 100;
-  audio.setVolume(state.volume);
-  save(state);
-});
-
-$("btn-stats").addEventListener("click", () => {
+}
+function toggleStatsView() {
   if (ui.isStatsOpen()) { ui.closeStats(); return; }
   state.menuOpen = true;
   input.setEnabled(false);
@@ -1549,11 +1523,41 @@ $("btn-stats").addEventListener("click", () => {
     input.setEnabled(!state.paused);
     lastTime = performance.now();
   });
-});
-
+}
+const controls = new HudControls($, {
+  pause: () => setPaused(!state.paused),
+  restart: () => { if (state.paused) setPaused(false); restartGalaxy(); },
+  canRestart: () => {
+    if (state.screen !== "play" || state.mode === "zen") return false;
+    if (state.transitioning) { showHint("Hang on, drifting on…"); return false; }
+    return true;
+  },
+  galaxy: () => state.galaxy,
+  toggleAudio: () => {
+    state.audioEnabled = !state.audioEnabled;
+    audio.setEnabled(state.audioEnabled);
+    if (state.audioEnabled) { audio.init(); audio.startDrone(state.biome); }
+    save(state);
+    return state.audioEnabled;
+  },
+  setVolume: v => { state.volume = v; audio.setVolume(v); save(state); },
+  stats: toggleStatsView,
+  hold: open => {   // the confirm holds the world still, like a menu
+    state.menuOpen = open;
+    input.setEnabled(!open && !state.paused);
+    if (!open) lastTime = performance.now();
+  },
+  click: () => audio.playClick(),
+}).bind();
 
 // P / Escape pause (Escape also closes the stats view)
 window.addEventListener("keydown", e => {
+  if (e.key === "Escape" && controls.isConfirmOpen()) {
+    controls.closeConfirm();
+    e.preventDefault();
+    return;
+  }
+  if (controls.isConfirmOpen()) return;
   if (e.key === "Escape" && ui.isStatsOpen()) {
     ui.closeStats();
     e.preventDefault();
@@ -1630,8 +1634,8 @@ if (savedData) {
   }
   if (savedData.run && savedData.run.galaxy === state.galaxy) resumeRun = savedData.run;
 
-  $("volume-slider").value = Math.round(state.volume * 100);
-  if (!state.audioEnabled) $("btn-audio").classList.add("audio-off");
+  controls.setVolume(state.volume);
+  controls.setAudio(state.audioEnabled);
 }
 
 // ─── SETTINGS ───

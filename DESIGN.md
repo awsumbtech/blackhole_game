@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.5.1**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.5.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.5.2** on branch `hud-touch` (live `main` is v9.5.1)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.5.2"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -112,6 +112,15 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **Default:** a floating virtual thumbstick. It appears under the thumb anywhere on screen, and dragging further means a faster drift. Let go to coast. This keeps the whole screen visible, which is why Brian asked for it.
 - Option: "follow finger" (Settings). Desktop: mouse, or WASD/arrow keys. Pause with Esc/P or the top-left button.
 - Code: `js/input.js`.
+
+### 4b. Controls bar & HUD (v9.5.2, `js/core/HudControls.js`)
+- **Layout:** `Pause | Sound + volume | Stats ........ Restart`. Restart sits alone at the far right (was 6 px from Pause), dimmer, because it's rarely needed. Zen shows `Pause | Sound` only.
+- **Touch targets:** every bar control is at least **44×44 CSS px** (`--tap`). The bar is 52 px (`--bar-h`). The volume slider has a 44 px-tall touch area while its visible track stays 4 px (`--track-h`, drawn by the track pseudo-element). Settings On/Off toggles, the settings sliders and "Start completely over…" are 44 px tall too.
+- **Restart asks first:** a calm card ("Restart this galaxy?", what stays), with the safe choice, **Keep drifting**, as the bright button and **Restart galaxy** as the quiet one. No red, no alarm. The world holds still while it's open; Escape or a tap on the backdrop keeps drifting. From the pause menu it unpauses after restarting.
+- **HUD type:** GALAXY / SCALE labels 11 px at 66% (were 9.3 px at 50% on phones), biome 12 px, goal 11.5 px (`--hud-label`, `--hud-biome`, `--hud-goal`).
+- **One place for sizes:** the `:root` block at the top of `css/game.css`; `HUD_TAP` in HudControls.js mirrors `--tap` for tests. game.js only passes hooks (pause, restart, audio, volume, stats, hold).
+- **Gate:** before calling a build live, run the design-review checklist (390×844 + 375×667 + 412×915 + 844×390 + 1440×900; layout/geometry audits; tap pass; rubric; P0–P3). Script: `/workspace/bhpt/hud/cap.py <root> <port> <outdir>`.
+- **Versioning note:** v9.5.2 was numbered on `hud-touch` while the v9.6 Flagship (`flagship-redraw`) waits for Brian's yes. If v9.6 ships first, rebase this branch on it and renumber (e.g. v9.6.1, `CACHE_NAME` to match).
 
 ## 5. Growth system — v5 "Vast"
 
@@ -324,6 +333,7 @@ js/core/
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
   Inflow.js             v9.5 accretion inflow, rising motes, impact burst (feed / burst / update / drawBack / drawFront)
+  HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/ships.js             Ship system (v9.4): shipClassFor / adoptShip / setWreck / upgradeShip,
                         paintShip (art.js PAINTERS.craft), drawShip (heading, breathing engines,
@@ -380,6 +390,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.3 Calm currents + dev mode:** Comet Current sky bands (60 bright beziers) replaced by soft cloud + 3 faint lanes; rivers one faint ribbon with sparse, very slow streaks (static under Reduce Motion). Forge beams spin 0.0019 (was 0.0028) and are softer; forge sky shells fainter. Hidden `DevMode` sandbox (§7e) with save suspension.
 - **v9.4 Ships:** one ship system (`js/ships.js`, §3) with five seeded classes by tier (drone, shuttle, freighter, cruiser, capital), 8 looks each. Wrecks (Armada, flotillas) tumble slowly; living ships steer nose-first in small formations with breathing engine glow. The blinking light was removed. Eaten ships split into 4 plates that spiral in. The Flagship is a broken capital ship with a debris field. Armada crumbs are hull plates.
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
+- **v9.5.2 Touch pass (branch `hud-touch`):** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.5.1 No Zen ring:** the breathing-guide ring (shown in Zen before the wisp was unlocked) and the magnet ring are never drawn in Zen. Brian's rule: no ring around the hole in Zen.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
@@ -402,7 +413,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 index.html          HUD, title, overlays, star map + logbook screens
 manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
-js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, DevMode
+js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, DevMode, HudControls
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
 js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky

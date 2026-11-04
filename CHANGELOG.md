@@ -2,6 +2,16 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.5.2 Touch pass (Nov 2026, branch `hud-touch`, not live yet)
+
+- **Bigger buttons.** Pause, Sound, Stats and Restart are 44×44 px (were 36×36). The volume slider is easier to grab: a 44 px-tall touch area with the same thin 4 px track.
+- **Restart can't be hit by accident.** It moved to the far right of the bar, away from Pause, and now asks first with a calm card: "Restart this galaxy?" The bright button is **Keep drifting**; **Restart galaxy** is the quiet one. Escape or tapping outside keeps drifting.
+- **Readable HUD labels.** GALAXY and SCALE are 11 px (were 9.3 px on phones) and a little brighter; the biome name and goal line went up a touch.
+- **Settings:** On/Off toggles and the music/effects sliders are 44 px tall, and the Breathing guide toggle no longer loses its "Off" half on phones.
+- Zen bar is just Pause and Sound. Nothing else changed in play, art or sound. Saves unchanged.
+- Code: the bar is its own `HudControls` class (`js/core/HudControls.js`); sizes live in one `:root` block in `css/game.css`.
+- If v9.6 (Flagship) ships first, this becomes v9.6.1.
+
 ## v9.5.1 No ring in Zen (Nov 2026)
 
 - **Zen never draws a ring around the hole.** The breathing-guide ring that showed in Zen before the wisp was unlocked is gone, and so is the magnet's dashed pull ring (the magnet still works). With the wisp, it still breathes beside you as before.
