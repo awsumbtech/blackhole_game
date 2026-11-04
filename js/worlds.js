@@ -12,58 +12,12 @@ import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
 import { MERGE_FRAMES } from "./depth.js";
 import { fitType } from "./tiers.js";
+import { MECHANICS, SET_PREFIX, LAYOUTS } from "./data/worlds.js";
+export { MECHANICS };   // the codex reads it from here
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
-
-// ─── Codex / captions ───
-export const MECHANICS = {
-  "Debris Reef": {
-    name: "Regrowing reefs",
-    first: "Reefs of rock gather here and slowly regrow after you graze them.",
-    minTier: 1,   // v8.4: a newborn sees the reefs only as haze in the back layer
-    codex: "Soft teal reefs hold clusters of rock. Graze one, drift off, and it quietly regrows. Meteor showers reseed the reefs faster.",
-    pairs: { meteorShower: "the shower is reseeding the reefs" }
-  },
-  "Comet Current": {
-    name: "Rivers to ride",
-    first: "Glide into a river of light and let the current carry you along.",
-    codex: "Rivers of light flow across the galaxy. Drift into one and it carries you (and its comets) along. Comet streams pour in upstream.",
-    pairs: { cometStream: "comets are pouring into the rivers" }
-  },
-  "Planet Nursery": {
-    name: "The Cradle",
-    first: "A young sun sits in this galaxy. Little worlds circle it, slow and patient.",
-    codex: "A warm young sun with planets on slow orbits. Come close and they drift out of orbit toward you. Stellar births add new worlds to the rings.",
-    pairs: { stellarBirth: "new worlds are joining the orbits", dustBloom: "new worlds are joining the orbits" }
-  },
-  "Ruined Armada": {
-    name: "Breakable hulls",
-    first: "Big hulls here are brittle. Nudge one and pieces crumble off for you.",
-    codex: "Old hulls too big to swallow crumble softly when you bump them, shedding pieces you can eat. Keep nudging and they shrink until they fit. Flotillas bring more hulls.",
-    pairs: { derelictFlotilla: "a few brittle hulls drift in with them" }
-  },
-  "Void Rift": {
-    name: "Aurora feeding line",
-    first: "Follow the aurora. Food slowly gathers along its light.",
-    codex: "A ribbon of aurora crosses the rift. Small food keeps appearing along it and drifts down its length. A void gift makes it glow and feed faster.",
-    pairs: { voidPulse: "the aurora brightens and feeds faster" }
-  },
-  "Star Meadow": {
-    name: "Blooming stars",
-    first: "Star buds grow in the meadows. Eat them now, or wait and they bloom bigger.",
-    codex: "Little star buds grow in golden meadows and bloom over about half a minute. Patient bites are bigger. A stellar birth makes the nearest meadow bloom all at once.",
-    pairs: { stellarBirth: "the meadow is blooming", dustBloom: "the meadow is blooming" }
-  },
-  "Neutron Forge": {
-    name: "Pulsar beams",
-    first: "Slow pulsar beams sweep the forge. Inside a beam, everything you eat counts 50% more.",
-    codex: "Pulsars turn slowly, sweeping soft beams of light. While you are inside a beam, food gives +50% mass. Gravity waves make the beams flare wider for a while.",
-    pairs: { gravitationalWave: "the beams flare wider" }
-  }
-};
-
 
 // ─── Module state ───
 let W = null;
@@ -93,10 +47,9 @@ const B0K = 100;            // a set spans ~100 hole radii (at the tier's start)
 const SET_KEYS = ["b0", "ox", "oy", "lms", "reefs", "rivers", "cradle", "aurora", "meadows", "pulsars", "flagship", "grid", "setNo"];
 const FLAGSHIP = new Flagship();   // v9.6: one painter + sprite cache for every Flagship
 let AM = 1;                 // alpha multiplier while drawing older (receding) sets
-const PREFIX = ["Greater", "Outer", "High", "Far", "Grand", "Deep"];
 function setName(n) {
   if (!W.tierNo) return n;
-  const p = PREFIX[(W.tierNo - 1) % PREFIX.length];
+  const p = SET_PREFIX[(W.tierNo - 1) % SET_PREFIX.length];
   return n.startsWith("The ") ? "The " + p + " " + n.slice(4) : p + " " + n;
 }
 function viewR(state) { return hypot(state.viewW, state.viewH) / 2; }
@@ -166,7 +119,7 @@ function buildSet(state, ox = state.playerX, oy = state.playerY) {
   W.lms = []; W.reefs = []; W.rivers = []; W.cradle = null; W.aurora = null;
   W.meadows = []; W.pulsars = []; W.flagship = null; W.grid = null;
   const setup = SETUP[W.biome];
-  if (setup) setup(state, W.r, W.b0);
+  if (setup) setup(state, W.r, W.b0, LAYOUTS[W.biome]);
 }
 
 /**
@@ -195,17 +148,16 @@ function withSet(set, fn) {
 }
 
 const SETUP = {
-  "Debris Reef"(state, r, b0) {
-    const names = ["The Shoals", "Pebble Reach", "Old Reef", "Driftstone"];
-    const spots = ringSpots(r, 4, b0 * 0.32, b0 * 0.7);
+  "Debris Reef"(state, r, b0, L) {
+    const spots = ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]);
     spots.forEach(([x, y], i) => {
       // v8.4: at tier 0 the reefs are back-layer haze (no rock, no regrowth);
       // the next set, at tier 1, merges in with rock and fades up
       const haze = (state.tier || 0) === 0;
-      const reef = { x, y, r: b0 * (0.17 + r() * 0.06), want: 10, regrow: 0, haze, born: W.timer || 0 };
+      const reef = { x, y, r: b0 * (L.reefR[0] + r() * L.reefR[1]), want: L.want, regrow: 0, haze, born: W.timer || 0 };
       W.reefs.push(reef);
-      W.lms.push(landmark(setName(names[i]), "reef", x, y, reef.r, "120, 220, 200"));
-      for (let k = 0; k < (haze ? 0 : 6); k++) {
+      W.lms.push(landmark(setName(L.names[i]), "reef", x, y, reef.r, L.rgb));
+      for (let k = 0; k < (haze ? 0 : L.rocks); k++) {
         const a = r() * TAU, d = Math.sqrt(r()) * reef.r * 0.85;
         const e = spawnFood(state, false, { pos: { x: px(x) + Math.cos(a) * d, y: py(y) + Math.sin(a) * d } });
         e.vx *= 0.3; e.vy *= 0.3;
@@ -215,27 +167,26 @@ const SETUP = {
     });
   },
 
-  "Comet Current"(state, r, b0) {
-    const names = ["The Long River", "Glacier Run"];
-    for (let i = 0; i < 2; i++) {
-      const c = curve(r, b0, 0.55);
-      const river = { ...c, w: b0 * 0.11, spawn: 0, names: names[i] };
+  "Comet Current"(state, r, b0, L) {
+    for (let i = 0; i < L.names.length; i++) {
+      const c = curve(r, b0, L.bend);
+      const river = { ...c, w: b0 * L.width, spawn: 0, names: L.names[i] };
       W.rivers.push(river);
       const m = pointOn(c.pts, 0.5);
-      W.lms.push(landmark(setName(names[i]), "river", m.x, m.y, river.w * 1.2, "170, 225, 255"));
+      W.lms.push(landmark(setName(L.names[i]), "river", m.x, m.y, river.w * 1.2, L.rgb));
     }
     buildFlowGrid(b0);
   },
 
-  "Planet Nursery"(state, r, b0) {
-    const a = r() * TAU, d = b0 * 0.36;
+  "Planet Nursery"(state, r, b0, L) {
+    const a = r() * TAU, d = b0 * L.dist;
     const cx = Math.cos(a) * d, cy = Math.sin(a) * d;
-    const sunR = b0 * 0.075;
-    W.cradle = { x: cx, y: cy, sunR, rings: [2.4, 3.6, 5.0, 6.5].map(k => k * sunR),
-      sun: { type: "star", color: "#ffd86d", seed: 4242, variant: 0, look: 0, radius: sunR } };
-    W.lms.push(landmark(setName("The Cradle"), "cradle", cx, cy, sunR * 6.8, "255, 216, 140"));
+    const sunR = b0 * L.sunR;
+    W.cradle = { x: cx, y: cy, sunR, rings: L.rings.map(k => k * sunR),
+      sun: { ...L.sun, radius: sunR } };
+    W.lms.push(landmark(setName(L.name), "cradle", cx, cy, sunR * L.lmR, L.rgb));
     // Little worlds (of this tier) on slow orbits
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < L.worlds; i++) {
       const e = spawnFood(state, false, { type: i % 3 ? undefined : "planet", pos: { x: px(cx), y: py(cy) }, sizeK: 1.1 });
       putInOrbit(e, i % 4, r() * TAU);
       const o = e.orbit, rr = wx(W.cradle.rings[o.ring]);
@@ -244,52 +195,51 @@ const SETUP = {
     }
   },
 
-  "Ruined Armada"(state, r, b0) {
-    const spots = ringSpots(r, 2, b0 * 0.35, b0 * 0.62);
-    const [fx, fy] = spots[0];
+  "Ruined Armada"(state, r, b0, L) {
+    const spots = ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]);
+    const F = L.flagship, [fx, fy] = spots[0];
     // v9.4: the Flagship is a broken capital ship with its own slow debris field
-    W.flagship = { x: fx, y: fy, size: b0 * 0.16, rot: r() * TAU,
-      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: "#8f7fb0", radius: 1, _sp: null, _artBase: null },
-      debris: Array.from({ length: 7 }, (_, i) => {
+    W.flagship = { x: fx, y: fy, size: b0 * F.size, rot: r() * TAU,
+      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: F.color, radius: 1, _sp: null, _artBase: null },
+      debris: Array.from({ length: F.debris }, (_, i) => {
         const a = r() * TAU, d = 0.9 + r() * 0.8;
         return { dx: Math.cos(a) * d, dy: Math.sin(a) * d * 0.7, s: 0.05 + r() * 0.07, rot: r() * TAU, spin: (r() - 0.5) * 0.00008, ph: r() * TAU,
-          art: { type: "craft", ship: "scrap", wreck: true, look: i, color: "#8f7fb0", radius: 1, _sp: null, _artBase: null } };
+          art: { type: "craft", ship: "scrap", wreck: true, look: i, color: F.color, radius: 1, _sp: null, _artBase: null } };
       }) };
-    W.lms.push(landmark(setName("The Flagship"), "flagship", fx, fy, b0 * 0.22, "205, 180, 255"));
+    W.lms.push(landmark(setName(F.name), "flagship", fx, fy, b0 * F.lmR, F.rgb));
     const [lx, ly] = spots[1];
-    W.lms.push(landmark(setName("The Broken Line"), "line", lx, ly, b0 * 0.18, "215, 170, 120"));
+    W.lms.push(landmark(setName(L.line.name), "line", lx, ly, b0 * L.line.lmR, L.line.rgb));
     // Brittle hulls around both
-    for (let i = 0; i < 3; i++) addHull(state, px(fx) + (r() - 0.5) * b0 * 0.3, py(fy) + (r() - 0.5) * b0 * 0.3, 1.5, 2.2);
+    for (let i = 0; i < F.hulls; i++) addHull(state, px(fx) + (r() - 0.5) * b0 * 0.3, py(fy) + (r() - 0.5) * b0 * 0.3, 1.5, 2.2);
     const la = r() * Math.PI;
-    for (let i = 0; i < 4; i++) addHull(state, px(lx) + Math.cos(la) * (i - 1.5) * b0 * 0.09, py(ly) + Math.sin(la) * (i - 1.5) * b0 * 0.09, 1.2, 1.6);
+    for (let i = 0; i < L.line.hulls; i++) addHull(state, px(lx) + Math.cos(la) * (i - 1.5) * b0 * 0.09, py(ly) + Math.sin(la) * (i - 1.5) * b0 * 0.09, 1.2, 1.6);
   },
 
-  "Void Rift"(state, r, b0) {
-    const c = curve(r, b0, 0.4);
+  "Void Rift"(state, r, b0, L) {
+    const c = curve(r, b0, L.bend);
     W.aurora = { ...c, spawn: 0, count: 0 };
-    const m = pointOn(c.pts, 0.5), e = pointOn(c.pts, 0.85);
-    W.lms.push(landmark(setName("The Aurora"), "aurora", m.x, m.y, b0 * 0.14, "130, 240, 200"));
-    W.lms.push(landmark(setName("Stillwater"), "aurora", e.x, e.y, b0 * 0.14, "150, 150, 255"));
+    for (const mk of L.marks) {
+      const m = pointOn(c.pts, mk.at);
+      W.lms.push(landmark(setName(mk.name), "aurora", m.x, m.y, b0 * L.lmR, mk.rgb));
+    }
   },
 
-  "Star Meadow"(state, r, b0) {
-    const names = ["Goldfield", "Sunpatch", "The Orchard"];
-    ringSpots(r, 3, b0 * 0.3, b0 * 0.66).forEach(([x, y], i) => {
-      const m = { x, y, r: b0 * 0.17, want: 7, plant: 0 };
+  "Star Meadow"(state, r, b0, L) {
+    ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]).forEach(([x, y], i) => {
+      const m = { x, y, r: b0 * L.r, want: L.want, plant: 0 };
       W.meadows.push(m);
-      W.lms.push(landmark(setName(names[i]), "meadow", x, y, m.r, "255, 215, 130"));
-      for (let k = 0; k < 4; k++) plantBud(state, m, 0.2 + r() * 0.6);
+      W.lms.push(landmark(setName(L.names[i]), "meadow", x, y, m.r, L.rgb));
+      for (let k = 0; k < L.buds; k++) plantBud(state, m, 0.2 + r() * 0.6);
     });
   },
 
-  "Neutron Forge"(state, r, b0) {
-    const names = ["The Lighthouse", "Ember Pulsar"];
-    ringSpots(r, 2, b0 * 0.3, b0 * 0.55).forEach(([x, y], i) => {
-      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * 0.0019,   // v9.3: slower sweep (was 0.0028): calmer bands, easier to ride
-       
-        art: { type: "neutron", color: i ? "#ffd2b0" : "#e0e8ff", seed: 99 + i, variant: 0, radius: b0 * 0.012 },
-        rgb: i ? "255, 190, 140" : "200, 190, 255", grad: null });
-      W.lms.push(landmark(setName(names[i]), "pulsar", x, y, b0 * 0.08, i ? "255, 190, 140" : "200, 190, 255"));
+  "Neutron Forge"(state, r, b0, L) {
+    ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]).forEach(([x, y], i) => {
+      const P = L.pulsars[i];
+      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * L.spin,
+        art: { type: "neutron", color: P.color, seed: 99 + i, variant: 0, radius: b0 * 0.012 },
+        rgb: P.rgb, grad: null });
+      W.lms.push(landmark(setName(P.name), "pulsar", x, y, b0 * L.lmR, P.rgb));
     });
   }
 };
