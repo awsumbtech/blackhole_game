@@ -24,7 +24,6 @@ export function mix(hex, to, t, a = 1) {
 const WHITE = [255, 255, 245];
 const BLACK = [6, 6, 18];
 export const light = (hex, t, a) => mix(hex, WHITE, t, a);
-const dark = (hex, t, a) => mix(hex, BLACK, t, a);
 export const rgba = (hex, a) => mix(hex, WHITE, 0, a);
 
 export function rng(seed) {
@@ -42,13 +41,6 @@ export function makeCanvas(size) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
   return c;
-}
-
-function path(g, pts) {
-  g.beginPath();
-  g.moveTo(pts[0][0], pts[0][1]);
-  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
-  g.closePath();
 }
 
 export function smoothPath(g, pts) {

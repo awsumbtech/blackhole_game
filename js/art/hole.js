@@ -1,6 +1,6 @@
 // The player's black hole: accretion disk, photon ring, lensed arc, tier-reveal fx.
 
-import { TAU, rgba, rng, makeCanvas } from "./kit.js";
+import { TAU, rng, makeCanvas } from "./kit.js";
 import { artCache, quality, bucketFor } from "./quality.js";
 
 export const PALETTES = {

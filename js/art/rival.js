@@ -1,7 +1,7 @@
 // Rival holes: a small cached violet hole.
 
 import { PALETTES, DISK_IN, DISK_OUT, colAt } from "./hole.js";
-import { TAU, rgba, rng, makeCanvas } from "./kit.js";
+import { TAU, rng, makeCanvas } from "./kit.js";
 import { artCache, bucketFor } from "./quality.js";
 
 /** v8.1: a small cached violet hole for rivals (own disk, lensed arc, ring). */

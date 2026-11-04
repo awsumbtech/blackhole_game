@@ -7,3 +7,23 @@ export { DevMode } from "./DevMode.js";
 export { Inflow } from "./Inflow.js";
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
+
+// The game itself, one part per job (wired together in js/game.js).
+export { createState } from "./GameState.js";
+export { Display } from "./Display.js";
+export { Hud } from "./Hud.js";
+export { Player } from "./Player.js";
+export { Feeding, MEATY } from "./Feeding.js";
+export { RunTracker } from "./RunTracker.js";
+export { Galaxy } from "./Galaxy.js";
+export { PerfMonitor } from "./PerfMonitor.js";
+export { Settings } from "./Settings.js";
+export { ScreenFlow, TITLE_ZOOM, TITLE_AFTER_MS } from "./ScreenFlow.js";
+export { ZenSession } from "./ZenSession.js";
+export { CollapseFlow } from "./CollapseFlow.js";
+export { PlayControls } from "./PlayControls.js";
+export { Menus } from "./Menus.js";
+export { Lifecycle } from "./Lifecycle.js";
+export { ScreenOverlay, TIER_BANNER_FRAMES } from "./ScreenOverlay.js";
+export { Scene } from "./Scene.js";
+export { GameLoop } from "./GameLoop.js";
