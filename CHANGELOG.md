@@ -2,7 +2,7 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
-## v9.6.1 — Core split (branch `refactor-core`, not live yet)
+## v9.6.1 — Core split (live Nov 4 2026)
 
 Code structure only. Nothing changes in play, look, sound or saves (SAVE_VERSION stays 9; old saves load).
 
