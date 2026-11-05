@@ -2,6 +2,21 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.6.1 — Core split (branch `refactor-core`, not live yet)
+
+Code structure only. Nothing changes in play, look, sound or saves (SAVE_VERSION stays 9; old saves load).
+
+- `js/game.js` went from 1,821 lines to a 136-line boot file. Its work now lives in single-job systems in
+  `js/core/`: GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
+  RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle, GameState, Display.
+  They share one `state` and reach each other through one `game` object; no loose globals, and the only
+  `window.*` in game.js is the `?debug` hook `__bh`.
+- `js/art.js` (1,628 lines) is now an 18-line index with the same exports; painters live in `js/art/`
+  by kind of object (dust, rocks, comets, planets, stars, deep sky, hole, rival) plus shared kit, sprite
+  cache and quality.
+- World mechanics and landmark layouts, object types and biomes moved to plain data files in `js/data/`.
+- Removed two unused art helpers and stray imports. sw.js caches every new file (CACHE_NAME blackhole-v9.6.1).
+
 ## v9.6 Flagship (Nov 2026)
 
 - **The Flagship is back, and huge.** The Ruined Armada's landmark is repainted as a detailed, hi-res capital-class wreck instead of a blown-up ship sprite: a long armoured hull snapped in two behind its torn habitat ring, stepped prow plates, a bridge tower, hangar wings, radiator vanes, plated decks with dark city blocks and scattered warm windows, scorch and torn holes, and a drive bank where two drives still smoulder.

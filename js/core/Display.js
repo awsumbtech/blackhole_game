@@ -1,5 +1,5 @@
 // ─── Display ───
-// The game canvas: size, device-pixel ratio and the sharpness cap.
+// The game canvas: size, device-pixel ratio and the sharpness cap. Follows the window size.
 
 export class Display {
   constructor(canvas, container) {
@@ -9,6 +9,7 @@ export class Display {
     this.dprCap = 2;          // screen sharpness cap: 2x on High, 1.5x on Balanced ("Lite")
     this.w = 0; this.h = 0; this.dpr = 1;
     this.resize();
+    window.addEventListener("resize", () => this.resize());
   }
 
   resize() {

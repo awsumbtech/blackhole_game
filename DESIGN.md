@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.6**
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.6"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.6** live; branch `refactor-core` is v9.6.1 (code split only, not live yet)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.6.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -133,7 +133,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **Tier reveal.** The camera slowly pulls back (~2.5s) while you keep moving. A soft chime plays and a quiet line names the new scale. The music adds one layer per tier, up to six.
 - **No edges.** Objects spawn in a band just outside the view and recycle at about 2 view radii, keeping a steady density (~25–40 visible, ~60 nearby).
 - Radar is centred on you, with a trail and rim markers for out-of-range landmarks.
-- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/game.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
+- Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/core/Feeding.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
 
 ### 5b. Growth you can feel (v8.3, `js/depth.js`). This serves the North Star.
 - **The play layer holds what fits you now.** A brand-new hole sees only dust: tier 0 food is dust only, with no biome signature and no big fish while in tier 0. Inedible "bigger fish" are kept to the minimum pace needs (3–4 per regular galaxy from tier 1 on, 1–2 in breathers; cutting them to 2 slowed Comet Current ~15%), and they drift in from the back layer. **At most ~1 tier above you (v8.4):** a big type or biome signature whose home tier (the first tier it is food) is more than one above yours never enters play (`homeTier` in tiers.js); bigger fish are 1.3–2.2× your radius (one tier is 2.6×), and at Grit & Pebbles they are rough rock only. Anything 2+ tiers up stays in the back depth layers.
@@ -202,7 +202,7 @@ Born → grow → collapse → reborn stronger. One reset (Collapse), one meta c
 one upgrade screen (the constellation). There is no in-run currency or shop (stardust was removed
 in v9; saves refund it, see below).
 - **Inside a run, growth is the progression.** Tier-ups and depth-layer merges are the rewards.
-- **Galaxy flow** (`galaxyComplete` / `updateTransition` in game.js). At the target size the galaxy
+- **Galaxy flow** (core/GalaxyFlow.js). At the target size the galaxy
   is credited quietly (stats, records, `galaxyLog` star, run depth). Phase `flowout` (90 frames)
   softly veils the view toward the next galaxy's colour while you keep drifting and eating. The
   next galaxy is built under the veil (`initGalaxy(n, null, true)` keeps your drift), then `flowin`
@@ -327,11 +327,37 @@ The code should read the way a veteran game programmer would write it: lean and 
   - Save migration is checked by `migcmp.mjs`, which must produce identical output to the
     previous version.
 
-### Object map (v9.1) — upgrade / replace one system at a time
+### Object map (v9.6.1) — upgrade / replace one system at a time
+
+`js/game.js` is boot only: it builds one `state` (core/GameState.js) and a `game` object that
+holds every system, in a fixed order, then restores the save and starts the loop. Each system
+gets `game` and reaches the others through it (`game.hud.hint(...)`, `game.galaxy.init(...)`).
+No module-level game globals; the only `window.*` in game.js is the `?debug` hook `window.__bh`.
+Browser-window code lives in two places only: `Display` (resize, devicePixelRatio) and
+`Lifecycle` (keys, tab hidden/closed, the `bh-update` flag from index.html, audio unlock).
 
 ```
-game.js                 orchestrator: state, main loop, screens, wiring
+js/game.js              boot: state + systems + wiring, save restore, first screen, __bh
 js/core/
+  GameState.js          createState(): the one plain state object (save.js persists part of it)
+  Display.js            canvas, size, DPR + sharpness cap (follows window resize)
+  GameLoop.js           rAF frame: timing/dt, then every update in a fixed order; resync()
+  Scene.js              draw order for one frame (sky → depth → world → hole → overlays → veils)
+  ScreenFlow.js         title, intro + birth, drift-in, idle title world, fresh start, first screen, dev start
+  ZenSession.js         Zen: start / update / beginExit / restore (journey snapshot)
+  CollapseFlow.js       collapse confirm, singularity moment, reborn run
+  PlayControls.js       pause menu, controls bar actions (HudControls), stats view, P / Esc
+  Feeding.js            bites (pacing constants MEATY etc.), bumps, power-up pickups, swallowed rivals
+  Player.js             hole radius from mass, steering + drift, radar trail
+  RunTracker.js         galaxy goals + stars, Ascension run time/depth, Hungry Wisp, rivals, finds
+  Galaxy.js             init(galaxy, resume, flow): sets up a galaxy; progress()
+  Hud.js                DOM HUD + hint toast (one-time hints), event warnings
+  ScreenOverlay.js      tier banner, thumbstick, floaters, combo counter, mouse cursor
+  PerfMonitor.js        frame-time ring, auto quality drop, __bh.perf() report
+  Settings.js           apply settings, setSetting, quality (art + DPR cap), hole skin filter
+  Menus.js              constellation, star map, logbook, save backup code; state.version
+  Lifecycle.js          save restore at boot, autosave, hidden/pagehide, calm update reload, audio unlock
+  breath.js             breathPhase(now) (4 s in, 6 s out)
   Camera.js             framing, zoom, tier reveal pull-back
   Growth.js             tier-ups, depth-layer merge spectacle, banner
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
@@ -340,25 +366,36 @@ js/core/
   Inflow.js             v9.5 accretion inflow, rising motes, impact burst (feed / burst / update / drawBack / drawFront)
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
+js/art.js               thin index: same exports as before (spriteFor, drawBlackHoleArt, heatFor, tailFor...)
+js/art/
+  quality.js            art quality + cache registry (artCache(); a quality change clears all)
+  kit.js                shared paint helpers (colour, rng, shading, craters, rings, atmosphere)
+  sprites.js            sprite cache + painter table (lookOf, spriteFor, beginArtFrame, artStats)
+  dust.js  rocks.js  comets.js  planets.js  stars.js  deepsky.js   painters by kind of object
+  hole.js               the black hole, its disk and reveal fx; rival.js  rival holes
+js/data/                plain data, no logic
+  worlds.js             MECHANICS, SET_PREFIX, LAYOUTS (per-galaxy mechanics + landmarks)
+  objects.js            objectTypes          biomes.js   biomeCatalog, BREATHERS, REGULARS
 js/ships.js             Ship system (v9.4): shipClassFor / adoptShip / setWreck / upgradeShip,
-                        paintShip (art.js PAINTERS.craft), drawShip (heading, breathing engines,
+                        paintShip (art PAINTERS.craft), drawShip (heading, breathing engines,
                         plate break-apart), setShipLight (galaxy bounce rim). Entity fields: ship, wreck, steer
-js/entities.js          plain entity factory + biomes (data, not a class)
+js/entities.js          plain entity factory (createEntity declares every field), biome picking
 js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
-js/worlds.js            per-galaxy mechanics & landmarks
+js/worlds.js            per-galaxy mechanics & landmarks (logic; data in js/data/worlds.js)
 js/depth.js             DepthLayers (hazy back tiers + merge snapshot)
 js/ascension.js         Ascension / Dark Matter / perks / milestones
 js/constellation.js     Constellation screen
 js/audio.js             Audio (drone, layers, soft SFX)
-js/art.js + render.js   Renderer (sprites, hole, entities, radar)
+js/render.js            Renderer (entities, hole wrapper, particles, radar)
 js/input.js             Input (thumbstick / follow / mouse / keys)
 js/save.js              Save + migration
-js/zen.js               Zen sessions
+js/zen.js               Zen sessions (picker, arc, exit)
 js/wisp.js              Wisp companion class: unlock / isActive / update / draw / react / setSkin / setAnim
 ```
 
-**Rule:** change one system's public methods or swap its file; leave the others alone. Migrate
-gradually — extract the next hotspot from `game.js` when you touch that area, don't rewrite everything overnight.
+**Rule:** change one system's public methods or swap its file; leave the others alone. Keep the
+update order (GameLoop) and draw order (Scene) in one place each. New per-frame work goes in the
+system that owns it, called from GameLoop; don't grow game.js again.
 
 Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless Chromium, 3 runs of 20 s each:
 
@@ -378,7 +415,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 **Save safety:** on entry the raw save string is snapshotted to sessionStorage and `setSaveSuspended(true)` makes `save()`/`writeBackup()` no-ops. Exit restores the snapshot and reloads. If the page reloads mid-sandbox (crash, update), `DevMode.recover()` runs before `load()` and restores the snapshot. Tested: a full collapse inside the sandbox leaves the real save byte-identical.
 
-**Hooks:** game.js passes `start / fireEvent / tierUp / setWisp / collapse / perf / reloadToTitle`; `state.devBiome` overrides the biome for one `initGalaxy`; `dev.frozen` zeroes `dt`. `__bh.dev` exposes it for headless sweeps (`Object.assign(__bh.dev.cfg, {...}); __bh.dev.enter()`).
+**Hooks:** game.js passes `start / fireEvent / tierUp / setWisp / collapse / perf / reloadToTitle`; `state.devBiome` overrides the biome for one `Galaxy.init`; `dev.frozen` zeroes `dt`. `__bh.dev` exposes it for headless sweeps (`Object.assign(__bh.dev.cfg, {...}); __bh.dev.enter()`).
 
 **Calm check:** after visual changes, sweep the 7 biomes at a few tiers at 412×915 and look for large moving bands, snakes, or hard pulsing (v9.3 sweep: `/workspace/bh_v93_sweep.png`).
 
@@ -397,12 +434,13 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.6.1 Core split (branch `refactor-core`, not live yet):** code structure only, zero gameplay/visual/audio/save change (SAVE_VERSION 9). game.js (1.8k lines) split into single-job systems in `js/core/` (GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player, RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle, GameState, Display) wired through one `game` object; art.js split by kind of object into `js/art/` behind a thin index; world, object and biome definitions moved to `js/data/`. Checked with a seeded, fake-clock dev sweep (pixel diff vs main), perf bench and save migration compare.
 - **v9.5.1 No Zen ring:** the breathing-guide ring (shown in Zen before the wisp was unlocked) and the magnet ring are never drawn in Zen. Brian's rule: no ring around the hole in Zen.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
 - **v9.1 Systems + merge spectacle:** small system classes (`js/core/`: Camera, Growth, GalaxyFlow, Fx) with stable public surfaces; entities stay plain objects for hot loops. Code style §7e now prefers composition over god-objects. Kick-up: richer layer-merge on tier-up — soft "world opens" pulse, warm arrival rim on merging food, banner names what drifts closer. Behavior otherwise identical; saves unchanged (v8).
 - **v9.0 One loop + painted looks:** born → grow → collapse → reborn stronger. Stardust and its shop removed (save v8 refunds them as Dark Matter, 25 stardust = 1 DM, +8 DM per galaxy perk); galaxy perks folded into constellation nodes; no summary screen: galaxies flow into each other in play (soft veil, caption, chime, star added silently; star map in pause and title); soft collapse prompt when growth slows, then constellation and a rebirth intro; goal stars are optional logbook entries worth +2 DM per new best star; milestones pruned to golden / supernova / skins. Events and mechanic objects are tier-gated (`fitType`, `eventFor` in tiers.js: content at most one tier up; Dust Drift / Soft Bloom stand in at Space Dust). Rebalanced (Nursery, Void Rift, Meadow quicker; Comet and Armada stay the walls). Art: every type has painted looks (§3).
 - **v8.6 A real beginning:** the intro is a dark void that hides the galaxy (wordmark, then "Drift. / Eat what's smaller. / Grow."), then the void lifts over ~2.8s while the newborn hole is born in the play view (`state.birth` scales the drawn hole). `seenHints.intro` is set only when the intro has played, and boot shows the intro whenever it is unset, so an interrupted start-over resumes at the beginning. SW updates: `reg.update()` whenever the app returns to the front; on `controllerchange` the game saves and reloads at a calm moment (title or hidden), coming back to the title.
-- **v8.5 True fresh start:** title "Start completely over" (`startCompletelyOver` in game.js) wipes progress, Ascension, the star map's galaxy log and all `seenHints` (onboarding, codex seen flags, tier/merge captions), ends any Zen session, then replays the first-launch intro and drift-in into a newborn dust-only galaxy 1. Settings, lifetime stats, fastest times, the logbook and Zen notes stay.
+- **v8.5 True fresh start:** title "Start completely over" (`startCompletelyOver` in core/ScreenFlow.js) wipes progress, Ascension, the star map's galaxy log and all `seenHints` (onboarding, codex seen flags, tier/merge captions), ends any Zen session, then replays the first-launch intro and drift-in into a newborn dust-only galaxy 1. Settings, lifetime stats, fastest times, the logbook and Zen notes stay.
 - **v8.4 Still tiny:** big inedible objects in play are at most ~1 tier up (`homeTier` filter on big types and biome signatures; bigger-fish 1.3–2.2× your radius; rough rock only at Grit & Pebbles); Debris Reef reefs are back-layer haze at tier 0 and merge in at tier 1 (caption waits, `minTier`); newborn opening hint.
 - **v8.3 Growth you can feel:** North Star (§0); a fresh game is dust only, bigger tiers wait in blurred back depth layers and merge into play on tier-up (`js/depth.js`, §5b); the hole visibly outgrows its food; rivals drift in from the back; reef tendrils (the "snakes") removed.
 - **v8.1 Painterly, bolder:** Interstellar hole, painted per-biome skies, detailed sprites, spaghettification, reveal ring, violet rivals, unique discoveries, richer landmarks, new icon + splash.
@@ -417,13 +455,17 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 ```
 index.html          HUD, title, overlays, star map + logbook screens
-manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME)
+manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME, ASSETS: every js file)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
-js/game.js          orchestrator (~1.8k). js/core/ Camera, Growth, GalaxyFlow, Fx, Inflow, Flagship, DevMode, HudControls
+js/game.js          boot only (~140 lines); systems in js/core/ (map in §7e)
+js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
+                    RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
+                    GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Flagship, DevMode, HudControls
+js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, planets, stars, deepsky), hole, rival, kit
+js/data/            plain data: worlds (mechanics, landmark layouts), objects (types), biomes
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
-js/entities.js      object types, 7 biomes js/living-world.js gravity, spawning, gentle events (CFG)
-js/art.js           painterly sprites, black hole   js/backdrop.js  parallax sky
-js/ships.js         v9.4 ship classes, painter, motion, break-apart
+js/entities.js      entity factory, biome picking   js/living-world.js gravity, spawning, gentle events (CFG)
+js/backdrop.js      parallax sky         js/ships.js        v9.4 ship classes, painter, motion, break-apart
 js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
 js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
@@ -436,6 +478,8 @@ js/powerups.js      power-ups            js/progression.js base mods, run record
 js/save.js          localStorage, migration, backup codes   js/ui.js  HUD, stats, settings, codex
 js/input.js         thumbstick, follow-finger, mouse, keyboard
 ```
+
+**New file? Add it to `ASSETS` in sw.js** or the installed app breaks offline.
 
 Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it locally with `python3 -m http.server 8080`. Add `?debug` to the URL for `window.__bh`, which includes `__bh.perf()`.
 
