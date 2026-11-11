@@ -9,18 +9,25 @@
     "gone": true,
     "pieces": 4,
     "lives": [
-      47,
-      48,
-      55,
-      59
+      50,
+      54,
+      52,
+      57
     ],
-    "lifeMin": 36,
+    "lifeMin": 42,
     "lifeMax": 60,
     "fromSprite": true,
-    "drawHits": 60,
+    "drawHits": 154,
     "coreBad": 0,
     "coreSamples": 2941,
-    "frames": 60,
+    "frames": 58,
+    "bright": [
+      35,
+      38,
+      38,
+      43
+    ],
+    "brightOk": true,
     "liveAfter": 0,
     "removed": 1
   },
@@ -29,8 +36,8 @@
     "idle": {
       "hits": 0,
       "live": 0,
-      "ms": 5007
+      "ms": 5008
     },
-    "biteHits": 12
+    "biteHits": 24
   }
 }

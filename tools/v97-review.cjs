@@ -127,34 +127,38 @@ async function bite(page) {
       let coreBad = 0;
       let frames = 0;
       let baseCount = 0;
+      const born = live.slice();
+      const bright = born.map(() => 0);
       const plainDraw = field.draw;
       field.draw = function (ctx2, hx, hy, side) {
-        let before = null;
-        if (side === 1) before = sample();
+        const before = sample();
         inside = true;
         let result;
         try { result = plainDraw.call(field, ctx2, hx, hy, side); }
         finally { inside = false; }
-        if (before) {
-          const after = sample();
+        const after = sample();
+        if (side === 1) {
           frames++;
           baseCount = before.length / 3;
-          const n = Math.min(before.length, after.length);
-          for (let i = 0; i < n; i++) if (before[i] !== after[i]) coreBad++;
+          for (let i = 0; i < born.length; i++) if (born[i].visAlpha > 0.3) bright[i]++;
         }
+        const n = Math.min(before.length, after.length);
+        for (let i = 0; i < n; i++) if (before[i] !== after[i]) coreBad++;
         return result;
       };
       for (let age = 0; age <= maxLife; age++) {
         bh.scene.draw(now, 0, true);
         if (age < maxLife) field.update(1, false);
       }
+      // 18 frames at dt=1 is 300 ms at 60 Hz. At least 3 of the 4 shards.
+      const brightOk = bright.filter(n => n >= 18).length >= 3;
       field.draw = plainDraw;
       drawHits = hits;
       const massGained = s.mass - mass0;
       const lifeOk = lives.length === 4 && lives.every(n => n >= field.lifeMin && n <= field.lifeMax);
       s.paused = false;
       return {
-        ok: massGained > 0 && gone && lifeOk && fromSprite && field.live === 0 && drawHits > 0 && coreBad === 0 && baseCount > 20,
+        ok: massGained > 0 && gone && lifeOk && fromSprite && field.live === 0 && drawHits > 0 && coreBad === 0 && baseCount > 20 && brightOk,
         massGained,
         gone,
         pieces: live.length,
@@ -166,6 +170,8 @@ async function bite(page) {
         coreBad,
         coreSamples: baseCount,
         frames,
+        bright,
+        brightOk,
         liveAfter: field.live,
         removed: n0 - s.entities.length
       };

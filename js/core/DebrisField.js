@@ -1,23 +1,27 @@
 // ─── DebrisField ───
 // One job: the bits of whatever was just eaten. They exist only during a bite.
 // Each piece is that item's own sprite, cut by a painted shard mask (an image
-// asset, composited once and cached). They start where the item was, spiral
-// in, shrink, and fade out before their footprint crosses the painted shadow.
-// Nothing is drawn over the black centre. Idle means no canvas calls.
+// asset, composited once and cached). A bite starts inside the painted shadow,
+// so the pieces hop out to the rim (the item's angle, just past shadowRadius)
+// and ride that rim in the disk's direction for about half to three-quarters
+// of a turn. They tighten, shrink and fade, and alpha is 0 as the footprint
+// meets the shadow. Nothing is drawn over the black centre. Idle means no
+// canvas calls.
 //
-// If the masks have not loaded, or the item is already inside the shadow
-// (no room to travel), one piece is the whole sprite: it shrinks and fades
-// in place. Still only that image. No code-drawn stand-in.
+// If the masks have not loaded, one piece is the whole sprite on that same
+// rim. Still only that image. No code-drawn stand-in, no light streaks.
 
 import { spriteFor } from "../art.js";
 import { shadowRadius } from "../art/hole.js";
 
 const CAP = 18;
 const PER_BITE = 4;
-const LIFE_MIN = 36;   // 0.6 s at 60 Hz
+const LIFE_MIN = 42;   // 0.7 s at 60 Hz
 const LIFE_MAX = 60;   // 1.0 s
-const SPIN = 0.028;
-const SPIN_STILL = 0.01;
+// Canvas y grows downward, so atan2 increases clockwise, which is also the
+// way drawDisk's positive rotation carries the disk.
+const TURN_MIN = Math.PI;        // half a turn
+const TURN_MAX = Math.PI * 1.5;  // three quarters
 const MASKS = [1, 2, 3, 4].map(n => "assets/fx/shard_mask_" + n + ".png");
 
 const shardCache = new WeakMap();
@@ -41,7 +45,8 @@ export class DebrisField {
     for (let i = 0; i < CAP; i++) {
       this.pieces[i] = {
         on: false, age: 0, life: LIFE_MIN, ang: 0, rad: 0, r0: 0,
-        core: 1, dir: 1, spin0: 0, spr: null, dw: 0
+        travel: TURN_MIN, slack0: 1, spin0: 0, spr: null, dw: 0, dh: 0,
+        visAlpha: 0, whole: false
       };
     }
     this.live = 0;
@@ -148,57 +153,85 @@ export class DebrisField {
     return oldest;
   }
 
-  _arm(p, e, dx, dy, still, whole) {
-    const state = this.state;
-    const dist = Math.hypot(dx, dy);
+  /**
+   * Park one piece on the rim at `ang`. The centre sits just outside the
+   * painted shadow by about half the shard (its corner reach) plus a short
+   * gap, so a bite that started inside the shadow still shows.
+   */
+  _arm(p, ang, dw, dh, still, shadowR, whole) {
+    const zoom = this.state.zoom > 0 ? this.state.zoom : 1;
+    const px = 1 / (zoom * (this.dpr || 1));
+    const reach = 0.71 * dw;
     p.on = true;
     p.age = 0;
     p.life = still ? LIFE_MIN : LIFE_MIN + Math.floor(Math.random() * (LIFE_MAX - LIFE_MIN + 1));
-    p.ang = Math.atan2(dy, dx);
-    p.core = state.radius;
-    p.r0 = dist;
-    p.rad = dist;
+    p.ang = ang;
+    p.spin0 = ang;
     p.whole = whole;
-    p.dir = 1;
-    p.spin0 = p.ang;
-    p.dw = e.radius * 2;
-    p.dh = e.radius * 2;
+    p.dw = dw;
+    p.dh = dh;
+    // Just outside the shadow: the corner reach, plus a hair so the first
+    // frame is not already touching. That hair is the gap they close.
+    const hop = Math.max(reach * 0.12, 2 * px);
+    p.r0 = shadowR + reach + hop;
+    p.rad = p.r0;
+    p.slack0 = Math.max(px, hop);
+    p.travel = (still ? TURN_MIN * 0.45 : TURN_MIN);
+    p.visAlpha = 0;
+    p.spr = null;
     this.live++;
     this.spawned++;
   }
 
-  /** Start pieces at the eaten item. The entity can go. */
+  /** Where the piece is, and how strongly it draws, for the current age. */
+  _pose(p, still) {
+    const t = p.life > 0 ? Math.min(1, p.age / p.life) : 1;
+    const sc = 1 - 0.46 * t;
+    const shadowR = shadowRadius(this.state.radius, this.state.gulp, still);
+    const radial = 0.71 * p.dw * sc;
+    const touch = shadowR + radial;
+    const remain = (1 - t) * (1 - 0.2 * t);
+    const rad = touch + (p.r0 - touch) * remain;
+    const slack = rad - shadowR - radial;
+    const ageFade = t < 0.4 ? 1 : Math.pow((1 - t) / 0.6, 0.85);
+    const zoom = this.state.zoom > 0 ? this.state.zoom : 1;
+    const pad = 1.25 / (zoom * (this.dpr || 1));
+    const alpha = slack <= pad ? 0 : Math.min(1, slack / p.slack0) * ageFade;
+    return { sc, rad, alpha, radial };
+  }
+
+  /** Start pieces on the rim at the eaten item's angle. The entity can go. */
   spawn(e) {
     const state = this.state;
-    const px = Math.max(8, e.radius * (state.zoom || 1) * (this.dpr || 1));
+    const zoom = state.zoom > 0 ? state.zoom : 1;
+    const px = Math.max(8, e.radius * zoom * (this.dpr || 1));
     const sp = spriteFor(e, px);
     const canvas = sp.c;
     if (!canvas || !canvas.width) return;
-    const dx = e.x - state.playerX;
-    const dy = e.y - state.playerY;
+    const base = Math.atan2(e.y - state.playerY, e.x - state.playerX);
     const still = !!(state.settings && state.settings.reduceMotion);
     const shadowR = shadowRadius(state.radius, state.gulp, still);
-    // Room outside the painted shadow. Zero means the whole item is already inside it.
-    const span = Math.hypot(dx, dy) + e.radius - shadowR;
-    if (!this.masksReady || span <= 0) {
+    const item = Math.max(1, e.radius * 2);
+    const minW = 6 / zoom;
+    if (!this.masksReady) {
+      const dw = Math.max(minW, item * 0.34);
       const p = this._free();
-      this._arm(p, e, dx, dy, still, true);
+      this._arm(p, base, dw, dw, still, shadowR, true);
       p.spr = canvas;
-      p.dir = 1;
       return;
     }
     const shards = this._shards(canvas);
     for (let i = 0; i < PER_BITE; i++) {
       const sh = shards[i];
-      const ox = sh.ox * e.radius * 2;
-      const oy = sh.oy * e.radius * 2;
+      const frac = 0.25 + 0.15 * (i / (PER_BITE - 1));
+      const dw = Math.max(minW, item * frac);
+      const dh = dw * (sh.canvas.height / Math.max(1, sh.canvas.width));
       const p = this._free();
-      this._arm(p, e, dx + ox, dy + oy, still, false);
+      // A short fan at the item's angle, wide enough that four pieces read apart.
+      this._arm(p, base + (i - 1.5) * 0.36, dw, dh, still, shadowR, false);
       p.spr = sh.canvas;
-      p.dw = e.radius * 2 * sh.fw;
-      p.dh = e.radius * 2 * sh.fh;
-      p.dir = i % 2 === 0 ? 1 : -1;
-      p.spin0 = p.ang;
+      const u = i / (PER_BITE - 1);
+      p.travel = still ? TURN_MIN * 0.45 : TURN_MIN + (TURN_MAX - TURN_MIN) * u;
     }
   }
 
@@ -213,7 +246,6 @@ export class DebrisField {
 
   update(dt, still) {
     if (dt <= 0 || this.live <= 0) return;
-    const spin = still ? SPIN_STILL : SPIN;
     for (let i = 0; i < CAP; i++) {
       const p = this.pieces[i];
       if (!p.on) continue;
@@ -221,16 +253,13 @@ export class DebrisField {
       if (p.age >= p.life) {
         p.on = false;
         p.spr = null;
+        p.visAlpha = 0;
         this.live--;
         this.finished++;
         continue;
       }
-      const k = 1 - p.age / p.life;
-      const shadowR = shadowRadius(this.state.radius, this.state.gulp, still);
-      const span = p.r0 - shadowR;
-      // No room to travel: hold the start distance and let draw shrink the sprite.
-      p.rad = span <= 0 ? p.r0 : shadowR + span * k * k;
-      p.ang += spin * p.dir * dt;
+      p.ang += (p.travel / p.life) * dt;
+      p.rad = this._pose(p, still).rad;
     }
   }
 
@@ -240,34 +269,29 @@ export class DebrisField {
    */
   draw(ctx, hx, hy, side) {
     if (this.live <= 0) return;
+    const still = !!(this.state.settings && this.state.settings.reduceMotion);
+    // The far half is drawn first. Clear last frame's alphas once per frame.
+    if (side === -1) {
+      for (let i = 0; i < CAP; i++) this.pieces[i].visAlpha = 0;
+    }
     for (let i = 0; i < CAP; i++) {
       const p = this.pieces[i];
       if (!p.on || !p.spr) continue;
       const below = Math.sin(p.ang) >= 0 ? 1 : -1;
       if (below !== side) continue;
-      const t = p.age / p.life;
-      const lifeFade = p.whole ? (1 - t) : (t < 0.8 ? 1 : (1 - t) / 0.2);
-      let sc = p.whole ? Math.max(0.05, 1 - t) : 0.35 + 0.65 * (1 - t);
-      const shadowR = shadowRadius(this.state.radius, this.state.gulp, !!(this.state.settings && this.state.settings.reduceMotion));
-      // Whole footprint, including a rotated corner (0.71 of the drawn width).
-      // Alpha is 0 when rad - shadowR <= 0.71*dw*sc. If the piece is still
-      // outside the shadow, shrink it until that is true rather than covering the core.
-      const room = p.rad - shadowR;
-      if (room <= 0) continue;
-      const maxSc = room / (0.71 * p.dw);
-      if (maxSc < 0.08) continue;
-      if (sc > maxSc * 0.96) sc = maxSc * 0.96;
-      if (p.rad - shadowR <= 0.71 * p.dw * sc) continue;
-      const edgeFade = Math.min(1, room / (shadowR * 0.16));
-      const alpha = edgeFade * lifeFade;
-      if (alpha <= 0.02) continue;
-      const x = hx + Math.cos(p.ang) * p.rad;
-      const y = hy + Math.sin(p.ang) * p.rad;
-      const dw = p.dw * sc;
-      const dh = (p.dh || p.dw) * sc;
+      const pose = this._pose(p, still);
+      p.rad = pose.rad;
+      if (pose.alpha <= 0.02) continue;
+      if (pose.rad - shadowRadius(this.state.radius, this.state.gulp, still) <= pose.radial) continue;
+      const x = hx + Math.cos(p.ang) * pose.rad;
+      const y = hy + Math.sin(p.ang) * pose.rad;
+      const dw = p.dw * pose.sc;
+      const dh = (p.dh || p.dw) * pose.sc;
+      p.visAlpha = pose.alpha;
       this.draws++;
       ctx.save();
-      ctx.globalAlpha = alpha;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = pose.alpha;
       ctx.translate(x, y);
       ctx.rotate(p.ang - p.spin0);
       ctx.drawImage(p.spr, -dw / 2, -dh / 2, dw, dh);
