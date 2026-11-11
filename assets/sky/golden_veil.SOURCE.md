@@ -25,15 +25,14 @@ No masks, vignettes, gradients, blurs or per-region operations.
 - Euclidean distance: 10.02.
 - For reference: a code vignette scored 1.62, and the painted backdrops score 10.3–11.2. That vignette was never shipped.
 
-**Colour deltas**, measured at screen 0.35, 390×844, golden minus plain, in RGB levels. Centre = x 120–270, y 300–544, around the hole.
+**Colour deltas.** Canvas-only `getImageData` (the page chrome is not in the figures), golden minus plain, one frozen frame after the Flagship has finished painting and fading. Centre is the middle 30–70% of the canvas on both axes, the same box `tools/v97-review.cjs` uses.
 
-| Backdrop | Whole frame (R / G / B) | Centre (R / G / B) |
-|---|---|---|
-| armada | **+17.4** / +10.5 / +1.3 | **+22.5** / +15.0 / +2.5 |
-| nursery | **+17.5** / +9.6 / +1.4 | **+22.7** / +13.5 / +2.7 |
-| meadow | +16.3 / +10.0 / +1.5 | +20.9 / +14.5 / +3.0 |
+| Backdrop | Whole frame (R / G / B) | Centre 30–70% (R / G / B) | Pixels moved >8 |
+|---|---|---|---|
+| Ruined Armada | +16.69 / +10.35 / +1.68 | +19.09 / +12.81 / +2.41 | 92.75% |
+| Planet Nursery | +17.55 / +9.84 / +1.89 | +21.69 / +12.99 / +2.83 | 94.25% |
 
-The target was +12 to +25 on R, with the centre warmed as well; both are met.
+The art-box whole-frame check (no centre box) was about +17 R / +10 G / +1.4 B, inside the +12 to +25 R target. The centre is warmed too.
 
 ## Candidates
 | Candidate | Result |

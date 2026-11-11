@@ -221,7 +221,10 @@ const SHOT_DIR = process.env.V97_SHOT_DIR || path.join(OUT_DIR, "after");
 
 /**
  * Plain and golden from one frozen draw. Same seed, same camera, same timestamp.
- * The game loop is paused so a later frame cannot move the world between the two shots.
+ * Before either shot, slice-painted sprites in view (the Flagship) must be
+ * finished and past their 1.2 s fade. The fade reads performance.now(), so
+ * freezing the scene clock does not hold it.
+ * Deltas are canvas-only getImageData. The centre box is the middle 30–70%.
  */
 async function goldenShots(page) {
   fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -233,6 +236,25 @@ async function goldenShots(page) {
   const report = [];
   for (const [biome, tier, galaxy, plainName, goldName] of pairs) {
     await enter(page, { biome, tier, galaxy, zen: false });
+    await page.evaluate(() => {
+      const s = window.__bh.state;
+      const w = window.__bh.worlds();
+      const lm = w && w.landmarks && w.landmarks[0];
+      if (lm) {
+        const off = Math.max(s.viewW * 0.28, 60);
+        s.playerX = lm.x + off;
+        s.playerY = lm.y;
+        s.camX = s.playerX;
+        s.camY = s.playerY;
+      }
+      s.paused = false;
+      const toast = document.getElementById("hint-toast");
+      if (toast) toast.classList.add("hidden");
+    });
+    await page.waitForFunction(() => {
+      const r = window.__bh.slicePaintReady();
+      return r && r.ready;
+    }, { timeout: 20000 });
     const delta = await page.evaluate(() => {
       const bh = window.__bh;
       const s = bh.state;
@@ -293,7 +315,9 @@ async function goldenShots(page) {
         pctOver8: +((over / n) * 100).toFixed(2),
         centerMeanRGB: [mean(cdr, cn), mean(cdg, cn), mean(cdb, cn)],
         centerPctOver8: +((cover / cn) * 100).toFixed(2),
-        pixels: n
+        pixels: n,
+        source: "canvas getImageData",
+        centerBox: "30-70%"
       };
     });
     await page.screenshot({ path: path.join(SHOT_DIR, goldName) });

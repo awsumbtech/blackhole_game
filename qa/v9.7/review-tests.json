@@ -9,18 +9,20 @@
       "plain": "phone-armada-plain.png",
       "golden": "phone-armada-golden.png",
       "meanRGB": [
-        17.9,
-        11.12,
-        1.81
+        16.69,
+        10.35,
+        1.68
       ],
-      "pctOver8": 96.15,
+      "pctOver8": 92.75,
       "centerMeanRGB": [
-        22.27,
-        14.94,
-        2.79
+        19.09,
+        12.81,
+        2.41
       ],
-      "centerPctOver8": 98.25,
-      "pixels": 1235520
+      "centerPctOver8": 96.02,
+      "pixels": 1235520,
+      "source": "canvas getImageData",
+      "centerBox": "30-70%"
     },
     {
       "biome": "Planet Nursery",
@@ -31,19 +33,21 @@
         9.84,
         1.89
       ],
-      "pctOver8": 94.26,
+      "pctOver8": 94.25,
       "centerMeanRGB": [
-        21.7,
-        13.01,
-        2.85
+        21.69,
+        12.99,
+        2.83
       ],
-      "centerPctOver8": 97.01,
-      "pixels": 1235520
+      "centerPctOver8": 96.93,
+      "pixels": 1235520,
+      "source": "canvas getImageData",
+      "centerBox": "30-70%"
     }
   ],
   "bite": {
     "ok": true,
-    "massGained": 143.15555466796104,
+    "massGained": 31.63493265336001,
     "gone": true,
     "liveAfterBite": 1,
     "liveAfter": 0,
@@ -54,57 +58,57 @@
     "notes": [],
     "samples": [
       {
-        "phase": 3.9,
-        "draws": 132,
+        "phase": 4.188,
+        "draws": 106,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 0.342,
-        "draws": 132,
+        "phase": 0.63,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 3.067,
-        "draws": 132,
+        "phase": 3.355,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 5.792,
-        "draws": 132,
+        "phase": 6.08,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 2.233,
-        "draws": 131,
+        "phase": 2.521,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 4.958,
-        "draws": 130,
+        "phase": 5.246,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 1.4,
-        "draws": 129,
+        "phase": 1.688,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 4.125,
-        "draws": 128,
+        "phase": 4.412,
+        "draws": 102,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0

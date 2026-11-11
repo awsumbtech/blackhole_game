@@ -7,7 +7,7 @@ import { createInput } from "./input.js";
 import * as audio from "./audio.js";
 import { save, setSaveSuspended, SAVE_STORAGE_KEY } from "./save.js";
 import { getBiome, biomeCatalog } from "./entities.js";
-import { onWorldEvent, onWorldTier, worldsInfo, worldsFeature } from "./worlds.js";
+import { onWorldEvent, onWorldTier, worldsInfo, worldsFeature, slicePaintReady } from "./worlds.js";
 import { layersInfo } from "./depth.js";
 import { artStats } from "./art.js";
 import { discoveriesInfo } from "./discoveries.js";
@@ -133,7 +133,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   perf: () => game.perf.report(), layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => game.perf.reset(), art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
   camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, ring, absorption,
-  scene: game.scene,
+  scene: game.scene, slicePaintReady: () => slicePaintReady(state),
   feeding: game.feeding,
   worldTier: () => onWorldTier(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,

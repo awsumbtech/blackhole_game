@@ -122,6 +122,13 @@ export class Flagship {
    * ring = false paints the Zen look: no habitat ring loop, only short stubs
    * at the hub (Brian: never a ring around the hole in Zen).
    */
+  /** Cache lookup only. Does not paint. born is the wall-clock time the sprite finished. */
+  peek(look, light, lite, ring = true) {
+    const key = `${look}|${light.key}|${lite ? 1 : 0}|${ring ? 1 : 0}`;
+    const s = this.cache.get(key);
+    return s ? { ready: true, born: s.born || 0 } : { ready: false, born: 0 };
+  }
+
   sprite(look, light, lite, ring = true, budgetMs = 4) {
     const key = `${look}|${light.key}|${lite ? 1 : 0}|${ring ? 1 : 0}`;
     const s = this.cache.get(key);

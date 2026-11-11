@@ -1075,6 +1075,25 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
 let lastFD = 0;
 /** For tests/debug: nearest mechanic feature, in view radii */
 export function worldsFeature(state) { if (!W) return null; lastFD = featureDist(state) / viewR(state); return lastFD; }
+/**
+ * Slice-painted sprites currently in view. The Flagship is the one: it stays
+ * null until the slices finish, then fades in for 1.2 s on the wall clock.
+ * Ready means the sprite exists and that fade has finished (now > born + 1.3 s).
+ */
+export function slicePaintReady(state) {
+  const now = performance.now();
+  const pending = [];
+  if (W && W.flagship) {
+    const fl = W.flagship;
+    const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
+    if (onScreen(state, x, y, s * 1.6, state.viewW, state.viewH)) {
+      const sp = FLAGSHIP.peek(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");
+      if (!sp.ready || !(now > sp.born + 1300)) pending.push({ name: "flagship", born: sp.born, now });
+    }
+  }
+  return { ready: pending.length === 0, pending };
+}
+
 /** For the automated tests (dev builds only) */
 export function worldsInfo() {
   if (!W) return null;
