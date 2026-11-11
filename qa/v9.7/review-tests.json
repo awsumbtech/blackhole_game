@@ -2,23 +2,76 @@
   "ok": true,
   "notes": [],
   "errs": [],
-  "ring": {
-    "before": 0,
-    "after": 0,
-    "phase": 2.909
-  },
-  "longZen": "qa/v9.7/after/phone-zen-long.png",
+  "command": "node tools/v97-review.cjs",
   "bite": {
     "ok": true,
-    "massGained": 116.84062567117144,
+    "massGained": 63.00035781385668,
     "gone": true,
     "liveAfterBite": 1,
     "liveAfter": 0,
     "removed": 1
   },
-  "golden": {
-    "loaded": true,
-    "plain": "qa/v9.7/after/phone-armada-plain.png",
-    "golden": "qa/v9.7/after/phone-armada-golden.png"
+  "ring": {
+    "ok": true,
+    "notes": [],
+    "samples": [
+      {
+        "phase": 4.285,
+        "draws": 103,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 0.727,
+        "draws": 102,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 3.452,
+        "draws": 104,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 6.177,
+        "draws": 102,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 2.618,
+        "draws": 100,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 5.343,
+        "draws": 100,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 1.785,
+        "draws": 100,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      },
+      {
+        "phase": 4.51,
+        "draws": 100,
+        "pairs": 2,
+        "maxAbsAng": 0,
+        "tilted": 0
+      }
+    ],
+    "minutes": 5
   }
 }

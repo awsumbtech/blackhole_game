@@ -25,8 +25,6 @@ export class AccretionRing {
     this.front = load("assets/hole_ring_front.png");
     this.phase = 0;
     this.draws = 0;
-    // Always 0. The halves stay horizontal. Tests assert this after a long Zen.
-    this.rotation = 0;
   }
 
   get present() {

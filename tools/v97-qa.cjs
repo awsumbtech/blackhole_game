@@ -208,26 +208,28 @@ async function checks(page) {
     const fail = m => { out.ok = false; out.notes.push(m); };
     if (!bh.ring || !bh.ring.present) fail("ring images not present");
     if (!bh.absorption) fail("no absorption");
-    const before = bh.absorption.live;
-    const ents = bh.state.entities.filter(e => !e.powerup && !e.consumed);
-    const n = Math.min(3, ents.length);
-    for (let i = 0; i < n; i++) {
-      const e = ents[i];
-      const ang = i * 2.094;
-      e.x = bh.state.playerX + Math.cos(ang) * bh.state.radius * 2.8;
-      e.y = bh.state.playerY + Math.sin(ang) * bh.state.radius * 2.8;
-      bh.absorption.spawn(e);
-      e.consumed = true;
+    // One real bite through Feeding.update. The draw-transform ring check lives in
+    // tools/v97-review.cjs (node tools/v97-review.cjs), which writes review-tests.json.
+    bh.absorption.clear();
+    const s = bh.state;
+    const e = s.entities.find(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio);
+    if (!e) fail("no edible for a real bite");
+    else {
+      const mass0 = s.mass;
+      const n0 = s.entities.length;
+      e.x = s.playerX; e.y = s.playerY; e.vx = 0; e.vy = 0;
+      bh.feeding.update(1);
+      const gone = !s.entities.includes(e);
+      const liveAfterBite = bh.absorption.live;
+      if (!(s.mass > mass0)) fail("bite did not gain mass");
+      if (!gone) fail("bitten entity still in the list");
+      if (liveAfterBite < 1) fail("absorption did not start");
+      for (let f = 0; f < 90; f++) bh.absorption.update(1, false);
+      if (bh.absorption.live !== 0) fail("absorption still live after 90 frames: " + bh.absorption.live);
+      out.bite = { massGained: s.mass - mass0, gone, liveAfterBite, liveAfter: bh.absorption.live, removed: n0 - s.entities.length };
     }
-    const spawned = bh.absorption.live - before;
-    if (spawned < 1) fail("spawn did not create an absorption");
-    for (let f = 0; f < 90; f++) bh.absorption.update(1, false);
-    if (bh.absorption.live !== 0) fail("absorption still live after 90 frames: " + bh.absorption.live);
-    const stuck = bh.absorption.slots.filter(s => s.on).length;
-    if (stuck !== 0) fail("slot still on: " + stuck);
     const info = bh.inflow.info();
     if (info.inflow !== 0 || info.motes !== 0) fail("debris cloud counts " + info.inflow + "/" + info.motes);
-    out.spawned = spawned;
     out.finished = bh.absorption.finished;
     out.inflow = info;
     out.ringDraws = bh.ring.draws;
