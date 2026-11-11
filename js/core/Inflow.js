@@ -106,11 +106,11 @@ export class Inflow {
     this.msz[i] = 0.8 + rnd() * 0.9;
   }
 
-  /** Quality and Reduce Motion set the live counts (no reallocation). */
+  /** Quality and Reduce Motion. v9.7: the permanent grain cloud and the rising motes are gone (the ring and Absorption own the hole). Impact bursts stay. */
   configure(high, reduceMotion) {
     this.high = high; this.still = reduceMotion;
-    this.nIn = reduceMotion ? 18 : high ? IN_MAX : 44;
-    this.nMote = reduceMotion ? 0 : high ? MOTE_MAX : 8;
+    this.nIn = 0;
+    this.nMote = 0;
   }
 
   /** A bite: nudge a couple of grains to start where the food was, and warm the stream. */

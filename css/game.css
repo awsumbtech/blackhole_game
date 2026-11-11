@@ -761,7 +761,8 @@ body.on-title .collapse-pill { display: none; }
 
 /* ─── v9.3 DEV MODE (hidden play-test panel) ─── */
 .dev-badge { position: fixed; z-index: 2100; bottom: calc(env(safe-area-inset-bottom, 0px) + 66px); left: 8px;
-  padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255, 210, 140, 0.35);
+  min-width: 44px; min-height: 44px; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(255, 210, 140, 0.35);
+  white-space: nowrap;
   background: rgba(20, 16, 30, 0.55); color: rgba(255, 220, 170, 0.85);
   font: 700 10px "Space Mono", monospace; letter-spacing: 0.08em; cursor: pointer;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -780,7 +781,7 @@ body.on-title .collapse-pill { display: none; }
 .dev-sec { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 10px 0; border-top: 1px solid rgba(190, 200, 255, 0.08); }
 .dev-sec:first-of-type { border-top: 0; }
 .dev-sec label { font-size: 11px; color: rgba(200, 206, 255, 0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-.dev-panel button, .dev-panel select { min-height: 38px; border-radius: 12px; border: 1px solid rgba(190, 200, 255, 0.16);
+.dev-panel button, .dev-panel select { min-height: 44px; min-width: 44px; border-radius: 12px; border: 1px solid rgba(190, 200, 255, 0.16);
   background: rgba(255, 255, 255, 0.05); color: rgba(230, 234, 255, 0.92); font: 400 13px Outfit, system-ui, sans-serif; padding: 6px 10px; cursor: pointer; }
 .dev-panel select { width: 100%; appearance: auto; }
 .dev-panel select option { background: #141833; }

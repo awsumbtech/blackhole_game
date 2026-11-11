@@ -2,6 +2,16 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.7 — Calm skies and a ring that eats (Nov 11 2026)
+
+The galaxies were too busy: orbit scribbles, sky columns, specks, and a debris cloud that never left the hole. Brian asked for a quiet picture and a hole that absorbs what it eats, with one ring that stays.
+
+- **Skies.** Each galaxy draws its painted backdrop (`assets/backdrop_<key>.jpg`). The picture does not scroll. The old coded nebula, star specks and parallax dust are not drawn.
+- **Less clutter.** Cradle orbit lines are one faint hairline each, and only on the cradle you are in. The arc scribble, meadow specks and aurora curtains are gone. Food counts and bite sizes are the same, so a galaxy still takes as long as it did.
+- **The ring.** `AccretionRing` is always around the hole, including Zen. Far half, hole, near half. It turns very slowly and breathes with a tiny scale change. Reduce Motion holds it still.
+- **Eating.** Each bite spawns an `Absorption`. That thing's own picture spirals in, stretches, leaves a short streak, and is removed. Nothing stays behind. The old permanent inflow cloud is off. A big catch and a tier-up still get the short warm burst.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7`.
+
 ## v9.6.1 — Core split (live Nov 4 2026)
 
 Code structure only. Nothing changes in play, look, sound or saves (SAVE_VERSION stays 9; old saves load).

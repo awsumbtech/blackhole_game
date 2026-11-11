@@ -8,7 +8,6 @@ import { rand } from "../entities.js";
 import { onWorldBump, worldMassMul } from "../worlds.js";
 import { wispReact } from "../wisp.js";
 import { POWERUPS, activatePowerup } from "../powerups.js";
-import { getArtQuality } from "../art.js";
 
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -98,9 +97,6 @@ export class Feeding {
       const touchDist = R + e.radius * (0.4 + state.mods.reachBonus);
 
       if (edible && dist < touchDist) {
-        e.consuming = true;
-        e.consumeProgress = 0;
-
         const comboBonus = 1 + Math.min(state.comboCount, state.mode === "zen" ? 25 : state.ascMods.comboCap) * 0.01;
         const dbl = state.active.double > 0 ? 2 : 1;
         // Small absolute floor keeps the opening seconds snappy
@@ -129,9 +125,9 @@ export class Feeding {
         totalMassGained += gain;
         state.gulp = Math.min(1, state.gulp + 0.25 + Math.min(0.5, gain / state.mass));
 
-        game.fx.spawnConsume(e, getArtQuality());
         game.fx.spawnRipple(e);
-        game.inflow.feed(Math.atan2(dy, dx), dist / state.radius);
+        game.absorption.spawn(e);
+        e.consumed = true;
 
         if (e.bigFish) {
           // v6: a slow, satisfying swallow (about a second) with a soft chime. No shake.

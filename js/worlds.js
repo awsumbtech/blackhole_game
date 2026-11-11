@@ -770,22 +770,8 @@ function lmSprite(kind) {
     // v8.3: no tendrils (they read as wriggling "snakes" in galaxy 1); just a few soft glints
     for (let i = 0; i < 9; i++) blob((r() - 0.5) * h * 0.9, (r() - 0.5) * h * 0.9, S * 0.02, "220, 255, 240", 0.35);
   } else if (kind === "meadow") {
-    // a field of tiny golden blossoms
+    // one soft field. The old seventy blossoms read as specks.
     blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
-    for (let i = 0; i < 70; i++) {
-      const a = r() * TAU, d = Math.sqrt(r()) * h * 0.8;
-      blob(Math.cos(a) * d, Math.sin(a) * d, S * (0.012 + r() * 0.025), i % 4 ? "255, 230, 160" : "200, 255, 180", 0.7);
-    }
-  } else if (kind === "cradle") {
-    // a dusty protoplanetary disk around the young sun
-    g.save(); g.scale(1, 0.42);
-    for (let i = 0; i < 120; i++) {
-      const a0 = r() * TAU, rr = h * (0.3 + r() * 0.65);
-      g.strokeStyle = `rgba(${i % 3 ? "255, 214, 160" : "180, 240, 190"}, ${0.04 + r() * 0.08})`;
-      g.lineWidth = S * (0.006 + r() * 0.02);
-      g.beginPath(); g.arc(0, 0, rr, a0, a0 + 0.5 + r() * 2); g.stroke();
-    }
-    g.restore();
   }
   LM[kind] = c;
   return c;
@@ -867,19 +853,11 @@ const DRAW = {
   "Planet Nursery"(ctx, state, fx, vw, vh) {
     const c = W.cradle;
     const x = px(c.x), y = py(c.y);
-    ctx.lineWidth = 1.2 / fx.zoom;
-    for (const rr of c.rings) {
-      ctx.globalAlpha = AM * (0.22);
-      ctx.beginPath();
-      ctx.arc(x, y, wx(rr), 0, TAU);
-      ctx.strokeStyle = "rgba(200, 240, 200, 1)";
-      ctx.stroke();
-    }
+    // v9.7: no orbit strokes. The worlds themselves show the cradle.
+    // The old hairlines stacked across the screen and read as a diagram.
     const sr = wx(c.sunR);
     if (!onScreen(state, x, y, sr * 4, vw, vh)) return;
-    drawGlow(ctx, "255, 220, 150", x, y, sr * 5.5, 0.12 + fx.breath * 0.04);
-    ctx.globalAlpha = AM * 0.8;
-    ctx.drawImage(lmSprite("cradle"), x - sr * 6, y - sr * 6, sr * 12, sr * 12);
+    drawGlow(ctx, "255, 220, 150", x, y, sr * 5.5, 0.08 + fx.breath * 0.03);
     c.sun.radius = sr;
     const sp = spriteFor(c.sun, sr * fx.zoom * fx.dpr);
     const d = sp.k * sr * (0.98 + fx.breath * 0.04);
@@ -916,8 +894,7 @@ const DRAW = {
   },
 
   "Void Rift"(ctx, state, fx) {
-    const au = W.aurora, f = W.f, lite = getArtQuality() !== "high";
-    const shimmer = fx.reduceMotion ? 0.5 : 0.5 + Math.sin(fx.time * 0.0007) * 0.5;
+    const au = W.aurora, f = W.f;
     const glowK = W.boost > 0 ? 1.6 : 1;
     ctx.save();
     ctx.translate(W.ox, W.oy);
@@ -927,29 +904,10 @@ const DRAW = {
     ctx.lineJoin = "round";
     const wide = W.b0 * 0.12;
     ctx.globalAlpha = AM * (1);
-    ctx.strokeStyle = `rgba(70, 200, 170, ${0.045 * glowK})`;
+    ctx.strokeStyle = `rgba(70, 200, 170, ${0.05 * glowK})`;
     ctx.lineWidth = wide;
     ctx.stroke(au.path);
-    if (!lite) {
-      ctx.save();
-      ctx.translate(0, -wide * 0.25);
-      ctx.strokeStyle = `rgba(120, 110, 255, ${(0.035 + shimmer * 0.02) * glowK})`;
-      ctx.lineWidth = wide * 0.6;
-      ctx.stroke(au.path);
-      ctx.restore();
-    }
-    if (!lite) {
-      // v8.1 curtains: faint layers rising off the ribbon
-      for (let k = 1; k <= 3; k++) {
-        ctx.save();
-        ctx.translate(0, -wide * 0.22 * k);
-        ctx.strokeStyle = k === 2 ? "rgba(190, 120, 255, 0.03)" : "rgba(90, 240, 190, 0.035)";
-        ctx.lineWidth = wide * (0.5 - k * 0.1);
-        ctx.stroke(au.path);
-        ctx.restore();
-      }
-    }
-    ctx.strokeStyle = `rgba(170, 255, 225, ${(0.1 + fx.breath * 0.05) * glowK})`;
+    ctx.strokeStyle = `rgba(170, 255, 225, ${(0.1 + fx.breath * 0.04) * glowK})`;
     ctx.lineWidth = Math.max(2 / (fx.zoom * f), wide * 0.06);
     ctx.stroke(au.path);
     ctx.restore();
@@ -963,8 +921,7 @@ const DRAW = {
       ctx.globalAlpha = AM * (0.6 + fx.breath * 0.2);
       ctx.drawImage(lmSprite("meadow"), x - r * 1.2, y - r * 1.2, r * 2.4, r * 2.4);
     }
-    // Soft bloom halos around growing buds
-    const lite = getArtQuality() !== "high";
+    // One quiet ring on a growing bud. No orbiting specks.
     ctx.lineWidth = 1.2 / fx.zoom;
     for (const e of state.entities) {
       if (!e.bloom || e.consuming || !onScreen(state, e.x, e.y, e.radius * 3, vw, vh)) continue;
@@ -975,13 +932,6 @@ const DRAW = {
       ctx.arc(e.x, e.y, e.radius * (1.7 + k * 0.6), 0, TAU);
       ctx.strokeStyle = "rgba(255, 225, 150, 1)";
       ctx.stroke();
-      if (!lite) {
-        const rot = fx.reduceMotion ? 0 : fx.time * 0.0002;
-        for (let i = 0; i < 5; i++) {
-          const ang = rot + i * TAU / 5;
-          drawGlow(ctx, "255, 230, 160", e.x + Math.cos(ang) * e.radius * 1.5, e.y + Math.sin(ang) * e.radius * 1.5, e.radius * 0.6, a * 0.8);
-        }
-      }
     }
   },
 
@@ -1046,7 +996,9 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
     ctx.fillStyle = "#e9edff";
     ctx.shadowColor = "rgba(150, 160, 255, 0.6)";
     ctx.shadowBlur = 12;
-    ctx.fillText(W.banner.text.toUpperCase(), w / 2, h * 0.2);
+    // Short landscape screens: the top HUD already owns y < ~100, so the name sits below it.
+    const by = h < 520 ? Math.max(112, h * 0.34) : h * 0.2;
+    ctx.fillText(W.banner.text.toUpperCase(), w / 2, by);
     ctx.restore();
   }
   const hint = W.hint, lm = hint.lm || hint.last;

@@ -5,6 +5,9 @@ export { GalaxyFlow, FLOW_OUT, FLOW_IN } from "./GalaxyFlow.js";
 export { Growth } from "./Growth.js";
 export { DevMode } from "./DevMode.js";
 export { Inflow } from "./Inflow.js";
+export { Backdrop } from "./Backdrop.js";
+export { AccretionRing } from "./AccretionRing.js";
+export { Absorption } from "./Absorption.js";
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
 

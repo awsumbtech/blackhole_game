@@ -50,6 +50,7 @@ export class GameLoop {
 
     const playing = inPlay;   // v9: the galaxy flow happens in play
     const worldDt = dt * slowFactor(state);
+    game.absorption.dpr = game.display.dpr;
 
     if (playing) {
       state.run.time += dt / 60;
@@ -87,7 +88,10 @@ export class GameLoop {
     if (state.tierBanner) game.overlay.tick(dt);
     game.growth.update(dt);
     game.fx.update(dt, getArtQuality());
-    game.inflow.configure(getArtQuality() === "high", !!state.settings.reduceMotion);
+    const still = !!state.settings.reduceMotion;
+    game.absorption.update(state.paused ? 0 : dt, still);
+    game.ring.update(state.paused ? 0 : dt, still);
+    game.inflow.configure(getArtQuality() === "high", still);
     game.inflow.update(state.paused ? 0 : dt);
     state.gulp *= Math.pow(0.9, dt);
 

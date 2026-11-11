@@ -1,0 +1,82 @@
+{
+  "phone": {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "pageScrollY": 0,
+      "pageScrollX": 0
+    },
+    "smallTargets": [],
+    "lowContrast": [],
+    "overlaps": [],
+    "offscreenPrimary": [],
+    "scrollers": [],
+    "pageOverflowX": 0,
+    "unevenRows": [],
+    "overflowSpills": [],
+    "wrappedControls": [
+      "button#dev-badge \"DEV · sandbox\""
+    ],
+    "tapUnder44": []
+  },
+  "small": {
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "pageScrollY": 0,
+      "pageScrollX": 0
+    },
+    "smallTargets": [],
+    "lowContrast": [],
+    "overlaps": [],
+    "offscreenPrimary": [],
+    "scrollers": [],
+    "pageOverflowX": 0,
+    "unevenRows": [],
+    "overflowSpills": [],
+    "wrappedControls": [
+      "button#dev-badge \"DEV · sandbox\""
+    ],
+    "tapUnder44": []
+  },
+  "land": {
+    "viewport": {
+      "width": 844,
+      "height": 390,
+      "pageScrollY": 0,
+      "pageScrollX": 0
+    },
+    "smallTargets": [],
+    "lowContrast": [],
+    "overlaps": [],
+    "offscreenPrimary": [],
+    "scrollers": [],
+    "pageOverflowX": 0,
+    "unevenRows": [],
+    "overflowSpills": [],
+    "wrappedControls": [
+      "button#dev-badge \"DEV · sandbox\""
+    ],
+    "tapUnder44": []
+  },
+  "desk": {
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "pageScrollY": 0,
+      "pageScrollX": 0
+    },
+    "smallTargets": [],
+    "lowContrast": [],
+    "overlaps": [],
+    "offscreenPrimary": [],
+    "scrollers": [],
+    "pageOverflowX": 0,
+    "unevenRows": [],
+    "overflowSpills": [],
+    "wrappedControls": [
+      "button#dev-badge \"DEV · sandbox\""
+    ],
+    "tapUnder44": []
+  }
+}

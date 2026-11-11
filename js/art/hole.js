@@ -256,22 +256,14 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   const zoom = fx.zoom || 1;
   const rpx = radius * zoom * (fx.dpr || 1);
   const b = bucketFor(rpx * 1.1);
-  const palette = fx.double ? "double" : "calm";
   const high = quality === "high";
   const breath = fx.breath ?? 0.5;
   const gulp = fx.reduceMotion ? 0 : (fx.gulp || 0);
   const dt = fx.dt || 1;
 
-  const boost = 1 + gulp * 1.6;
-  spinInner += 0.0055 * boost * dt;
-  spinOuter += 0.0024 * boost * dt;
   if (!fx.reduceMotion) shimmerT += 0.035 * dt;
 
   holeSprites(b);
-  const inner = diskTexture(palette, b, 0);
-  const arc = arcSprite(palette, b);
-  const dop = dopplerSprite(b);
-  const glowA = 0.88 + breath * 0.12 + gulp * 0.2;
 
   ctx.save();
   ctx.translate(x, y);
@@ -296,35 +288,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
     ctx.stroke();
   }
 
-  // Soft outer glow + warm bloom
-  const gs = radius * 4.2 * (1 + (breath - 0.5) * 0.08);
-  ctx.globalAlpha = glowA;
-  ctx.drawImage(glowSprite, -gs, -gs, gs * 2, gs * 2);
-  if (high) {
-    const bl = bloomFor(b), bs = radius * 4.6 * (1 + gulp * 0.05);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = 0.75 + breath * 0.2;
-    ctx.save(); ctx.scale(1, 0.55);
-    ctx.drawImage(bl, -bs, -bs, bs * 2, bs * 2);
-    ctx.restore();
-    ctx.globalCompositeOperation = "source-over";
-  }
-
-  const half = radius * DISK_OUT * 1.05;
-  // Far half of the disk (behind the hole)
-  ctx.save();
-  ctx.beginPath(); ctx.rect(-half, -half, half * 2, half); ctx.clip();
-  if (high) drawDisk(ctx, inner, spinOuter + 1.7, 0.45 * glowA, radius * 1.04);
-  drawDisk(ctx, inner, spinInner, glowA, radius);
-  drawDoppler(ctx, dop, 0.7 * glowA, radius);
-  ctx.restore();
-
-  // Lensed back-of-disk: bright arc over the shadow, thin arc under it
-  const as = radius * arc.R * (1 + gulp * 0.04);
-  ctx.globalAlpha = glowA;
-  ctx.drawImage(arc.c, -as, -as, as * 2, as * 2);
-
-  // Shadow + photon ring
+  // v9.7: the painted AccretionRing is the disk. This is only the shadow and its thin edge.
   const g = 1 + gulp * 0.08;
   const rs = radius * 1.3 * g;
   ctx.globalAlpha = 1;
@@ -337,14 +301,6 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
   }
-
-  // Near half of the disk (in front of the hole)
-  ctx.save();
-  ctx.beginPath(); ctx.rect(-half, 0, half * 2, half); ctx.clip();
-  if (high) drawDisk(ctx, inner, spinOuter + 1.7, 0.45 * glowA, radius * 1.04);
-  drawDisk(ctx, inner, spinInner, glowA, radius);
-  drawDoppler(ctx, dop, glowA, radius);
-  ctx.restore();
 
   ctx.restore();
 }
