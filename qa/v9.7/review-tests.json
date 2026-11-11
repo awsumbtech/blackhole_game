@@ -3,117 +3,26 @@
   "notes": [],
   "errs": [],
   "command": "node tools/v97-review.cjs",
-  "golden": [
-    {
-      "biome": "Ruined Armada",
-      "plain": "phone-armada-plain.png",
-      "golden": "phone-armada-golden.png",
-      "meanRGB": [
-        16.69,
-        10.35,
-        1.68
-      ],
-      "pctOver8": 92.75,
-      "centerMeanRGB": [
-        19.09,
-        12.81,
-        2.41
-      ],
-      "centerPctOver8": 96.02,
-      "pixels": 1235520,
-      "source": "canvas getImageData",
-      "centerBox": "30-70%"
-    },
-    {
-      "biome": "Planet Nursery",
-      "plain": "phone-nursery-plain.png",
-      "golden": "phone-nursery-golden.png",
-      "meanRGB": [
-        17.55,
-        9.84,
-        1.89
-      ],
-      "pctOver8": 94.25,
-      "centerMeanRGB": [
-        21.69,
-        12.99,
-        2.83
-      ],
-      "centerPctOver8": 96.93,
-      "pixels": 1235520,
-      "source": "canvas getImageData",
-      "centerBox": "30-70%"
-    }
-  ],
   "bite": {
     "ok": true,
-    "massGained": 31.63493265336001,
+    "massGained": 95.24035427074159,
     "gone": true,
-    "liveAfterBite": 1,
+    "pieces": 4,
+    "lives": [
+      45,
+      40,
+      42,
+      51
+    ],
+    "fromSprite": true,
     "liveAfter": 0,
     "removed": 1
   },
-  "ring": {
+  "idle": {
     "ok": true,
-    "notes": [],
-    "samples": [
-      {
-        "phase": 4.188,
-        "draws": 106,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 0.63,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 3.355,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 6.08,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 2.521,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 5.246,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 1.688,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      },
-      {
-        "phase": 4.412,
-        "draws": 102,
-        "pairs": 2,
-        "maxAbsAng": 0,
-        "tilted": 0
-      }
-    ],
-    "minutes": 5
+    "live": 0,
+    "draws": 0,
+    "inflow": 0,
+    "motes": 20
   }
 }

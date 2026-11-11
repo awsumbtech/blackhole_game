@@ -64,7 +64,7 @@ export class Galaxy {
     state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
 
     state.entities = [];
-    game.absorption.clear();
+    game.debris.clear();
     state.biome = biome;
     state.baseBounds = 1000;
     state.initialCount = DENSITY.regular;

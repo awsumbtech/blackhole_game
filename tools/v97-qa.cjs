@@ -206,11 +206,9 @@ async function checks(page) {
     const bh = window.__bh;
     const out = { ok: true, notes: [] };
     const fail = m => { out.ok = false; out.notes.push(m); };
-    if (!bh.ring || !bh.ring.present) fail("ring images not present");
-    if (!bh.absorption) fail("no absorption");
-    // One real bite through Feeding.update. The draw-transform ring check lives in
-    // tools/v97-review.cjs (node tools/v97-review.cjs), which writes review-tests.json.
-    bh.absorption.clear();
+    if (!bh.debris) fail("no debris field");
+    // One real bite through Feeding.update. The idle check lives in tools/v97-review.cjs.
+    bh.debris.clear();
     const s = bh.state;
     const e = s.entities.find(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio);
     if (!e) fail("no edible for a real bite");
@@ -220,19 +218,19 @@ async function checks(page) {
       e.x = s.playerX; e.y = s.playerY; e.vx = 0; e.vy = 0;
       bh.feeding.update(1);
       const gone = !s.entities.includes(e);
-      const liveAfterBite = bh.absorption.live;
+      const liveAfterBite = bh.debris.live;
+      const maxLife = bh.debris.pieces.reduce((m, p) => p.on ? Math.max(m, p.life) : m, 0);
       if (!(s.mass > mass0)) fail("bite did not gain mass");
       if (!gone) fail("bitten entity still in the list");
-      if (liveAfterBite < 1) fail("absorption did not start");
-      for (let f = 0; f < 90; f++) bh.absorption.update(1, false);
-      if (bh.absorption.live !== 0) fail("absorption still live after 90 frames: " + bh.absorption.live);
-      out.bite = { massGained: s.mass - mass0, gone, liveAfterBite, liveAfter: bh.absorption.live, removed: n0 - s.entities.length };
+      if (liveAfterBite < 1) fail("debris did not start");
+      for (let f = 0; f < maxLife; f++) bh.debris.update(1, false);
+      if (bh.debris.live !== 0) fail("debris still live after its life: " + bh.debris.live);
+      out.bite = { massGained: s.mass - mass0, gone, liveAfterBite, liveAfter: bh.debris.live, removed: n0 - s.entities.length };
     }
     const info = bh.inflow.info();
-    if (info.inflow !== 0 || info.motes !== 0) fail("debris cloud counts " + info.inflow + "/" + info.motes);
-    out.finished = bh.absorption.finished;
+    if (info.inflow !== 0) fail("circling grain cloud still on: " + info.inflow);
+    out.finished = bh.debris.finished;
     out.inflow = info;
-    out.ringDraws = bh.ring.draws;
     return out;
   });
 }
@@ -270,14 +268,13 @@ async function audits(page) {
       report.checks = await checks(page);
       // Zen ring already probed. Re-enter play and zen explicitly for the mode check.
       await sandbox(page, { biome: "Void Rift", tier: 2, zen: false });
-      const playRing = await page.evaluate(() => ({ mode: window.__bh.state.mode, present: window.__bh.ring.present, draws: window.__bh.ring.draws, inflow: window.__bh.inflow.info() }));
+      const playHole = await page.evaluate(() => ({ mode: window.__bh.state.mode, debris: window.__bh.debris.live, inflow: window.__bh.inflow.info() }));
       await sandbox(page, { biome: "Star Meadow", tier: 2, zen: true });
-      const zenRing = await page.evaluate(() => ({ mode: window.__bh.state.mode, present: window.__bh.ring.present, draws: window.__bh.ring.draws, inflow: window.__bh.inflow.info() }));
-      report.checks.playRing = playRing;
-      report.checks.zenRing = zenRing;
-      if (!playRing.present || playRing.draws < 1) report.checks.ok = false, report.checks.notes.push("ring not drawing in play");
-      if (zenRing.mode !== "zen" || !zenRing.present || zenRing.draws < 1) report.checks.ok = false, report.checks.notes.push("ring missing in zen");
-      if (playRing.inflow.inflow !== 0 || zenRing.inflow.motes !== 0) report.checks.ok = false, report.checks.notes.push("cloud in a mode");
+      const zenHole = await page.evaluate(() => ({ mode: window.__bh.state.mode, debris: window.__bh.debris.live, inflow: window.__bh.inflow.info() }));
+      report.checks.playHole = playHole;
+      report.checks.zenHole = zenHole;
+      if (zenHole.mode !== "zen") report.checks.ok = false, report.checks.notes.push("not in zen");
+      if (playHole.inflow.inflow !== 0 || zenHole.inflow.inflow !== 0) report.checks.ok = false, report.checks.notes.push("circling cloud in a mode");
     }
     report[label + "Perf"] = await perfSample(page);
     await page.context().close();

@@ -131,11 +131,11 @@ export class Feeding {
         state.gulp = Math.min(1, state.gulp + 0.25 + Math.min(0.5, gain / state.mass));
 
         game.fx.spawnRipple(e);
-        game.absorption.spawn(e);
+        game.debris.spawn(e);
         e.consumed = true;
 
         if (e.bigFish) {
-          // Big catch: the chime and the short impact. The spiral itself is Absorption.
+          // Big catch: the chime and the short impact. The pieces are DebrisField.
           e.swallow = true;
           state.run.bigFish += 1;
           state.stats.bigFishEaten += 1;

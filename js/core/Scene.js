@@ -65,9 +65,9 @@ export class Scene {
     drawLivingWorldFG(ctx, state, vw, vh);
     const holeX = state.playerX - state.camX + vw / 2, holeY = state.playerY - state.camY + vh / 2;
     const holeR = state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius;
-    // Far food falls in, then the far half of the ring, then the hole, then the near half.
-    game.absorption.draw(ctx, holeX, holeY, -1);
-    game.ring.drawBack(ctx, holeX, holeY, holeR, breath, still, skin);
+    // Same order as main: far inflow, the hole, near inflow. Debris only while a bite is in flight.
+    game.inflow.drawBack(ctx, holeX, holeY, holeR, z, dpr);
+    game.debris.draw(ctx, holeX, holeY, -1);
     drawBlackHole(ctx, holeX, holeY, holeR, now,
       { vx: state.playerVX, vy: state.playerVY }, {
         zoom: z,
@@ -80,12 +80,11 @@ export class Scene {
         double: state.active.double > 0,
         gulp: state.gulp,
         breath,
-        // Breathing-guide ring stays out of Zen. The accretion ring is separate and always on.
+        // v7.1: in Zen the wisp is the breath guide. v9.5.1: never a guide ring around the hole in Zen.
         breathGuide: state.mode !== "zen" && state.settings.breathGuide,
         filter: skin
       });
-    game.absorption.draw(ctx, holeX, holeY, 1);
-    game.ring.drawFront(ctx, holeX, holeY, holeR, breath, still, skin);
+    game.debris.draw(ctx, holeX, holeY, 1);
     game.inflow.drawFront(ctx, holeX, holeY, holeR, z, dpr);
     if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);
     // v8: the wisp draws last in the world so nothing ever covers it

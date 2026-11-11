@@ -29,7 +29,7 @@ function tiltOf(m) {
 
 async function boot(page) {
   await page.goto(`http://127.0.0.1:${PORT}/?dev&debug`, { waitUntil: "load", timeout: 30000 });
-  await page.waitForFunction(() => window.__bh && window.__bh.feeding && window.__bh.ring, { timeout: 20000 });
+  await page.waitForFunction(() => window.__bh && window.__bh.feeding && window.__bh.debris, { timeout: 20000 });
   const skip = page.locator("#btn-skip-intro");
   if (await skip.isVisible().catch(() => false)) await skip.click();
   await page.evaluate(() => {
@@ -54,13 +54,13 @@ async function enter(page, cfg) {
   await page.waitForTimeout(300);
 }
 
-/** One Feeding.update bite: mass up, entity gone, absorption live then back to 0. */
+/** One Feeding.update bite: mass up, entity gone, debris pieces die within their life. */
 async function bite(page) {
   await enter(page, { biome: "Comet Current", tier: 3, galaxy: 3, zen: false });
   return page.evaluate(() => {
     const bh = window.__bh;
     const s = bh.state;
-    bh.absorption.clear();
+    bh.debris.clear();
     const e = s.entities.find(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio);
     if (!e) return { ok: false, why: "no edible" };
     const mass0 = s.mass;
@@ -71,150 +71,50 @@ async function bite(page) {
     e.vy = 0;
     bh.feeding.update(1);
     const gone = !s.entities.includes(e);
-    const liveAfterBite = bh.absorption.live;
-    for (let i = 0; i < 90; i++) bh.absorption.update(1, false);
+    const live = bh.debris.pieces.filter(p => p.on);
+    const lives = live.map(p => p.life);
+    const fromSprite = live.every(p => p.spr && p.sw > 0 && p.sh > 0);
+    const maxLife = lives.length ? Math.max(...lives) : 0;
+    for (let i = 0; i < maxLife; i++) bh.debris.update(1, false);
     const massGained = s.mass - mass0;
+    const lifeOk = lives.length > 0 && lives.length <= 4 && lives.every(n => n >= 36 && n <= 60);
     return {
-      ok: massGained > 0 && gone && liveAfterBite >= 1 && bh.absorption.live === 0,
+      ok: massGained > 0 && gone && live.length >= 1 && lifeOk && fromSprite && bh.debris.live === 0,
       massGained,
       gone,
-      liveAfterBite,
-      liveAfter: bh.absorption.live,
+      pieces: live.length,
+      lives,
+      fromSprite,
+      liveAfter: bh.debris.live,
       removed: n0 - s.entities.length
     };
   });
 }
 
 /**
- * Draw the ring across a long Zen run and read the canvas matrix at each half.
- * A stored angle on the object is not consulted. Back image, then the hole, then the front image.
+ * Idle Zen: nothing is being eaten, so DebrisField must not draw.
+ * Several simulated minutes of scene draws, entities cleared so a drift cannot bite.
  */
-async function ring(page) {
+async function idle(page) {
   await enter(page, { biome: "Planet Nursery", tier: 3, galaxy: 3, zen: true });
-  return page.evaluate(async ({ step, samples }) => {
-    const ring = window.__bh.ring;
-    const proto = CanvasRenderingContext2D.prototype;
-    const orig = {
-      drawImage: proto.drawImage,
-      setTransform: proto.setTransform,
-      transform: proto.transform,
-      rotate: proto.rotate
-    };
-    const origBack = ring.drawBack;
-    const origFront = ring.drawFront;
-    let half = null;
-    let watch = false;
-    let frame = [];
-    const notes = [];
-    const fail = m => notes.push(m);
-
-    function matrixOf(ctx) {
-      const m = ctx.getTransform();
-      return { a: m.a, b: m.b, c: m.c, d: m.d, ang: Math.atan2(m.b, m.a) };
-    }
-    function argsMatrix(args) {
-      if (args.length === 1 && args[0] && typeof args[0].a === "number") {
-        const m = args[0];
-        return { a: m.a, b: m.b, c: m.c, d: m.d, ang: Math.atan2(m.b, m.a) };
-      }
-      const a = args[0], b = args[1], c = args[2], d = args[3];
-      return { a, b, c, d, ang: Math.atan2(b, a) };
-    }
-    function rotated(m) {
-      if (!m || !isFinite(m.ang)) return true;
-      // Pure scale plus translation keeps the x axis level and the y axis vertical.
-      return Math.abs(m.ang) > 0.02 || Math.abs(m.c) > 1e-3 || Math.abs(m.b) > 1e-3;
-    }
-
-    proto.drawImage = function (img) {
-      if (watch) {
-        const m = matrixOf(this);
-        let who = "other";
-        if (img === ring.back) who = "back";
-        else if (img === ring.front) who = "front";
-        frame.push({ kind: "drawImage", half, who, ...m });
-      }
-      return orig.drawImage.apply(this, arguments);
-    };
-    proto.setTransform = function () {
-      if (watch && half) frame.push({ kind: "setTransform", half, ...argsMatrix(arguments) });
-      return orig.setTransform.apply(this, arguments);
-    };
-    proto.transform = function () {
-      if (watch && half) frame.push({ kind: "transform", half, ...argsMatrix(arguments) });
-      return orig.transform.apply(this, arguments);
-    };
-    proto.rotate = function (rad) {
-      if (watch && half) frame.push({ kind: "rotate", half, rad });
-      return orig.rotate.apply(this, arguments);
-    };
-    ring.drawBack = function () {
-      half = "back";
-      try { return origBack.apply(ring, arguments); }
-      finally { half = null; }
-    };
-    ring.drawFront = function () {
-      half = "front";
-      try { return origFront.apply(ring, arguments); }
-      finally { half = null; }
-    };
-
-    const taken = [];
-    try {
-      for (let s = 0; s < samples; s++) {
-        for (let i = 0; i < step; i++) ring.update(1, false);
-        frame = [];
-        watch = true;
-        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-        watch = false;
-        const draws = frame.filter(e => e.kind === "drawImage");
-        let pairs = 0;
-        let i = 0;
-        while (i < draws.length) {
-          if (draws[i].who !== "back") { i++; continue; }
-          let j = i + 1;
-          let sawHole = false;
-          while (j < draws.length && draws[j].who !== "front") {
-            if (draws[j].who === "other") sawHole = true;
-            if (draws[j].who === "back") break;
-            j++;
-          }
-          if (j < draws.length && draws[j].who === "front" && sawHole) pairs++;
-          else break;
-          i = j + 1;
-        }
-        const halfEvents = frame.filter(e => e.half === "back" || e.half === "front");
-        const tilted = halfEvents.filter(e => e.kind === "rotate" || rotated(e));
-        const maxAbsAng = halfEvents.reduce((m, e) => Math.max(m, Math.abs(e.ang || 0)), 0);
-        taken.push({
-          phase: +ring.phase.toFixed(3),
-          draws: draws.length,
-          pairs,
-          maxAbsAng: +maxAbsAng.toFixed(5),
-          tilted: tilted.length
-        });
-        if (pairs < 1) fail("sample " + s + " did not draw back, then the hole, then front");
-        if (tilted.length) fail("sample " + s + " tilted a ring half (" + tilted.length + ")");
-        const mismatched = draws.filter(e => e.half && e.who !== "other" && e.half !== e.who);
-        if (mismatched.length) fail("sample " + s + " drew the wrong half inside drawBack/drawFront");
-      }
-    } finally {
-      watch = false;
-      proto.drawImage = orig.drawImage;
-      proto.setTransform = orig.setTransform;
-      proto.transform = orig.transform;
-      proto.rotate = orig.rotate;
-      ring.drawBack = origBack;
-      ring.drawFront = origFront;
-    }
-
+  return page.evaluate(() => {
+    const bh = window.__bh;
+    const s = bh.state;
+    s.entities.length = 0;
+    bh.debris.clear();
+    bh.debris.draws = 0;
+    s.paused = true;
+    const now = performance.now();
+    for (let i = 0; i < 5 * 60 * 60; i += 30) bh.scene.draw(now + i, 0, true);
+    const info = bh.inflow.info();
     return {
-      ok: notes.length === 0,
-      notes,
-      samples: taken,
-      minutes: samples * step / 3600
+      ok: bh.debris.live === 0 && bh.debris.draws === 0 && info.inflow === 0,
+      live: bh.debris.live,
+      draws: bh.debris.draws,
+      inflow: info.inflow,
+      motes: info.motes
     };
-  }, { step: STEP, samples: SAMPLES });
+  });
 }
 
 const SHOT_DIR = process.env.V97_SHOT_DIR || path.join(OUT_DIR, "after");
@@ -362,8 +262,8 @@ async function main() {
   }
   result.bite = await bite(page);
   if (!result.bite.ok) { result.ok = false; result.notes.push("bite failed"); }
-  result.ring = await ring(page);
-  if (!result.ring.ok) { result.ok = false; result.notes.push("ring draw failed"); result.notes.push(...result.ring.notes); }
+  result.idle = await idle(page);
+  if (!result.idle.ok) { result.ok = false; result.notes.push("idle debris failed"); }
   if (errs.length) { result.ok = false; result.notes.push("console errors"); }
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -377,4 +277,4 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { bite, ring };
+module.exports = { bite, idle };

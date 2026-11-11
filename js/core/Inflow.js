@@ -106,11 +106,11 @@ export class Inflow {
     this.msz[i] = 0.8 + rnd() * 0.9;
   }
 
-  /** Quality and Reduce Motion. v9.7: the permanent grain cloud and the rising motes are gone (the ring and Absorption own the hole). Impact bursts stay. */
+  /** Quality and Reduce Motion. The circling grain cloud stays off (nIn is 0). Motes and the impact burst are unchanged from main. */
   configure(high, reduceMotion) {
     this.high = high; this.still = reduceMotion;
     this.nIn = 0;
-    this.nMote = 0;
+    this.nMote = reduceMotion ? 0 : high ? MOTE_MAX : 8;
   }
 
   /** A bite: nudge a couple of grains to start where the food was, and warm the stream. */
@@ -178,7 +178,10 @@ export class Inflow {
     }
   }
 
-  /** Near-side grains, motes and the impact: draw after the hole. The far half is unused (nIn is 0). */
+  /** Grains on the far side of the disk: draw before the hole. The circling cloud is off, so this returns at once. */
+  drawBack(ctx, x, y, R, zoom, dpr = 1) { this._grains(ctx, x, y, R, zoom, dpr, -1); }
+
+  /** Near-side grains, motes and the impact: draw after the hole. */
   drawFront(ctx, x, y, R, zoom, dpr = 1) {
     this._grains(ctx, x, y, R, zoom, dpr, 1);
     const k = zoom * dpr;
