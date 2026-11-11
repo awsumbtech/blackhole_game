@@ -3,9 +3,47 @@
   "notes": [],
   "errs": [],
   "command": "node tools/v97-review.cjs",
+  "golden": [
+    {
+      "biome": "Ruined Armada",
+      "plain": "phone-armada-plain.png",
+      "golden": "phone-armada-golden.png",
+      "meanRGB": [
+        17.9,
+        11.12,
+        1.81
+      ],
+      "pctOver8": 96.15,
+      "centerMeanRGB": [
+        22.27,
+        14.94,
+        2.79
+      ],
+      "centerPctOver8": 98.25,
+      "pixels": 1235520
+    },
+    {
+      "biome": "Planet Nursery",
+      "plain": "phone-nursery-plain.png",
+      "golden": "phone-nursery-golden.png",
+      "meanRGB": [
+        17.55,
+        9.84,
+        1.89
+      ],
+      "pctOver8": 94.26,
+      "centerMeanRGB": [
+        21.7,
+        13.01,
+        2.85
+      ],
+      "centerPctOver8": 97.01,
+      "pixels": 1235520
+    }
+  ],
   "bite": {
     "ok": true,
-    "massGained": 63.00035781385668,
+    "massGained": 143.15555466796104,
     "gone": true,
     "liveAfterBite": 1,
     "liveAfter": 0,
@@ -16,57 +54,57 @@
     "notes": [],
     "samples": [
       {
-        "phase": 4.285,
-        "draws": 103,
+        "phase": 3.9,
+        "draws": 132,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 0.727,
-        "draws": 102,
+        "phase": 0.342,
+        "draws": 132,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 3.452,
-        "draws": 104,
+        "phase": 3.067,
+        "draws": 132,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 6.177,
-        "draws": 102,
+        "phase": 5.792,
+        "draws": 132,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 2.618,
-        "draws": 100,
+        "phase": 2.233,
+        "draws": 131,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 5.343,
-        "draws": 100,
+        "phase": 4.958,
+        "draws": 130,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 1.785,
-        "draws": 100,
+        "phase": 1.4,
+        "draws": 129,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0
       },
       {
-        "phase": 4.51,
-        "draws": 100,
+        "phase": 4.125,
+        "draws": 128,
         "pairs": 2,
         "maxAbsAng": 0,
         "tilted": 0

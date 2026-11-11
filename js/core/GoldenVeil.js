@@ -1,7 +1,6 @@
 // ─── GoldenVeil (v9.7) ───
-// One job: a warm edge on a golden galaxy. The painting is gold haze with a
-// black centre, drawn in 'screen' so the black does nothing and the haze
-// warms the rim. 0.35 is the opacity that reads; 0.5 fogs Armada.
+// One job: a warm haze on a golden galaxy. The painting covers the frame and
+// is drawn in 'screen' at 0.35, so black in the file leaves the sky alone.
 // If the file is missing, draw is a no-op.
 
 const SRC = "assets/sky/golden_veil.jpg";

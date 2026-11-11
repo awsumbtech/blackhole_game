@@ -3,7 +3,8 @@
 // Writes qa/v9.7/review-tests.json. Default port is 8091.
 // Needs playwright-core under /tmp/pw (or PLAYWRIGHT_CORE) and Chrome.
 //
-// When assets/sky/golden_veil.jpg is replaced, re-shoot the comparisons with:
+// When assets/sky/golden_veil.jpg is replaced, re-shoot plain vs golden from the
+// same frozen frame (Armada and Nursery, 390x844) and print the RGB delta:
 //   node tools/v97-review.cjs --golden
 
 const fs = require("fs");
@@ -216,21 +217,102 @@ async function ring(page) {
   }, { step: STEP, samples: SAMPLES });
 }
 
+const SHOT_DIR = process.env.V97_SHOT_DIR || path.join(OUT_DIR, "after");
+
+/**
+ * Plain and golden from one frozen draw. Same seed, same camera, same timestamp.
+ * The game loop is paused so a later frame cannot move the world between the two shots.
+ */
 async function goldenShots(page) {
-  const dir = path.join(OUT_DIR, "after");
-  async function shot(name, biome, tier, galaxy, golden) {
+  fs.mkdirSync(SHOT_DIR, { recursive: true });
+  const pairs = [
+    ["Ruined Armada", 5, 4, "phone-armada-plain.png", "phone-armada-golden.png"],
+    ["Planet Nursery", 4, 3, "phone-nursery-plain.png", "phone-nursery-golden.png"]
+  ];
+  await page.waitForFunction(() => window.__bh.golden && window.__bh.golden.ok, { timeout: 15000 });
+  const report = [];
+  for (const [biome, tier, galaxy, plainName, goldName] of pairs) {
     await enter(page, { biome, tier, galaxy, zen: false });
-    await page.evaluate(on => {
-      window.__bh.state.golden = on;
-      const t = document.getElementById("hint-toast");
-      if (t) t.classList.add("hidden");
-    }, golden);
-    await page.waitForTimeout(250);
-    await page.screenshot({ path: path.join(dir, name) });
+    const delta = await page.evaluate(() => {
+      const bh = window.__bh;
+      const s = bh.state;
+      const prev = { paused: s.paused, reduce: s.settings.reduceMotion, golden: s.golden };
+      const w = bh.worlds();
+      const lm = w && w.landmarks && w.landmarks[0];
+      if (lm) {
+        const off = Math.max(s.viewW * 0.28, 60);
+        s.playerX = lm.x + off;
+        s.playerY = lm.y;
+        s.camX = s.playerX;
+        s.camY = s.playerY;
+      }
+      s.paused = true;
+      s.settings.reduceMotion = true;
+      const toast = document.getElementById("hint-toast");
+      if (toast) toast.classList.add("hidden");
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const now = performance.now();
+      s.golden = false;
+      bh.scene.draw(now, 0, true);
+      const plain = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      s.golden = true;
+      bh.scene.draw(now, 0, true);
+      const gold = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      s.paused = prev.paused;
+      s.settings.reduceMotion = prev.reduce;
+      s.golden = prev.golden;
+      const wdt = plain.width, h = plain.height;
+      let n = 0, dr = 0, dg = 0, db = 0, over = 0;
+      let cn = 0, cdr = 0, cdg = 0, cdb = 0, cover = 0;
+      const x0 = Math.floor(wdt * 0.3), x1 = Math.floor(wdt * 0.7);
+      const y0 = Math.floor(h * 0.3), y1 = Math.floor(h * 0.7);
+      const A = plain.data, B = gold.data;
+      for (let y = 0; y < h; y++) {
+        const midY = y >= y0 && y < y1;
+        for (let x = 0; x < wdt; x++) {
+          const i = (y * wdt + x) * 4;
+          const r = B[i] - A[i], g = B[i + 1] - A[i + 1], bl = B[i + 2] - A[i + 2];
+          dr += r; dg += g; db += bl; n++;
+          if (Math.max(Math.abs(r), Math.abs(g), Math.abs(bl)) > 8) over++;
+          if (midY && x >= x0 && x < x1) {
+            cdr += r; cdg += g; cdb += bl; cn++;
+            if (Math.max(Math.abs(r), Math.abs(g), Math.abs(bl)) > 8) cover++;
+          }
+        }
+      }
+      const mean = (sum, count) => +(sum / count).toFixed(2);
+      // Leave the golden frame on the canvas for the second screenshot. The plain
+      // pixels are copied below via a second draw once the page shot is taken.
+      s.paused = true;
+      s.golden = true;
+      bh.scene.draw(now, 0, true);
+      window.__pair = { now, prev };
+      return {
+        meanRGB: [mean(dr, n), mean(dg, n), mean(db, n)],
+        pctOver8: +((over / n) * 100).toFixed(2),
+        centerMeanRGB: [mean(cdr, cn), mean(cdg, cn), mean(cdb, cn)],
+        centerPctOver8: +((cover / cn) * 100).toFixed(2),
+        pixels: n
+      };
+    });
+    await page.screenshot({ path: path.join(SHOT_DIR, goldName) });
+    await page.evaluate(() => {
+      const s = window.__bh.state;
+      s.golden = false;
+      window.__bh.scene.draw(window.__pair.now, 0, true);
+    });
+    await page.screenshot({ path: path.join(SHOT_DIR, plainName) });
+    await page.evaluate(() => {
+      const s = window.__bh.state;
+      const prev = window.__pair.prev;
+      s.paused = prev.paused;
+      s.settings.reduceMotion = prev.reduce;
+      s.golden = prev.golden;
+    });
+    report.push({ biome, plain: plainName, golden: goldName, ...delta });
   }
-  await shot("phone-armada-plain.png", "Ruined Armada", 5, 4, false);
-  await shot("phone-armada-golden.png", "Ruined Armada", 5, 4, true);
-  await shot("phone-nursery-golden.png", "Planet Nursery", 4, 3, true);
+  return report;
 }
 
 async function main() {
@@ -249,9 +331,11 @@ async function main() {
   page.on("console", m => { if (m.type() === "error") errs.push(m.text().slice(0, 240)); });
   await boot(page);
 
-  if (GOLDEN) await goldenShots(page);
-
   const result = { ok: true, notes: [], errs, command: "node tools/v97-review.cjs" };
+  if (GOLDEN) {
+    result.golden = await goldenShots(page);
+    console.log(JSON.stringify(result.golden, null, 2));
+  }
   result.bite = await bite(page);
   if (!result.bite.ok) { result.ok = false; result.notes.push("bite failed"); }
   result.ring = await ring(page);

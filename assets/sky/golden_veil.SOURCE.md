@@ -1,46 +1,46 @@
-# golden_veil_painted.jpg — source record
+# assets/sky/golden_veil.jpg — source record
 
-- **File:** final/golden/golden_veil_painted.jpg — 1290×2796, JPEG q85, 82 KB.
+The file that ships is `assets/sky/golden_veil.jpg`, owned by `GoldenVeil`. It is drawn with `screen` at 0.35 over the backdrop, and only on a golden galaxy.
+
+- **Art-box original:** `final/golden/golden_veil_full.jpg` (1290×2796, JPEG q85, 152 KB). Copied into the repo under the shipped name above. It replaces the earlier edge-only painting.
 - **Tool:** GenerateImage (Grok Bot, cursor namespace), aspect_ratio "9:16", output 720×1280 JPEG.
-- **Date:** 11 Nov 2026, ~12:45 AM ET.
-- **Raw source kept at:** /workspace/vast-art-v97/raw/golden_painted/cand6.jpg (unmodified generator output).
-- **Exact prompt:**
-  > Portrait painterly overlay on pure black: very soft, smooth, out-of-focus drifts of warm honey-gold haze, like gentle golden fog seen through a soft lens, organic and asymmetric: a soft drift tucked into the upper left corner, a thin faint drift along the upper part of the right edge, and a wider soft drift across the bottom right corner and along the bottom edge. A few very faint, very blurry gold dust motes inside the haze. Smooth airy texture, not gritty, not detailed. The haze stays close to the edges; the large middle of the frame is dark, empty pure black. Dim, low contrast, calm. No round shapes, no orbs, no glow spot, no border band, no frame, no stars, no lines, no text.
+- **Date:** 11 Nov 2026, ~12:55 AM ET.
+- **Raw candidates:** `/workspace/vast-art-v97/raw/golden_full/` (cand1–3; chosen = cand3.jpg). These stay off-repo. Do not commit them.
+- **Exact prompt (cand3):**
+  > Full-frame portrait painterly overlay: a soft, dim, warm honey and amber haze spread evenly across the entire frame, like faint golden nebula fog, with smooth organic cloud variation in large gentle shapes, some areas a little warmer and some a little dimmer, scattered irregularly across top, middle and bottom alike. Dark low-key image, low contrast, smooth airbrushed painterly texture. No glow spot, no bright center, no empty center, no vignette, no frame band, no lines, no specks, no stars, no text.
 
-## Processing (golden_painted.py, nothing else)
-1. Resize 720×1280 → 1290×2796, LANCZOS. No crop: the 0.82× horizontal squeeze keeps the edge haze.
-2. Global levels clamp, the same curve for every pixel: out = clip((in − 10) / (290 − 10), 0, 1) × 255. Black point 10 keeps the centre at true black; white point 290 lowers the peak to 145/255.
-3. Light grain: Gaussian noise, σ = 0.8 levels, fixed seed 11.
-4. JPEG save: quality 85, optimize, progressive.
+## Processing (golden_full.py, nothing else)
+1. Resize 720×1280 → 1290×2796 with LANCZOS. No crop (0.82× horizontal squeeze).
+2. One global levels clamp, the same for every pixel: out = clip((in − 20) / (450 − 20), 0, 1) × 255.
+   - The white point is above 255, so this is a linear dim; the brightest pixel is 106/255.
+   - Resulting veil mean RGB is (57, 33, 5).
+3. Light grain: Gaussian, σ 0.8 levels, seed 11.
+4. JPEG: quality 85, optimize, progressive.
 
-No masks, vignettes, gradients, blurs or per-region operations were applied.
+No masks, vignettes, gradients, blurs or per-region operations.
 
-## Painted check (resid.py)
-Pixel brightness is max(R, G, B). It is fitted to distance from the centre with a 200-bin mean curve, and the score is the RMS residual in 8-bit levels.
+## Measurements
+**Paint check (resid.py).** Brightness = max(R, G, B), fitted to distance from the centre with a 200-bin mean; the score is the RMS residual in levels.
+- Elliptical distance: **10.74**.
+- Euclidean distance: 10.02.
+- For reference: a code vignette scored 1.62, and the painted backdrops score 10.3–11.2. That vignette was never shipped.
 
-| Image | Elliptical distance | Euclidean distance |
+**Colour deltas**, measured at screen 0.35, 390×844, golden minus plain, in RGB levels. Centre = x 120–270, y 300–544, around the hole.
+
+| Backdrop | Whole frame (R / G / B) | Centre (R / G / B) |
 |---|---|---|
-| **golden_veil_painted.jpg** | **28.84** | **27.11** |
-| golden_veil.jpg (blocked code vignette) | 1.62 | 19.03 |
-| backdrop_nursery.jpg | 10.33 | 10.09 |
-| backdrop_meadow.jpg | 11.21 | 9.17 |
+| armada | **+17.4** / +10.5 / +1.3 | **+22.5** / +15.0 / +2.5 |
+| nursery | **+17.5** / +9.6 / +1.4 | **+22.7** / +13.5 / +2.7 |
+| meadow | +16.3 / +10.0 / +1.5 | +20.9 / +14.5 / +3.0 |
 
-The elliptical score is the one that separates code from paint. golden_veil.jpg is blocked and superseded by this file, and must not ship.
+The target was +12 to +25 on R, with the centre warmed as well; both are met.
 
-Centre region (x 390–900, y 1000–1800) has a mean of 0.3 levels, which is grain only.
-
-## Candidates (7 generated, raw files in raw/golden_painted/)
+## Candidates
 | Candidate | Result |
 |---|---|
-| cand1 | Gritty, crinkled texture that reads like debris at phone size |
-| cand2 | Rejected: thin wavy line-like wisp, and sharp motes that could read as pickups |
-| cand3 | Rejected: bright, bold decorative smoke curls; too busy and strong |
-| cand4 | Rejected: small round glow blob at top right, and haze reaching toward the middle |
-| cand5 | Rejected: detailed smoke covering too much of the frame; busy |
-| **cand6** | **Chosen** |
-| cand7 | Close runner-up; visibly grittier texture in the composites |
+| cand1 | Rejected: even, but bright and blotchy with gritty grain. It hits the R target, but the JPEG is 289 KB (over the limit) and reads speckled. |
+| cand2 | Rejected: a dark round blob in the lower middle that could read as a second hole, plus crusty texture. |
+| **cand3** | **Chosen:** smooth, large soft drifts across the whole frame. Its natural painted edge falloff is part of the image, not a mask. |
 
-## Recommended use
-- Blend mode: 'screen'.
-- Opacity: 0.35 by default; 0.5 is acceptable for a stronger golden galaxy.
-- Previews: previews/golden_veil_painted_{nursery,armada,meadow}_screen_{0.35,0.5}_390x844.png and previews/golden_veil_painted_compare_sheet.png.
+## Preview
+`previews/golden_full_compare_sheet.png` on the art box shows nursery, armada and meadow, each plain and then golden at screen 0.35. The ring and hole mock is drawn on every tile; the ring stays the brightest, clearest element.
