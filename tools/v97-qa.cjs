@@ -159,10 +159,10 @@ async function playShots(page, dir, tag, full) {
     names.push(file);
     const probe = await page.evaluate(() => {
       const bh = window.__bh;
-      const ring = bh.ring ? { present: !!bh.ring.present, draws: bh.ring.draws } : null;
       const inflow = bh.inflow ? bh.inflow.info() : null;
       const backdrop = bh.backdrop ? { ready: !!bh.backdrop.ready, key: bh.backdrop.key } : null;
-      return { biome: bh.state.biome.name, mode: bh.state.mode, ring, inflow, backdrop, errs: null };
+      const debris = bh.debris ? bh.debris.live : null;
+      return { biome: bh.state.biome.name, mode: bh.state.mode, debris, inflow, backdrop, errs: null };
     });
     probe.console = page._errs.slice();
     page._probe = page._probe || {};
@@ -192,7 +192,7 @@ async function playShots(page, dir, tag, full) {
       const bh = window.__bh;
       return {
         mode: bh.state.mode,
-        ring: bh.ring ? { present: !!bh.ring.present, draws: bh.ring.draws } : null,
+        debris: bh.debris ? bh.debris.live : null,
         inflow: bh.inflow ? bh.inflow.info() : null
       };
     });

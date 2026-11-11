@@ -1,8 +1,9 @@
 // ─── DebrisField ───
 // One job: the bits of whatever was just eaten. They exist only during a bite.
-// Each piece is a slice of that item's own cached sprite (a source rectangle),
-// never a code-drawn shape. They spiral inward, shrink, fade, and are gone.
-// Idle means nothing to draw: no pieces, and draw does not touch the canvas.
+// Each piece is that item's own sprite, cut by a soft shard mask (an image
+// asset, composited once and cached). They start where the item was, spiral
+// in, shrink, and fade out at the edge of the dark core. Nothing is drawn
+// over the black centre. Idle means no canvas calls.
 
 import { spriteFor } from "../art.js";
 
@@ -12,17 +13,30 @@ const LIFE_MIN = 36;   // 0.6 s at 60 Hz
 const LIFE_MAX = 60;   // 1.0 s
 const SPIN = 0.028;
 const SPIN_STILL = 0.01;
+const MASKS = [1, 2, 3, 4].map(n => "assets/fx/shard_mask_" + n + ".png");
+
+const shardCache = new WeakMap();
+
+function load(src) {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  return img;
+}
 
 export class DebrisField {
   constructor(state) {
     this.state = state;
     this.dpr = 1;
+    this.perBite = PER_BITE;
+    this.lifeMin = LIFE_MIN;
+    this.lifeMax = LIFE_MAX;
+    this.masks = MASKS.map(load);
     this.pieces = new Array(CAP);
     for (let i = 0; i < CAP; i++) {
       this.pieces[i] = {
         on: false, age: 0, life: LIFE_MIN, ang: 0, rad: 0, r0: 0,
-        dir: 1, spin0: 0, spr: null,
-        sx: 0, sy: 0, sw: 0, sh: 0, dw: 0, dh: 0
+        core: 1, dir: 1, spin0: 0, spr: null, dw: 0
       };
     }
     this.live = 0;
@@ -31,30 +45,28 @@ export class DebrisField {
     this.draws = 0;
   }
 
-  /** The painted pixels, split into four. Empty canvas padding is left out. */
-  _rects(canvas) {
-    const w = canvas.width, h = canvas.height;
-    const data = canvas.getContext("2d").getImageData(0, 0, w, h).data;
-    let x0 = w, y0 = h, x1 = 0, y1 = 0, any = false;
-    for (let y = 0; y < h; y += 2) {
-      for (let x = 0; x < w; x += 2) {
-        if (data[(y * w + x) * 4 + 3] < 20) continue;
-        any = true;
-        if (x < x0) x0 = x;
-        if (y < y0) y0 = y;
-        if (x > x1) x1 = x;
-        if (y > y1) y1 = y;
-      }
+  get masksReady() {
+    return this.masks.every(m => m.complete && m.naturalWidth > 0);
+  }
+
+  /** Four soft shards of this sprite. Cached on the sprite canvas itself. */
+  _shards(sprite) {
+    const hit = shardCache.get(sprite);
+    if (hit) return hit;
+    const w = sprite.width, h = sprite.height;
+    const out = [];
+    for (let i = 0; i < PER_BITE; i++) {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const g = c.getContext("2d");
+      g.drawImage(sprite, 0, 0);
+      g.globalCompositeOperation = "destination-in";
+      g.drawImage(this.masks[i], 0, 0, w, h);
+      out.push(c);
     }
-    if (!any) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
-    const hw = Math.max(1, Math.ceil((x1 - x0 + 1) / 2));
-    const hh = Math.max(1, Math.ceil((y1 - y0 + 1) / 2));
-    return [
-      { sx: x0, sy: y0, sw: hw, sh: hh },
-      { sx: x0 + hw, sy: y0, sw: Math.max(1, x1 - x0 + 1 - hw), sh: hh },
-      { sx: x0, sy: y0 + hh, sw: hw, sh: Math.max(1, y1 - y0 + 1 - hh) },
-      { sx: x0 + hw, sy: y0 + hh, sw: Math.max(1, x1 - x0 + 1 - hw), sh: Math.max(1, y1 - y0 + 1 - hh) }
-    ];
+    shardCache.set(sprite, out);
+    return out;
   }
 
   _free() {
@@ -68,41 +80,34 @@ export class DebrisField {
     return oldest;
   }
 
-  /** Cut the eaten item's sprite into pieces and start them falling. The entity can go. */
+  /** Start pieces at the eaten item. The entity can go. */
   spawn(e) {
+    if (!this.masksReady) return;
     const state = this.state;
     const px = Math.max(8, e.radius * (state.zoom || 1) * (this.dpr || 1));
     const sp = spriteFor(e, px);
     const canvas = sp.c;
     if (!canvas || !canvas.width) return;
-    const rects = this._rects(canvas);
+    const shards = this._shards(canvas);
     const dx = e.x - state.playerX;
     const dy = e.y - state.playerY;
+    const dist = Math.hypot(dx, dy);
+    const base = Math.atan2(dy, dx);
     const still = !!(state.settings && state.settings.reduceMotion);
-    const n = Math.min(PER_BITE, rects.length);
-    for (let i = 0; i < n; i++) {
-      const rec = rects[i];
+    const core = state.radius;
+    for (let i = 0; i < PER_BITE; i++) {
       const p = this._free();
-      const ox = ((rec.sx + rec.sw / 2) / canvas.width - 0.5) * e.radius * 2;
-      const oy = ((rec.sy + rec.sh / 2) / canvas.height - 0.5) * e.radius * 2;
-      let rad = Math.hypot(dx + ox, dy + oy);
-      // The disk is wide. Start outside its bright core so the pieces read, then spiral in.
-      const minR = state.radius * 2.6;
-      if (rad < minR) rad = minR + i * state.radius * 0.22;
       p.on = true;
       p.age = 0;
       p.life = still ? LIFE_MIN : LIFE_MIN + Math.floor(Math.random() * (LIFE_MAX - LIFE_MIN + 1));
-      p.ang = Math.atan2(dy + oy, dx + ox) + (i - 1.5) * 0.55;
-      p.r0 = rad;
-      p.rad = rad;
+      p.ang = base + (i - 1.5) * 0.2;
+      p.core = core;
+      p.r0 = dist;
+      p.rad = dist;
       p.dir = i % 2 === 0 ? 1 : -1;
       p.spin0 = p.ang;
-      p.spr = canvas;
-      p.sx = rec.sx; p.sy = rec.sy; p.sw = rec.sw; p.sh = rec.sh;
-      const aspect = rec.sw / Math.max(1, rec.sh);
-      const long = e.radius * 1.15;
-      p.dw = aspect >= 1 ? long : long * aspect;
-      p.dh = aspect >= 1 ? long / aspect : long;
+      p.spr = shards[i];
+      p.dw = e.radius * 2;
       this.live++;
       this.spawned++;
     }
@@ -132,37 +137,42 @@ export class DebrisField {
         continue;
       }
       const k = 1 - p.age / p.life;
+      const span = Math.max(0, p.r0 - p.core);
+      p.rad = p.core + span * k * k;
       p.ang += spin * p.dir * dt;
-      p.rad = p.r0 * k * k;
     }
   }
 
   /**
    * side -1: the far half, behind the hole. side +1: the near half, in front.
-   * Idle returns before any canvas call.
+   * Idle, and anything already at the dark core, returns before any canvas call.
    */
   draw(ctx, hx, hy, side) {
     if (this.live <= 0) return;
-    let any = false;
     for (let i = 0; i < CAP; i++) {
       const p = this.pieces[i];
       if (!p.on || !p.spr) continue;
       const below = Math.sin(p.ang) >= 0 ? 1 : -1;
       if (below !== side) continue;
+      // Fully gone once the piece reaches the shadow. Near side included:
+      // nothing is drawn over the black centre.
+      if (p.rad <= p.core) continue;
+      const span = Math.max(1, p.r0 - p.core);
+      const near = (p.rad - p.core) / span;
+      const approach = near < 0.22 ? near / 0.22 : 1;
       const t = p.age / p.life;
-      const k = 1 - t;
+      const lifeFade = t < 0.8 ? 1 : (1 - t) / 0.2;
+      const alpha = approach * lifeFade;
+      if (alpha <= 0.02) continue;
+      const sc = 0.35 + 0.65 * near;
       const x = hx + Math.cos(p.ang) * p.rad;
       const y = hy + Math.sin(p.ang) * p.rad;
-      const sc = 0.2 + 0.8 * k;
-      const fade = k < 0.25 ? k / 0.25 : 1;
-      const alpha = fade * (t < 0.72 ? 1 : (1 - t) / 0.28);
-      if (alpha <= 0.01) continue;
-      if (!any) { any = true; this.draws++; }
+      this.draws++;
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.translate(x, y);
       ctx.rotate(p.ang - p.spin0);
-      ctx.drawImage(p.spr, p.sx, p.sy, p.sw, p.sh, -p.dw * sc / 2, -p.dh * sc / 2, p.dw * sc, p.dh * sc);
+      ctx.drawImage(p.spr, -p.dw * sc / 2, -p.dw * sc / 2, p.dw * sc, p.dw * sc);
       ctx.restore();
     }
   }

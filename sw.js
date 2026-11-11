@@ -86,6 +86,10 @@ const ASSETS = [
   "./assets/backdrop_meadow.jpg",
   "./assets/backdrop_forge.jpg",
   "./assets/sky/golden_veil.jpg",
+  "./assets/fx/shard_mask_1.png",
+  "./assets/fx/shard_mask_2.png",
+  "./assets/fx/shard_mask_3.png",
+  "./assets/fx/shard_mask_4.png",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

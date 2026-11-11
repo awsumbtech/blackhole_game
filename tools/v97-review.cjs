@@ -54,67 +54,160 @@ async function enter(page, cfg) {
   await page.waitForTimeout(300);
 }
 
-/** One Feeding.update bite: mass up, entity gone, debris pieces die within their life. */
+/** One Feeding.update bite: exactly 4 pieces, each life inside DebrisField's range, then gone. */
 async function bite(page) {
   await enter(page, { biome: "Comet Current", tier: 3, galaxy: 3, zen: false });
+  await page.waitForFunction(() => window.__bh.debris.masksReady);
   return page.evaluate(() => {
     const bh = window.__bh;
     const s = bh.state;
-    bh.debris.clear();
+    const field = bh.debris;
+    field.clear();
     const e = s.entities.find(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio);
     if (!e) return { ok: false, why: "no edible" };
     const mass0 = s.mass;
     const n0 = s.entities.length;
-    e.x = s.playerX;
+    const reach = s.radius + e.radius * (0.4 + (s.mods.reachBonus || 0));
+    e.x = s.playerX + reach * 0.92;
     e.y = s.playerY;
     e.vx = 0;
     e.vy = 0;
-    bh.feeding.update(1);
-    const gone = !s.entities.includes(e);
-    const live = bh.debris.pieces.filter(p => p.on);
-    const lives = live.map(p => p.life);
-    const fromSprite = live.every(p => p.spr && p.sw > 0 && p.sh > 0);
-    const maxLife = lives.length ? Math.max(...lives) : 0;
-    for (let i = 0; i < maxLife; i++) bh.debris.update(1, false);
-    const massGained = s.mass - mass0;
-    const lifeOk = lives.length > 0 && lives.length <= 4 && lives.every(n => n >= 36 && n <= 60);
-    return {
-      ok: massGained > 0 && gone && live.length >= 1 && lifeOk && fromSprite && bh.debris.live === 0,
-      massGained,
-      gone,
-      pieces: live.length,
-      lives,
-      fromSprite,
-      liveAfter: bh.debris.live,
-      removed: n0 - s.entities.length
+    const proto = CanvasRenderingContext2D.prototype;
+    const orig = proto.drawImage;
+    const origDraw = field.draw;
+    let inside = false;
+    let hits = 0;
+    field.draw = function () {
+      inside = true;
+      try { return origDraw.apply(field, arguments); }
+      finally { inside = false; }
     };
+    proto.drawImage = function () {
+      if (inside) hits++;
+      return orig.apply(this, arguments);
+    };
+    let drawHits = 0;
+    try {
+      bh.feeding.update(1);
+      const gone = !s.entities.includes(e);
+      const live = field.pieces.filter(p => p.on);
+      const lives = live.map(p => p.life);
+      const fromSprite = live.every(p => p.spr && p.spr.width > 0);
+      const maxLife = lives.length ? Math.max(...lives) : 0;
+      const now = performance.now();
+      s.paused = true;
+      for (let i = 0; i < 6; i++) {
+        field.update(2, false);
+        bh.scene.draw(now, 0, true);
+      }
+      drawHits = hits;
+      for (let i = 0; i < maxLife; i++) field.update(1, false);
+      const massGained = s.mass - mass0;
+      const lifeOk = lives.length === 4 && lives.every(n => n >= field.lifeMin && n <= field.lifeMax);
+      s.paused = false;
+      return {
+        ok: massGained > 0 && gone && lifeOk && fromSprite && field.live === 0 && drawHits > 0,
+        massGained,
+        gone,
+        pieces: live.length,
+        lives,
+        lifeMin: field.lifeMin,
+        lifeMax: field.lifeMax,
+        fromSprite,
+        drawHits,
+        liveAfter: field.live,
+        removed: n0 - s.entities.length
+      };
+    } finally {
+      proto.drawImage = orig;
+      field.draw = origDraw;
+    }
   });
 }
 
 /**
- * Idle Zen: nothing is being eaten, so DebrisField must not draw.
- * Several simulated minutes of scene draws, entities cleared so a drift cannot bite.
+ * Real Zen play for several seconds. Entities are kept out of reach.
+ * drawImage calls made inside DebrisField.draw are counted, so a draw that
+ * forgets its own counter still fails this check. A bite afterwards must draw.
  */
 async function idle(page) {
   await enter(page, { biome: "Planet Nursery", tier: 3, galaxy: 3, zen: true });
-  return page.evaluate(() => {
+  await page.waitForFunction(() => window.__bh.debris.masksReady);
+  return page.evaluate(() => new Promise(resolve => {
     const bh = window.__bh;
     const s = bh.state;
-    s.entities.length = 0;
-    bh.debris.clear();
-    bh.debris.draws = 0;
-    s.paused = true;
-    const now = performance.now();
-    for (let i = 0; i < 5 * 60 * 60; i += 30) bh.scene.draw(now + i, 0, true);
-    const info = bh.inflow.info();
-    return {
-      ok: bh.debris.live === 0 && bh.debris.draws === 0 && info.inflow === 0,
-      live: bh.debris.live,
-      draws: bh.debris.draws,
-      inflow: info.inflow,
-      motes: info.motes
+    const field = bh.debris;
+    const proto = CanvasRenderingContext2D.prototype;
+    const orig = proto.drawImage;
+    const origDraw = field.draw;
+    let inside = false;
+    let idleHits = 0;
+    field.draw = function () {
+      inside = true;
+      try { return origDraw.apply(field, arguments); }
+      finally { inside = false; }
     };
-  });
+    proto.drawImage = function () {
+      if (inside) idleHits++;
+      return orig.apply(this, arguments);
+    };
+    field.clear();
+    s.paused = false;
+    s.playerVX = 0;
+    s.playerVY = 0;
+    const park = () => {
+      const R = s.radius;
+      s.playerVX = 0;
+      s.playerVY = 0;
+      for (const e of s.entities) {
+        e.radius = Math.max(e.radius, R * 4);
+        e.x = s.playerX + R * 30;
+        e.y = s.playerY;
+        e.vx = 0;
+        e.vy = 0;
+      }
+    };
+    park();
+    const t0 = performance.now();
+    const step = () => {
+      park();
+      if (performance.now() - t0 < 5000) requestAnimationFrame(step);
+      else finish();
+    };
+    const finish = () => {
+      const idle = { hits: idleHits, live: field.live, ms: Math.round(performance.now() - t0) };
+      idleHits = 0;
+      const e = s.entities[0];
+      let biteHits = 0;
+      if (e) {
+        e.radius = s.radius * 0.4;
+        e.consumed = false;
+        const reach = s.radius + e.radius * (0.4 + (s.mods.reachBonus || 0));
+        e.x = s.playerX + reach * 0.92;
+        e.y = s.playerY;
+        e.vx = 0;
+        e.vy = 0;
+        if (!s.entities.includes(e)) s.entities.push(e);
+        bh.feeding.update(1);
+        const now = performance.now();
+        s.paused = true;
+        for (let i = 0; i < 6; i++) {
+          field.update(2, false);
+          bh.scene.draw(now, 0, true);
+        }
+        biteHits = idleHits;
+        s.paused = false;
+      }
+      proto.drawImage = orig;
+      field.draw = origDraw;
+      resolve({
+        ok: idle.hits === 0 && idle.live === 0 && biteHits > 0,
+        idle,
+        biteHits
+      });
+    };
+    requestAnimationFrame(step);
+  }));
 }
 
 const SHOT_DIR = process.env.V97_SHOT_DIR || path.join(OUT_DIR, "after");

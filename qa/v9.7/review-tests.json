@@ -5,24 +5,29 @@
   "command": "node tools/v97-review.cjs",
   "bite": {
     "ok": true,
-    "massGained": 95.24035427074159,
+    "massGained": 45.89908380090674,
     "gone": true,
     "pieces": 4,
     "lives": [
-      45,
-      40,
-      42,
-      51
+      47,
+      41,
+      46,
+      48
     ],
+    "lifeMin": 36,
+    "lifeMax": 60,
     "fromSprite": true,
+    "drawHits": 24,
     "liveAfter": 0,
     "removed": 1
   },
   "idle": {
     "ok": true,
-    "live": 0,
-    "draws": 0,
-    "inflow": 0,
-    "motes": 20
+    "idle": {
+      "hits": 0,
+      "live": 0,
+      "ms": 5007
+    },
+    "biteHits": 24
   }
 }
