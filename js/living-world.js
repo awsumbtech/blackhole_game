@@ -22,13 +22,13 @@ export const CFG = {
   PULL_CAP: 2.5,
 
   // Food is sized relative to the player (fraction of player radius)
-  FOOD_RATIO_MIN: 0.12,   // v6 meatier bites: fewer, bigger morsels (was 0.08-0.22)
-  FOOD_RATIO_MAX: 0.30,
+  FOOD_RATIO_MIN: 0.145,  // v9.7: a little larger, so a morsel reads instead of specking
+  FOOD_RATIO_MAX: 0.36,
   NEAR_SPAWN_CHANCE: 0.7,
 
   // Breathers: big, easy food (fraction of player radius)
-  BREATHER_FOOD_MIN: 0.32,  // v6 (was 0.25-0.45)
-  BREATHER_FOOD_MAX: 0.55,
+  BREATHER_FOOD_MIN: 0.38,
+  BREATHER_FOOD_MAX: 0.62,
 
   // Bigger fish: always keep a few things on the field you can't eat yet
   BIG_RATIO_MIN: 1.3,    // v8.4: soon-edible, at most ~1 tier up (was 1.4-2.6)
@@ -113,11 +113,8 @@ export function updateLivingWorld(state, dt, worldDt = dt) {
   }
 }
 
-export function drawLivingWorldBG(ctx, state, w, h) {
-  if (!world) return;
-  drawShootingStars(ctx, w, h);
-  drawDistantFlashes(ctx, w, h);
-  drawEnergyWaves(ctx, w, h);
+export function drawLivingWorldBG() {
+  // v9.7: shooting stars, distant flashes and energy rings were decorative specks.
 }
 
 /** Drawn inside the zoomed world transform; w/h are the zoomed (world) viewport. */
@@ -278,7 +275,7 @@ function spawnBigFish(state) {
   return e;
 }
 
-export const DENSITY = { regular: 44, breather: 52 };  // v6: fewer, bigger (was 60/70)  // objects around the view
+export const DENSITY = { regular: 24, breather: 29 };  // v9.7: ~45% fewer in view than v6 (44/52). Bites pay that back.
 const RECYCLE = 2.0;    // gone once 2 view radii away (well off-screen)
 const HARD_CAP = 170;
 

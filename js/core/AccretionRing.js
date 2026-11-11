@@ -6,10 +6,11 @@
 // Alpha paintings, drawn source-over at a fixed 0.72. Additive blew toward
 // white on the warmer lanes (meadow, nursery); the alpha pair keeps the cream.
 
-const OPACITY = 0.72;
-// The painting's empty centre is 0.397 of its width. The hole's dark core is
-// about 2 radii across, so the ring frames that core.
-const WIDTH_PER_R = 2 / 0.397;
+const OPACITY = 0.9;
+// Visible cream runs from ~0.17 to ~0.37 of the image width (measured on the
+// alpha pair). At this scale the inner edge hugs the shadow and the outer
+// edge is about 2.45x the dark core's diameter, so it reads on a phone.
+const WIDTH_PER_R = 5.96;
 const SPIN = 0.00045;
 
 function load(src) {

@@ -1,0 +1,15 @@
+{
+  "method": "32s greedy drift in dev sandbox, same bot, headless Chrome 390x844. Mass multiple is endMass/startMass.",
+  "before": [
+    {"biome": "Debris Reef", "massK": 1.693, "eaten": 126, "progress": 0.230, "inRing": 33, "secTo1.35x": 18.3},
+    {"biome": "Comet Current", "massK": 1.627, "eaten": 113, "progress": 0.188, "inRing": 36, "secTo1.35x": 22.0},
+    {"biome": "Planet Nursery", "massK": 2.008, "eaten": 118, "progress": 0.518, "inRing": 37, "secTo1.35x": 12.7},
+    {"biome": "Ruined Armada", "massK": 1.444, "eaten": 111, "progress": 0.104, "inRing": 27, "secTo1.35x": 27.8}
+  ],
+  "after": [
+    {"biome": "Debris Reef", "massK": 1.861, "eaten": 81, "progress": 0.276, "inRing": 9, "secTo1.35x": 10.2},
+    {"biome": "Comet Current", "massK": 1.662, "eaten": 84, "progress": 0.196, "inRing": 17, "secTo1.35x": 21.2},
+    {"biome": "Planet Nursery", "massK": 2.099, "eaten": 89, "progress": 0.551, "inRing": 15, "secTo1.35x": 14.0},
+    {"biome": "Ruined Armada", "massK": 1.350, "eaten": 66, "progress": 0.085, "inRing": 17, "secTo1.35x": null}
+  ]
+}

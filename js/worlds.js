@@ -498,7 +498,7 @@ const UPDATE = {
     let orbiting = 0;
     for (const e of state.entities) if (e.orbit) orbiting++;
     c.regrow = (c.regrow || 0) + dt;
-    if (orbiting < 14 && c.regrow > 150 && nearYou(state, cx, cy, 2.6)) {
+    if (orbiting < 8 && c.regrow > 150 && nearYou(state, cx, cy, 2.6)) {
       c.regrow = 0;
       const e = spawnFood(state, false, { type: W.r() < 0.4 ? "planet" : undefined, pos: { x: cx, y: cy }, sizeK: 1.1 });
       putInOrbit(e, Math.floor(W.r() * 4), W.r() * TAU);
@@ -567,7 +567,7 @@ const UPDATE = {
     au.count = n;
     au.spawn += dt;
     const every = W.boost > 0 ? 25 : 80;
-    if (au.spawn >= every && n < 32) {
+    if (au.spawn >= every && n < 16) {
       au.spawn = 0;
       const pk = pickNear(state, au.pts, 0.9);
       if (!pk) return;
@@ -829,23 +829,11 @@ const DRAW = {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const rv of W.rivers) {
-      // v9.3: calm rivers. One soft body and a faint core (no wide glowing
-      // bands), and a few sparse streaks that creep along very slowly (still
-      // under Reduce Motion) so you can read the flow without it pulling the eye.
+      // One quiet ribbon. The wide shafts and the crossing dashes were the loudest thing in the frame.
       ctx.globalAlpha = AM;
-      ctx.strokeStyle = W.boost > 0 ? "rgba(120, 200, 255, 0.06)" : "rgba(120, 200, 255, 0.045)";
-      ctx.lineWidth = rv.w * 1.3;
+      ctx.strokeStyle = W.boost > 0 ? "rgba(170, 220, 255, 0.07)" : "rgba(160, 210, 245, 0.045)";
+      ctx.lineWidth = rv.w * 0.07;
       ctx.stroke(rv.path);
-      ctx.strokeStyle = "rgba(200, 235, 255, 0.04)";
-      ctx.lineWidth = rv.w * 0.4;
-      ctx.stroke(rv.path);
-      const speed = fx.reduceMotion ? 0 : 0.006;
-      ctx.setLineDash([rv.w * 0.25, rv.w * 2.2]);
-      ctx.lineDashOffset = -fx.time * speed;
-      ctx.strokeStyle = "rgba(220, 245, 255, 0.11)";
-      ctx.lineWidth = Math.max(1.5 / (fx.zoom * f), rv.w * 0.025);
-      ctx.stroke(rv.path);
-      ctx.setLineDash([]);
     }
     ctx.restore();
   },
@@ -857,11 +845,12 @@ const DRAW = {
     // The old hairlines stacked across the screen and read as a diagram.
     const sr = wx(c.sunR);
     if (!onScreen(state, x, y, sr * 4, vw, vh)) return;
-    drawGlow(ctx, "255, 220, 150", x, y, sr * 5.5, 0.08 + fx.breath * 0.03);
+    // The sprite already has a corona. No extra halo, drawn smaller so the rays
+    // are not a second sun beside the hole.
     c.sun.radius = sr;
-    const sp = spriteFor(c.sun, sr * fx.zoom * fx.dpr);
-    const d = sp.k * sr * (0.98 + fx.breath * 0.04);
-    ctx.globalAlpha = AM * (0.95);
+    const sp = spriteFor(c.sun, sr * 0.5 * fx.zoom * fx.dpr);
+    const d = sp.k * sr * 0.5;
+    ctx.globalAlpha = AM * 0.9;
     ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
   },
 
@@ -872,19 +861,7 @@ const DRAW = {
     // arrive, then fades in; until then nothing pops in on screen
     const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
-    drawGlow(ctx, "180, 160, 220", x, y, s * 2.2, 0.06);
     const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
-    const cr = Math.cos(rot), sr = Math.sin(rot);
-    for (const p of fl.debris) {
-      const t = fx.reduceMotion ? 0 : fx.time;
-      const bx = p.dx * s + Math.sin(t * 0.00005 + p.ph) * s * 0.03, by = p.dy * s;
-      const qx = x + bx * cr - by * sr, qy = y + bx * sr + by * cr, ps = p.s * s;
-      const dsp = spriteFor(p.art, ps * fx.zoom * fx.dpr), dd = dsp.k * ps, pr = p.rot + t * p.spin;
-      ctx.globalAlpha = AM * 0.5;
-      ctx.translate(qx, qy); ctx.rotate(pr);
-      ctx.drawImage(dsp.c, -dd / 2, -dd / 2, dd, dd);
-      ctx.rotate(-pr); ctx.translate(-qx, -qy);
-    }
     if (!sp) return;
     // It sits back from play, hazed; it clears a little as you come close (never fully)
     const near = smooth(1 - (hypot(state.playerX - x, state.playerY - y) - s * 1.2) / (s * 3));
@@ -902,13 +879,14 @@ const DRAW = {
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    const wide = W.b0 * 0.12;
-    ctx.globalAlpha = AM * (1);
-    ctx.strokeStyle = `rgba(70, 200, 170, ${0.05 * glowK})`;
+    // A readable feeding line, not a bright column. The hole stays the bright thing.
+    const wide = W.b0 * 0.045;
+    ctx.globalAlpha = AM;
+    ctx.strokeStyle = `rgba(80, 190, 170, ${0.035 * glowK})`;
     ctx.lineWidth = wide;
     ctx.stroke(au.path);
-    ctx.strokeStyle = `rgba(170, 255, 225, ${(0.1 + fx.breath * 0.04) * glowK})`;
-    ctx.lineWidth = Math.max(2 / (fx.zoom * f), wide * 0.06);
+    ctx.strokeStyle = `rgba(180, 245, 225, ${0.05 * glowK})`;
+    ctx.lineWidth = Math.max(1.2 / (fx.zoom * f), wide * 0.08);
     ctx.stroke(au.path);
     ctx.restore();
   },
@@ -917,8 +895,8 @@ const DRAW = {
     for (const m of W.meadows) {
       const x = px(m.x), y = py(m.y), r = wx(m.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      drawGlow(ctx, "255, 205, 110", x, y, r * 1.4, 0.09 + fx.breath * 0.03);
-      ctx.globalAlpha = AM * (0.6 + fx.breath * 0.2);
+      drawGlow(ctx, "255, 205, 110", x, y, r * 1.1, 0.04);
+      ctx.globalAlpha = AM * 0.35;
       ctx.drawImage(lmSprite("meadow"), x - r * 1.2, y - r * 1.2, r * 2.4, r * 2.4);
     }
     // One quiet ring on a growing bud. No orbiting specks.
@@ -943,27 +921,21 @@ const DRAW = {
       if (!p.grad || p.gradL !== L || p.gradF !== (W.flare > 0)) {
         const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
         const k = W.flare > 0 ? 1.4 : 1;
-        g.addColorStop(0, `rgba(${p.rgb}, ${0.16 * k})`);   // v9.3: a little softer
-        g.addColorStop(0.35, `rgba(${p.rgb}, ${0.05 * k})`);
+        g.addColorStop(0, `rgba(${p.rgb}, ${0.055 * k})`);
+        g.addColorStop(0.4, `rgba(${p.rgb}, ${0.018 * k})`);
         g.addColorStop(1, `rgba(${p.rgb}, 0)`);
         p.grad = g; p.gradL = L; p.gradF = W.flare > 0;
       }
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(p.ang);
-      ctx.globalAlpha = AM * (0.85 + fx.breath * 0.15);
+      ctx.globalAlpha = AM * 0.55;
       ctx.fillStyle = p.grad;
       for (let k = 0; k < 2; k++) {
         const side = k * Math.PI;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, L, side - hw, side + hw);
-        ctx.closePath();
-        ctx.fill();
-        // v8.1: a brighter core inside each beam
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, L * 0.85, side - hw * 0.25, side + hw * 0.25);
         ctx.closePath();
         ctx.fill();
       }
@@ -977,8 +949,7 @@ const DRAW = {
         ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
       }
     }
-    // A warm halo on the hole while you're in a beam
-    if (AM === 1 && W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.6, 0.38 * W.beamA);
+    // The beam still pays +50%. It does not put a second glow on the hole.
   }
 };
 

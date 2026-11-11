@@ -11,7 +11,7 @@
 import { shipClassFor } from "./ships.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
-import { spriteFor, getArtQuality } from "./art.js";
+import { spriteFor } from "./art.js";
 
 const TAU = Math.PI * 2;
 export const MERGE_FRAMES = 150;     // ~2.5 s at 60 fps
@@ -116,7 +116,8 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
   const ox = offX[L & 63], oy = offY[L & 63];
   const gx0 = Math.floor((ox - C) / C), gx1 = Math.floor((ox + w + C) / C);
   const gy0 = Math.floor((oy - C) / C), gy1 = Math.floor((oy + h + C) / C);
-  const lv = blurLv(k), occ = k < 1.5 ? 0.3 : k < 2.5 ? 0.2 : 0.13;   // deeper layers are sparser
+  // v9.7: a few hazy next-things, not a field of specks
+  const lv = blurLv(k), occ = k < 1.5 ? 0.1 : k < 2.5 ? 0.045 : 0;
   for (let gy = gy0; gy <= gy1; gy++) {
     for (let gx = gx0; gx <= gx1; gx++) {
       const r = hash(gx, gy, 101 + L * 13);
@@ -149,11 +150,10 @@ export function drawDepth(ctx, w, h, state, holePx, dpr, dt) {
   lastBgX = state.bgX || 0; lastBgY = state.bgY || 0;
   if (shift > 0) shift = Math.max(0, shift - dt / MERGE_FRAMES);
   const s = shift * shift * (3 - 2 * shift);
-  const lite = getArtQuality() !== "high";
   for (let k = LAYERS + 1; k >= 1; k--) {
     const L = t + k, ke = k + s;
     offX[L & 63] += dx * par(ke); offY[L & 63] += dy * par(ke);
-    if (lite && k > 2) continue;   // Lite: two back layers
+    if (k > 2) continue;   // the third haze layer was just more specks
     const a = alp(ke);
     if (a < 0.01) continue;
     walk(ctx, L, ke, w, h, holePx, dpr, a, null);

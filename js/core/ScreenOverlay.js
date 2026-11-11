@@ -118,23 +118,19 @@ export class ScreenOverlay {
     }
   }
 
-  // Combo counter + bonus
+  // One quiet line. The bonus still applies in Feeding; it is not a second caption.
   drawCombo(w, h, z) {
     const state = this.state, ctx = this.ctx;
     const hx = (state.playerX - state.camX) * z + w / 2;
     const hy = (state.playerY - state.camY) * z + h / 2;
-    const size = 14 + Math.min(state.comboCount, 25) * 0.5;
+    const life = state.comboTimer / state.mods.comboWindow;
+    const a = Math.min(0.42, life) * (life < 0.25 ? life / 0.25 : 1);
+    if (a < 0.04) return;
     ctx.save();
-    ctx.font = `700 ${size}px 'Outfit', sans-serif`;
+    ctx.font = "500 13px Outfit, sans-serif";
     ctx.textAlign = "center";
-    const a = Math.min(0.9, 0.3 + state.comboTimer / state.mods.comboWindow);
-    ctx.fillStyle = `rgba(255, 210, 100, ${a})`;
-    ctx.fillText(`×${state.comboCount}`, hx, hy - state.radius * z * 1.25 - 14);
-    if (state.comboCount >= 5) {
-      ctx.font = "600 10px 'Space Mono', monospace";
-      ctx.fillStyle = `rgba(255, 210, 100, ${a * 0.7})`;
-      ctx.fillText(`+${Math.min(state.comboCount, 25)}% mass`, hx, hy - state.radius * z * 1.25 - 14 + 13);
-    }
+    ctx.fillStyle = `rgba(255, 214, 140, ${a})`;
+    ctx.fillText("×" + state.comboCount, hx, hy - state.radius * z * 1.7 - 8);
     ctx.restore();
   }
 }

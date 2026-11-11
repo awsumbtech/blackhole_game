@@ -1,35 +1,35 @@
 {
   "beforePerf": {
-    "avg": 1.05,
+    "avg": 1.09,
     "p50": 1,
-    "p95": 1.3,
-    "max": 4.5,
+    "p95": 1.5,
+    "max": 2.5,
     "quality": "high",
     "autoDrops": 0,
-    "vsyncMs": 16.6,
-    "frameMs": 16.67,
+    "vsyncMs": 14.35,
+    "frameMs": 17.59,
     "entities": 59,
-    "sprites": 425,
-    "generated": 425
+    "sprites": 440,
+    "generated": 440
   },
   "afterPerf": {
-    "avg": 0.39,
-    "p50": 0.4,
-    "p95": 0.5,
-    "max": 1.1,
+    "avg": 0.26,
+    "p50": 0.3,
+    "p95": 0.4,
+    "max": 0.4,
     "quality": "high",
     "autoDrops": 0,
-    "vsyncMs": 16.65,
+    "vsyncMs": 16.62,
     "frameMs": 16.67,
-    "entities": 59,
-    "sprites": 480,
-    "generated": 480
+    "entities": 33,
+    "sprites": 279,
+    "generated": 279
   },
   "checks": {
     "ok": true,
     "notes": [],
     "spawned": 3,
-    "finished": 11,
+    "finished": 8,
     "inflow": {
       "inflow": 0,
       "motes": 0,
@@ -39,11 +39,11 @@
       "high": true,
       "bloom": false
     },
-    "ringDraws": 3338,
+    "ringDraws": 3306,
     "playRing": {
       "mode": "ascension",
       "present": true,
-      "draws": 3452,
+      "draws": 3418,
       "inflow": {
         "inflow": 0,
         "motes": 0,
@@ -57,7 +57,7 @@
     "zenRing": {
       "mode": "zen",
       "present": true,
-      "draws": 3644,
+      "draws": 3612,
       "inflow": {
         "inflow": 0,
         "motes": 0,
@@ -211,7 +211,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 1092
+          "draws": 1038
         },
         "inflow": {
           "inflow": 0,
@@ -234,7 +234,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 1278
+          "draws": 1228
         },
         "inflow": {
           "inflow": 0,
@@ -257,7 +257,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 1466
+          "draws": 1414
         },
         "inflow": {
           "inflow": 0,
@@ -280,7 +280,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 1648
+          "draws": 1600
         },
         "inflow": {
           "inflow": 0,
@@ -303,7 +303,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 1834
+          "draws": 1792
         },
         "inflow": {
           "inflow": 0,
@@ -326,7 +326,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 2022
+          "draws": 1980
         },
         "inflow": {
           "inflow": 0,
@@ -349,7 +349,7 @@
         "mode": "ascension",
         "ring": {
           "present": true,
-          "draws": 2206
+          "draws": 2168
         },
         "inflow": {
           "inflow": 0,
@@ -371,7 +371,7 @@
         "mode": "zen",
         "ring": {
           "present": true,
-          "draws": 3338
+          "draws": 3306
         },
         "inflow": {
           "inflow": 0,
@@ -436,7 +436,7 @@
       "small": []
     },
     "after-phone-play": {
-      "la": "{\n \"viewport\": {\n  \"width\": 390,\n  \"height\": 844,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   10,\n   12\n  ],\n  \"offScale\": [\n   6,\n   10\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    10\n   ],\n   [\n    10,\n    12\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"14px\",\n   \"12px\",\n   \"13px\",\n   \"20px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"14px/700\": 1,\n   \"12px/600\": 1,\n   \"12px/400\": 2,\n   \"13px/700\": 1,\n   \"20px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"button#dev-badge \\\"DEV · sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 734,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "la": "{\n \"viewport\": {\n  \"width\": 390,\n  \"height\": 844,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"div#splash \\\"Black Hole\\\"\",\n   \"w\": 390,\n   \"h\": 844,\n   \"fillPct\": 12,\n   \"pctOfViewport\": 100\n  },\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   10,\n   12,\n   18\n  ],\n  \"offScale\": [\n   6,\n   10,\n   18\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    10\n   ],\n   [\n    10,\n    12\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"22px\",\n   \"11px\",\n   \"14px\",\n   \"12px\",\n   \"13px\",\n   \"20px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"22px/200\": 1,\n   \"11px/600\": 2,\n   \"14px/700\": 1,\n   \"12px/600\": 1,\n   \"12px/400\": 2,\n   \"13px/700\": 1,\n   \"20px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#splash \\\"Black Hole\\\"\",\n   \"x\": 0,\n   \"y\": 0,\n   \"w\": 390,\n   \"h\": 844\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV · sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 734,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
       "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#dev-badge \\\"DEV · sandbox\\\"\"]}",
       "small": []
     },
@@ -478,17 +478,17 @@
   },
   "perf": {
     "before": {
-      "avg": 1.05,
-      "p95": 1.3,
+      "avg": 1.09,
+      "p95": 1.5,
       "quality": "high",
       "entities": 59
     },
     "after": {
-      "avg": 0.39,
-      "p95": 0.5,
+      "avg": 0.26,
+      "p95": 0.4,
       "quality": "high",
-      "entities": 59
+      "entities": 33
     },
-    "avgDeltaPct": -62.9
+    "avgDeltaPct": -76.1
   }
 }
