@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "notes": [],
+  "errs": [],
+  "ring": {
+    "before": 0,
+    "after": 0,
+    "phase": 2.909
+  },
+  "longZen": "qa/v9.7/after/phone-zen-long.png",
+  "bite": {
+    "ok": true,
+    "massGained": 116.84062567117144,
+    "gone": true,
+    "liveAfterBite": 1,
+    "liveAfter": 0,
+    "removed": 1
+  },
+  "golden": {
+    "loaded": true,
+    "plain": "qa/v9.7/after/phone-armada-plain.png",
+    "golden": "qa/v9.7/after/phone-armada-golden.png"
+  }
+}

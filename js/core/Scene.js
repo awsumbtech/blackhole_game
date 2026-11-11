@@ -12,7 +12,7 @@ import { beginArtFrame, getArtQuality, drawRevealFx } from "../art.js";
 import { drawDiscoveries, drawDiscoveryCue } from "../discoveries.js";
 import { drawWisp } from "../wisp.js";
 import { drawRivals } from "../rivals.js";
-import { drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay, pullRange } from "../living-world.js";
+import { drawLivingWorldFG, drawLivingWorldOverlay, pullRange } from "../living-world.js";
 import { powerupFade } from "../powerups.js";
 import { breathPhase } from "./breath.js";
 
@@ -47,7 +47,7 @@ export class Scene {
     const skin = game.settings.skinFilter();
     // v9.7: one painted sky. No coded nebula, no star specks, no parallax motes, no lens rings.
     game.backdrop.draw(ctx, w, h, state.biome ? state.biome.tint : "#04060c");
-    drawLivingWorldBG(ctx, state, w, h);
+    game.golden.draw(ctx, w, h, !!state.golden);
     beginArtFrame();
     if (state.screen === "play") drawDepth(ctx, w, h, state, state.anchorSmooth * z, dpr, state.paused ? 0 : dt);
 

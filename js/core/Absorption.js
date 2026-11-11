@@ -67,6 +67,15 @@ export class Absorption {
     this.spawned++;
   }
 
+  /** Drop every in-flight spiral. Galaxy, Zen and collapse all call this via Galaxy.init. */
+  clear() {
+    for (let i = 0; i < POOL; i++) {
+      this.slots[i].on = false;
+      this.slots[i].spr = null;
+    }
+    this.live = 0;
+  }
+
   update(dt, still) {
     if (dt <= 0 || this.live <= 0) return;
     const spin = still ? SPIN_STILL : SPIN;

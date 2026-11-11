@@ -78,10 +78,6 @@ function freshWorldState() {
     activeEvents: [],
     galaxyTime: 0,
 
-    shootingStars: [],
-    shootingStarTimer: 0,
-    distantFlashes: [],
-    energyWaves: []
   };
 }
 
@@ -102,7 +98,6 @@ export function updateLivingWorld(state, dt, worldDt = dt) {
   updateGravityWell(state, dt);
   updateDynamicSpawning(state, dt);
   updateEventSystem(state, worldDt);
-  updateAmbientBackground(state, dt);
 
   for (const e of state.entities) {
     if (e.depthT < 1) e.depthT = Math.min(1, e.depthT + dt / MERGE_FRAMES);
@@ -111,10 +106,6 @@ export function updateLivingWorld(state, dt, worldDt = dt) {
       e._spawnAlpha = Math.min(1, e._spawnAge / 60);
     }
   }
-}
-
-export function drawLivingWorldBG() {
-  // v9.7: shooting stars, distant flashes and energy rings were decorative specks.
 }
 
 /** Drawn inside the zoomed world transform; w/h are the zoomed (world) viewport. */
@@ -756,137 +747,3 @@ function makeGravityWave(state) {
   };
 }
 
-// ─── 2D: AMBIENT BACKGROUND LIFE ───
-
-function updateAmbientBackground(state, dt) {
-  // Shooting stars
-  world.shootingStarTimer += dt;
-  const shootInterval = rand(180, 420); // 3-7 sec
-  if (world.shootingStarTimer >= shootInterval && world.shootingStars.length < 3) {
-    world.shootingStarTimer = 0;
-    world.shootingStars.push({
-      x: rand(0, 1),
-      y: rand(0, 1),
-      angle: rand(0.2, 1.2),
-      speed: rand(3, 6),
-      life: 0,
-      maxLife: rand(60, 100),
-      brightness: rand(0.3, 0.7)
-    });
-  }
-
-  for (let i = world.shootingStars.length - 1; i >= 0; i--) {
-    const s = world.shootingStars[i];
-    s.life += dt;
-    s.x += Math.cos(s.angle) * s.speed * 0.001 * dt;
-    s.y += Math.sin(s.angle) * s.speed * 0.001 * dt;
-    if (s.life >= s.maxLife) {
-      world.shootingStars.splice(i, 1);
-    }
-  }
-
-  // Distant flashes
-  if (Math.random() < 0.001 * dt && world.distantFlashes.length < 2) {
-    world.distantFlashes.push({
-      x: rand(0.1, 0.9),
-      y: rand(0.1, 0.9),
-      life: 0,
-      maxLife: rand(60, 120),
-      brightness: rand(0.15, 0.35)
-    });
-  }
-
-  for (let i = world.distantFlashes.length - 1; i >= 0; i--) {
-    const f = world.distantFlashes[i];
-    f.life += dt;
-    if (f.life >= f.maxLife) {
-      world.distantFlashes.splice(i, 1);
-    }
-  }
-
-  // Energy waves
-  if (Math.random() < 0.0008 * dt && world.energyWaves.length < 3) {
-    world.energyWaves.push({
-      x: rand(0.2, 0.8),
-      y: rand(0.2, 0.8),
-      radius: 0,
-      life: 0,
-      maxLife: rand(180, 300),
-      speed: rand(0.15, 0.3)
-    });
-  }
-
-  for (let i = world.energyWaves.length - 1; i >= 0; i--) {
-    const ew = world.energyWaves[i];
-    ew.life += dt;
-    ew.radius += ew.speed * dt;
-    if (ew.life >= ew.maxLife) {
-      world.energyWaves.splice(i, 1);
-    }
-  }
-}
-
-function drawShootingStars(ctx, w, h) {
-  for (const s of world.shootingStars) {
-    const progress = s.life / s.maxLife;
-    // Fade in quickly, fade out slowly
-    const alpha = progress < 0.2
-      ? (progress / 0.2) * s.brightness
-      : (1 - (progress - 0.2) / 0.8) * s.brightness;
-
-    const headX = s.x * w;
-    const headY = s.y * h;
-    const tailLen = 30 + s.speed * 8;
-    const tailX = headX - Math.cos(s.angle) * tailLen;
-    const tailY = headY - Math.sin(s.angle) * tailLen;
-
-    const grad = ctx.createLinearGradient(headX, headY, tailX, tailY);
-    grad.addColorStop(0, `rgba(220, 230, 255, ${alpha})`);
-    grad.addColorStop(1, `rgba(220, 230, 255, 0)`);
-
-    ctx.beginPath();
-    ctx.moveTo(headX, headY);
-    ctx.lineTo(tailX, tailY);
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-}
-
-function drawDistantFlashes(ctx, w, h) {
-  for (const f of world.distantFlashes) {
-    const progress = f.life / f.maxLife;
-    // Quick rise (20%), slow fade (80%)
-    const alpha = progress < 0.2
-      ? (progress / 0.2) * f.brightness
-      : (1 - (progress - 0.2) / 0.8) * f.brightness;
-
-    const x = f.x * w;
-    const y = f.y * h;
-    const r = 15 + alpha * 20;
-
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, `rgba(255, 240, 220, ${alpha * 0.5})`);
-    grad.addColorStop(1, "transparent");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawEnergyWaves(ctx, w, h) {
-  for (const ew of world.energyWaves) {
-    const progress = ew.life / ew.maxLife;
-    const alpha = (1 - progress) * 0.08;
-
-    const x = ew.x * w;
-    const y = ew.y * h;
-
-    ctx.beginPath();
-    ctx.arc(x, y, ew.radius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(100, 120, 220, ${alpha})`;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-}

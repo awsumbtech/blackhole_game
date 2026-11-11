@@ -178,10 +178,7 @@ export class Inflow {
     }
   }
 
-  /** Grains on the far side of the disk: draw before the hole. ctx is in world units. */
-  drawBack(ctx, x, y, R, zoom, dpr = 1) { this._grains(ctx, x, y, R, zoom, dpr, -1); }
-
-  /** Near-side grains, motes and the impact: draw after the hole. */
+  /** Near-side grains, motes and the impact: draw after the hole. The far half is unused (nIn is 0). */
   drawFront(ctx, x, y, R, zoom, dpr = 1) {
     this._grains(ctx, x, y, R, zoom, dpr, 1);
     const k = zoom * dpr;

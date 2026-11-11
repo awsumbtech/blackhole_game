@@ -15,7 +15,7 @@ import { wisp, resetWisp, wispInfo, wispReact } from "./wisp.js";
 import { fireEvent, activeEventInfo, EVENT_INFO, densityInfo } from "./living-world.js";
 import { tierName, massForR, rForTier, TIERS } from "./tiers.js";
 import {
-  Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, Backdrop, AccretionRing, Absorption,
+  Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, Backdrop, AccretionRing, Absorption, GoldenVeil,
   createState, Display, Hud, Player, Feeding, MEATY, RunTracker, Galaxy, PerfMonitor, Settings,
   ScreenFlow, ZenSession, CollapseFlow, PlayControls, Menus, Lifecycle, ScreenOverlay, Scene, GameLoop
 } from "./core/index.js";
@@ -32,6 +32,7 @@ const camera = new Camera(state);
 const fx = new Fx(state);
 const inflow = new Inflow();   // v9.5 impact bloom only; the permanent cloud is gone (v9.7)
 const backdrop = new Backdrop();
+const golden = new GoldenVeil();
 const ring = new AccretionRing();
 const absorption = new Absorption(state);
 /** v9.5 impact: the radial bloom and the low swell land on the same frame. */
@@ -42,7 +43,7 @@ function impact(strength) {
 }
 
 const game = {
-  state, display, input, audio, camera, fx, inflow, impact, backdrop, ring, absorption,
+  state, display, input, audio, camera, fx, inflow, impact, backdrop, golden, ring, absorption,
   dev: null,
   zoomTarget: () => camera.zoomTarget(display.w, display.h),
   updateCameraScale: (snap = false) => camera.updateScale(display.w, display.h, snap),
@@ -131,7 +132,8 @@ if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: () => game.perf.report(), layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => game.perf.reset(), art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
-  camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, ring, absorption,
+  camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, ring, absorption,
+  feeding: game.feeding,
   worldTier: () => onWorldTier(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),

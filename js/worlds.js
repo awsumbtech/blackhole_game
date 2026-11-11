@@ -200,12 +200,7 @@ const SETUP = {
     const F = L.flagship, [fx, fy] = spots[0];
     // v9.4: the Flagship is a broken capital ship with its own slow debris field
     W.flagship = { x: fx, y: fy, size: b0 * F.size, rot: r() * TAU,
-      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: F.color, radius: 1, _sp: null, _artBase: null },
-      debris: Array.from({ length: F.debris }, (_, i) => {
-        const a = r() * TAU, d = 0.9 + r() * 0.8;
-        return { dx: Math.cos(a) * d, dy: Math.sin(a) * d * 0.7, s: 0.05 + r() * 0.07, rot: r() * TAU, spin: (r() - 0.5) * 0.00008, ph: r() * TAU,
-          art: { type: "craft", ship: "scrap", wreck: true, look: i, color: F.color, radius: 1, _sp: null, _artBase: null } };
-      }) };
+      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: F.color, radius: 1, _sp: null, _artBase: null } };
     W.lms.push(landmark(setName(F.name), "flagship", fx, fy, b0 * F.lmR, F.rgb));
     const [lx, ly] = spots[1];
     W.lms.push(landmark(setName(L.line.name), "line", lx, ly, b0 * L.line.lmR, L.line.rgb));

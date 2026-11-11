@@ -8,6 +8,8 @@ export { Inflow } from "./Inflow.js";
 export { Backdrop } from "./Backdrop.js";
 export { AccretionRing } from "./AccretionRing.js";
 export { Absorption } from "./Absorption.js";
+export { GoldenVeil } from "./GoldenVeil.js";
+// sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
 

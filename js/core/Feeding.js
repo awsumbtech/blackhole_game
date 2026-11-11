@@ -32,12 +32,12 @@ const BREATHER_PACE = 0.095;
 // Nursery (its ceiling replaces `cap`, so it did not get the raise). These
 // factors are what a 32s greedy drift matched to the old mass rate.
 const MEATY = { gain: 1.12, breatherGain: 1.12, cap: 3, byBiome: {
-  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.56, "Ruined Armada": 0.53,
-  "Void Rift": 0.85, "Star Meadow": 0.56, "Neutron Forge": 0.62 },
+  "Debris Reef": 0.66, "Comet Current": 0.63, "Planet Nursery": 0.56, "Ruined Armada": 0.53,
+  "Void Rift": 0.85, "Star Meadow": 0.56, "Neutron Forge": 0.54 },
   // bite ceiling per galaxy (breathers and Armada are ceiling-bound, so this sets their pace)
   // v9: Nursery, Void Rift and Meadow a little quicker; Comet and Armada stay the walls
   // v9.7: Nursery and Meadow ceilings up so fewer worlds still clear on time. Armada's stays low.
-  capBiome: { "Planet Nursery": 1.67, "Star Meadow": 1.67, "Ruined Armada": 1.2 } };
+  capBiome: { "Debris Reef": 2.45, "Planet Nursery": 1.67, "Star Meadow": 1.67, "Ruined Armada": 1.2, "Neutron Forge": 2.3 } };
 // Calm bump: a soft, eased nudge away from something too big. No shake, the
 // combo just pauses, and it never costs mass.
 const BUMP_PUSH = 2.4;          // was a hard 7x speed kick
@@ -135,7 +135,7 @@ export class Feeding {
         e.consumed = true;
 
         if (e.bigFish) {
-          // v6: a slow, satisfying swallow (about a second) with a soft chime. No shake.
+          // Big catch: the chime and the short impact. The spiral itself is Absorption.
           e.swallow = true;
           state.run.bigFish += 1;
           state.stats.bigFishEaten += 1;

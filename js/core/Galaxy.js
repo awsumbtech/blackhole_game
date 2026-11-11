@@ -5,7 +5,7 @@ import * as audio from "../audio.js";
 import * as ui from "../ui.js";
 import { setShipLight } from "../ships.js";
 import { getBiome, biomeCatalog } from "../entities.js";
-import { setNebulaPalette, setHaloFrom } from "../render.js";
+import { setHaloFrom } from "../render.js";
 import { initWorlds } from "../worlds.js";
 import { resetDepth } from "../depth.js";
 import { initLivingWorld, fillAround, DENSITY } from "../living-world.js";
@@ -64,13 +64,13 @@ export class Galaxy {
     state.startMass = Math.min(state.startMass, state.targetMass * 0.8);
 
     state.entities = [];
+    game.absorption.clear();
     state.biome = biome;
     state.baseBounds = 1000;
     state.initialCount = DENSITY.regular;
 
-    // Golden galaxies glow warm gold
+    // Golden galaxies: ship rim still picks up the warm nebula. The sky veil is GoldenVeil.
     const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : biome.nebula;
-    setNebulaPalette(neb);
     game.backdrop.set(biome.name);
     setShipLight(neb[1] || neb[0], biome.name + (state.golden ? "*" : ""));   // v9.4 ship rim bounce
     if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;

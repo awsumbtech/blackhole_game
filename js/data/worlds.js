@@ -70,7 +70,7 @@ export const LAYOUTS = {
   },
   "Ruined Armada": {
     spots: [2, 0.35, 0.62],
-    flagship: { name: "The Flagship", rgb: "205, 180, 255", size: 0.16, lmR: 0.22, color: "#8f7fb0", debris: 7, hulls: 3 },
+    flagship: { name: "The Flagship", rgb: "205, 180, 255", size: 0.16, lmR: 0.22, color: "#8f7fb0", hulls: 3 },
     line: { name: "The Broken Line", rgb: "215, 170, 120", lmR: 0.18, hulls: 4 }
   },
   "Void Rift": {

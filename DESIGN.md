@@ -107,7 +107,8 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 
 - **v9.7 Sky, ring, absorption.** Three objects, three files, supplied paintings only.
   - **Backdrop** (`js/core/Backdrop.js`): one JPG per biome (`assets/backdrop_<key>.jpg`, keys = `STYLES` in `js/sky.js`). Drawn once per frame, cover-fit, no parallax. The coded sky in `js/sky.js` and the mote layers in `js/backdrop.js` are no longer called.
-  - **AccretionRing** (`js/core/AccretionRing.js`): `hole_ring_back.png` then the hole then `hole_ring_front.png`. Alpha art, source-over at 0.9 (additive washed out on the warm lanes). `WIDTH_PER_R` 5.96 so the visible outer edge is about 2.45× the dark core and the inner edge still hugs the shadow. Slow rotation and a ±1.5% breath scale; both off under Reduce Motion. On in Zen.
+  - **AccretionRing** (`js/core/AccretionRing.js`): `hole_ring_back.png` then the hole then `hole_ring_front.png`. The halves stay horizontal (no rotation; a turn would swap which half is in front). Motion is a uniform breath/shimmer scale. Alpha, source-over at 0.9. `WIDTH_PER_R` 5.96. On in Zen.
+  - **GoldenVeil** (`js/core/GoldenVeil.js`): `assets/sky/golden_veil.jpg` over the backdrop, `screen` at 0.35, only when the galaxy is golden. Missing file: no-op.
   - **Absorption** (`js/core/Absorption.js`): a pool of 24. On a bite, the entity's sprite is snapshotted and the entity is removed the same moment the mass lands. The sprite spirals in (angle + radius), stretches on the radial axis, and a streak sits behind it. The slot turns off at the end of its life (~0.8 s, shorter for Reduce Motion, a little longer for a big catch). `Inflow` grains and motes stay at 0; the impact burst is unchanged.
 - **v9.5 Inflow (`js/core/Inflow.js`).** Brian liked a live-event visual (strong glow on bright things over a flat saturated background, particles lifting off the main object, a burst where a bass hit and the visuals land together, fast particles stretched into streaks). Adapted to the calm rules:
   - **Inflow:** grains on the disk plane (flattening from a fatter cloud far out to the disk's 0.17 tilt), Kepler-ish (angular speed ∝ r^-1.5, infall ∝ r^-0.5), fed along two slowly turning arms so shear winds them into spiral streams. The streak length grows faster than speed, so far grains are dots and near ones are streaks. The far half draws before the hole, the near half after it. **v9.7:** those permanent grains and the motes are not drawn (`nIn` and `nMote` stay 0). The impact burst below is what remains.
@@ -470,13 +471,14 @@ js/game.js          boot only (~140 lines); systems in js/core/ (map in §7e)
 js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
                     RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
                     GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Backdrop,
-                    AccretionRing, Absorption, Flagship, DevMode, HudControls
+                    AccretionRing, Absorption, GoldenVeil, Flagship, DevMode, HudControls
 js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, planets, stars, deepsky), hole, rival, kit
 js/data/            plain data: worlds (mechanics, landmark layouts), objects (types), biomes
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      entity factory, biome picking   js/living-world.js gravity, spawning, gentle events (CFG)
-js/backdrop.js      parallax sky         js/ships.js        v9.4 ship classes, painter, motion, break-apart
-js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
+js/ships.js          v9.4 ship classes, painter, motion, break-apart
+js/grade.js         v8 vignette/grade (CSS layer)
+js/core/GoldenVeil.js  golden-galaxy edge veil (assets/sky/golden_veil.jpg)
 js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map
