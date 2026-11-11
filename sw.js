@@ -2,7 +2,7 @@
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
 // Bump on each release so phones drop the old offline copy.
-const CACHE_NAME = "blackhole-v9.6.1";
+const CACHE_NAME = "blackhole-v9.7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -22,11 +22,9 @@ const ASSETS = [
   "./js/tiers.js",
   "./js/wisp.js",
   "./js/grade.js",
-  "./js/sky.js",
   "./js/depth.js",
   "./icons/icon-maskable-512.png",
   "./js/starmap.js",
-  "./js/backdrop.js",
   "./js/worlds.js",
   "./js/discoveries.js",
   "./js/logbook.js",
@@ -41,6 +39,9 @@ const ASSETS = [
   "./js/core/Growth.js",
   "./js/core/DevMode.js",
   "./js/core/Inflow.js",
+  "./js/core/Backdrop.js",
+  "./js/core/DebrisField.js",
+  "./js/core/GoldenVeil.js",
   "./js/core/HudControls.js",
   "./js/core/Flagship.js",
   "./js/core/CollapseFlow.js",
@@ -77,6 +78,18 @@ const ASSETS = [
   "./js/data/objects.js",
   "./js/data/worlds.js",
   "./manifest.json",
+  "./assets/backdrop_reef.jpg",
+  "./assets/backdrop_current.jpg",
+  "./assets/backdrop_nursery.jpg",
+  "./assets/backdrop_armada.jpg",
+  "./assets/backdrop_void.jpg",
+  "./assets/backdrop_meadow.jpg",
+  "./assets/backdrop_forge.jpg",
+  "./assets/sky/golden_veil.jpg",
+  "./assets/fx/shard_mask_1.png",
+  "./assets/fx/shard_mask_2.png",
+  "./assets/fx/shard_mask_3.png",
+  "./assets/fx/shard_mask_4.png",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

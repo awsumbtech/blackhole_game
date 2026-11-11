@@ -5,6 +5,10 @@ export { GalaxyFlow, FLOW_OUT, FLOW_IN } from "./GalaxyFlow.js";
 export { Growth } from "./Growth.js";
 export { DevMode } from "./DevMode.js";
 export { Inflow } from "./Inflow.js";
+export { Backdrop } from "./Backdrop.js";
+export { DebrisField } from "./DebrisField.js";
+export { GoldenVeil } from "./GoldenVeil.js";
+// sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
 

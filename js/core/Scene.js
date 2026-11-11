@@ -4,22 +4,21 @@
 // screen-space overlays and veils. Reads state only; changes nothing in play.
 
 import * as audio from "../audio.js";
-import { drawStarfield, drawEntities, drawBlackHole, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators, drawLens, setStarQuality } from "../render.js";
+import { drawEntities, drawBlackHole, drawParticles, drawRipples, drawMinimap, drawEdgeIndicators } from "../render.js";
 import { drawWorldsBG, drawWorldsOverlay, drawWorldsMinimap } from "../worlds.js";
 import { setGrade } from "../grade.js";
 import { drawDepth } from "../depth.js";
-import { drawBackdrop } from "../backdrop.js";
 import { beginArtFrame, getArtQuality, drawRevealFx } from "../art.js";
 import { drawDiscoveries, drawDiscoveryCue } from "../discoveries.js";
 import { drawWisp } from "../wisp.js";
 import { drawRivals } from "../rivals.js";
-import { drawLivingWorldBG, drawLivingWorldFG, drawLivingWorldOverlay, pullRange } from "../living-world.js";
+import { drawLivingWorldFG, drawLivingWorldOverlay, pullRange } from "../living-world.js";
 import { powerupFade } from "../powerups.js";
 import { breathPhase } from "./breath.js";
 
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 // per-frame option bags, reused so drawing doesn't allocate
-const SF_OPTS = { noNebula: true }, BD_OPTS = { lite: false, time: 0, reduceMotion: false }, PT_OPTS = { reduceMotion: false };
+const PT_OPTS = { reduceMotion: false };
 
 export class Scene {
   constructor(game) {
@@ -44,16 +43,13 @@ export class Scene {
     const breath = breathPhase(now);
     audio.setBreath(breath);
     const hiQ = getArtQuality() === "high";
-    setStarQuality(hiQ);
-    drawStarfield(ctx, w, h, state.bgX, state.bgY, state.biome ? state.biome.tint : "#0d1633", breath, SF_OPTS);
-    BD_OPTS.lite = !hiQ; BD_OPTS.time = now; BD_OPTS.reduceMotion = state.settings.reduceMotion;
-    drawBackdrop(ctx, w, h, z, state.bgX, state.bgY, breath, BD_OPTS);
-    drawLivingWorldBG(ctx, state, w, h);
+    const still = !!state.settings.reduceMotion;
+    const skin = game.settings.skinFilter();
+    // v9.7: one painted sky. No coded nebula, no star specks, no parallax motes, no lens rings.
+    game.backdrop.draw(ctx, w, h, state.biome ? state.biome.tint : "#04060c");
+    game.golden.draw(ctx, w, h, !!state.golden);
     beginArtFrame();
     if (state.screen === "play") drawDepth(ctx, w, h, state, state.anchorSmooth * z, dpr, state.paused ? 0 : dt);
-    if (getArtQuality() === "high") {
-      drawLens(ctx, (state.playerX - state.camX) * state.zoom + w / 2, (state.playerY - state.camY) * state.zoom + h / 2, state.radius * state.zoom);
-    }
 
 
     ctx.save();
@@ -69,23 +65,26 @@ export class Scene {
     drawLivingWorldFG(ctx, state, vw, vh);
     const holeX = state.playerX - state.camX + vw / 2, holeY = state.playerY - state.camY + vh / 2;
     const holeR = state.birth > 0 ? state.radius * (0.06 + 0.94 * state.birth * state.birth * (3 - 2 * state.birth)) : state.radius;
+    // Same order as main: far inflow, the hole, near inflow. Debris only while a bite is in flight.
     game.inflow.drawBack(ctx, holeX, holeY, holeR, z, dpr);
+    game.debris.draw(ctx, holeX, holeY, -1);
     drawBlackHole(ctx, holeX, holeY, holeR, now,
       { vx: state.playerVX, vy: state.playerVY }, {
         zoom: z,
         dpr,
         dt: state.paused ? 0 : dt,
-        reduceMotion: state.settings.reduceMotion,
+        reduceMotion: still,
         speedScale: state.speedScale,
-        magnet: state.active.magnet > 0 && state.mode !== "zen",   // v9.5.1: no ring around the hole in Zen
+        magnet: state.active.magnet > 0 && state.mode !== "zen",   // guide ring, never in Zen
         pullRange: pullRange(state),
         double: state.active.double > 0,
         gulp: state.gulp,
         breath,
-        // v7.1: in Zen the wisp is the breath guide. v9.5.1 (Brian): never a ring around the hole in Zen
+        // v7.1: in Zen the wisp is the breath guide. v9.5.1: never a guide ring around the hole in Zen.
         breathGuide: state.mode !== "zen" && state.settings.breathGuide,
-        filter: game.settings.skinFilter()
+        filter: skin
       });
+    game.debris.draw(ctx, holeX, holeY, 1);
     game.inflow.drawFront(ctx, holeX, holeY, holeR, z, dpr);
     if (state.reveal) drawRevealFx(ctx, state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.radius, state.reveal.p, state.settings.reduceMotion);
     // v8: the wisp draws last in the world so nothing ever covers it

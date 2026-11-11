@@ -24,14 +24,14 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Grindy galaxies are welcome as walls.** A slow, heavy galaxy is fine as a gate. There is no actual boss.
 - **The wisp (v9.2: an unlock, the Growth Witness):**
   - No wisp until you light **Companion** on the constellation (Appetite, tier 1, 5 DM, opens after your first collapse). Its purpose is to witness growth: a calm glow + wider orbit on every tier-up / layer merge, then ONE soft hint toward food your new size. No random food tours.
-  - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint. **Never a ring around the hole in Zen** (v9.5.1): no breathing ring, no magnet ring. Before the wisp is unlocked, the breath lives in the hole's halo and the music only.
+  - In Zen it stays beside the hole as the breath guide and doesn't wander off to hint. **Guide rings stay out of Zen** (v9.5.1): no breathing-guide ring, no magnet ring. **The hole looks the way it did before v9.7, in every mode including Zen** (Brian, Nov 11 2026). The only thing removed from that look is the grain cloud that circled it all the time. Debris appears only while something is being eaten, and then it is gone.
   - In every mode it is drawn above everything and is never covered.
 - **Zen level pacing is liked.** Keep Zen durations as they are.
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.6.1** live (code split only; plays like v9.6)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.6.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.7** (calm skies, the original hole, debris only while eating)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -54,12 +54,12 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 
 ## 3. Art direction
 
-**Soft and painterly: glows and gradients.** All art is drawn in code (`js/art.js`), with no image assets beyond the icons.
+**Soft and painterly: glows and gradients.** Sprites are still drawn in code (`js/art.js`). From v9.7 the sky, the hole's ring and the eat-streak are supplied paintings in `assets/` (see below), each owned by its own object.
 - Lit planets with cloud bands, atmospheres, rings and moons. Stars have coronas, meteors have soft craters, wrecks are muted hulls with warm windows, comets have tapered tails.
 - The black hole has a tilted swirling accretion disk, a photon ring, a lensed arc and star lensing.
 - Particles are spiral glow streaks. Bloom is used instead of flashes.
 - Sprites are painted once into cached canvases (by type, variant and size), with a ~2.5 ms/frame paint budget. Auto quality drops to Lite when frames run long.
-- The sky is a four-layer parallax backdrop (`js/backdrop.js`) using each biome's nebula colours.
+- The sky is one still painting per galaxy, owned by `Backdrop` (`assets/backdrop_<key>.jpg`). The old four-layer parallax backdrop was removed in v9.7.
 - **v8 Painterly.** Keep the look premium but calm. Light comes from the upper left.
   - **Planets and moons:** a terminator, limb darkening and an atmospheric crescent (`litSphere`). Hard shapes get a rim light (`rimLight`).
   - **The hole:** doppler beaming on the left side of the disk, a lensed ring that is brighter on the left, wide bloom and a faint shimmer.
@@ -73,7 +73,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **The wisp draws last in the world.** In Zen it stays beside the hole.
 - **v8.1 (bolder).**
   - **The hole:** an Interstellar-style thin, wide disk (`DISK_IN` 1.45, `DISK_OUT` 3.6, `TILT` 0.17), with lensed arcs over and under the shadow (`arcSprite`). It must read clearly at phone size.
-  - **Skies:** each biome has a painted sky in `js/sky.js` (a style per biome name). New biomes need a style there.
+  - **Skies:** each galaxy's sky is the JPG owned by `Backdrop`. The key list is `KEYS` in that file. The old coded per-biome sky painter was removed in v9.7.
   - **Rivals** use `rivalSprite`; **discoveries** have per-find sprites; **landmarks** use `lmSprite` in worlds.js.
   - **Rules:**
     - Every new visual is painted once and stamped.
@@ -105,8 +105,13 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Gallery:** `/workspace/bhpt/flaggallery.py`; shots `/workspace/bhpt/v96shots.py <port> <tag> [rm|zen|eat|g11]`.
   - **Audit tool:** `tools/art-gallery.html?type=planet&px=40&n=12&cols=3&q=high[&hot][&blur=2]` paints every look of a type; `/workspace/bhpt/v9gallery.py` and `v9game.py` screenshot all types and tiers.
 
+- **v9.7 Sky and a hole that only sheds debris while it eats.**
+  - **The hole** is the pre-v9.7 painting again (`js/art/hole.js`): the same disk, photon edge and lensed arc, in play and in Zen. The circling grain cloud (`Inflow` `nIn`) is the one thing removed. Rising motes and the impact burst stay.
+  - **DebrisField** (`js/core/DebrisField.js`): only while a bite is in flight. Four soft shards, each the eaten item's own sprite through the painted `assets/fx/shard_mask_{1..4}.png`, composited once, cropped to the mask, and cached. A bite happens inside the painted shadow, so the shards are placed at the item's angle on the rim, just outside `shadowRadius` (about half a shard past it). They orbit with the disk for about half to three-quarters of a turn over 0.7–1.0 s, tightening, shrinking and fading. Alpha is 0 as the footprint meets the shadow, and nothing is drawn on the black centre. Each shard starts at about 0.25–0.4 of the eaten item, and at least about 6 CSS px. If the masks have not loaded, one piece is the whole sprite on that same rim, still that image only. Idle draws nothing. Cap 18. `clear()` on galaxy init, which covers Zen and collapse.
+  - **Backdrop** (`js/core/Backdrop.js`): one JPG per biome (`assets/backdrop_<key>.jpg`, keys in `KEYS` in that file). Drawn once per frame, cover-fit, no parallax. The old coded sky painter and the four-layer mote backdrop were deleted in v9.7.
+  - **GoldenVeil** (`js/core/GoldenVeil.js`): `assets/sky/golden_veil.jpg`, a full-frame warm haze, over the backdrop with `screen` at 0.35, only when the galaxy is golden. Missing file: no-op.
 - **v9.5 Inflow (`js/core/Inflow.js`).** Brian liked a live-event visual (strong glow on bright things over a flat saturated background, particles lifting off the main object, a burst where a bass hit and the visuals land together, fast particles stretched into streaks). Adapted to the calm rules:
-  - **Inflow:** grains on the disk plane (flattening from a fatter cloud far out to the disk's 0.17 tilt), Kepler-ish (angular speed ∝ r^-1.5, infall ∝ r^-0.5), fed along two slowly turning arms so shear winds them into spiral streams. The streak length grows faster than speed, so far grains are dots and near ones are streaks. The far half draws before the hole, the near half after it.
+  - **Inflow:** grains on the disk plane (flattening from a fatter cloud far out to the disk's 0.17 tilt), Kepler-ish (angular speed ∝ r^-1.5, infall ∝ r^-0.5), fed along two slowly turning arms so shear winds them into spiral streams. The streak length grows faster than speed, so far grains are dots and near ones are streaks. The far half draws before the hole, the near half after it. **v9.7:** the circling grain cloud is not drawn (`nIn` stays 0). Motes and the impact burst below remain.
   - **Motes** rise off the disk and fade. **Impact** (tier-up 1.0, big swallow / rival 0.6): a radial spark burst plus a warm bloom, both eased in over ~4–6 frames to match the swell's 60 ms attack, fading over ~1.2 s. Warm cream-to-ember ramp, **never white**. Bursts within ~0.8 s merge.
   - Everything is a stamped soft streak sprite (feathered ends, no hard "pill" strokes), additive, positions in hole radii so it follows and scales with the hole.
   - Backgrounds are untouched: only the hole and its matter glow.
@@ -363,7 +368,9 @@ js/core/
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
   Flagship.js           v9.6 Armada landmark: layout / paint (time-sliced) / draw, cached sprite
-  Inflow.js             v9.5 accretion inflow, rising motes, impact burst (feed / burst / update / drawBack / drawFront)
+  Inflow.js             v9.5 motes and impact burst (v9.7: the circling grain cloud, nIn, is off)
+  Backdrop.js           v9.7 painted galaxy sky (one JPG per biome, no parallax)
+  DebrisField.js        v9.7 pieces of the eaten sprite, only while a bite is in flight
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/art.js               thin index: same exports as before (spriteFor, drawBlackHoleArt, heatFor, tailFor...)
@@ -434,6 +441,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.7 Calm skies + feeding (Nov 11 2026):** every galaxy uses a painted backdrop (`assets/backdrop_<key>.jpg`, keys in `Backdrop.js`) owned by `Backdrop`. No parallax: the portraits are composed full-frame, and sliding them would crop the dust lane. The old coded sky painter and the four-layer mote backdrop were deleted. Orbit scribbles, stacked cradle rings, meadow specks and aurora curtains are quieted or gone. Round 2: `DENSITY` is 24 regular / 29 breather (was 44 / 52) and cradle worlds are 10 (was 18). Bites pay that back (gain 1.12, default ceiling 3, Nursery and Meadow ceilings 1.67, food ~20% wider). A 48s drift on all 7 is the check. Reef's own ceiling is 2.45 and its gain is 0.66 after it ran ~20% fast. Forge's own ceiling is 2.3 and its gain is 0.54 after it ran ~35% fast. Comet stays near the old pace. Armada progress is 0.82×; only its time to 1.35× matches, and it stays the slow wall. The hole is the pre-v9.7 disk again. The circling grain cloud is off (`nIn` is 0); motes and the impact burst stay. `DebrisField` replaces `AccretionRing` and `Absorption`: four slices of the eaten sprite ride the rim for a fraction of a turn, then nothing. SAVE_VERSION stays 9.
 - **v9.6.1 Core split (live Nov 4 2026):** code structure only, zero gameplay/visual/audio/save change (SAVE_VERSION 9). game.js (1.8k lines) split into single-job systems in `js/core/` (GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player, RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle, GameState, Display) wired through one `game` object; art.js split by kind of object into `js/art/` behind a thin index; world, object and biome definitions moved to `js/data/`. Checked with a seeded, fake-clock dev sweep (pixel diff vs main), perf bench and save migration compare.
 - **v9.5.1 No Zen ring:** the breathing-guide ring (shown in Zen before the wisp was unlocked) and the magnet ring are never drawn in Zen. Brian's rule: no ring around the hole in Zen.
 - **v9.2 Growth Witness:** the wisp is an unlock (Companion, Appetite tier 1, 5 DM, after first collapse) and a `Wisp` class with `setSkin`/`setAnim` hooks for later looks. It glows and widens its orbit on tier-up/merge, gives one post-merge hint toward new-scale food, twirls on big catches/finds, breathes beside you in Zen. Random food tours removed. Hungry Wisp needs Companion. SAVE_VERSION 9 grants Companion to anyone who had collapsed or owned Hungry Wisp. Zen without the wisp shows the breath ring.
@@ -455,18 +463,21 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 ```
 index.html          HUD, title, overlays, star map + logbook screens
-manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME, ASSETS: every js file)
+assets/             v9.7 paintings: backdrop_<key>.jpg, sky/golden_veil.jpg
+manifest.json       PWA manifest        sw.js   network-first service worker (CACHE_NAME, ASSETS: every js file + those paintings)
 css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512.png
 js/game.js          boot only (~140 lines); systems in js/core/ (map in §7e)
 js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
                     RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
-                    GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Flagship, DevMode, HudControls
+                    GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Backdrop,
+                    DebrisField, GoldenVeil, Flagship, DevMode, HudControls
 js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, planets, stars, deepsky), hole, rival, kit
 js/data/            plain data: worlds (mechanics, landmark layouts), objects (types), biomes
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      entity factory, biome picking   js/living-world.js gravity, spawning, gentle events (CFG)
-js/backdrop.js      parallax sky         js/ships.js        v9.4 ship classes, painter, motion, break-apart
-js/grade.js         v8 vignette/grade (CSS layer)   js/sky.js  v8.1 painted biome skies
+js/ships.js          v9.4 ship classes, painter, motion, break-apart
+js/grade.js         v8 vignette/grade (CSS layer)
+js/core/GoldenVeil.js  golden-galaxy veil, full frame, screen at 0.35 (assets/sky/golden_veil.jpg)
 js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle
 js/render.js        particles, ripples, radar        js/audio.js     WebAudio drone, layers, sounds
 js/wisp.js          companion wisp       js/starmap.js     star map

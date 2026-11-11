@@ -14,33 +14,6 @@ export class Fx {
     if (f.length > 12) f.shift();
   }
 
-  /** Bits swirl around the hole and spiral in (tangential + inward pull). */
-  spawnConsume(entity, artQuality) {
-    const s = this.state;
-    const few = s.settings.reduceMotion || artQuality !== "high";
-    const count = Math.floor((6 + Math.min(14, Math.floor(entity.radius * 0.8 / Math.max(1, s.radius * 0.05)))) * (few ? 0.6 : 1));
-    const sizeK = Math.max(1, entity.radius * 0.12);
-    const ss = s.speedScale;
-    const dx = entity.x - s.playerX, dy = entity.y - s.playerY;
-    const d = hypot(dx, dy) || 1;
-    const tx = -dy / d, ty = dx / d;
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = (0.3 + Math.random() * 1.2) * ss;
-      const swirl = (0.8 + Math.random() * 1.4) * ss;
-      s.particles.push({
-        x: entity.x + Math.cos(angle) * entity.radius * 0.5,
-        y: entity.y + Math.sin(angle) * entity.radius * 0.5,
-        vx: Math.cos(angle) * speed + tx * swirl, vy: Math.sin(angle) * speed + ty * swirl,
-        size: (0.8 + Math.random() * 1.8) * sizeK,
-        color: entity.color,
-        alpha: 0.5 + Math.random() * 0.35,
-        age: 0, maxAge: 40 + Math.random() * 25,
-        gravity: (0.05 + Math.random() * 0.04) * ss
-      });
-    }
-  }
-
   spawnRipple(entity) {
     const s = this.state;
     s.ripples.push({

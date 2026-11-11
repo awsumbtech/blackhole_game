@@ -1,0 +1,622 @@
+{
+  "beforePerf": {
+    "avg": 1.09,
+    "p50": 1,
+    "p95": 1.5,
+    "max": 2.5,
+    "quality": "high",
+    "autoDrops": 0,
+    "vsyncMs": 14.35,
+    "frameMs": 17.59,
+    "entities": 59,
+    "sprites": 440,
+    "generated": 440
+  },
+  "afterPerf": {
+    "avg": 0.26,
+    "p50": 0.3,
+    "p95": 0.4,
+    "max": 0.4,
+    "quality": "high",
+    "autoDrops": 0,
+    "vsyncMs": 16.62,
+    "frameMs": 16.67,
+    "entities": 33,
+    "sprites": 279,
+    "generated": 279
+  },
+  "checks": {
+    "ok": true,
+    "notes": [],
+    "spawned": 3,
+    "finished": 8,
+    "inflow": {
+      "inflow": 0,
+      "motes": 0,
+      "burstLive": 0,
+      "bursts": 0,
+      "still": false,
+      "high": true,
+      "bloom": false
+    }
+  },
+  "probes": {
+    "before": {
+      "reef": {
+        "biome": "Debris Reef",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "current": {
+        "biome": "Comet Current",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "nursery": {
+        "biome": "Planet Nursery",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "armada": {
+        "biome": "Ruined Armada",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "void": {
+        "biome": "Void Rift",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "meadow": {
+        "biome": "Star Meadow",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "forge": {
+        "biome": "Neutron Forge",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": null,
+        "errs": null,
+        "console": []
+      },
+      "zen": {
+        "mode": "zen",
+        "inflow": {
+          "inflow": 112,
+          "motes": 20,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "console": []
+      }
+    },
+    "after": {
+      "reef": {
+        "biome": "Debris Reef",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "reef"
+        },
+        "errs": null,
+        "console": []
+      },
+      "current": {
+        "biome": "Comet Current",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "current"
+        },
+        "errs": null,
+        "console": []
+      },
+      "nursery": {
+        "biome": "Planet Nursery",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "nursery"
+        },
+        "errs": null,
+        "console": []
+      },
+      "armada": {
+        "biome": "Ruined Armada",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "armada"
+        },
+        "errs": null,
+        "console": []
+      },
+      "void": {
+        "biome": "Void Rift",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "void"
+        },
+        "errs": null,
+        "console": []
+      },
+      "meadow": {
+        "biome": "Star Meadow",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "meadow"
+        },
+        "errs": null,
+        "console": []
+      },
+      "forge": {
+        "biome": "Neutron Forge",
+        "mode": "ascension",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "backdrop": {
+          "ready": true,
+          "key": "forge"
+        },
+        "errs": null,
+        "console": []
+      },
+      "zen": {
+        "mode": "zen",
+        "inflow": {
+          "inflow": 0,
+          "motes": 0,
+          "burstLive": 0,
+          "bursts": 0,
+          "still": false,
+          "high": true,
+          "bloom": false
+        },
+        "console": []
+      }
+    }
+  },
+  "audits": {
+    "before-small-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 375,\n  \"height\": 667,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 375,\n   \"h\": 615,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 92\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 375,\n   \"h\": 615,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 92\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   9\n  ],\n  \"offScale\": [\n   6,\n   9\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    9\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"14px\",\n   \"13px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"14px/700\": 1,\n   \"13px/700\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 122,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 576,\n   \"w\": 110,\n   \"h\": 25\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[]}",
+      "small": [
+        {
+          "t": "dev-badge",
+          "w": 110,
+          "h": 25
+        }
+      ]
+    },
+    "before-land-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 844,\n  \"height\": 390,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 844,\n   \"h\": 338,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 87\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 844,\n   \"h\": 338,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 87\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   9,\n   16,\n   20\n  ],\n  \"offScale\": [\n   6,\n   9\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    9\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"17px\",\n   \"13px\",\n   \"12px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"17px/700\": 1,\n   \"13px/700\": 1,\n   \"12px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 356,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 299,\n   \"w\": 110,\n   \"h\": 25\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[]}",
+      "small": [
+        {
+          "t": "dev-badge",
+          "w": 110,
+          "h": 25
+        }
+      ]
+    },
+    "before-desk-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 1440,\n  \"height\": 900,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 1440,\n   \"h\": 848,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 1440,\n   \"h\": 848,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   9,\n   16,\n   20\n  ],\n  \"offScale\": [\n   6,\n   9\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    9\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"17px\",\n   \"13px\",\n   \"12px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"17px/700\": 1,\n   \"13px/700\": 1,\n   \"12px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 654,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 809,\n   \"w\": 110,\n   \"h\": 25\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[]}",
+      "small": [
+        {
+          "t": "dev-badge",
+          "w": 110,
+          "h": 25
+        }
+      ]
+    },
+    "after-small-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 375,\n  \"height\": 667,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 375,\n   \"h\": 615,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 92\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 375,\n   \"h\": 615,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 92\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   12\n  ],\n  \"offScale\": [\n   6\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"14px\",\n   \"13px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"14px/700\": 1,\n   \"13px/700\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 122,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 557,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\"]}",
+      "small": []
+    },
+    "after-land-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 844,\n  \"height\": 390,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 844,\n   \"h\": 338,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 87\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 844,\n   \"h\": 338,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 87\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   12,\n   16,\n   20\n  ],\n  \"offScale\": [\n   6\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"17px\",\n   \"13px\",\n   \"12px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"17px/700\": 1,\n   \"13px/700\": 1,\n   \"12px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 356,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 280,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\"]}",
+      "small": []
+    },
+    "after-desk-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 1440,\n  \"height\": 900,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 1440,\n   \"h\": 848,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 1440,\n   \"h\": 848,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   12,\n   16,\n   20\n  ],\n  \"offScale\": [\n   6\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"11px\",\n   \"17px\",\n   \"13px\",\n   \"12px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"11px/600\": 2,\n   \"17px/700\": 1,\n   \"13px/700\": 1,\n   \"12px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#zen-arc\",\n   \"x\": 654,\n   \"y\": 10,\n   \"w\": 132,\n   \"h\": 15\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 790,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\"]}",
+      "small": []
+    },
+    "after-phone-play": {
+      "la": "{\n \"viewport\": {\n  \"width\": 390,\n  \"height\": 844,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"div#splash \\\"Black Hole\\\"\",\n   \"w\": 390,\n   \"h\": 844,\n   \"fillPct\": 12,\n   \"pctOfViewport\": 100\n  },\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   1,\n   4,\n   6,\n   8,\n   10,\n   12,\n   18\n  ],\n  \"offScale\": [\n   6,\n   10,\n   18\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    10\n   ],\n   [\n    10,\n    12\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"22px\",\n   \"11px\",\n   \"14px\",\n   \"12px\",\n   \"13px\",\n   \"20px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"22px/200\": 1,\n   \"11px/600\": 2,\n   \"14px/700\": 1,\n   \"12px/600\": 1,\n   \"12px/400\": 2,\n   \"13px/700\": 1,\n   \"20px/400\": 1,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [],\n \"overlaps\": [],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#splash \\\"Black Hole\\\"\",\n   \"x\": 0,\n   \"y\": 0,\n   \"w\": 390,\n   \"h\": 844\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 734,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\"]}",
+      "small": []
+    },
+    "after-phone-settings": {
+      "la": "{\n \"viewport\": {\n  \"width\": 390,\n  \"height\": 844,\n  \"pageScrollY\": 0,\n  \"pageScrollX\": 0\n },\n \"offscreenPrimary\": [],\n \"scrollers\": [],\n \"deadSpace\": [\n  {\n   \"el\": \"canvas#game \\\"Black Hole Galaxy Eater game\\\"\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  },\n  {\n   \"el\": \"div#grade\",\n   \"w\": 390,\n   \"h\": 792,\n   \"fillPct\": 0,\n   \"pctOfViewport\": 94\n  }\n ],\n \"spacing\": {\n  \"observed\": [\n   2,\n   4,\n   6,\n   8,\n   10,\n   12,\n   24,\n   56\n  ],\n  \"offScale\": [\n   6,\n   10\n  ],\n  \"nearDupes\": [\n   [\n    4,\n    6\n   ],\n   [\n    6,\n    8\n   ],\n   [\n    8,\n    10\n   ],\n   [\n    10,\n    12\n   ]\n  ]\n },\n \"type\": {\n  \"distinctFontSizes\": [\n   \"43px\",\n   \"13px\",\n   \"16px\",\n   \"11px\",\n   \"26px\",\n   \"14px\",\n   \"10px\"\n  ],\n  \"sizes\": {\n   \"43px/300\": 1,\n   \"13px/400\": 2,\n   \"16px/600\": 1,\n   \"11px/400\": 2,\n   \"26px/300\": 1,\n   \"14px/600\": 4,\n   \"10px/700\": 1\n  }\n },\n \"alignment\": {\n  \"nearMissEdges\": []\n },\n \"smallTargets\": [],\n \"lowContrast\": [\n  {\n   \"el\": \"div.title-name \\\"Black Hole\\\"\",\n   \"ratio\": 1.05\n  }\n ],\n \"overlaps\": [\n  {\n   \"a\": \"button#btn-title-logbook \\\"Logbook\\\"\",\n   \"b\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"w\": 89,\n   \"h\": 16\n  },\n  {\n   \"a\": \"button#btn-title-new \\\"Start completely over\u2026\\\"\",\n   \"b\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"w\": 89,\n   \"h\": 14\n  }\n ],\n \"fixedOverlays\": [\n  {\n   \"el\": \"div#title-screen \\\"Title\\\"\",\n   \"x\": 0,\n   \"y\": 0,\n   \"w\": 390,\n   \"h\": 844\n  },\n  {\n   \"el\": \"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\",\n   \"x\": 8,\n   \"y\": 734,\n   \"w\": 116,\n   \"h\": 44\n  }\n ]\n}",
+      "ga": "{\"pageOverflowX\":0,\"unevenRows\":[],\"overflowSpills\":[],\"wrappedControls\":[\"button#btn-title-constellation \\\"Constellation\\\"\",\"button#btn-title-starmap \\\"Star Map\\\"\",\"button#btn-title-logbook \\\"Logbook\\\"\",\"button#btn-title-settings \\\"Settings\\\"\",\"button#dev-badge \\\"DEV \u00b7 sandbox\\\"\"]}",
+      "small": []
+    }
+  },
+  "taps": {
+    "before-small-zen": [
+      {
+        "t": "dev-badge",
+        "w": 110,
+        "h": 25
+      }
+    ],
+    "before-land-zen": [
+      {
+        "t": "dev-badge",
+        "w": 110,
+        "h": 25
+      }
+    ],
+    "before-desk-zen": [
+      {
+        "t": "dev-badge",
+        "w": 110,
+        "h": 25
+      }
+    ],
+    "after-small-zen": [],
+    "after-land-zen": [],
+    "after-desk-zen": []
+  },
+  "console": {
+    "before": [],
+    "after": []
+  },
+  "perf": {
+    "before": {
+      "avg": 1.09,
+      "p95": 1.5,
+      "quality": "high",
+      "entities": 59
+    },
+    "after": {
+      "avg": 0.26,
+      "p95": 0.4,
+      "quality": "high",
+      "entities": 33
+    },
+    "avgDeltaPct": -76.1
+  },
+  "afterShots": {
+    "note": "Measured PNG sizes of qa/v9.7/after at this commit. CSS size times DPR from tools/v97-qa.cjs.",
+    "viewports": {
+      "phone": {
+        "css": [
+          390,
+          844
+        ],
+        "dpr": 2,
+        "png": [
+          780,
+          1688
+        ]
+      },
+      "small": {
+        "css": [
+          375,
+          667
+        ],
+        "dpr": 2,
+        "png": [
+          750,
+          1334
+        ]
+      },
+      "land": {
+        "css": [
+          844,
+          390
+        ],
+        "dpr": 2,
+        "png": [
+          1688,
+          780
+        ]
+      },
+      "desk": {
+        "css": [
+          1440,
+          900
+        ],
+        "dpr": 1,
+        "png": [
+          1440,
+          900
+        ]
+      }
+    },
+    "files": {
+      "phone-audit-settings.png": [
+        780,
+        1688
+      ],
+      "phone-play-meadow.png": [
+        780,
+        1688
+      ],
+      "land-title.png": [
+        1688,
+        780
+      ],
+      "phone-play-busy.png": [
+        780,
+        1688
+      ],
+      "phone-settings.png": [
+        780,
+        1688
+      ],
+      "phone-zen-long.png": [
+        780,
+        1688
+      ],
+      "small-settings.png": [
+        750,
+        1334
+      ],
+      "desk-zen.png": [
+        1440,
+        900
+      ],
+      "small-play-nursery.png": [
+        750,
+        1334
+      ],
+      "phone-nursery-golden.png": [
+        780,
+        1688
+      ],
+      "desk-settings.png": [
+        1440,
+        900
+      ],
+      "phone-armada-plain.png": [
+        780,
+        1688
+      ],
+      "phone-play-reef.png": [
+        780,
+        1688
+      ],
+      "phone-nursery-plain.png": [
+        780,
+        1688
+      ],
+      "phone-armada-golden.png": [
+        780,
+        1688
+      ],
+      "phone-play-current.png": [
+        780,
+        1688
+      ],
+      "land-zen.png": [
+        1688,
+        780
+      ],
+      "small-zen.png": [
+        750,
+        1334
+      ],
+      "desk-title.png": [
+        1440,
+        900
+      ],
+      "desk-play-nursery.png": [
+        1440,
+        900
+      ],
+      "phone-play-nursery.png": [
+        780,
+        1688
+      ],
+      "phone-audit-title.png": [
+        780,
+        1688
+      ],
+      "land-play-nursery.png": [
+        1688,
+        780
+      ],
+      "small-title.png": [
+        750,
+        1334
+      ],
+      "phone-play-greater-cradle.png": [
+        780,
+        1688
+      ],
+      "land-settings.png": [
+        1688,
+        780
+      ],
+      "phone-title.png": [
+        780,
+        1688
+      ],
+      "phone-play-forge.png": [
+        780,
+        1688
+      ],
+      "phone-zen.png": [
+        780,
+        1688
+      ],
+      "phone-play-armada.png": [
+        780,
+        1688
+      ],
+      "phone-play-void.png": [
+        780,
+        1688
+      ]
+    }
+  },
+  "holeShots": {
+    "css": [
+      390,
+      844
+    ],
+    "dpr": 2,
+    "png": [
+      780,
+      1688
+    ],
+    "files": {
+      "after-play.png": [
+        780,
+        1688
+      ],
+      "after-zen.png": [
+        780,
+        1688
+      ]
+    },
+    "note": "after-play and after-zen are idle, no bite in progress."
+  }
+}

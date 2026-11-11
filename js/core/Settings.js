@@ -4,7 +4,7 @@
 
 import * as audio from "../audio.js";
 import { save } from "../save.js";
-import { setSoftPalette, invalidateStarfield } from "../render.js";
+import { setSoftPalette } from "../render.js";
 import { setArtQuality } from "../art.js";
 import { SKINS, hasMilestone } from "../ascension.js";
 
@@ -37,7 +37,7 @@ export class Settings {
 
   applyQuality(q) {
     setArtQuality(q);
-    if (this.game.display.setCap(q === "high" ? 2 : 1.5)) invalidateStarfield();
+    this.game.display.setCap(q === "high" ? 2 : 1.5);
   }
 
   /** CSS filter for the hole's skin ("" for classic or a locked skin). */

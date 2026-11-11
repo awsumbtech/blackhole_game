@@ -1,0 +1,22 @@
+{
+  "method": "48s greedy drift, dev sandbox, headless Chrome 390x844. Same bot on main (before) and this branch (after). massK is endMass/startMass. secTo135 is seconds to 1.35x mass.",
+  "before": [
+    {"biome": "Debris Reef", "massK": 2.576, "progress": 0.414, "secTo135": 16.2, "inRing": 28},
+    {"biome": "Comet Current", "massK": 2.311, "progress": 0.324, "secTo135": 20.8, "inRing": 31},
+    {"biome": "Planet Nursery", "massK": 2.825, "progress": 0.772, "secTo135": 15.1, "inRing": 46},
+    {"biome": "Ruined Armada", "massK": 2.244, "progress": 0.229, "secTo135": 26.0, "inRing": 22},
+    {"biome": "Void Rift", "massK": 2.301, "progress": 0.197, "secTo135": 21.3, "inRing": 24},
+    {"biome": "Star Meadow", "massK": 2.909, "progress": 0.488, "secTo135": 14.9, "inRing": 39},
+    {"biome": "Neutron Forge", "massK": 2.226, "progress": 0.138, "secTo135": 23.4, "inRing": 27}
+  ],
+  "after": [
+    {"biome": "Debris Reef", "massK": 2.322, "progress": 0.379, "secTo135": 17.5, "inRing": 22, "massRatio": 0.90, "progressRatio": 0.92},
+    {"biome": "Comet Current", "massK": 2.399, "progress": 0.339, "secTo135": 19.7, "inRing": 15, "massRatio": 1.04, "progressRatio": 1.05},
+    {"biome": "Planet Nursery", "massK": 3.225, "progress": 0.870, "secTo135": 17.7, "inRing": 20, "massRatio": 1.14, "progressRatio": 1.13},
+    {"biome": "Ruined Armada", "massK": 1.932, "progress": 0.187, "secTo135": 25.8, "inRing": 14, "massRatio": 0.86, "progressRatio": 0.82},
+    {"biome": "Void Rift", "massK": 2.415, "progress": 0.209, "secTo135": 25.5, "inRing": 23, "massRatio": 1.05, "progressRatio": 1.06},
+    {"biome": "Star Meadow", "massK": 3.338, "progress": 0.551, "secTo135": 15.6, "inRing": 18, "massRatio": 1.15, "progressRatio": 1.13},
+    {"biome": "Neutron Forge", "massK": 2.430, "progress": 0.154, "secTo135": 19.6, "inRing": null, "massRatio": 1.09, "progressRatio": 1.12}
+  ],
+  "note": "Forge was 35% fast on the shared ceiling, then its own ceiling was set to 2.3 and its gain to 0.54 and remeasured. Reef gain 0.66 and ceiling 2.45 pulled it back from about +20% progress. Armada stays the slowest."
+}

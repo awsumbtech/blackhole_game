@@ -57,7 +57,7 @@ export const SET_PREFIX = ["Greater", "Outer", "High", "Far", "Grand", "Deep"];
 export const LAYOUTS = {
   "Debris Reef": {
     names: ["The Shoals", "Pebble Reach", "Old Reef", "Driftstone"], rgb: "120, 220, 200",
-    spots: [4, 0.32, 0.7], reefR: [0.17, 0.06], want: 10, rocks: 6
+    spots: [4, 0.32, 0.7], reefR: [0.17, 0.06], want: 6, rocks: 4
   },
   "Comet Current": {
     names: ["The Long River", "Glacier Run"], rgb: "170, 225, 255",
@@ -65,12 +65,12 @@ export const LAYOUTS = {
   },
   "Planet Nursery": {
     name: "The Cradle", rgb: "255, 216, 140",
-    dist: 0.36, sunR: 0.075, rings: [2.4, 3.6, 5.0, 6.5], lmR: 6.8, worlds: 18,
+    dist: 0.36, sunR: 0.075, rings: [2.4, 3.6, 5.0, 6.5], lmR: 6.8, worlds: 10,
     sun: { type: "star", color: "#ffd86d", seed: 4242, variant: 0, look: 0 }
   },
   "Ruined Armada": {
     spots: [2, 0.35, 0.62],
-    flagship: { name: "The Flagship", rgb: "205, 180, 255", size: 0.16, lmR: 0.22, color: "#8f7fb0", debris: 7, hulls: 3 },
+    flagship: { name: "The Flagship", rgb: "205, 180, 255", size: 0.16, lmR: 0.22, color: "#8f7fb0", hulls: 3 },
     line: { name: "The Broken Line", rgb: "215, 170, 120", lmR: 0.18, hulls: 4 }
   },
   "Void Rift": {
@@ -79,7 +79,7 @@ export const LAYOUTS = {
   },
   "Star Meadow": {
     names: ["Goldfield", "Sunpatch", "The Orchard"], rgb: "255, 215, 130",
-    spots: [3, 0.3, 0.66], r: 0.17, want: 7, buds: 4
+    spots: [3, 0.3, 0.66], r: 0.17, want: 4, buds: 3
   },
   "Neutron Forge": {
     spots: [2, 0.3, 0.55], lmR: 0.08,

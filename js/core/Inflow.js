@@ -106,10 +106,10 @@ export class Inflow {
     this.msz[i] = 0.8 + rnd() * 0.9;
   }
 
-  /** Quality and Reduce Motion set the live counts (no reallocation). */
+  /** Quality and Reduce Motion. The circling grain cloud stays off (nIn is 0). Motes and the impact burst are unchanged from main. */
   configure(high, reduceMotion) {
     this.high = high; this.still = reduceMotion;
-    this.nIn = reduceMotion ? 18 : high ? IN_MAX : 44;
+    this.nIn = 0;
     this.nMote = reduceMotion ? 0 : high ? MOTE_MAX : 8;
   }
 
@@ -178,7 +178,7 @@ export class Inflow {
     }
   }
 
-  /** Grains on the far side of the disk: draw before the hole. ctx is in world units. */
+  /** Grains on the far side of the disk: draw before the hole. The circling cloud is off, so this returns at once. */
   drawBack(ctx, x, y, R, zoom, dpr = 1) { this._grains(ctx, x, y, R, zoom, dpr, -1); }
 
   /** Near-side grains, motes and the impact: draw after the hole. */

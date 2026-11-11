@@ -200,12 +200,7 @@ const SETUP = {
     const F = L.flagship, [fx, fy] = spots[0];
     // v9.4: the Flagship is a broken capital ship with its own slow debris field
     W.flagship = { x: fx, y: fy, size: b0 * F.size, rot: r() * TAU,
-      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: F.color, radius: 1, _sp: null, _artBase: null },
-      debris: Array.from({ length: F.debris }, (_, i) => {
-        const a = r() * TAU, d = 0.9 + r() * 0.8;
-        return { dx: Math.cos(a) * d, dy: Math.sin(a) * d * 0.7, s: 0.05 + r() * 0.07, rot: r() * TAU, spin: (r() - 0.5) * 0.00008, ph: r() * TAU,
-          art: { type: "craft", ship: "scrap", wreck: true, look: i, color: F.color, radius: 1, _sp: null, _artBase: null } };
-      }) };
+      art: { type: "craft", ship: "capital", wreck: true, look: (r() * 8) | 0, color: F.color, radius: 1, _sp: null, _artBase: null } };
     W.lms.push(landmark(setName(F.name), "flagship", fx, fy, b0 * F.lmR, F.rgb));
     const [lx, ly] = spots[1];
     W.lms.push(landmark(setName(L.line.name), "line", lx, ly, b0 * L.line.lmR, L.line.rgb));
@@ -498,7 +493,7 @@ const UPDATE = {
     let orbiting = 0;
     for (const e of state.entities) if (e.orbit) orbiting++;
     c.regrow = (c.regrow || 0) + dt;
-    if (orbiting < 14 && c.regrow > 150 && nearYou(state, cx, cy, 2.6)) {
+    if (orbiting < 8 && c.regrow > 150 && nearYou(state, cx, cy, 2.6)) {
       c.regrow = 0;
       const e = spawnFood(state, false, { type: W.r() < 0.4 ? "planet" : undefined, pos: { x: cx, y: cy }, sizeK: 1.1 });
       putInOrbit(e, Math.floor(W.r() * 4), W.r() * TAU);
@@ -567,7 +562,7 @@ const UPDATE = {
     au.count = n;
     au.spawn += dt;
     const every = W.boost > 0 ? 25 : 80;
-    if (au.spawn >= every && n < 32) {
+    if (au.spawn >= every && n < 16) {
       au.spawn = 0;
       const pk = pickNear(state, au.pts, 0.9);
       if (!pk) return;
@@ -770,22 +765,8 @@ function lmSprite(kind) {
     // v8.3: no tendrils (they read as wriggling "snakes" in galaxy 1); just a few soft glints
     for (let i = 0; i < 9; i++) blob((r() - 0.5) * h * 0.9, (r() - 0.5) * h * 0.9, S * 0.02, "220, 255, 240", 0.35);
   } else if (kind === "meadow") {
-    // a field of tiny golden blossoms
+    // one soft field. The old seventy blossoms read as specks.
     blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
-    for (let i = 0; i < 70; i++) {
-      const a = r() * TAU, d = Math.sqrt(r()) * h * 0.8;
-      blob(Math.cos(a) * d, Math.sin(a) * d, S * (0.012 + r() * 0.025), i % 4 ? "255, 230, 160" : "200, 255, 180", 0.7);
-    }
-  } else if (kind === "cradle") {
-    // a dusty protoplanetary disk around the young sun
-    g.save(); g.scale(1, 0.42);
-    for (let i = 0; i < 120; i++) {
-      const a0 = r() * TAU, rr = h * (0.3 + r() * 0.65);
-      g.strokeStyle = `rgba(${i % 3 ? "255, 214, 160" : "180, 240, 190"}, ${0.04 + r() * 0.08})`;
-      g.lineWidth = S * (0.006 + r() * 0.02);
-      g.beginPath(); g.arc(0, 0, rr, a0, a0 + 0.5 + r() * 2); g.stroke();
-    }
-    g.restore();
   }
   LM[kind] = c;
   return c;
@@ -843,23 +824,11 @@ const DRAW = {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const rv of W.rivers) {
-      // v9.3: calm rivers. One soft body and a faint core (no wide glowing
-      // bands), and a few sparse streaks that creep along very slowly (still
-      // under Reduce Motion) so you can read the flow without it pulling the eye.
+      // One quiet ribbon. The wide shafts and the crossing dashes were the loudest thing in the frame.
       ctx.globalAlpha = AM;
-      ctx.strokeStyle = W.boost > 0 ? "rgba(120, 200, 255, 0.06)" : "rgba(120, 200, 255, 0.045)";
-      ctx.lineWidth = rv.w * 1.3;
+      ctx.strokeStyle = W.boost > 0 ? "rgba(170, 220, 255, 0.07)" : "rgba(160, 210, 245, 0.045)";
+      ctx.lineWidth = rv.w * 0.07;
       ctx.stroke(rv.path);
-      ctx.strokeStyle = "rgba(200, 235, 255, 0.04)";
-      ctx.lineWidth = rv.w * 0.4;
-      ctx.stroke(rv.path);
-      const speed = fx.reduceMotion ? 0 : 0.006;
-      ctx.setLineDash([rv.w * 0.25, rv.w * 2.2]);
-      ctx.lineDashOffset = -fx.time * speed;
-      ctx.strokeStyle = "rgba(220, 245, 255, 0.11)";
-      ctx.lineWidth = Math.max(1.5 / (fx.zoom * f), rv.w * 0.025);
-      ctx.stroke(rv.path);
-      ctx.setLineDash([]);
     }
     ctx.restore();
   },
@@ -867,23 +836,16 @@ const DRAW = {
   "Planet Nursery"(ctx, state, fx, vw, vh) {
     const c = W.cradle;
     const x = px(c.x), y = py(c.y);
-    ctx.lineWidth = 1.2 / fx.zoom;
-    for (const rr of c.rings) {
-      ctx.globalAlpha = AM * (0.22);
-      ctx.beginPath();
-      ctx.arc(x, y, wx(rr), 0, TAU);
-      ctx.strokeStyle = "rgba(200, 240, 200, 1)";
-      ctx.stroke();
-    }
+    // v9.7: no orbit strokes. The worlds themselves show the cradle.
+    // The old hairlines stacked across the screen and read as a diagram.
     const sr = wx(c.sunR);
     if (!onScreen(state, x, y, sr * 4, vw, vh)) return;
-    drawGlow(ctx, "255, 220, 150", x, y, sr * 5.5, 0.12 + fx.breath * 0.04);
-    ctx.globalAlpha = AM * 0.8;
-    ctx.drawImage(lmSprite("cradle"), x - sr * 6, y - sr * 6, sr * 12, sr * 12);
+    // The sprite already has a corona. No extra halo, drawn smaller so the rays
+    // are not a second sun beside the hole.
     c.sun.radius = sr;
-    const sp = spriteFor(c.sun, sr * fx.zoom * fx.dpr);
-    const d = sp.k * sr * (0.98 + fx.breath * 0.04);
-    ctx.globalAlpha = AM * (0.95);
+    const sp = spriteFor(c.sun, sr * 0.5 * fx.zoom * fx.dpr);
+    const d = sp.k * sr * 0.5;
+    ctx.globalAlpha = AM * 0.9;
     ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
   },
 
@@ -894,19 +856,7 @@ const DRAW = {
     // arrive, then fades in; until then nothing pops in on screen
     const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
-    drawGlow(ctx, "180, 160, 220", x, y, s * 2.2, 0.06);
     const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
-    const cr = Math.cos(rot), sr = Math.sin(rot);
-    for (const p of fl.debris) {
-      const t = fx.reduceMotion ? 0 : fx.time;
-      const bx = p.dx * s + Math.sin(t * 0.00005 + p.ph) * s * 0.03, by = p.dy * s;
-      const qx = x + bx * cr - by * sr, qy = y + bx * sr + by * cr, ps = p.s * s;
-      const dsp = spriteFor(p.art, ps * fx.zoom * fx.dpr), dd = dsp.k * ps, pr = p.rot + t * p.spin;
-      ctx.globalAlpha = AM * 0.5;
-      ctx.translate(qx, qy); ctx.rotate(pr);
-      ctx.drawImage(dsp.c, -dd / 2, -dd / 2, dd, dd);
-      ctx.rotate(-pr); ctx.translate(-qx, -qy);
-    }
     if (!sp) return;
     // It sits back from play, hazed; it clears a little as you come close (never fully)
     const near = smooth(1 - (hypot(state.playerX - x, state.playerY - y) - s * 1.2) / (s * 3));
@@ -916,8 +866,7 @@ const DRAW = {
   },
 
   "Void Rift"(ctx, state, fx) {
-    const au = W.aurora, f = W.f, lite = getArtQuality() !== "high";
-    const shimmer = fx.reduceMotion ? 0.5 : 0.5 + Math.sin(fx.time * 0.0007) * 0.5;
+    const au = W.aurora, f = W.f;
     const glowK = W.boost > 0 ? 1.6 : 1;
     ctx.save();
     ctx.translate(W.ox, W.oy);
@@ -925,32 +874,14 @@ const DRAW = {
     ctx.globalCompositeOperation = "lighter";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    const wide = W.b0 * 0.12;
-    ctx.globalAlpha = AM * (1);
-    ctx.strokeStyle = `rgba(70, 200, 170, ${0.045 * glowK})`;
+    // A readable feeding line, not a bright column. The hole stays the bright thing.
+    const wide = W.b0 * 0.045;
+    ctx.globalAlpha = AM;
+    ctx.strokeStyle = `rgba(80, 190, 170, ${0.035 * glowK})`;
     ctx.lineWidth = wide;
     ctx.stroke(au.path);
-    if (!lite) {
-      ctx.save();
-      ctx.translate(0, -wide * 0.25);
-      ctx.strokeStyle = `rgba(120, 110, 255, ${(0.035 + shimmer * 0.02) * glowK})`;
-      ctx.lineWidth = wide * 0.6;
-      ctx.stroke(au.path);
-      ctx.restore();
-    }
-    if (!lite) {
-      // v8.1 curtains: faint layers rising off the ribbon
-      for (let k = 1; k <= 3; k++) {
-        ctx.save();
-        ctx.translate(0, -wide * 0.22 * k);
-        ctx.strokeStyle = k === 2 ? "rgba(190, 120, 255, 0.03)" : "rgba(90, 240, 190, 0.035)";
-        ctx.lineWidth = wide * (0.5 - k * 0.1);
-        ctx.stroke(au.path);
-        ctx.restore();
-      }
-    }
-    ctx.strokeStyle = `rgba(170, 255, 225, ${(0.1 + fx.breath * 0.05) * glowK})`;
-    ctx.lineWidth = Math.max(2 / (fx.zoom * f), wide * 0.06);
+    ctx.strokeStyle = `rgba(180, 245, 225, ${0.05 * glowK})`;
+    ctx.lineWidth = Math.max(1.2 / (fx.zoom * f), wide * 0.08);
     ctx.stroke(au.path);
     ctx.restore();
   },
@@ -959,12 +890,11 @@ const DRAW = {
     for (const m of W.meadows) {
       const x = px(m.x), y = py(m.y), r = wx(m.r);
       if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      drawGlow(ctx, "255, 205, 110", x, y, r * 1.4, 0.09 + fx.breath * 0.03);
-      ctx.globalAlpha = AM * (0.6 + fx.breath * 0.2);
+      drawGlow(ctx, "255, 205, 110", x, y, r * 1.1, 0.04);
+      ctx.globalAlpha = AM * 0.35;
       ctx.drawImage(lmSprite("meadow"), x - r * 1.2, y - r * 1.2, r * 2.4, r * 2.4);
     }
-    // Soft bloom halos around growing buds
-    const lite = getArtQuality() !== "high";
+    // One quiet ring on a growing bud. No orbiting specks.
     ctx.lineWidth = 1.2 / fx.zoom;
     for (const e of state.entities) {
       if (!e.bloom || e.consuming || !onScreen(state, e.x, e.y, e.radius * 3, vw, vh)) continue;
@@ -975,13 +905,6 @@ const DRAW = {
       ctx.arc(e.x, e.y, e.radius * (1.7 + k * 0.6), 0, TAU);
       ctx.strokeStyle = "rgba(255, 225, 150, 1)";
       ctx.stroke();
-      if (!lite) {
-        const rot = fx.reduceMotion ? 0 : fx.time * 0.0002;
-        for (let i = 0; i < 5; i++) {
-          const ang = rot + i * TAU / 5;
-          drawGlow(ctx, "255, 230, 160", e.x + Math.cos(ang) * e.radius * 1.5, e.y + Math.sin(ang) * e.radius * 1.5, e.radius * 0.6, a * 0.8);
-        }
-      }
     }
   },
 
@@ -993,27 +916,21 @@ const DRAW = {
       if (!p.grad || p.gradL !== L || p.gradF !== (W.flare > 0)) {
         const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
         const k = W.flare > 0 ? 1.4 : 1;
-        g.addColorStop(0, `rgba(${p.rgb}, ${0.16 * k})`);   // v9.3: a little softer
-        g.addColorStop(0.35, `rgba(${p.rgb}, ${0.05 * k})`);
+        g.addColorStop(0, `rgba(${p.rgb}, ${0.055 * k})`);
+        g.addColorStop(0.4, `rgba(${p.rgb}, ${0.018 * k})`);
         g.addColorStop(1, `rgba(${p.rgb}, 0)`);
         p.grad = g; p.gradL = L; p.gradF = W.flare > 0;
       }
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(p.ang);
-      ctx.globalAlpha = AM * (0.85 + fx.breath * 0.15);
+      ctx.globalAlpha = AM * 0.55;
       ctx.fillStyle = p.grad;
       for (let k = 0; k < 2; k++) {
         const side = k * Math.PI;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, L, side - hw, side + hw);
-        ctx.closePath();
-        ctx.fill();
-        // v8.1: a brighter core inside each beam
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, L * 0.85, side - hw * 0.25, side + hw * 0.25);
         ctx.closePath();
         ctx.fill();
       }
@@ -1027,8 +944,7 @@ const DRAW = {
         ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
       }
     }
-    // A warm halo on the hole while you're in a beam
-    if (AM === 1 && W.beamA > 0.02) drawGlow(ctx, "255, 200, 140", state.playerX, state.playerY, state.radius * 3.6, 0.38 * W.beamA);
+    // The beam still pays +50%. It does not put a second glow on the hole.
   }
 };
 
@@ -1046,7 +962,9 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
     ctx.fillStyle = "#e9edff";
     ctx.shadowColor = "rgba(150, 160, 255, 0.6)";
     ctx.shadowBlur = 12;
-    ctx.fillText(W.banner.text.toUpperCase(), w / 2, h * 0.2);
+    // Short landscape screens: the top HUD already owns y < ~100, so the name sits below it.
+    const by = h < 520 ? Math.max(112, h * 0.34) : h * 0.2;
+    ctx.fillText(W.banner.text.toUpperCase(), w / 2, by);
     ctx.restore();
   }
   const hint = W.hint, lm = hint.lm || hint.last;
@@ -1157,6 +1075,25 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
 let lastFD = 0;
 /** For tests/debug: nearest mechanic feature, in view radii */
 export function worldsFeature(state) { if (!W) return null; lastFD = featureDist(state) / viewR(state); return lastFD; }
+/**
+ * Slice-painted sprites currently in view. The Flagship is the one: it stays
+ * null until the slices finish, then fades in for 1.2 s on the wall clock.
+ * Ready means the sprite exists and that fade has finished (now > born + 1.3 s).
+ */
+export function slicePaintReady(state) {
+  const now = performance.now();
+  const pending = [];
+  if (W && W.flagship) {
+    const fl = W.flagship;
+    const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
+    if (onScreen(state, x, y, s * 1.6, state.viewW, state.viewH)) {
+      const sp = FLAGSHIP.peek(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");
+      if (!sp.ready || !(now > sp.born + 1300)) pending.push({ name: "flagship", born: sp.born, now });
+    }
+  }
+  return { ready: pending.length === 0, pending };
+}
+
 /** For the automated tests (dev builds only) */
 export function worldsInfo() {
   if (!W) return null;

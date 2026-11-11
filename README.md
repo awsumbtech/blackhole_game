@@ -1,6 +1,6 @@
 # Black Hole: Galaxy Eater
 
-**v8.6** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v9.7** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
 No ads, no purchases, no timers, no way to lose.
 
@@ -90,7 +90,7 @@ js/entities.js    object types and the seven biomes
 js/living-world.js  gravity, spawning around the view, gentle events
 js/worlds.js      per-galaxy mechanics and landmarks (follow you as you travel)
 js/art.js         painterly code-drawn sprites (cached) and the black hole
-js/backdrop.js    four-layer parallax sky
+js/core/Backdrop.js  one still painted sky per galaxy (the old parallax file was removed in v9.7)
 js/render.js      particles, ripples, radar
 js/wisp.js        the companion wisp
 js/starmap.js     the star map screen (and the end-of-galaxy ritual)

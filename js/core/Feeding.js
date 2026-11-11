@@ -8,7 +8,6 @@ import { rand } from "../entities.js";
 import { onWorldBump, worldMassMul } from "../worlds.js";
 import { wispReact } from "../wisp.js";
 import { POWERUPS, activatePowerup } from "../powerups.js";
-import { getArtQuality } from "../art.js";
 
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -28,12 +27,17 @@ const BREATHER_PACE = 0.095;
 // the total time per galaxy is unchanged (tuned with the playtest bot).
 // gain scales what a bite gives, cap lifts the per-bite ceiling so big morsels count.
 // Per-galaxy factors keep each galaxy's v5.2 clear time (bot-measured, within ~10%).
-const MEATY = { gain: 1, breatherGain: 1, cap: 2, byBiome: {
-  "Debris Reef": 0.75, "Comet Current": 0.63, "Planet Nursery": 0.56, "Ruined Armada": 0.53,
-  "Void Rift": 0.85, "Star Meadow": 0.56, "Neutron Forge": 0.62 },
+// v9.7: the view holds 24/44 of the old regular count (29/52 in a breather) and
+// food is ~20% wider. A first pass overshot Reef and Comet and undershot
+// Nursery (its ceiling replaces `cap`, so it did not get the raise). These
+// factors are what a 32s greedy drift matched to the old mass rate.
+const MEATY = { gain: 1.12, breatherGain: 1.12, cap: 3, byBiome: {
+  "Debris Reef": 0.66, "Comet Current": 0.63, "Planet Nursery": 0.56, "Ruined Armada": 0.53,
+  "Void Rift": 0.85, "Star Meadow": 0.56, "Neutron Forge": 0.54 },
   // bite ceiling per galaxy (breathers and Armada are ceiling-bound, so this sets their pace)
-  // v9: Nursery, Void Rift and Meadow a little quicker (first collapse ~30 min); Comet and Armada stay the walls
-  capBiome: { "Planet Nursery": 1.15, "Star Meadow": 1.15, "Ruined Armada": 1.2 } };
+  // v9: Nursery, Void Rift and Meadow a little quicker; Comet and Armada stay the walls
+  // v9.7: Nursery and Meadow ceilings up so fewer worlds still clear on time. Armada's stays low.
+  capBiome: { "Debris Reef": 2.45, "Planet Nursery": 1.67, "Star Meadow": 1.67, "Ruined Armada": 1.2, "Neutron Forge": 2.3 } };
 // Calm bump: a soft, eased nudge away from something too big. No shake, the
 // combo just pauses, and it never costs mass.
 const BUMP_PUSH = 2.4;          // was a hard 7x speed kick
@@ -98,9 +102,6 @@ export class Feeding {
       const touchDist = R + e.radius * (0.4 + state.mods.reachBonus);
 
       if (edible && dist < touchDist) {
-        e.consuming = true;
-        e.consumeProgress = 0;
-
         const comboBonus = 1 + Math.min(state.comboCount, state.mode === "zen" ? 25 : state.ascMods.comboCap) * 0.01;
         const dbl = state.active.double > 0 ? 2 : 1;
         // Small absolute floor keeps the opening seconds snappy
@@ -129,12 +130,12 @@ export class Feeding {
         totalMassGained += gain;
         state.gulp = Math.min(1, state.gulp + 0.25 + Math.min(0.5, gain / state.mass));
 
-        game.fx.spawnConsume(e, getArtQuality());
         game.fx.spawnRipple(e);
-        game.inflow.feed(Math.atan2(dy, dx), dist / state.radius);
+        game.debris.spawn(e);
+        e.consumed = true;
 
         if (e.bigFish) {
-          // v6: a slow, satisfying swallow (about a second) with a soft chime. No shake.
+          // Big catch: the chime and the short impact. The pieces are DebrisField.
           e.swallow = true;
           state.run.bigFish += 1;
           state.stats.bigFishEaten += 1;

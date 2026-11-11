@@ -14,5 +14,5 @@ export { rng } from "./art/kit.js";
 export { lookOf, spriteFor, beginArtFrame, artStats } from "./art/sprites.js";
 export { heatFor } from "./art/rocks.js";
 export { tailFor } from "./art/comets.js";
-export { drawBlackHoleArt, drawRevealFx, warmHole } from "./art/hole.js";
+export { drawBlackHoleArt, drawRevealFx, warmHole, shadowRadius } from "./art/hole.js";
 export { rivalSprite } from "./art/rival.js";

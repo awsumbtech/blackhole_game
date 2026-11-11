@@ -248,6 +248,12 @@ function drawDoppler(ctx, spr, alpha, radius) {
   ctx.restore();
 }
 
+/** World radius of the painted shadow. drawBlackHoleArt uses this for the shadow sprite. */
+export function shadowRadius(radius, gulp = 0, reduceMotion = false) {
+  const g = reduceMotion ? 0 : (gulp || 0);
+  return radius * 1.3 * (1 + g * 0.08);
+}
+
 /**
  * Draw the black hole at (x, y) in world units (ctx already scaled by zoom).
  * fx: { zoom, dpr, dt, double, gulp, breath, reduceMotion, magnet, pullRange, breathGuide }
@@ -325,8 +331,7 @@ export function drawBlackHoleArt(ctx, x, y, radius, time, fx) {
   ctx.drawImage(arc.c, -as, -as, as * 2, as * 2);
 
   // Shadow + photon ring
-  const g = 1 + gulp * 0.08;
-  const rs = radius * 1.3 * g;
+  const rs = shadowRadius(radius, fx.gulp, !!fx.reduceMotion);
   ctx.globalAlpha = 1;
   ctx.drawImage(ringSprite, -rs, -rs, rs * 2, rs * 2);
   if (high && !fx.reduceMotion) {

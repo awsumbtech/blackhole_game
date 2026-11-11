@@ -21,3 +21,6 @@ build/
 
 # Claude Code
 .claude/
+
+# Local graphify output (not part of the game)
+graphify-out/
