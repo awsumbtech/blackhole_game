@@ -56,19 +56,21 @@ async function enter(page, cfg) {
 
 /** One Feeding.update bite: exactly 4 pieces, each life inside DebrisField's range, then gone. */
 async function bite(page) {
-  await enter(page, { biome: "Comet Current", tier: 3, galaxy: 3, zen: false });
+  await enter(page, { biome: "Planet Nursery", tier: 5, galaxy: 5, zen: false });
   await page.waitForFunction(() => window.__bh.debris.masksReady);
   return page.evaluate(() => {
     const bh = window.__bh;
     const s = bh.state;
     const field = bh.debris;
     field.clear();
-    const e = s.entities.find(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio);
-    if (!e) return { ok: false, why: "no edible" };
+    const eds = s.entities.filter(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio && ent.radius > s.radius * 0.45);
+    eds.sort((a, b) => b.radius - a.radius);
+    const e = eds[0];
+    if (!e) return { ok: false, why: "no large edible" };
     const mass0 = s.mass;
     const n0 = s.entities.length;
     const reach = s.radius + e.radius * (0.4 + (s.mods.reachBonus || 0));
-    e.x = s.playerX + reach * 0.92;
+    e.x = s.playerX + reach * 0.99;
     e.y = s.playerY;
     e.vx = 0;
     e.vy = 0;
@@ -96,17 +98,63 @@ async function bite(page) {
       const maxLife = lives.length ? Math.max(...lives) : 0;
       const now = performance.now();
       s.paused = true;
-      for (let i = 0; i < 6; i++) {
-        field.update(2, false);
+      s.camX = s.playerX;
+      s.camY = s.playerY;
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const shadowR = bh.shadowRadius(s.radius, s.gulp, !!(s.settings && s.settings.reduceMotion));
+      const cx = (s.viewW / 2) * s.zoom * dpr;
+      const cy = (s.viewH / 2) * s.zoom * dpr;
+      const discR = 0.95 * shadowR * s.zoom * dpr;
+      const sample = () => {
+        const x0 = Math.max(0, Math.floor(cx - discR));
+        const y0 = Math.max(0, Math.floor(cy - discR));
+        const x1 = Math.min(canvas.width - 1, Math.ceil(cx + discR));
+        const y1 = Math.min(canvas.height - 1, Math.ceil(cy + discR));
+        const img = ctx.getImageData(x0, y0, Math.max(1, x1 - x0 + 1), Math.max(1, y1 - y0 + 1));
+        const pix = [];
+        for (let y = y0; y <= y1; y++) {
+          for (let x = x0; x <= x1; x++) {
+            const dx = x - cx, dy = y - cy;
+            if (dx * dx + dy * dy > discR * discR) continue;
+            const i = ((y - y0) * img.width + (x - x0)) * 4;
+            pix.push(img.data[i], img.data[i + 1], img.data[i + 2]);
+          }
+        }
+        return pix;
+      };
+      let coreBad = 0;
+      let frames = 0;
+      let baseCount = 0;
+      const plainDraw = field.draw;
+      field.draw = function (ctx2, hx, hy, side) {
+        let before = null;
+        if (side === 1) before = sample();
+        inside = true;
+        let result;
+        try { result = plainDraw.call(field, ctx2, hx, hy, side); }
+        finally { inside = false; }
+        if (before) {
+          const after = sample();
+          frames++;
+          baseCount = before.length / 3;
+          const n = Math.min(before.length, after.length);
+          for (let i = 0; i < n; i++) if (before[i] !== after[i]) coreBad++;
+        }
+        return result;
+      };
+      for (let age = 0; age <= maxLife; age++) {
         bh.scene.draw(now, 0, true);
+        if (age < maxLife) field.update(1, false);
       }
+      field.draw = plainDraw;
       drawHits = hits;
-      for (let i = 0; i < maxLife; i++) field.update(1, false);
       const massGained = s.mass - mass0;
       const lifeOk = lives.length === 4 && lives.every(n => n >= field.lifeMin && n <= field.lifeMax);
       s.paused = false;
       return {
-        ok: massGained > 0 && gone && lifeOk && fromSprite && field.live === 0 && drawHits > 0,
+        ok: massGained > 0 && gone && lifeOk && fromSprite && field.live === 0 && drawHits > 0 && coreBad === 0 && baseCount > 20,
         massGained,
         gone,
         pieces: live.length,
@@ -115,6 +163,9 @@ async function bite(page) {
         lifeMax: field.lifeMax,
         fromSprite,
         drawHits,
+        coreBad,
+        coreSamples: baseCount,
+        frames,
         liveAfter: field.live,
         removed: n0 - s.entities.length
       };
@@ -180,10 +231,10 @@ async function idle(page) {
       const e = s.entities[0];
       let biteHits = 0;
       if (e) {
-        e.radius = s.radius * 0.4;
+        e.radius = s.radius * 0.9;
         e.consumed = false;
         const reach = s.radius + e.radius * (0.4 + (s.mods.reachBonus || 0));
-        e.x = s.playerX + reach * 0.92;
+        e.x = s.playerX + reach * 0.99;
         e.y = s.playerY;
         e.vx = 0;
         e.vy = 0;

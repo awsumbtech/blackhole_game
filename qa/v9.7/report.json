@@ -421,5 +421,202 @@
       "entities": 33
     },
     "avgDeltaPct": -76.1
+  },
+  "afterShots": {
+    "note": "Measured PNG sizes of qa/v9.7/after at this commit. CSS size times DPR from tools/v97-qa.cjs.",
+    "viewports": {
+      "phone": {
+        "css": [
+          390,
+          844
+        ],
+        "dpr": 2,
+        "png": [
+          780,
+          1688
+        ]
+      },
+      "small": {
+        "css": [
+          375,
+          667
+        ],
+        "dpr": 2,
+        "png": [
+          750,
+          1334
+        ]
+      },
+      "land": {
+        "css": [
+          844,
+          390
+        ],
+        "dpr": 2,
+        "png": [
+          1688,
+          780
+        ]
+      },
+      "desk": {
+        "css": [
+          1440,
+          900
+        ],
+        "dpr": 1,
+        "png": [
+          1440,
+          900
+        ]
+      }
+    },
+    "files": {
+      "phone-audit-settings.png": [
+        780,
+        1688
+      ],
+      "phone-play-meadow.png": [
+        780,
+        1688
+      ],
+      "land-title.png": [
+        1688,
+        780
+      ],
+      "phone-play-busy.png": [
+        780,
+        1688
+      ],
+      "phone-settings.png": [
+        780,
+        1688
+      ],
+      "phone-zen-long.png": [
+        780,
+        1688
+      ],
+      "small-settings.png": [
+        750,
+        1334
+      ],
+      "desk-zen.png": [
+        1440,
+        900
+      ],
+      "small-play-nursery.png": [
+        750,
+        1334
+      ],
+      "phone-nursery-golden.png": [
+        780,
+        1688
+      ],
+      "desk-settings.png": [
+        1440,
+        900
+      ],
+      "phone-armada-plain.png": [
+        780,
+        1688
+      ],
+      "phone-play-reef.png": [
+        780,
+        1688
+      ],
+      "phone-nursery-plain.png": [
+        780,
+        1688
+      ],
+      "phone-armada-golden.png": [
+        780,
+        1688
+      ],
+      "phone-play-current.png": [
+        780,
+        1688
+      ],
+      "land-zen.png": [
+        1688,
+        780
+      ],
+      "small-zen.png": [
+        750,
+        1334
+      ],
+      "desk-title.png": [
+        1440,
+        900
+      ],
+      "desk-play-nursery.png": [
+        1440,
+        900
+      ],
+      "phone-play-nursery.png": [
+        780,
+        1688
+      ],
+      "phone-audit-title.png": [
+        780,
+        1688
+      ],
+      "land-play-nursery.png": [
+        1688,
+        780
+      ],
+      "small-title.png": [
+        750,
+        1334
+      ],
+      "phone-play-greater-cradle.png": [
+        780,
+        1688
+      ],
+      "land-settings.png": [
+        1688,
+        780
+      ],
+      "phone-title.png": [
+        780,
+        1688
+      ],
+      "phone-play-forge.png": [
+        780,
+        1688
+      ],
+      "phone-zen.png": [
+        780,
+        1688
+      ],
+      "phone-play-armada.png": [
+        780,
+        1688
+      ],
+      "phone-play-void.png": [
+        780,
+        1688
+      ]
+    }
+  },
+  "holeShots": {
+    "css": [
+      390,
+      844
+    ],
+    "dpr": 2,
+    "png": [
+      780,
+      1688
+    ],
+    "files": {
+      "after-play.png": [
+        780,
+        1688
+      ],
+      "after-zen.png": [
+        780,
+        1688
+      ]
+    },
+    "note": "after-play and after-zen are idle, no bite in progress."
   }
 }

@@ -14,6 +14,7 @@ import { discoveriesInfo } from "./discoveries.js";
 import { wisp, resetWisp, wispInfo, wispReact } from "./wisp.js";
 import { fireEvent, activeEventInfo, EVENT_INFO, densityInfo } from "./living-world.js";
 import { tierName, massForR, rForTier, TIERS } from "./tiers.js";
+import { shadowRadius } from "./art/hole.js";
 import {
   Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, Backdrop, DebrisField, GoldenVeil,
   createState, Display, Hud, Player, Feeding, MEATY, RunTracker, Galaxy, PerfMonitor, Settings,
@@ -133,7 +134,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
   camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, debris,
   scene: game.scene, slicePaintReady: () => slicePaintReady(state),
-  feeding: game.feeding,
+  feeding: game.feeding, shadowRadius,
   worldTier: () => onWorldTier(state),
   tier: () => ({ tier: state.tier, name: tierName(state.tier), R: state.radius, anchor: state.anchorSmooth, zoom: state.zoom,
     reveal: state.reveal ? +state.reveal.p.toFixed(2) : null, floor: state.floorMass, target: state.targetMass, progress: state.galaxyProgress }),
