@@ -1,0 +1,119 @@
+{
+  "sha": "pending",
+  "ref": "branch",
+  "ok": true,
+  "levels": [
+    {
+      "biome": "Planet Nursery",
+      "tier": 3,
+      "far": 992,
+      "phases": [
+        {
+          "name": "right",
+          "checked": 791,
+          "drawn": 882,
+          "worst": 0.01,
+          "bad": null,
+          "ok": true
+        },
+        {
+          "name": "upleft",
+          "checked": 453,
+          "drawn": 494,
+          "worst": 0.013,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "biome": "Comet Current",
+      "tier": 3,
+      "far": 2399,
+      "phases": [
+        {
+          "name": "right",
+          "checked": 1411,
+          "drawn": 1580,
+          "worst": 0.02,
+          "bad": null,
+          "ok": true
+        },
+        {
+          "name": "upleft",
+          "checked": 1289,
+          "drawn": 1443,
+          "worst": 0.016,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "biome": "Debris Reef",
+      "tier": 2,
+      "far": 0,
+      "phases": [
+        {
+          "name": "drift",
+          "checked": 25,
+          "drawn": 36,
+          "worst": 0.004,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ],
+  "finds": {
+    "gold": {
+      "phases": [
+        {
+          "name": "right",
+          "checked": 128,
+          "worst": 0,
+          "bad": null,
+          "ok": true
+        },
+        {
+          "name": "upleft",
+          "checked": 128,
+          "worst": 0,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    "twin": {
+      "phases": [
+        {
+          "name": "right",
+          "checked": 128,
+          "worst": 0,
+          "bad": null,
+          "ok": true
+        },
+        {
+          "name": "upleft",
+          "checked": 128,
+          "worst": 0,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  },
+  "zoom": {
+    "compared": 4,
+    "far": 3,
+    "worst": 0,
+    "bad": null,
+    "ok": true
+  },
+  "errs": []
+}

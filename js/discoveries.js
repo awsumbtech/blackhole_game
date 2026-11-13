@@ -203,7 +203,7 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) 
     if (!f.planted || f.found) continue;
     if (f.def.kind === "comet") {
       if (!f.tail) f.tail = new CometTail(f.at + Math.PI);
-      f.tail.sample(f.x - state.camX, f.y - state.camY, dt, Math.hypot(vw, vh));
+      f.tail.sample(f.x, f.y, dt, Math.hypot(vw, vh));
     }
     const x = f.x + ox, y = f.y + oy;
     if (x < -r * 8 || y < -r * 8 || x > vw + r * 8 || y > vh + r * 8) continue;

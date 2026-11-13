@@ -1,5 +1,6 @@
 // ─── CometTail ───
-// One job: aim a comet's tail behind the way that comet just moved on screen.
+// One job: aim a comet's tail behind that comet's own travel in the world.
+// The player, the camera and the zoom are not part of the step.
 // The pictures are the ones already painted (tailFor, or a find's own tail).
 // This file does not draw a new shape.
 
@@ -26,28 +27,28 @@ export class CometTail {
     this.sy = 0;
   }
 
-  /** Forget the last screen position. A teleport must not aim the tail. */
+  /** Forget the last world position. A teleport must not aim the tail. */
   reset() {
     this.have = false;
     this.aimed = false;
   }
 
   /**
-   * sx, sy: head position relative to the camera, in world units. Zoom is
-   * not part of the step, so a zoom-only change does not swing the tail.
-   * dt is frame-time. A step longer than `limit` (the view diagonal) is a
+   * x, y: where the head is in the world. Steering, the camera and zoom do
+   * not move this point, so they do not swing the tail. dt is frame-time.
+   * A step longer than `limit` (the view diagonal, in world units) is a
    * respawn or a wrap: keep the heading, do not spin toward it.
    */
-  sample(sx, sy, dt = 1, limit = Infinity) {
+  sample(x, y, dt = 1, limit = Infinity) {
     if (!this.have) {
-      this.sx = sx;
-      this.sy = sy;
+      this.sx = x;
+      this.sy = y;
       this.have = true;
       return;
     }
-    const dx = sx - this.sx, dy = sy - this.sy;
-    this.sx = sx;
-    this.sy = sy;
+    const dx = x - this.sx, dy = y - this.sy;
+    this.sx = x;
+    this.sy = y;
     const step = Math.hypot(dx, dy);
     const frames = dt > 0 ? dt : 0;
     if (step > limit) return;
