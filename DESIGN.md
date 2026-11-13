@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.7.1** (v9.7, plus the shard bookkeeping below)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.7.2** (v9.7.1, plus comet tails that follow the on-screen step)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7.2"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -371,6 +371,7 @@ js/core/
   Inflow.js             v9.5 motes and impact burst (v9.7: the circling grain cloud, nIn, is off)
   Backdrop.js           v9.7 painted galaxy sky (one JPG per biome, no parallax)
   DebrisField.js        v9.7 pieces of the eaten sprite, only while a bite is in flight
+  CometTail.js          v9.7.2 aims a comet's existing tail sprite behind its on-screen step
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/art.js               thin index: same exports as before (spriteFor, drawBlackHoleArt, heatFor, tailFor...)
@@ -441,6 +442,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.7.2 Comet tails (Nov 13 2026):** `CometTail` owns the heading. Over 60s the old `atan2(-vy, -vx)` diverged wherever the on-screen step was not the stored velocity: Nursery orbits (velocity cleared, then a fresh speck of drift, so the tail jumped at random far from the hole), Comet Current (the river is added to position), and a drifting camera. The Golden Comet tail was a clock (`time * 0.0002`) and now uses the same object. Cache `blackhole-v9.7.2`.
 - **v9.7.1 Shard bookkeeping (Nov 13 2026):** the four P3 cleanups from the v9.7 review are done. The mask source sheet is committed (`assets/fx/source/shard_masks_sheet.jpg`). Shard reach uses half the true diagonal. The review script reads `display.dpr`. `shadowRadius()` stays, because it is the pre-v9.7 shadow size and the hole draws with it. Cache `blackhole-v9.7.1`. Orbit speed and timing were not touched.
 - **v9.7 Calm skies + feeding (Nov 11 2026):** every galaxy uses a painted backdrop (`assets/backdrop_<key>.jpg`, keys in `Backdrop.js`) owned by `Backdrop`. No parallax: the portraits are composed full-frame, and sliding them would crop the dust lane. The old coded sky painter and the four-layer mote backdrop were deleted. Orbit scribbles, stacked cradle rings, meadow specks and aurora curtains are quieted or gone. Round 2: `DENSITY` is 24 regular / 29 breather (was 44 / 52) and cradle worlds are 10 (was 18). Bites pay that back (gain 1.12, default ceiling 3, Nursery and Meadow ceilings 1.67, food ~20% wider). A 48s drift on all 7 is the check. Reef's own ceiling is 2.45 and its gain is 0.66 after it ran ~20% fast. Forge's own ceiling is 2.3 and its gain is 0.54 after it ran ~35% fast. Comet stays near the old pace. Armada progress is 0.82×; only its time to 1.35× matches, and it stays the slow wall. The hole is the pre-v9.7 disk again. The circling grain cloud is off (`nIn` is 0); motes and the impact burst stay. `DebrisField` replaces `AccretionRing` and `Absorption`: four slices of the eaten sprite ride the rim for a fraction of a turn, then nothing. SAVE_VERSION stays 9.
 - **v9.6.1 Core split (live Nov 4 2026):** code structure only, zero gameplay/visual/audio/save change (SAVE_VERSION 9). game.js (1.8k lines) split into single-job systems in `js/core/` (GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player, RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle, GameState, Display) wired through one `game` object; art.js split by kind of object into `js/art/` behind a thin index; world, object and biome definitions moved to `js/data/`. Checked with a seeded, fake-clock dev sweep (pixel diff vs main), perf bench and save migration compare.
