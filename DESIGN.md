@@ -516,6 +516,7 @@ Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it 
 
 ## 12. Backlog (awaiting Brian's pick; don't start without asking)
 
+- **Open P3:** a meteor's entry streak (`render.js`, the hot-meteor tail) still aims from stored velocity, so it can disagree with the on-screen step the way comet tails used to. Comet tails are fixed; this one was left.
 - **Open P3:** in Zen a planet's faint ring can touch the hole's edge.
 - **Open P3:** portrait lock (not approved).
 - **App polish** (parked by Brian): proper icon, splash screen, keep screen awake, landscape support.

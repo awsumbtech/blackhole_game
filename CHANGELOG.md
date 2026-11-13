@@ -6,7 +6,7 @@ All notable changes to Black Hole: Galaxy Eater. Saves carry forward through eve
 
 A comet's tail was aimed from its stored velocity. Several motions never write themselves into that velocity, so the tail spun or pointed the wrong way anywhere on screen.
 
-- Each comet owns a `CometTail`. It aims the existing tail pictures behind the step the comet just took on screen, and it keeps the last heading when that step is tiny. The pictures, the length and the speeds are unchanged.
+- Each comet owns a `CometTail`. It aims the existing tail pictures behind the step the comet just took on screen, and it keeps the last heading when that step is tiny. The pictures, the length and the speeds are unchanged. A zoom-only change, or the player turning without moving, does not swing it. The hold and the ease are per frame-time, and a step longer than the view (a respawn or a wrap) is ignored.
 - The Golden Comet and the Twin Comets use the same object. Their tail used to turn on a clock (`time`), even while the find sat still.
 - Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7.2`.
 

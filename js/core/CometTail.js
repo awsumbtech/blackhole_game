@@ -6,8 +6,8 @@
 import { tailFor } from "../art.js";
 
 const TAU = Math.PI * 2;
-// Below this on-screen step the last heading is kept, so a speck of noise
-// cannot spin the tail while the comet is barely moving.
+// Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
+// last heading. FOLLOW is how much of the new heading is taken in one frame.
 const HOLD = 0.06;
 const FOLLOW = 0.7;
 
@@ -33,11 +33,12 @@ export class CometTail {
   }
 
   /**
-   * sx, sy: where the head is on screen this frame, in CSS pixels,
-   * camera and zoom already taken out. The trailing point eases toward
-   * the opposite of that step.
+   * sx, sy: head position relative to the camera, in world units. Zoom is
+   * not part of the step, so a zoom-only change does not swing the tail.
+   * dt is frame-time. A step longer than `limit` (the view diagonal) is a
+   * respawn or a wrap: keep the heading, do not spin toward it.
    */
-  sample(sx, sy) {
+  sample(sx, sy, dt = 1, limit = Infinity) {
     if (!this.have) {
       this.sx = sx;
       this.sy = sy;
@@ -47,14 +48,18 @@ export class CometTail {
     const dx = sx - this.sx, dy = sy - this.sy;
     this.sx = sx;
     this.sy = sy;
-    if (dx * dx + dy * dy < HOLD * HOLD) return;
+    const step = Math.hypot(dx, dy);
+    const frames = dt > 0 ? dt : 0;
+    if (step > limit) return;
+    if (step < HOLD * frames || frames === 0) return;
     const target = Math.atan2(-dy, -dx);
     if (!this.aimed) {
       this.ang = target;
       this.aimed = true;
       return;
     }
-    this.ang += wrap(target - this.ang) * FOLLOW;
+    const take = 1 - Math.pow(1 - FOLLOW, frames);
+    this.ang += wrap(target - this.ang) * take;
   }
 
   /**

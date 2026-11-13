@@ -1,0 +1,94 @@
+{
+  "sha": "add3feae2f42a49063123133dd2bf1e500a6510c",
+  "ref": "main",
+  "ok": false,
+  "levels": [
+    {
+      "biome": "Planet Nursery",
+      "tier": 3,
+      "checked": 4989,
+      "far": 4402,
+      "drawn": 5055,
+      "worst": 3.14,
+      "bad": {
+        "f": 7,
+        "err": 1.916,
+        "dist": 762,
+        "sp": 4.72,
+        "ang": -1.047,
+        "back": 0.869,
+        "stored": null,
+        "orbit": true
+      },
+      "ok": false
+    },
+    {
+      "biome": "Comet Current",
+      "tier": 3,
+      "checked": 5049,
+      "far": 4599,
+      "drawn": 5370,
+      "worst": 2.391,
+      "bad": {
+        "f": 7,
+        "err": 0.841,
+        "dist": 789,
+        "sp": 1.1,
+        "ang": -0.705,
+        "back": 0.135,
+        "stored": null,
+        "orbit": false
+      },
+      "ok": false
+    },
+    {
+      "biome": "Debris Reef",
+      "tier": 2,
+      "checked": 211,
+      "far": 14,
+      "drawn": 223,
+      "worst": 0.407,
+      "bad": {
+        "f": 493,
+        "err": 0.407,
+        "dist": 490,
+        "sp": 1.08,
+        "ang": -0.179,
+        "back": 0.228,
+        "stored": null,
+        "orbit": false
+      },
+      "ok": false
+    }
+  ],
+  "finds": {
+    "gold": {
+      "checked": 27,
+      "worst": 2.434,
+      "bad": {
+        "i": 9,
+        "err": 2.434
+      },
+      "misses": 0,
+      "ok": false
+    },
+    "twin": {
+      "checked": 27,
+      "worst": 2.434,
+      "bad": {
+        "i": 9,
+        "err": 2.434
+      },
+      "misses": 0,
+      "ok": false
+    }
+  },
+  "zoom": {
+    "compared": 4,
+    "far": 3,
+    "worst": 0,
+    "bad": null,
+    "ok": true
+  },
+  "errs": []
+}

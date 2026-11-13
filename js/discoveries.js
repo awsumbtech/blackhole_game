@@ -195,7 +195,7 @@ function tail() {
 }
 
 /** World-space draw (inside the camera transform, like the wisp). */
-export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion) {
+export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) {
   if (!state.finds) return;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
   const r = findR(state);
@@ -203,8 +203,7 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion) {
     if (!f.planted || f.found) continue;
     if (f.def.kind === "comet") {
       if (!f.tail) f.tail = new CometTail(f.at + Math.PI);
-      const z = state.zoom || 1;
-      f.tail.sample((f.x - state.camX) * z, (f.y - state.camY) * z);
+      f.tail.sample(f.x - state.camX, f.y - state.camY, dt, Math.hypot(vw, vh));
     }
     const x = f.x + ox, y = f.y + oy;
     if (x < -r * 8 || y < -r * 8 || x > vw + r * 8 || y > vh + r * 8) continue;

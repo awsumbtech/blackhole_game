@@ -28,7 +28,7 @@ export function setSoftPalette(on) {
 // v4: painted sprites from art.js (cached by type/variant/size), soft tails.
 const ROTATES = { junk: true, meteor: true, craft: true };
 
-export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false) {
+export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false, dt = 1) {
   const pxScale = zoom * dpr;
   const twinkle = 0.9 + breath * 0.1;
 
@@ -36,7 +36,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     // Aim every comet, including ones off screen, from the step it just took.
     if (e.hasTail && !e.consumed) {
       if (!e.tail) e.tail = new CometTail();
-      e.tail.sample((e.x - camX) * zoom, (e.y - camY) * zoom);
+      e.tail.sample(e.x - camX, e.y - camY, dt, Math.hypot(w, h));
     }
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;

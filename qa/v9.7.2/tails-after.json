@@ -1,0 +1,61 @@
+{
+  "sha": "pending",
+  "ref": "head",
+  "ok": true,
+  "levels": [
+    {
+      "biome": "Planet Nursery",
+      "tier": 3,
+      "checked": 4989,
+      "far": 4402,
+      "drawn": 5055,
+      "worst": 0.006,
+      "bad": null,
+      "ok": true
+    },
+    {
+      "biome": "Comet Current",
+      "tier": 3,
+      "checked": 5049,
+      "far": 4599,
+      "drawn": 5370,
+      "worst": 0.063,
+      "bad": null,
+      "ok": true
+    },
+    {
+      "biome": "Debris Reef",
+      "tier": 2,
+      "checked": 211,
+      "far": 14,
+      "drawn": 223,
+      "worst": 0.004,
+      "bad": null,
+      "ok": true
+    }
+  ],
+  "finds": {
+    "gold": {
+      "checked": 27,
+      "worst": 0,
+      "bad": null,
+      "misses": 0,
+      "ok": true
+    },
+    "twin": {
+      "checked": 27,
+      "worst": 0,
+      "bad": null,
+      "misses": 0,
+      "ok": true
+    }
+  },
+  "zoom": {
+    "compared": 4,
+    "far": 3,
+    "worst": 0,
+    "bad": null,
+    "ok": true
+  },
+  "errs": []
+}
