@@ -57,7 +57,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 - [ ] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look.
 - [ ] `js/ships.js` 226–421 `paintShip`. Code-draws the hull.
 - [ ] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates.
-- [ ] `js/ships.js` 466–509 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates.
+- [ ] `js/ships.js` 466–505 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates.
 - **Moves into:** `Ship` (the first PR). One instance per craft entity. Art comes from a sheet, not `paintShip`.
 - **Depends on:** `art/sprites.js` (today), later `SpriteSheet`. Callers: `render.js` 130–132, `living-world.js` `adoptShip`, `worlds.js` `addHull` / crumbs, `depth.js` samples.
 
@@ -154,7 +154,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 ### A17. Rivals
 
 - [ ] `js/rivals.js` and `js/art/rival.js` 9–66 `rivalSprite`. Rival motion is functions. The hole picture is a code-painted canvas, two states (too big, and edible gold).
-- **Moves into:** `Rival`, using the same `BlackHole` sheet with a second palette rather than a second painter.
+- **Moves into:** `Rival`, drawing its own two paintings (too big, and edible gold) from its own sheet. No recolor or palette swap of the `BlackHole` art (see B and step 16).
 - **Depends on:** `Feeding` (swallow), `Player`.
 
 ### A18. Power-ups
@@ -176,22 +176,22 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 ### A20. Service worker
 
 - [ ] `sw.js` 1–140. `CACHE_NAME`, a hand-written `ASSETS` list, install/activate/fetch. Not an object, and the list is how a phone keeps old files.
+- **Moves into:** leave it a worker (it cannot be a game object). The change is the policy: precache the shell and the current galaxy only. New art is not added to `ASSETS` by default.
+- **Depends on:** every file the game loads.
 
 ### A22. Zen session flow
 
 - [ ] `js/zen.js` 13–25 `zenDensity` and `zenBreathPull`. 27–32 `setArc` drives the SVG progress arc. 35–42 `openPicker`. 45–50 module `timers` and `later` / `clear`. 50 `runExit` runs the three-breath close.
 - **Moves into:** `ZenSession` already owns start and exit. These loose functions become methods on it. The arc art is B, below.
 - **Depends on:** the `#zen-arc-fg` SVG in `index.html` 190, and `ZenSession`.
-- **Moves into:** leave it a worker (it cannot be a game object). The change is the policy: precache the shell and the current galaxy only. New art is not added to `ASSETS` by default.
-- **Depends on:** every file the game loads.
 
 ### A21. Already a class, but still painting or holding module pictures
 
 These are objects. They stay. The picture work inside them is section B.
 
 - `Inflow` (`js/core/Inflow.js` 46–70) builds streak, dot, and bloom canvases in the module.
-- `Flagship` (`js/core/Flagship.js` 47–115) lays out and paints a capital wreck in code, then caches it.
-- `DebrisField` composites sprites through mask images.
+- `Flagship` (`js/core/Flagship.js` layout 47, class 115, paint 168) lays out and paints a capital wreck in code, then caches it.
+- `DebrisField` composites sprites through mask images today. After step 14 it only draws the pre-cut shard frames from each type's sheet, with no runtime mask.
 - `CometTail` is a real object. It still blits a code-painted tail from `art/comets.js`.
 - `Scene`, `Player`, `Feeding`, `Camera`, `GameLoop`, `Hud`, `ScreenFlow`, `ZenSession`, `CollapseFlow`, `PlayControls`, `Menus`, `Lifecycle`, `Settings`, `PerfMonitor`, `Growth`, `Galaxy`, `GalaxyFlow`, `Fx`, `DevMode`, `Display`, `ScreenOverlay` are classes. They are not in the conversion list except where they call a loose painter.
 
