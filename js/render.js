@@ -4,6 +4,7 @@ import { drawShip } from "./ships.js";
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
 import { spriteFor, tailFor, heatFor, drawBlackHoleArt, getArtQuality } from "./art.js";
+import { CometTail } from "./core/CometTail.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
@@ -27,11 +28,16 @@ export function setSoftPalette(on) {
 // v4: painted sprites from art.js (cached by type/variant/size), soft tails.
 const ROTATES = { junk: true, meteor: true, craft: true };
 
-export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false) {
+export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false, dt = 1) {
   const pxScale = zoom * dpr;
   const twinkle = 0.9 + breath * 0.1;
 
   for (const e of entities) {
+    // Aim every comet, including ones off screen, from the step it just took.
+    if (e.hasTail && !e.consumed) {
+      if (!e.tail) e.tail = new CometTail();
+      e.tail.sample(e.x - camX, e.y - camY, dt, Math.hypot(w, h));
+    }
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
 
@@ -67,25 +73,8 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
     const rpx = e.radius * pxScale;
 
-    // Comet tail: one cached tapered gradient, rotated along the velocity
-    if (e.hasTail) {
-      const t = tailFor(e.color, rpx);
-      const speed = hypot(e.vx, e.vy);
-      const ang = Math.atan2(-e.vy, -e.vx);
-      const len = r * (5 + Math.min(4, speed * 3));
-      const hgt = r * 2.4;
-      ctx.globalAlpha = alpha * 0.9;
-      ctx.translate(sx, sy);
-      ctx.rotate(ang + 0.12);
-      ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);   // curved dust tail, a little off-axis
-      ctx.rotate(-0.12);
-      if (e.type === "comet") {
-        const it = tailFor(e.color, rpx, true);
-        ctx.globalAlpha = alpha * 0.8;
-        ctx.drawImage(it.c, 0, -r * 0.6, len * 1.35, r * 1.2);   // straight blue ion tail
-      }
-      ctx.rotate(-ang);
-      ctx.translate(-sx, -sy);
+    if (e.hasTail && e.tail) {
+      e.tail.drawComet(ctx, sx, sy, r, alpha, e.color, rpx, hypot(e.vx, e.vy));
     }
 
     // v9: a meteor entering hot: a glowing entry streak behind it (cools as it slows)

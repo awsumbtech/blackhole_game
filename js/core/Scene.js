@@ -56,9 +56,9 @@ export class Scene {
     ctx.scale(z, z);
     drawWorldsBG(ctx, state, vw, vh, { zoom: z, dpr, time: now, breath, reduceMotion: state.settings.reduceMotion });
     drawEntities(ctx, state.entities, vw, vh, state.camX, state.camY, state.radius, now, state.eatRatio, z, dpr, breath,
-      state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.settings.reduceMotion);
+      state.playerX - state.camX + vw / 2, state.playerY - state.camY + vh / 2, state.settings.reduceMotion, dt);
     drawRivals(ctx, state, vw, vh, now, state.settings.reduceMotion);
-    drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion);
+    drawDiscoveries(ctx, state, vw, vh, now, state.settings.reduceMotion, dt);
     PT_OPTS.reduceMotion = state.settings.reduceMotion;
     drawParticles(ctx, state.particles, vw, vh, state.camX, state.camY, PT_OPTS);
     drawRipples(ctx, state.ripples, vw, vh, state.camX, state.camY, z);

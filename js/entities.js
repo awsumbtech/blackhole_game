@@ -7,6 +7,7 @@ const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without 
 
 import { objectTypes } from "./data/objects.js";
 import { biomeCatalog, BREATHERS, REGULARS } from "./data/biomes.js";
+import { CometTail } from "./core/CometTail.js";
 export { objectTypes, biomeCatalog };
 
 const byName = n => biomeCatalog.find(b => b.name === n);
@@ -79,6 +80,7 @@ export function createEntity(type, x, y, scale = 1) {
     tone: type.tone + rand(-20, 20),
     glow: type.glow,
     hasTail: !!type.hasTail,
+    tail: type.hasTail ? new CometTail() : null,
     shape: type.shape || "circle",
     bands: bandSet,
     // Consume animation state

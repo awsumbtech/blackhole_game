@@ -5,6 +5,8 @@
 // quietly reappears ahead of you. A soft edge glow (2.5s fade-in) and the wisp
 // leaning that way are the only cues. Nothing flashes, nothing is timed.
 
+import { CometTail } from "./core/CometTail.js";
+
 const TAU = Math.PI * 2;
 
 // kind: "orb" (soft glow), "comet" (glow + tail), "ring" (glow + halo ring)
@@ -86,6 +88,7 @@ function plantAhead(state, f) {
   f.y = state.playerY + Math.sin(a) * d;
   f.planted = true;
   f.cue = 0;
+  if (f.tail) f.tail.reset();
 }
 
 /** Radius in world units: always a comfortable size relative to you. */
@@ -192,25 +195,22 @@ function tail() {
 }
 
 /** World-space draw (inside the camera transform, like the wisp). */
-export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion) {
+export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) {
   if (!state.finds) return;
   const ox = vw / 2 - state.camX, oy = vh / 2 - state.camY;
   const r = findR(state);
   for (const f of state.finds) {
     if (!f.planted || f.found) continue;
+    if (f.def.kind === "comet") {
+      if (!f.tail) f.tail = new CometTail(f.at + Math.PI);
+      f.tail.sample(f.x - state.camX, f.y - state.camY, dt, Math.hypot(vw, vh));
+    }
     const x = f.x + ox, y = f.y + oy;
     if (x < -r * 8 || y < -r * 8 || x > vw + r * 8 || y > vh + r * 8) continue;
     const fade = Math.min(1, f.age / 90);
     const tw = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(time * 0.0021 + f.at);
     if (f.def.kind === "comet") {
-      const ang = time * 0.0002 + f.at;
-      const len = r * 7, hgt = r * 1.4;
-      ctx.save();
-      ctx.translate(x, y); ctx.rotate(ang + Math.PI);
-      ctx.globalAlpha = 0.6 * fade;
-      ctx.globalCompositeOperation = "lighter";
-      ctx.drawImage(tail(), 0, -hgt / 2, len, hgt);
-      ctx.restore();
+      f.tail.drawSprite(ctx, x, y, tail(), r * 7, r * 1.4, 0.6 * fade, "lighter");
     }
     const sp = findSprite(f.def), d = r * 8.3 * (0.96 + 0.04 * tw);
     const rot = reduceMotion ? 0.4 : time * 0.0003 + f.at;
