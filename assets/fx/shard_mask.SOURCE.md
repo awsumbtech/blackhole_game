@@ -4,7 +4,7 @@ The four files `shard_mask_1.png` … `shard_mask_4.png` are the painted masks D
 
 - Tool: Grok Bot GenerateImage, 1:1, 1024×1024, generated Nov 11, 2026 ~8:00 AM ET by Black Hole Dev.
 - Prompt: "Four separate soft-edged rock shard silhouettes, pure white shapes on a pure black background, arranged in a 2x2 grid with generous black space around each. Each shard is an irregular broken fragment (like a chip of a cracked planet crust), different shape each, with soft feathered painterly edges and slightly rough brush texture inside, no outlines, no shading colors, no text, flat matte, high contrast alpha mask style."
-- Source sheet: the 1024×1024 JPEG supplied as `uploads/shard_masks_sheet.jpg`.
+- Source sheet: `assets/fx/source/shard_masks_sheet.jpg` (1024×1024 JPEG). The generator note is `assets/fx/source/SOURCE.md`.
 
 ## Processing (this export, nothing else)
 

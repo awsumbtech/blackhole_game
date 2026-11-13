@@ -22,7 +22,7 @@ import {
 } from "./core/index.js";
 
 const $ = id => document.getElementById(id);
-const VERSION = "9.7";
+const VERSION = "9.7.1";
 
 const display = new Display($("game"), $("game-container"));
 const state = createState();
@@ -132,7 +132,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: () => game.perf.report(), layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => game.perf.reset(), art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
-  camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, debris,
+  camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, debris, display,
   scene: game.scene, slicePaintReady: () => slicePaintReady(state),
   feeding: game.feeding, shadowRadius,
   worldTier: () => onWorldTier(state),

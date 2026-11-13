@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.7.1 — Shard bookkeeping (Nov 13 2026)
+
+Nothing Brian asked to see is different. The eat still lasts the same time and travels the same arc.
+
+- The painted shard-mask sheet is kept at `assets/fx/source/shard_masks_sheet.jpg`, with its note beside it. `assets/fx/shard_mask.SOURCE.md` points there.
+- A shard's reach is half its real diagonal (`0.5·hypot(dw, dh)·scale`), so a wide shard fades when that corner meets the shadow. Square shards are unchanged apart from the rounding of the old 0.71 factor.
+- `shadowRadius()` in `js/art/hole.js` is the same size the hole used before v9.7 (`radius·1.3·(1 + gulp·0.08)`, and gulp is 0 under Reduce Motion). The hole still draws with it.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7.1`.
+
 ## v9.7 — Calm skies, the original hole (Nov 11 2026)
 
 The galaxies were too busy. Brian liked the hole the way it was. The only thing wrong with it was the grain cloud that circled it all the time.

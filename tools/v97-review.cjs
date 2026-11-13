@@ -102,7 +102,7 @@ async function bite(page) {
       s.camY = s.playerY;
       const canvas = document.getElementById("game");
       const ctx = canvas.getContext("2d");
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = bh.display.dpr;
       const shadowR = bh.shadowRadius(s.radius, s.gulp, !!(s.settings && s.settings.reduceMotion));
       const cx = (s.viewW / 2) * s.zoom * dpr;
       const cy = (s.viewH / 2) * s.zoom * dpr;

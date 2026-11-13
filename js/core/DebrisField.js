@@ -26,6 +26,11 @@ const MASKS = [1, 2, 3, 4].map(n => "assets/fx/shard_mask_" + n + ".png");
 
 const shardCache = new WeakMap();
 
+/** Half the drawn rectangle's diagonal. Turning the shard does not change it. */
+function footprint(dw, dh, sc) {
+  return 0.5 * Math.hypot(dw, dh || dw) * sc;
+}
+
 function load(src) {
   const img = new Image();
   img.decoding = "async";
@@ -155,13 +160,13 @@ export class DebrisField {
 
   /**
    * Park one piece on the rim at `ang`. The centre sits just outside the
-   * painted shadow by about half the shard (its corner reach) plus a short
-   * gap, so a bite that started inside the shadow still shows.
+   * painted shadow by the shard's true corner (half its diagonal) plus a
+   * short gap, so a bite that started inside the shadow still shows.
    */
   _arm(p, ang, dw, dh, still, shadowR, whole) {
     const zoom = this.state.zoom > 0 ? this.state.zoom : 1;
     const px = 1 / (zoom * (this.dpr || 1));
-    const reach = 0.71 * dw;
+    const reach = footprint(dw, dh, 1);
     p.on = true;
     p.age = 0;
     p.life = still ? LIFE_MIN : LIFE_MIN + Math.floor(Math.random() * (LIFE_MAX - LIFE_MIN + 1));
@@ -188,7 +193,7 @@ export class DebrisField {
     const t = p.life > 0 ? Math.min(1, p.age / p.life) : 1;
     const sc = 1 - 0.46 * t;
     const shadowR = shadowRadius(this.state.radius, this.state.gulp, still);
-    const radial = 0.71 * p.dw * sc;
+    const radial = footprint(p.dw, p.dh, sc);
     const touch = shadowR + radial;
     const remain = (1 - t) * (1 - 0.2 * t);
     const rad = touch + (p.r0 - touch) * remain;
