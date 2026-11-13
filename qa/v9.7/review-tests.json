@@ -9,22 +9,22 @@
     "gone": true,
     "pieces": 4,
     "lives": [
-      50,
-      54,
-      52,
-      57
+      49,
+      57,
+      48,
+      58
     ],
     "lifeMin": 42,
     "lifeMax": 60,
     "fromSprite": true,
-    "drawHits": 154,
+    "drawHits": 151,
     "coreBad": 0,
     "coreSamples": 2941,
-    "frames": 58,
+    "frames": 59,
     "bright": [
-      35,
-      38,
-      38,
+      34,
+      40,
+      34,
       43
     ],
     "brightOk": true,
