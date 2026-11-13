@@ -1,0 +1,159 @@
+{
+  "sha": "751db27a53c8a2ad5cba808b42a4edd217b72338",
+  "ref": "main",
+  "ok": false,
+  "levels": [
+    {
+      "biome": "Planet Nursery",
+      "tier": 3,
+      "far": 992,
+      "phases": [
+        {
+          "name": "right",
+          "checked": 791,
+          "drawn": 882,
+          "worst": 0.871,
+          "bad": {
+            "f": 11,
+            "err": 0.421,
+            "sp": 4.14,
+            "ang": 1.22,
+            "back": 1.641,
+            "orbit": false,
+            "river": false
+          },
+          "ok": false
+        },
+        {
+          "name": "upleft",
+          "checked": 453,
+          "drawn": 494,
+          "worst": 1.156,
+          "bad": {
+            "f": 11,
+            "err": 0.835,
+            "sp": 2.42,
+            "ang": 2.285,
+            "back": 1.449,
+            "orbit": true,
+            "river": false
+          },
+          "ok": false
+        }
+      ],
+      "ok": false
+    },
+    {
+      "biome": "Comet Current",
+      "tier": 3,
+      "far": 2399,
+      "phases": [
+        {
+          "name": "right",
+          "checked": 1411,
+          "drawn": 1580,
+          "worst": 3.141,
+          "bad": {
+            "f": 11,
+            "err": 2.701,
+            "sp": 0.6,
+            "ang": -0.144,
+            "back": -2.845,
+            "orbit": false,
+            "river": false
+          },
+          "ok": false
+        },
+        {
+          "name": "upleft",
+          "checked": 1289,
+          "drawn": 1443,
+          "worst": 1.424,
+          "bad": {
+            "f": 11,
+            "err": 0.379,
+            "sp": 0.62,
+            "ang": -2.483,
+            "back": -2.863,
+            "orbit": false,
+            "river": false
+          },
+          "ok": false
+        }
+      ],
+      "ok": false
+    },
+    {
+      "biome": "Debris Reef",
+      "tier": 2,
+      "far": 0,
+      "phases": [
+        {
+          "name": "drift",
+          "checked": 25,
+          "drawn": 36,
+          "worst": 0.193,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": true
+    }
+  ],
+  "finds": {
+    "gold": {
+      "phases": [
+        {
+          "name": "right",
+          "checked": 128,
+          "worst": 1.4,
+          "bad": {
+            "i": 12,
+            "err": 1.4,
+            "phase": "right"
+          },
+          "ok": false
+        },
+        {
+          "name": "upleft",
+          "checked": 128,
+          "worst": 0.217,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": false
+    },
+    "twin": {
+      "phases": [
+        {
+          "name": "right",
+          "checked": 128,
+          "worst": 1.4,
+          "bad": {
+            "i": 12,
+            "err": 1.4,
+            "phase": "right"
+          },
+          "ok": false
+        },
+        {
+          "name": "upleft",
+          "checked": 128,
+          "worst": 0.217,
+          "bad": null,
+          "ok": true
+        }
+      ],
+      "ok": false
+    }
+  },
+  "zoom": {
+    "compared": 4,
+    "far": 3,
+    "worst": 0,
+    "bad": null,
+    "ok": true
+  },
+  "errs": []
+}

@@ -2,6 +2,13 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.7.3 — Comet tails follow the comet (Nov 13 2026)
+
+A comet's tail was sampling the head relative to the camera, so steering the black hole swung every tail along with the view.
+
+- The tail now samples the comet's own place in the world (`e.x, e.y`, and the same for a find). The player, the camera and zoom are not part of the step. A curve (an orbit, a river, ordinary drift) still turns the tail, because that motion is the comet's. A step longer than the view is still ignored, and a comet that is barely moving keeps its heading.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7.3`.
+
 ## v9.7.2 — Comet tails (Nov 13 2026)
 
 A comet's tail was aimed from its stored velocity. Several motions never write themselves into that velocity, so the tail spun or pointed the wrong way anywhere on screen.
