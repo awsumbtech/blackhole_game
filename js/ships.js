@@ -488,7 +488,7 @@ export function drawShip(ctx, e, sp, sx, sy, d, alpha, breath, still, outlineA =
   ctx.translate(sx, sy);
   ctx.rotate(rot);
   if (flip) ctx.scale(1, -1);
-  if (outlineA > 0.004) drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+  if (outlineA > 0.004) drawBigCatchOutline(ctx, e, sp.c, d, outlineA);
   ctx.globalAlpha = alpha;
   ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
   if (e.steer && !e.consuming) {

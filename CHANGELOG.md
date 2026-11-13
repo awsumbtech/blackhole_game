@@ -6,7 +6,7 @@ All notable changes to Black Hole: Galaxy Eater. Saves carry forward through eve
 
 The gold disc on a big catch was filled in, so it covered the thing you were about to eat.
 
-- That disc is gone. A thin gold outline follows the sprite's own edge, built once from its alpha and drawn behind it. The object's colours stay as they are. While you are nearly its size the outline breathes, slow and calm. Once it fits, the outline holds steady and a little brighter. The old "too big" ring is unchanged.
+- That disc is gone. A thin gold outline follows the sprite's own edge. The pictures are baked (`assets/fx/outline/`, one per silhouette) and the game only draws them. The object's colours stay as they are. While you are nearly its size the outline breathes, slow and calm. Once it fits, the outline holds steady and a little brighter. The old "too big" ring is unchanged.
 - Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7.4`.
 
 ## v9.7.3 — Comet tails follow the comet (Nov 13 2026)

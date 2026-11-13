@@ -1,63 +1,78 @@
 // ─── BigCatchOutline ───
-// One job: a thin gold edge that follows a sprite's own shape.
-// Built once per sprite canvas and size bucket. The sprite itself is not tinted.
-// No arcs, paths or gradients are drawn over the object at frame time.
+// One job: draw the baked gold edge for a big catch.
+// The pictures live in assets/fx/outline/. This file only loads and draws them.
+// Nothing here stamps, fills, blurs or composites a new shape.
 
-const GOLD = "rgb(255, 214, 140)";
-const cache = new Map();
+import { artCache, cacheGen } from "../art/quality.js";
 
-function build(src) {
-  const pad = Math.max(8, Math.round(src.width * 0.07));
-  const w = src.width + pad * 2;
-  const h = src.height + pad * 2;
-  const stamp = document.createElement("canvas");
-  stamp.width = w;
-  stamp.height = h;
-  const g = stamp.getContext("2d");
-  const steps = 16;
-  const rad = Math.max(2, pad * 0.38);
-  for (let i = 0; i < steps; i++) {
-    const a = (i / steps) * Math.PI * 2;
-    g.drawImage(src, pad + Math.cos(a) * rad, pad + Math.sin(a) * rad);
+const SHIP_LOOKS = 8;
+const SHIP_CLASSES = ["drone", "shuttle", "freighter", "cruiser", "capital"];
+const LOOKS = {
+  junk: 10, meteor: 12, comet: 6, moon: 12, planet: 30,
+  star: 12, system: 8, nebula: 10, cluster: 6, galaxy: 10, dust: 8
+};
+
+const images = artCache();
+let genSeen = -1;
+let manifest = null;
+let asked = false;
+
+/** Stable id for a baked silhouette. Colour is not part of it. */
+export function outlineId(e) {
+  if (!e || !e.type) return "";
+  if (e.type === "craft") {
+    const ship = SHIP_CLASSES.indexOf(e.ship) >= 0 ? e.ship : "drone";
+    const look = ((e.look | 0) % SHIP_LOOKS + SHIP_LOOKS) % SHIP_LOOKS;
+    return "craft-" + ship + "-" + (e.wreck ? 1 : 0) + "-" + look;
   }
-  g.globalCompositeOperation = "source-in";
-  g.fillStyle = GOLD;
-  g.fillRect(0, 0, w, h);
-  g.globalCompositeOperation = "destination-out";
-  g.drawImage(src, pad, pad);
-
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  c.__bigCatchOutline = true;
-  const o = c.getContext("2d");
-  o.filter = "blur(" + Math.max(1.2, pad * 0.16).toFixed(2) + "px)";
-  o.drawImage(stamp, 0, 0);
-  return c;
+  if (e.type === "neutron") return "neutron";
+  const n = LOOKS[e.type];
+  if (!n) return "";
+  const look = e.look >= 0 ? ((e.look % n) + n) % n : (((e.seed | 0) >>> 3) % n);
+  const variant = e.type === "planet" ? ((e.variant | 0) % 4 + 4) % 4 : 0;
+  return e.type + "-" + look + "-" + variant;
 }
 
-/** The cached outline for this sprite look. `bucket` is the art size bucket. */
-export function outlineFor(sprite, bucket) {
-  let byB = cache.get(sprite);
-  if (!byB) cache.set(sprite, byB = new Map());
-  let c = byB.get(bucket);
-  if (c) return c;
-  c = build(sprite);
-  byB.set(bucket, c);
-  return c;
+function ensure() {
+  if (genSeen !== cacheGen) genSeen = cacheGen;
+  if (manifest || asked) return;
+  asked = true;
+  fetch("assets/fx/outline/map.json")
+    .then(r => r.ok ? r.json() : null)
+    .then(data => { manifest = data || {}; })
+    .catch(() => { manifest = {}; });
+}
+
+function imageFor(id) {
+  ensure();
+  if (!manifest) return null;
+  const meta = manifest[id];
+  if (!meta) return null;
+  let img = images.get(id);
+  if (!img) {
+    img = new Image();
+    img.decoding = "async";
+    img.src = "assets/fx/outline/" + meta.file;
+    images.set(id, img);
+    return null;
+  }
+  if (!img.complete || !img.naturalWidth) return null;
+  return { img, srcW: meta.srcW };
 }
 
 /**
- * Draw the outline in the caller's current transform, centred, behind the sprite.
- * `drawn` is the sprite's drawn width in the same units as the transform.
+ * Draw the baked outline in the caller's transform, centred on the sprite.
+ * If the picture is not here yet, or this look has none, draw nothing.
  */
-export function drawBigCatchOutline(ctx, sprite, bucket, drawn, alpha) {
-  const c = outlineFor(sprite, bucket);
-  const scale = drawn / sprite.width;
-  const dw = c.width * scale;
-  const dh = c.height * scale;
+export function drawBigCatchOutline(ctx, e, sprite, drawn, alpha) {
+  if (!sprite || !(drawn > 0) || !(alpha > 0)) return;
+  const got = imageFor(outlineId(e));
+  if (!got) return;
+  const scale = drawn / got.srcW;
+  const dw = got.img.naturalWidth * scale;
+  const dh = got.img.naturalHeight * scale;
   const prev = ctx.globalAlpha;
   ctx.globalAlpha = alpha;
-  ctx.drawImage(c, -dw / 2, -dh / 2, dw, dh);
+  ctx.drawImage(got.img, -dw / 2, -dh / 2, dw, dh);
   ctx.globalAlpha = prev;
 }

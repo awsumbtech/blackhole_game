@@ -161,7 +161,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     } else if (rot) {
       ctx.translate(sx, sy);
       ctx.rotate(rot);
-      if (outlineA) drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+      if (outlineA) drawBigCatchOutline(ctx, e, sp.c, d, outlineA);
       ctx.globalAlpha = alpha;
       ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
       ctx.rotate(-rot);
@@ -169,7 +169,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     } else {
       if (outlineA) {
         ctx.translate(sx, sy);
-        drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+        drawBigCatchOutline(ctx, e, sp.c, d, outlineA);
         ctx.translate(-sx, -sy);
         ctx.globalAlpha = alpha;
       }

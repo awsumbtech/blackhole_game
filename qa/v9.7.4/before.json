@@ -22,9 +22,11 @@
     "drawn": 0
   },
   "cacheReused": false,
+  "fromFile": false,
+  "runtimePaint": 0,
   "center": {
     "opaque": 25,
-    "diff": 1281
+    "diff": 1090
   },
   "rotErr": 9,
   "ok": false,
@@ -34,7 +36,8 @@
     "pulse": false,
     "steady": false,
     "clean": false,
-    "turned": false
+    "turned": false,
+    "fromFile": false
   },
   "errs": []
 }

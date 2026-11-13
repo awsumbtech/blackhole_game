@@ -20,7 +20,7 @@ function skinRow(state) {
 
 // v6 codex entries for the new gentle things
 const V6_CODEX = [
-  ["255, 214, 140", "Golden halo", "A thin gold outline around the edge of something big means you're nearly its size. When the outline turns steady, it fits: drift in for a slow, satisfying big catch."],
+  ["255, 214, 140", "Golden outline", "A thin gold outline around the edge of something big means you're nearly its size. When the outline turns steady, it fits: drift in for a slow, satisfying big catch."],
   ["255, 240, 200", "Shimmer (discovery)", "Rare finds hide in every galaxy: a golden comet, a lost probe, a whale-shaped nebula. A faint glow at the screen edge (and your wisp leaning that way, once it's with you) means one is near. Drift into it to write it in your logbook."],
   ["150, 235, 215", "Your companion wisp", "Light Companion on the constellation after your first collapse and a little wisp joins you for good. It witnesses your growth: when you grow into a new scale it glows, widens its orbit, and points once toward food your new size. It twirls after a big catch or a find, rests in breather galaxies, and in Zen breathes beside you (in for 4, out for 6). Rename it in Settings."],
   ["200, 210, 255", "A new star", "When you outgrow a galaxy, its star quietly joins your sky and the next galaxy opens around you. Your star map is in the pause menu and on the title screen."],

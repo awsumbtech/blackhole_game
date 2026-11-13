@@ -80,7 +80,7 @@ export const PERKS = [
     ownedLine: "Yours, permanently. A little light will find you as your next run begins.",
     desc: "A little wisp joins you for good. It glows and widens its orbit when you grow into a new scale, points once toward food your new size, and in Zen breathes beside you" },
   { id: "a2", b: "appetite", t: 1, name: "Hungry Wisp", req: "aw", desc: "Your companion nudges a crumb into you every few seconds" },
-  { id: "a3a", b: "appetite", t: 2, name: "Big Appetite", desc: "Big catches give 60% more, and the golden halo shows sooner" },
+  { id: "a3a", b: "appetite", t: 2, name: "Big Appetite", desc: "Big catches give 60% more, and the golden outline shows sooner" },
   { id: "a3b", b: "appetite", t: 2, name: "Momentum", desc: "Combos add up to +40% (was +25%), and the combo window is 40% longer" },
   { id: "a4", b: "appetite", t: 3, name: "Feast", desc: "Every bite +20%" },
   { id: "a5a", b: "appetite", t: 4, name: "Second Helping", desc: "Power-ups last 40% longer and show up 25% more often" },

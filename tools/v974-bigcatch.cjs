@@ -53,9 +53,11 @@ async function run(page) {
       fill: proto.fill,
       draw: proto.drawImage
     };
-    const bag = { radials: 0, arcFills: 0, outlines: [] };
+    const bag = { radials: 0, arcFills: 0, outlines: [], filter: 0, comp: 0, watch: false };
+    const compDesc = Object.getOwnPropertyDescriptor(proto, "globalCompositeOperation");
+    const filterDesc = Object.getOwnPropertyDescriptor(proto, "filter");
     proto.createRadialGradient = function () {
-      if (this.canvas === canvas) bag.radials++;
+      if (bag.watch && this.canvas === canvas) bag.radials++;
       return orig.grad.apply(this, arguments);
     };
     proto.beginPath = function () {
@@ -67,16 +69,36 @@ async function run(page) {
       return orig.arc.apply(this, arguments);
     };
     proto.fill = function () {
-      if (this.canvas === canvas && this.__arc) bag.arcFills++;
+      if (bag.watch && this.canvas === canvas && this.__arc) bag.arcFills++;
       return orig.fill.apply(this, arguments);
     };
     proto.drawImage = function (img) {
-      if (this.canvas === canvas && img && img.__bigCatchOutline) {
+      if (bag.watch && this.canvas === canvas && img instanceof HTMLImageElement && /assets\/fx\/outline\//.test(img.src || "")) {
         const m = this.getTransform();
-        bag.outlines.push({ img, alpha: this.globalAlpha, ang: Math.atan2(m.b, m.a) });
+        bag.outlines.push({ img, src: img.src, alpha: this.globalAlpha, ang: Math.atan2(m.b, m.a) });
       }
       return orig.draw.apply(this, arguments);
     };
+    if (compDesc && compDesc.set) {
+      Object.defineProperty(proto, "globalCompositeOperation", {
+        configurable: true,
+        get() { return compDesc.get.call(this); },
+        set(v) {
+          if (bag.watch && (v === "source-in" || v === "destination-out")) bag.comp++;
+          compDesc.set.call(this, v);
+        }
+      });
+    }
+    if (filterDesc && filterDesc.set) {
+      Object.defineProperty(proto, "filter", {
+        configurable: true,
+        get() { return filterDesc.get.call(this); },
+        set(v) {
+          if (bag.watch && v && v !== "none") bag.filter++;
+          filterDesc.set.call(this, v);
+        }
+      });
+    }
 
     const eat = 0.88;
     const nearlyP = 0.90 * e.radius * eat;
@@ -85,46 +107,62 @@ async function run(page) {
       bag.radials = 0;
       bag.arcFills = 0;
       bag.outlines = [];
+      bag.filter = 0;
+      bag.comp = 0;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, W, H);
       render.drawEntities(ctx, [e], W, H, 0, 0, playerR, 0, eat, 1, 1, breath, W / 2, H / 2, true, 1);
+      const o = bag.outlines[0];
       return {
         radials: bag.radials,
         arcFills: bag.arcFills,
+        filter: bag.filter,
+        comp: bag.comp,
         n: bag.outlines.length,
-        alpha: bag.outlines.length ? +bag.outlines[0].alpha.toFixed(4) : null,
-        ang: bag.outlines.length ? +bag.outlines[0].ang.toFixed(4) : null,
-        id: bag.outlines.length ? bag.outlines[0].img : null
+        alpha: o ? +o.alpha.toFixed(4) : null,
+        ang: o ? +o.ang.toFixed(4) : null,
+        id: o ? o.img : null,
+        src: o ? o.src : ""
       };
     };
 
     e.bigFish = false;
     draw(nearlyP, 0.5);
+    bag.watch = true;
+    e.bigFish = true;
+    let ready = draw(nearlyP, 0.5);
+    for (let i = 0; i < 40 && !ready.n; i++) {
+      await new Promise(r => setTimeout(r, 40));
+      ready = draw(nearlyP, 0.5);
+    }
+    e.bigFish = false;
+    draw(nearlyP, 0.5);
     const bare = ctx.getImageData(W / 2 - 2, H / 2 - 2, 5, 5).data;
     e.bigFish = true;
-    const cover = (() => {
-      draw(nearlyP, 0.5);
-      const on = ctx.getImageData(W / 2 - 2, H / 2 - 2, 5, 5).data;
-      let diff = 0, opaque = 0;
-      for (let i = 0; i < bare.length; i += 4) {
-        if (bare[i + 3] < 200) continue;
-        opaque++;
-        diff += Math.abs(bare[i] - on[i]) + Math.abs(bare[i + 1] - on[i + 1]) + Math.abs(bare[i + 2] - on[i + 2]);
-      }
-      return { opaque, diff };
-    })();
+    draw(nearlyP, 0.5);
+    const on = ctx.getImageData(W / 2 - 2, H / 2 - 2, 5, 5).data;
+    let diff = 0, opaque = 0;
+    for (let i = 0; i < bare.length; i += 4) {
+      if (bare[i + 3] < 255) continue;
+      opaque++;
+      diff += Math.abs(bare[i] - on[i]) + Math.abs(bare[i + 1] - on[i + 1]) + Math.abs(bare[i + 2] - on[i + 2]);
+    }
+    const cover = { opaque, diff };
 
     const n0 = draw(nearlyP, 0);
     const n1 = draw(nearlyP, 1);
     const f0 = draw(fitsP, 0);
     const f1 = draw(fitsP, 1);
     const same = n0.id && n0.id === n1.id && n0.id === f0.id && f0.id === f1.id;
+    const fromFile = !!(n0.src && n0.src.indexOf("assets/fx/outline/") >= 0 && n0.id instanceof HTMLImageElement);
 
     proto.createRadialGradient = orig.grad;
     proto.arc = orig.arc;
     proto.beginPath = orig.begin;
     proto.fill = orig.fill;
     proto.drawImage = orig.draw;
+    if (compDesc && compDesc.set) Object.defineProperty(proto, "globalCompositeOperation", compDesc);
+    if (filterDesc && filterDesc.set) Object.defineProperty(proto, "filter", filterDesc);
 
     const angErr = n0.ang == null ? 9 : Math.abs(Math.atan2(Math.sin(n0.ang - e.rotation), Math.cos(n0.ang - e.rotation)));
     const result = {
@@ -133,18 +171,20 @@ async function run(page) {
       nearly: { a0: n0.alpha, a1: n1.alpha, radials: n0.radials + n1.radials, arcFills: n0.arcFills + n1.arcFills, drawn: n0.n + n1.n },
       fits: { a0: f0.alpha, a1: f1.alpha, radials: f0.radials + f1.radials, arcFills: f0.arcFills + f1.arcFills, drawn: f0.n + f1.n },
       cacheReused: !!same,
+      fromFile,
+      runtimePaint: n0.filter + n1.filter + f0.filter + f1.filter + n0.comp + n1.comp + f0.comp + f1.comp,
       center: cover,
       rotErr: +angErr.toFixed(4)
     };
     const noDisc = result.nearly.radials === 0 && result.nearly.arcFills === 0
       && result.fits.radials === 0 && result.fits.arcFills === 0;
-    const outlined = result.nearly.drawn >= 2 && result.fits.drawn >= 2 && result.cacheReused;
+    const outlined = result.nearly.drawn >= 2 && result.fits.drawn >= 2 && result.cacheReused && fromFile && result.runtimePaint === 0;
     const pulse = n0.alpha != null && n1.alpha != null && Math.abs(n0.alpha - n1.alpha) > 0.05;
     const steady = f0.alpha != null && f1.alpha != null && Math.abs(f0.alpha - f1.alpha) < 0.001 && f0.alpha > n0.alpha && f0.alpha > n1.alpha;
     const clean = cover.opaque >= 4 && cover.diff === 0;
     const turned = angErr < 0.05;
     result.ok = noDisc && outlined && pulse && steady && clean && turned;
-    result.checks = { noDisc, outlined, pulse, steady, clean, turned };
+    result.checks = { noDisc, outlined, pulse, steady, clean, turned, fromFile };
     return result;
   });
 }

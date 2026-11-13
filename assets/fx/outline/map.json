@@ -1,0 +1,1437 @@
+{
+  "cluster-0-0": {
+    "file": "cluster-0-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "cluster-1-0": {
+    "file": "cluster-1-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "cluster-2-0": {
+    "file": "cluster-2-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "cluster-3-0": {
+    "file": "cluster-3-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "cluster-4-0": {
+    "file": "cluster-4-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "cluster-5-0": {
+    "file": "cluster-5-0.png",
+    "srcW": 325,
+    "srcH": 325
+  },
+  "comet-0-0": {
+    "file": "comet-0-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "comet-1-0": {
+    "file": "comet-1-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "comet-2-0": {
+    "file": "comet-2-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "comet-3-0": {
+    "file": "comet-3-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "comet-4-0": {
+    "file": "comet-4-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "comet-5-0": {
+    "file": "comet-5-0.png",
+    "srcW": 393,
+    "srcH": 393
+  },
+  "craft-capital-0-0": {
+    "file": "craft-capital-0-0.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-1": {
+    "file": "craft-capital-0-1.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-2": {
+    "file": "craft-capital-0-2.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-3": {
+    "file": "craft-capital-0-3.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-4": {
+    "file": "craft-capital-0-4.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-5": {
+    "file": "craft-capital-0-5.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-6": {
+    "file": "craft-capital-0-6.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-0-7": {
+    "file": "craft-capital-0-7.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-0": {
+    "file": "craft-capital-1-0.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-1": {
+    "file": "craft-capital-1-1.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-2": {
+    "file": "craft-capital-1-2.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-3": {
+    "file": "craft-capital-1-3.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-4": {
+    "file": "craft-capital-1-4.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-5": {
+    "file": "craft-capital-1-5.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-6": {
+    "file": "craft-capital-1-6.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-capital-1-7": {
+    "file": "craft-capital-1-7.png",
+    "srcW": 266,
+    "srcH": 266
+  },
+  "craft-cruiser-0-0": {
+    "file": "craft-cruiser-0-0.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-1": {
+    "file": "craft-cruiser-0-1.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-2": {
+    "file": "craft-cruiser-0-2.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-3": {
+    "file": "craft-cruiser-0-3.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-4": {
+    "file": "craft-cruiser-0-4.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-5": {
+    "file": "craft-cruiser-0-5.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-6": {
+    "file": "craft-cruiser-0-6.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-0-7": {
+    "file": "craft-cruiser-0-7.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-0": {
+    "file": "craft-cruiser-1-0.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-1": {
+    "file": "craft-cruiser-1-1.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-2": {
+    "file": "craft-cruiser-1-2.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-3": {
+    "file": "craft-cruiser-1-3.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-4": {
+    "file": "craft-cruiser-1-4.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-5": {
+    "file": "craft-cruiser-1-5.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-6": {
+    "file": "craft-cruiser-1-6.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-cruiser-1-7": {
+    "file": "craft-cruiser-1-7.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-drone-0-0": {
+    "file": "craft-drone-0-0.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-1": {
+    "file": "craft-drone-0-1.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-2": {
+    "file": "craft-drone-0-2.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-3": {
+    "file": "craft-drone-0-3.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-4": {
+    "file": "craft-drone-0-4.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-5": {
+    "file": "craft-drone-0-5.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-6": {
+    "file": "craft-drone-0-6.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-0-7": {
+    "file": "craft-drone-0-7.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-0": {
+    "file": "craft-drone-1-0.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-1": {
+    "file": "craft-drone-1-1.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-2": {
+    "file": "craft-drone-1-2.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-3": {
+    "file": "craft-drone-1-3.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-4": {
+    "file": "craft-drone-1-4.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-5": {
+    "file": "craft-drone-1-5.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-6": {
+    "file": "craft-drone-1-6.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-drone-1-7": {
+    "file": "craft-drone-1-7.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-freighter-0-0": {
+    "file": "craft-freighter-0-0.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-1": {
+    "file": "craft-freighter-0-1.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-2": {
+    "file": "craft-freighter-0-2.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-3": {
+    "file": "craft-freighter-0-3.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-4": {
+    "file": "craft-freighter-0-4.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-5": {
+    "file": "craft-freighter-0-5.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-6": {
+    "file": "craft-freighter-0-6.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-0-7": {
+    "file": "craft-freighter-0-7.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-0": {
+    "file": "craft-freighter-1-0.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-1": {
+    "file": "craft-freighter-1-1.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-2": {
+    "file": "craft-freighter-1-2.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-3": {
+    "file": "craft-freighter-1-3.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-4": {
+    "file": "craft-freighter-1-4.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-5": {
+    "file": "craft-freighter-1-5.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-6": {
+    "file": "craft-freighter-1-6.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-freighter-1-7": {
+    "file": "craft-freighter-1-7.png",
+    "srcW": 257,
+    "srcH": 257
+  },
+  "craft-shuttle-0-0": {
+    "file": "craft-shuttle-0-0.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-1": {
+    "file": "craft-shuttle-0-1.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-2": {
+    "file": "craft-shuttle-0-2.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-3": {
+    "file": "craft-shuttle-0-3.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-4": {
+    "file": "craft-shuttle-0-4.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-5": {
+    "file": "craft-shuttle-0-5.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-6": {
+    "file": "craft-shuttle-0-6.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-0-7": {
+    "file": "craft-shuttle-0-7.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-0": {
+    "file": "craft-shuttle-1-0.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-1": {
+    "file": "craft-shuttle-1-1.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-2": {
+    "file": "craft-shuttle-1-2.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-3": {
+    "file": "craft-shuttle-1-3.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-4": {
+    "file": "craft-shuttle-1-4.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-5": {
+    "file": "craft-shuttle-1-5.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-6": {
+    "file": "craft-shuttle-1-6.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "craft-shuttle-1-7": {
+    "file": "craft-shuttle-1-7.png",
+    "srcW": 249,
+    "srcH": 249
+  },
+  "galaxy-0-0": {
+    "file": "galaxy-0-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-1-0": {
+    "file": "galaxy-1-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-2-0": {
+    "file": "galaxy-2-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-3-0": {
+    "file": "galaxy-3-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-4-0": {
+    "file": "galaxy-4-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-5-0": {
+    "file": "galaxy-5-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-6-0": {
+    "file": "galaxy-6-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-7-0": {
+    "file": "galaxy-7-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-8-0": {
+    "file": "galaxy-8-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "galaxy-9-0": {
+    "file": "galaxy-9-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "junk-0-0": {
+    "file": "junk-0-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-1-0": {
+    "file": "junk-1-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-2-0": {
+    "file": "junk-2-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-3-0": {
+    "file": "junk-3-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-4-0": {
+    "file": "junk-4-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-5-0": {
+    "file": "junk-5-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-6-0": {
+    "file": "junk-6-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-7-0": {
+    "file": "junk-7-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-8-0": {
+    "file": "junk-8-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "junk-9-0": {
+    "file": "junk-9-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "meteor-0-0": {
+    "file": "meteor-0-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-1-0": {
+    "file": "meteor-1-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-10-0": {
+    "file": "meteor-10-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-11-0": {
+    "file": "meteor-11-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-2-0": {
+    "file": "meteor-2-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-3-0": {
+    "file": "meteor-3-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-4-0": {
+    "file": "meteor-4-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-5-0": {
+    "file": "meteor-5-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-6-0": {
+    "file": "meteor-6-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-7-0": {
+    "file": "meteor-7-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-8-0": {
+    "file": "meteor-8-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "meteor-9-0": {
+    "file": "meteor-9-0.png",
+    "srcW": 240,
+    "srcH": 240
+  },
+  "moon-0-0": {
+    "file": "moon-0-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-1-0": {
+    "file": "moon-1-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-10-0": {
+    "file": "moon-10-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-11-0": {
+    "file": "moon-11-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-2-0": {
+    "file": "moon-2-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-3-0": {
+    "file": "moon-3-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-4-0": {
+    "file": "moon-4-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-5-0": {
+    "file": "moon-5-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-6-0": {
+    "file": "moon-6-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-7-0": {
+    "file": "moon-7-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-8-0": {
+    "file": "moon-8-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "moon-9-0": {
+    "file": "moon-9-0.png",
+    "srcW": 223,
+    "srcH": 223
+  },
+  "nebula-0-0": {
+    "file": "nebula-0-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-1-0": {
+    "file": "nebula-1-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-2-0": {
+    "file": "nebula-2-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-3-0": {
+    "file": "nebula-3-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-4-0": {
+    "file": "nebula-4-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-5-0": {
+    "file": "nebula-5-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-6-0": {
+    "file": "nebula-6-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-7-0": {
+    "file": "nebula-7-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-8-0": {
+    "file": "nebula-8-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "nebula-9-0": {
+    "file": "nebula-9-0.png",
+    "srcW": 300,
+    "srcH": 300
+  },
+  "neutron": {
+    "file": "neutron.png",
+    "srcW": 529,
+    "srcH": 529
+  },
+  "planet-0-0": {
+    "file": "planet-0-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-0-1": {
+    "file": "planet-0-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-0-2": {
+    "file": "planet-0-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-0-3": {
+    "file": "planet-0-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-1-0": {
+    "file": "planet-1-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-1-1": {
+    "file": "planet-1-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-1-2": {
+    "file": "planet-1-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-1-3": {
+    "file": "planet-1-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-10-0": {
+    "file": "planet-10-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-10-1": {
+    "file": "planet-10-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-10-2": {
+    "file": "planet-10-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-10-3": {
+    "file": "planet-10-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-11-0": {
+    "file": "planet-11-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-11-1": {
+    "file": "planet-11-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-11-2": {
+    "file": "planet-11-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-11-3": {
+    "file": "planet-11-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-12-0": {
+    "file": "planet-12-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-12-1": {
+    "file": "planet-12-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-12-2": {
+    "file": "planet-12-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-12-3": {
+    "file": "planet-12-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-13-0": {
+    "file": "planet-13-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-13-1": {
+    "file": "planet-13-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-13-2": {
+    "file": "planet-13-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-13-3": {
+    "file": "planet-13-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-14-0": {
+    "file": "planet-14-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-14-1": {
+    "file": "planet-14-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-14-2": {
+    "file": "planet-14-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-14-3": {
+    "file": "planet-14-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-15-0": {
+    "file": "planet-15-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-15-1": {
+    "file": "planet-15-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-15-2": {
+    "file": "planet-15-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-15-3": {
+    "file": "planet-15-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-16-0": {
+    "file": "planet-16-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-16-1": {
+    "file": "planet-16-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-16-2": {
+    "file": "planet-16-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-16-3": {
+    "file": "planet-16-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-17-0": {
+    "file": "planet-17-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-17-1": {
+    "file": "planet-17-1.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-17-2": {
+    "file": "planet-17-2.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-17-3": {
+    "file": "planet-17-3.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-18-0": {
+    "file": "planet-18-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-18-1": {
+    "file": "planet-18-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-18-2": {
+    "file": "planet-18-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-18-3": {
+    "file": "planet-18-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-19-0": {
+    "file": "planet-19-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-19-1": {
+    "file": "planet-19-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-19-2": {
+    "file": "planet-19-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-19-3": {
+    "file": "planet-19-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-2-0": {
+    "file": "planet-2-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-2-1": {
+    "file": "planet-2-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-2-2": {
+    "file": "planet-2-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-2-3": {
+    "file": "planet-2-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-20-0": {
+    "file": "planet-20-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-20-1": {
+    "file": "planet-20-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-20-2": {
+    "file": "planet-20-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-20-3": {
+    "file": "planet-20-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-21-0": {
+    "file": "planet-21-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-21-1": {
+    "file": "planet-21-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-21-2": {
+    "file": "planet-21-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-21-3": {
+    "file": "planet-21-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-22-0": {
+    "file": "planet-22-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-22-1": {
+    "file": "planet-22-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-22-2": {
+    "file": "planet-22-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-22-3": {
+    "file": "planet-22-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-23-0": {
+    "file": "planet-23-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-23-1": {
+    "file": "planet-23-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-23-2": {
+    "file": "planet-23-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-23-3": {
+    "file": "planet-23-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-24-0": {
+    "file": "planet-24-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-24-1": {
+    "file": "planet-24-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-24-2": {
+    "file": "planet-24-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-24-3": {
+    "file": "planet-24-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-25-0": {
+    "file": "planet-25-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-25-1": {
+    "file": "planet-25-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-25-2": {
+    "file": "planet-25-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-25-3": {
+    "file": "planet-25-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-26-0": {
+    "file": "planet-26-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-26-1": {
+    "file": "planet-26-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-26-2": {
+    "file": "planet-26-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-26-3": {
+    "file": "planet-26-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-27-0": {
+    "file": "planet-27-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-27-1": {
+    "file": "planet-27-1.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-27-2": {
+    "file": "planet-27-2.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-27-3": {
+    "file": "planet-27-3.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-28-0": {
+    "file": "planet-28-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-28-1": {
+    "file": "planet-28-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-28-2": {
+    "file": "planet-28-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-28-3": {
+    "file": "planet-28-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-29-0": {
+    "file": "planet-29-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-29-1": {
+    "file": "planet-29-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-29-2": {
+    "file": "planet-29-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-29-3": {
+    "file": "planet-29-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-3-0": {
+    "file": "planet-3-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-3-1": {
+    "file": "planet-3-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-3-2": {
+    "file": "planet-3-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-3-3": {
+    "file": "planet-3-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-4-0": {
+    "file": "planet-4-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-4-1": {
+    "file": "planet-4-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-4-2": {
+    "file": "planet-4-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-4-3": {
+    "file": "planet-4-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-5-0": {
+    "file": "planet-5-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-5-1": {
+    "file": "planet-5-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-5-2": {
+    "file": "planet-5-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-5-3": {
+    "file": "planet-5-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-6-0": {
+    "file": "planet-6-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-6-1": {
+    "file": "planet-6-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-6-2": {
+    "file": "planet-6-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-6-3": {
+    "file": "planet-6-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-7-0": {
+    "file": "planet-7-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-7-1": {
+    "file": "planet-7-1.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-7-2": {
+    "file": "planet-7-2.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-7-3": {
+    "file": "planet-7-3.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-8-0": {
+    "file": "planet-8-0.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-8-1": {
+    "file": "planet-8-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-8-2": {
+    "file": "planet-8-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-8-3": {
+    "file": "planet-8-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-9-0": {
+    "file": "planet-9-0.png",
+    "srcW": 351,
+    "srcH": 351
+  },
+  "planet-9-1": {
+    "file": "planet-9-1.png",
+    "srcW": 283,
+    "srcH": 283
+  },
+  "planet-9-2": {
+    "file": "planet-9-2.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "planet-9-3": {
+    "file": "planet-9-3.png",
+    "srcW": 232,
+    "srcH": 232
+  },
+  "star-0-0": {
+    "file": "star-0-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-1-0": {
+    "file": "star-1-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-10-0": {
+    "file": "star-10-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-11-0": {
+    "file": "star-11-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-2-0": {
+    "file": "star-2-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-3-0": {
+    "file": "star-3-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-4-0": {
+    "file": "star-4-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-5-0": {
+    "file": "star-5-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-6-0": {
+    "file": "star-6-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-7-0": {
+    "file": "star-7-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-8-0": {
+    "file": "star-8-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "star-9-0": {
+    "file": "star-9-0.png",
+    "srcW": 462,
+    "srcH": 462
+  },
+  "system-0-0": {
+    "file": "system-0-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-1-0": {
+    "file": "system-1-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-2-0": {
+    "file": "system-2-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-3-0": {
+    "file": "system-3-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-4-0": {
+    "file": "system-4-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-5-0": {
+    "file": "system-5-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-6-0": {
+    "file": "system-6-0.png",
+    "srcW": 427,
+    "srcH": 427
+  },
+  "system-7-0": {
+    "file": "system-7-0.png",
+    "srcW": 427,
+    "srcH": 427
+  }
+}

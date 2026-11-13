@@ -1,11 +1,11 @@
 {
-  "sha": "58eb8258a28cdeb35b414c9a0788e5f5b24cf5e2",
+  "sha": "pending",
   "ref": "branch",
   "galaxy": 4,
   "biome": "Ruined Armada",
   "tier": 3,
   "tierName": "Comets & Ice",
-  "ship": "cruiser",
+  "ship": "freighter",
   "wreck": true,
   "nearly": {
     "a0": 0.4496,
@@ -22,8 +22,10 @@
     "drawn": 2
   },
   "cacheReused": true,
+  "fromFile": true,
+  "runtimePaint": 0,
   "center": {
-    "opaque": 25,
+    "opaque": 18,
     "diff": 0
   },
   "rotErr": 0,
@@ -34,7 +36,8 @@
     "pulse": true,
     "steady": true,
     "clean": true,
-    "turned": true
+    "turned": true,
+    "fromFile": true
   },
   "errs": []
 }
