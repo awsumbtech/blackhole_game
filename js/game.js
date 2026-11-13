@@ -22,7 +22,7 @@ import {
 } from "./core/index.js";
 
 const $ = id => document.getElementById(id);
-const VERSION = "9.7.3";
+const VERSION = "9.7.4";
 
 const display = new Display($("game"), $("game-container"));
 const state = createState();

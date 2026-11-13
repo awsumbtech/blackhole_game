@@ -5,16 +5,26 @@ import { drawShip } from "./ships.js";
 
 import { spriteFor, tailFor, heatFor, drawBlackHoleArt, getArtQuality } from "./art.js";
 import { CometTail } from "./core/CometTail.js";
+import { drawBigCatchOutline } from "./core/BigCatchOutline.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 
 // "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
 let TOO_BIG_RGB = "240, 130, 140", TOO_BIG_DOT = "rgba(240, 130, 140, 0.8)";
-// v6 big-catch halo: warm gold; starts once you're 82% of the way to its size
-const HALO_RGB = "255, 214, 140";
+// v6 big-catch cue: starts once you're 82% of the way to its size (a3a can lower it)
 let BIG_HALO_FROM = 0.82;
 export function setHaloFrom(v) { BIG_HALO_FROM = v; }
+
+/** Nearly: a calm pulse on the breath. Fits: steady, and a little brighter. */
+function bigCatchAlpha(nearQ, tooBig, breath, spawnAlpha, e) {
+  if (!e.bigFish || e.consuming || !(nearQ > BIG_HALO_FROM)) return 0;
+  const ready = !tooBig;
+  const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
+  const pulse = ready ? 1 : (0.72 + 0.28 * breath);
+  const bright = ready ? 1.18 : 1;
+  return Math.min(1, (0.5 + 0.28 * k) * pulse * bright * spawnAlpha);
+}
 export function setSoftPalette(on) {
   TOO_BIG_RGB = on ? "235, 185, 110" : "240, 130, 140";
   TOO_BIG_DOT = `rgba(${TOO_BIG_RGB}, 0.8)`;
@@ -127,9 +137,12 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       d *= 0.98 + breath * 0.04;
     }
     ctx.globalAlpha = alpha;
+    const tooBig = playerRadius <= e.radius * eatRatio;
+    const nearQ = playerRadius / (e.radius * eatRatio);
+    const outlineA = bigCatchAlpha(nearQ, tooBig, breath, spawnAlpha, e);
     if (e.type === "craft") {
       // v9.4: ships draw themselves (heading, engine glow, break-apart)
-      drawShip(ctx, e, sp, sx, sy, sp.k * e.radius, spawnAlpha, breath, still);
+      drawShip(ctx, e, sp, sx, sy, sp.k * e.radius, spawnAlpha, breath, still, outlineA);
     } else if (e.consuming && e.swallow && !still) {
       // v8.1 spaghettification: a big catch stretches toward the hole and glows as it goes in
       const p = e.consumeProgress, q = p * p * (3 - 2 * p);
@@ -148,10 +161,18 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     } else if (rot) {
       ctx.translate(sx, sy);
       ctx.rotate(rot);
+      if (outlineA) drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+      ctx.globalAlpha = alpha;
       ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
       ctx.rotate(-rot);
       ctx.translate(-sx, -sy);
     } else {
+      if (outlineA) {
+        ctx.translate(sx, sy);
+        drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+        ctx.translate(-sx, -sy);
+        ctx.globalAlpha = alpha;
+      }
       ctx.drawImage(sp.c, sx - d / 2, sy - d / 2, d, d);
     }
     if (heat > 0.05) {
@@ -163,24 +184,6 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.drawImage(hs.c, -hd / 2, -hd / 2, hd, hd);
       ctx.rotate(-hang); ctx.translate(-sx, -sy);
       ctx.globalCompositeOperation = "source-over";
-    }
-
-    // v6 big catches: a soft gold halo as you near something's size, steady once it fits
-    const tooBig = playerRadius <= e.radius * eatRatio;
-    const nearQ = playerRadius / (e.radius * eatRatio);
-    if (e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
-      const ready = !tooBig;
-      const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
-      const a = (0.14 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
-      const hr = e.radius * (ready ? 1.65 : 1.35 + 0.25 * k);
-      const g = ctx.createRadialGradient(sx, sy, e.radius * 0.85, sx, sy, hr);
-      g.addColorStop(0, `rgba(${HALO_RGB}, ${a.toFixed(3)})`);
-      g.addColorStop(1, `rgba(${HALO_RGB}, 0)`);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(sx, sy, hr, 0, TAU);
-      ctx.fill();
     }
 
     if (tooBig && !e.consuming) {

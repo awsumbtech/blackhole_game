@@ -1,0 +1,40 @@
+{
+  "sha": "e93b0f25ddc39e12fd9e52f9b3678d28fe701b5d",
+  "ref": "main",
+  "galaxy": 4,
+  "biome": "Ruined Armada",
+  "tier": 3,
+  "tierName": "Comets & Ice",
+  "ship": "cruiser",
+  "wreck": true,
+  "nearly": {
+    "a0": null,
+    "a1": null,
+    "radials": 2,
+    "arcFills": 2,
+    "drawn": 0
+  },
+  "fits": {
+    "a0": null,
+    "a1": null,
+    "radials": 2,
+    "arcFills": 2,
+    "drawn": 0
+  },
+  "cacheReused": false,
+  "center": {
+    "opaque": 25,
+    "diff": 1281
+  },
+  "rotErr": 9,
+  "ok": false,
+  "checks": {
+    "noDisc": false,
+    "outlined": false,
+    "pulse": false,
+    "steady": false,
+    "clean": false,
+    "turned": false
+  },
+  "errs": []
+}

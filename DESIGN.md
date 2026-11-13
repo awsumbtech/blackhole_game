@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.7.3** (v9.7.2, plus comet tails that follow the comet itself, not the camera)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7.3"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.7.4** (v9.7.3, plus a gold outline on big catches instead of a filled disc)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7.4"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -372,6 +372,7 @@ js/core/
   Backdrop.js           v9.7 painted galaxy sky (one JPG per biome, no parallax)
   DebrisField.js        v9.7 pieces of the eaten sprite, only while a bite is in flight
   CometTail.js          aims a comet's existing tail sprite behind its own travel in the world
+  BigCatchOutline.js    v9.7.4 thin gold edge of a big catch, cached from the sprite's alpha
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/art.js               thin index: same exports as before (spriteFor, drawBlackHoleArt, heatFor, tailFor...)
@@ -442,6 +443,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.7.4 Big-catch outline (Nov 13 2026):** the filled gold disc on a big catch is gone. `BigCatchOutline` builds one gold edge from the sprite's own alpha and draws it behind the sprite, so the object stays visible and untinted. Nearly its size, the edge breathes. Once it fits, the edge is steady and a little brighter. The too-big ring is unchanged. Cache `blackhole-v9.7.4`.
 - **v9.7.3 Comet tails follow the comet (Nov 13 2026):** v9.7.2 sampled the head relative to the camera, so the player's steering became part of every tail. The tail now samples world position only. It is independent of the player and the camera. An orbit, a river or drift still turns it, because that is the comet's own step. Cache `blackhole-v9.7.3`.
 - **v9.7.2 Comet tails (Nov 13 2026):** `CometTail` owns the heading. Over 60s the old `atan2(-vy, -vx)` diverged wherever the on-screen step was not the stored velocity: Nursery orbits (velocity cleared, then a fresh speck of drift, so the tail jumped at random far from the hole), Comet Current (the river is added to position), and a drifting camera. The Golden Comet tail was a clock (`time * 0.0002`) and now uses the same object. Cache `blackhole-v9.7.2`.
 - **v9.7.1 Shard bookkeeping (Nov 13 2026):** the four P3 cleanups from the v9.7 review are done. The mask source sheet is committed (`assets/fx/source/shard_masks_sheet.jpg`). Shard reach uses half the true diagonal. The review script reads `display.dpr`. `shadowRadius()` stays, because it is the pre-v9.7 shadow size and the hole draws with it. Cache `blackhole-v9.7.1`. Orbit speed and timing were not touched.

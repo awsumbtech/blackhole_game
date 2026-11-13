@@ -12,6 +12,8 @@
 // torn plates with ribs showing and, on capital wrecks, a broken spine.
 // Everything paints once into the art cache; per frame only stamps.
 
+import { drawBigCatchOutline } from "./core/BigCatchOutline.js";
+
 const TAU = Math.PI * 2;
 
 // Classes, small to huge. Ships only appear while craft is food-sized, so a
@@ -463,7 +465,7 @@ function piecesFor(sp) {
  * flip only swaps which edge is lit). Eaten ships split into plates that
  * spiral softly into the hole.
  */
-export function drawShip(ctx, e, sp, sx, sy, d, alpha, breath, still) {
+export function drawShip(ctx, e, sp, sx, sy, d, alpha, breath, still, outlineA = 0) {
   let rot = e.rotation;
   if (e.consuming && !still) {
     const p = e.consumeProgress, q = p * p * (3 - 2 * p);
@@ -486,6 +488,8 @@ export function drawShip(ctx, e, sp, sx, sy, d, alpha, breath, still) {
   ctx.translate(sx, sy);
   ctx.rotate(rot);
   if (flip) ctx.scale(1, -1);
+  if (outlineA > 0.004) drawBigCatchOutline(ctx, sp.c, sp.b, d, outlineA);
+  ctx.globalAlpha = alpha;
   ctx.drawImage(sp.c, -d / 2, -d / 2, d, d);
   if (e.steer && !e.consuming) {
     // engine glow: dim, breathing slowly with the galaxy (never flickers)

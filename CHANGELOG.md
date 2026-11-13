@@ -2,6 +2,13 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.7.4 — Big-catch outline (Nov 13 2026)
+
+The gold disc on a big catch was filled in, so it covered the thing you were about to eat.
+
+- That disc is gone. A thin gold outline follows the sprite's own edge, built once from its alpha and drawn behind it. The object's colours stay as they are. While you are nearly its size the outline breathes, slow and calm. Once it fits, the outline holds steady and a little brighter. The old "too big" ring is unchanged.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.7.4`.
+
 ## v9.7.3 — Comet tails follow the comet (Nov 13 2026)
 
 A comet's tail was sampling the head relative to the camera, so steering the black hole swung every tail along with the view.
