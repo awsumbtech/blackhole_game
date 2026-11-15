@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Nothing here is started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -54,10 +54,10 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 ### A4. Ships are functions, not a Ship
 
 - [ ] `js/ships.js` 21–57 `shipExtent`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`, and the module `bounce` / `lightKey` (54–57).
-- [ ] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look.
-- [ ] `js/ships.js` 226–421 `paintShip`. Code-draws the hull.
-- [ ] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates.
-- [ ] `js/ships.js` 466–505 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates.
+- [x] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look. Removed in v9.8.0. The look row is the number `adoptShip` already stores.
+- [x] `js/ships.js` 226–421 `paintShip`. Code-draws the hull. Removed in v9.8.0. `Ship` draws a sheet frame.
+- [x] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates. Removed in v9.8.0. The glow and the plates are frames.
+- [x] `js/ships.js` 466–505 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates. Removed in v9.8.0. `Ship.draw` does that from the sheet.
 - **Moves into:** `Ship` (the first PR). One instance per craft entity. Art comes from a sheet, not `paintShip`.
 - **Depends on:** `art/sprites.js` (today), later `SpriteSheet`. Callers: `render.js` 130–132, `living-world.js` `adoptShip`, `worlds.js` `addHull` / crumbs, `depth.js` samples.
 
@@ -236,7 +236,7 @@ Sizes use the phone formula at the top. "Big-catch frame" means the artist paint
 
 ### Ships and the Flagship
 
-- [ ] **Five ship classes, eight looks, live and wreck.** `paintShip` `js/ships.js` 226–421. `drawShip` 466–505 (the file ends at 505). Classes: drone, shuttle, freighter, cruiser, capital (19). Extent 1.45–1.55. Wrecks are darker and punched with holes (368–390). Living ships flip vertically when facing left (485–488) and show a breathing engine glow (490–500). Eaten ships split into 4 plates (437–464, 468–482).
+- [x] **Five ship classes, eight looks, live and wreck.** Done in v9.8.0. `Ship` draws `assets/ships/<class>.webp` (live, wreck, liveEdge, wreckEdge, plate0–3, glow; 8 look rows). `paintShip` and `drawShip` are gone. Scrap crumbs have no sheet, so they are not drawn.
   - **Looks:** 40 (5 classes × 8 looks). Live, wreck, the gold edge, the 4 plates, and the engine glow are 9 frames of each look, not extra looks. Scrap crumbs are a sixth class, one shape (`extent` 1.2), not a big catch.
   - **Size:** a morsel is about 18 CSS / 54 device px long. A big catch at 1.3× is about 50 CSS / 150 device px long.
   - **Asset px:** 320×320 per frame.
@@ -487,7 +487,7 @@ One PR each. Each PR is based on `main`. Do not stack them. Ships are first beca
 
 The test named in each step does not exist yet. The PR adds it. On the parent commit the test fails. On that PR it passes.
 
-1. **Ship and SpriteSheet.** `Ship` owns one craft entity. `SpriteSheet` loads a picture and draws a frame. `paintShip` and `drawShip` stop drawing geometry. The sheet has live, wreck, gold-edge, plates, and the engine glow for all 5 classes and 8 looks.
+1. **Ship and SpriteSheet.** Done in v9.8.0. `Ship` owns one craft entity. `SpriteSheet` loads a picture and draws a frame. `paintShip` and `drawShip` no longer exist. The sheet has live, wreck, gold-edge, plates, and the engine glow for all 5 classes and 8 looks. Scrap (`ship: "scrap"`) has no file in the art drop, so those crumbs draw nothing.
    - **Done when:** a sandbox Armada run shows a wreck and a living ship from the sheet, the wreck tumbles, the living ship flips when it faces left, and a big-catch ship shows the painted gold edge (breathing, then steady) with no radial gradient.
    - **Test:** `tools/oo-ship.cjs`. Fails while `paintShip` still fills a hull. Passes when the pixels come from an `HTMLImageElement` under `assets/ships/` and the centre of the ship matches the sheet.
 
@@ -643,6 +643,8 @@ Rough library, PNG or WebP, at the asset sizes above:
 
 The table is a ceiling of about **35 MB** if every frame were on the phone at once. That is too much to precache. Real files should land under it.
 
+Ships, as shipped in v9.8.0: five lossless WebP sheets, 2880×2560, 320 px frames. Bytes: drone 719194, shuttle 932838, freighter 689852, cruiser 628554, capital 760736. Together 3731174 bytes, under the 9 MB ceiling. They are not in `sw.js` `ASSETS`. `SpriteSheet` starts them when a galaxy that can show a ship starts (Ruined Armada, or tier 2 and up).
+
 Strategy:
 
 - Precache the shell only: HTML, CSS, JS, the seven backdrops, the veil, the four shard masks, the hole sheet, the UI plates, and the food sheets for the galaxy you are in.
@@ -652,7 +654,7 @@ Strategy:
 
 ## Counts
 
-- **Section A:** 22 groups, 53 open checkboxes. The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that 53.
-- **Section B:** 45 open checkboxes, plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint.
+- **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until a later step. The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
+- **Section B:** 44 open checkboxes (the five ship classes are checked), plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint.
 - **Order:** 35 PRs, ships first, each based on `main`.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.

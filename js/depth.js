@@ -8,7 +8,8 @@
 //
 // Screen space, hashed (no per-object state), pre-blurred cached sprites.
 
-import { shipClassFor } from "./ships.js";
+import { shipClassFor, shipExtent } from "./ships.js";
+import { Ship } from "./core/Ship.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
 import { spriteFor } from "./art.js";
@@ -129,7 +130,13 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       const id = types[(r2 * 997 | 0) % types.length], v = (r3 * 991 | 0) % 8;   // v9: 8 looks per layer type
       if (cb) { cb(sx, sy, rad, id, v); continue; }
       const e = sampleFor(id, v, L);
+      if (e.type === "craft") {
+        // No painted canvas to blur. The sheet draws when it has decoded.
+        Ship.for(e).draw(ctx, sx, sy, shipExtent(e.ship) * 2 * rad, a * (0.8 + 0.2 * r3), 0.5, true, 0, 1, 1);
+        continue;
+      }
       const sp = spriteFor(e, rad * dpr);
+      if (!sp.c) continue;
       const bl = blurFor(sp.c, lv);
       const d = sp.k * rad, pd = d * (1 + 2 * bl._pad);
       ctx.globalAlpha = a * (0.8 + 0.2 * r3);

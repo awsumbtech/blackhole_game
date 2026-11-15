@@ -2,6 +2,16 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.8.0 — Ships draw from sheets (Nov 15 2026)
+
+The first object-art step. A ship is a picture. Features are unchanged.
+
+- `SpriteSheet` loads one class sheet and its JSON, and draws a frame by column name and look row, pivoted at the centre. The nose in the art faces right.
+- `Ship` owns one craft: class, look, live or wreck, the horizontal flip when it faces left, the wreck tumble, the four plates, and the engine glow. The big-catch gold edge is the painted `liveEdge` or `wreckEdge` frame, breathing then steady on the same timing as the old disc. Ships do not use that disc.
+- `paintShip` and `drawShip` are gone. There is no code hull, gradient, or tint standing in for a missing picture. Until the sheet decodes, the ship is not drawn.
+- Looks are still chosen once in `adoptShip` (`(Math.random() * 8) | 0`) and kept. Sheets load when a galaxy that can show a ship starts, and they are not in the precache list. Scrap crumbs have no sheet.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.8.0`.
+
 ## v9.7.3 — Comet tails follow the comet (Nov 13 2026)
 
 A comet's tail was sampling the head relative to the camera, so steering the black hole swung every tail along with the view.

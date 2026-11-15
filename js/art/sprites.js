@@ -1,6 +1,6 @@
 // Sprite cache: looks, keys, size buckets and the painter table. Per frame only cache lookups.
 
-import { paintShip, shipKey, shipExtent, SHIP_LOOKS } from "../ships.js";
+import { shipExtent, SHIP_LOOKS } from "../ships.js";
 import { COMET_PAINTERS } from "./comets.js";
 import { DEEPSKY_PAINTERS } from "./deepsky.js";
 import { DUST_PAINTERS } from "./dust.js";
@@ -70,13 +70,21 @@ function extentFor(type, variant, look) {
 
 function baseKeyFor(e) {
   const L = lookOf(e), t = e.type;
-  if (t === "craft") return shipKey(e) + "|" + L;
   if (OWN[t]) return t + "||" + L + "|" + (t === "planet" ? e.variant || 0 : 0);
   return `${t}|${e.color}|${e.bands ? e.bands[0] : ""}|${e.variant || 0}|${L}`;
 }
 
 /** Returns { c, size } where size is the drawn width in entity radii*2 units. */
 export function spriteFor(e, rpx) {
+  // Ships are sheet frames on Ship. There is no painted canvas to cache.
+  if (e.type === "craft") {
+    const stub = e._sp && e._sp.ship
+      ? e._sp
+      : { c: null, k: shipExtent(e.ship) * 2, b: 0, g: cacheGen, ship: true };
+    stub.used = frameNo;
+    e._sp = stub;
+    return stub;
+  }
   // Hysteresis: keep the current sprite while the on-screen size stays close,
   // so a slowly zooming camera doesn't repaint everything every few frames.
   const cur = e._sp;
@@ -109,6 +117,9 @@ export function spriteFor(e, rpx) {
 
 function paint(e, b) {
   generated++;
+  if (e.type === "craft") {
+    return { c: null, k: shipExtent(e.ship) * 2, b, g: cacheGen, used: frameNo, ship: true };
+  }
   const variant = e.variant || 0, look = lookOf(e);
   const ext = e.type === "craft" ? shipExtent(e.ship) : extentFor(e.type, variant, look);
   const size = Math.ceil(b * ext * 2) + 2;
@@ -124,7 +135,6 @@ function paint(e, b) {
 }
 
 const PAINTERS = {
-  craft(g, R, e) { paintShip(g, R, e); },   // v9.4: the ship system paints every class
   ...DUST_PAINTERS, ...ROCK_PAINTERS, ...COMET_PAINTERS, ...PLANET_PAINTERS,
   ...STAR_PAINTERS, ...DEEPSKY_PAINTERS
 };
