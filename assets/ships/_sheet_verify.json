@@ -1,0 +1,22 @@
+{
+ "drone": {
+  "premult_diff_vs_frames": 0,
+  "sheet_seam_u8": 0
+ },
+ "shuttle": {
+  "premult_diff_vs_frames": 0,
+  "sheet_seam_u8": 0
+ },
+ "freighter": {
+  "premult_diff_vs_frames": 0,
+  "sheet_seam_u8": 0
+ },
+ "cruiser": {
+  "premult_diff_vs_frames": 0,
+  "sheet_seam_u8": 0
+ },
+ "capital": {
+  "premult_diff_vs_frames": 0,
+  "sheet_seam_u8": 0
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "drone": {
+  "bytes": 719194,
+  "quality": "lossless",
+  "size": [
+   2880,
+   2560
+  ]
+ },
+ "shuttle": {
+  "bytes": 932838,
+  "quality": "lossless",
+  "size": [
+   2880,
+   2560
+  ]
+ },
+ "freighter": {
+  "bytes": 689852,
+  "quality": "lossless",
+  "size": [
+   2880,
+   2560
+  ]
+ },
+ "cruiser": {
+  "bytes": 628554,
+  "quality": "lossless",
+  "size": [
+   2880,
+   2560
+  ]
+ },
+ "capital": {
+  "bytes": 760736,
+  "quality": "lossless",
+  "size": [
+   2880,
+   2560
+  ]
+ }
+}

@@ -1,0 +1,4468 @@
+{
+ "gates": {
+  "edge_w150": [
+   1.6,
+   2.5
+  ],
+  "wreck_over_live_lum_54": [
+   0.44,
+   0.55
+  ],
+  "plates": "n=4, each 1 piece (8-conn), solidity>=0.6, sliver<=0.05, area>=0.08, overlap 0, fallback cuts 0",
+  "seam": "exactly 0: alpha u8 diff, composite alpha diff, premultiplied RGB diff",
+  "magenta_strays_smoke": "all 0 on all 9 frames",
+  "glow": "registration ok, 100% of glow px within 16 px of live hull, glow px > 0"
+ },
+ "looks": {
+  "b_drone": {
+   "row": 0,
+   "tag": "b",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.19,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.23,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.502,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.924,
+     0.87,
+     0.985,
+     0.958
+    ],
+    "sliver": [
+     0.012,
+     0.019,
+     0.005,
+     0.004
+    ],
+    "area": [
+     0.392,
+     0.137,
+     0.152,
+     0.319
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 711,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1031,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.289
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "b_shuttle": {
+   "row": 0,
+   "tag": "b",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.06,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.33,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.538,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.8,
+     0.841,
+     0.739,
+     0.972
+    ],
+    "sliver": [
+     0.008,
+     0.016,
+     0.021,
+     0.008
+    ],
+    "area": [
+     0.258,
+     0.211,
+     0.359,
+     0.172
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 756,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1024,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.184
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "b_freighter": {
+   "row": 0,
+   "tag": "b",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.96,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.73,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.441,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.847,
+     0.854,
+     0.796,
+     0.967
+    ],
+    "sliver": [
+     0.009,
+     0.011,
+     0.012,
+     0.007
+    ],
+    "area": [
+     0.263,
+     0.324,
+     0.207,
+     0.205
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 666,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 734,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.234
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "b_cruiser": {
+   "row": 0,
+   "tag": "b",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.15,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.02,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.481,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.756,
+     0.825,
+     0.927,
+     0.97
+    ],
+    "sliver": [
+     0.008,
+     0.02,
+     0.012,
+     0.008
+    ],
+    "area": [
+     0.268,
+     0.297,
+     0.231,
+     0.204
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 720,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1069,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.31
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "b_capital": {
+   "row": 0,
+   "tag": "b",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.95,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.05,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.494,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.764,
+     0.824,
+     0.723,
+     0.985
+    ],
+    "sliver": [
+     0.021,
+     0.003,
+     0.021,
+     0.002
+    ],
+    "area": [
+     0.281,
+     0.37,
+     0.214,
+     0.135
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 738,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1029,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.396
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL1_drone": {
+   "row": 1,
+   "tag": "bL1",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.97,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.93,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.483,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     2,
+     1
+    ],
+    "solidity": [
+     0.915,
+     0.859,
+     0.879,
+     0.82
+    ],
+    "sliver": [
+     0.017,
+     0.017,
+     0.013,
+     0.025
+    ],
+    "area": [
+     0.329,
+     0.18,
+     0.193,
+     0.298
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": false,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 765,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 11
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 7
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 5
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 3
+    }
+   },
+   "frames_pass": false,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 835,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.14
+   },
+   "glow_pass": true,
+   "pass": false
+  },
+  "bL1_shuttle": {
+   "row": 1,
+   "tag": "bL1",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.71,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.07,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.461,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.743,
+     0.704,
+     0.706,
+     1.006
+    ],
+    "sliver": [
+     0.01,
+     0.029,
+     0.011,
+     0.005
+    ],
+    "area": [
+     0.301,
+     0.337,
+     0.261,
+     0.1
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 732,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 1,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": false,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 909,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.322
+   },
+   "glow_pass": true,
+   "pass": false
+  },
+  "bL1_freighter": {
+   "row": 1,
+   "tag": "bL1",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.18,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.8,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.517,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.861,
+     0.843,
+     0.814,
+     0.983
+    ],
+    "sliver": [
+     0.004,
+     0.006,
+     0.012,
+     0.001
+    ],
+    "area": [
+     0.258,
+     0.349,
+     0.212,
+     0.181
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 762,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 803,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.217
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL1_cruiser": {
+   "row": 1,
+   "tag": "bL1",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.63,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.61,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.457,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.763,
+     0.663,
+     0.868,
+     0.913
+    ],
+    "sliver": [
+     0.006,
+     0.036,
+     0.035,
+     0.025
+    ],
+    "area": [
+     0.298,
+     0.282,
+     0.236,
+     0.184
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 717,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 866,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.318
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL1_capital": {
+   "row": 1,
+   "tag": "bL1",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.16,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.29,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.468,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     2,
+     1,
+     1
+    ],
+    "solidity": [
+     0.833,
+     0.807,
+     0.84,
+     0.915
+    ],
+    "sliver": [
+     0.025,
+     0.012,
+     0.008,
+     0.024
+    ],
+    "area": [
+     0.196,
+     0.352,
+     0.359,
+     0.094
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": false,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 738,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 434,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.553
+   },
+   "glow_pass": true,
+   "pass": false
+  },
+  "bL2_drone": {
+   "row": 2,
+   "tag": "bL2",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.38,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.86,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.461,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.924,
+     0.831,
+     0.965,
+     0.972
+    ],
+    "sliver": [
+     0.016,
+     0.022,
+     0.011,
+     0.005
+    ],
+    "area": [
+     0.391,
+     0.126,
+     0.153,
+     0.33
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 678,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 828,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.196
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL2_shuttle": {
+   "row": 2,
+   "tag": "bL2",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.09,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.8,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.511,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.776,
+     0.846,
+     0.729,
+     1.003
+    ],
+    "sliver": [
+     0.008,
+     0.011,
+     0.03,
+     0.004
+    ],
+    "area": [
+     0.276,
+     0.236,
+     0.314,
+     0.174
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 747,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 815,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.178
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL2_freighter": {
+   "row": 2,
+   "tag": "bL2",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.79,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.02,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.476,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.762,
+     0.794,
+     0.808,
+     0.954
+    ],
+    "sliver": [
+     0.01,
+     0.008,
+     0.007,
+     0.005
+    ],
+    "area": [
+     0.374,
+     0.219,
+     0.216,
+     0.191
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 765,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 916,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.294
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL2_cruiser": {
+   "row": 2,
+   "tag": "bL2",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.72,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.99,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.486,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.746,
+     0.816,
+     0.837,
+     0.965
+    ],
+    "sliver": [
+     0.007,
+     0.025,
+     0.007,
+     0.01
+    ],
+    "area": [
+     0.276,
+     0.317,
+     0.235,
+     0.173
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 753,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1004,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.315
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL2_capital": {
+   "row": 2,
+   "tag": "bL2",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.47,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.98,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.501,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.731,
+     0.715,
+     0.89,
+     0.919
+    ],
+    "sliver": [
+     0.038,
+     0.006,
+     0.004,
+     0.015
+    ],
+    "area": [
+     0.141,
+     0.411,
+     0.36,
+     0.087
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 759,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 680,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.512
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL3_drone": {
+   "row": 3,
+   "tag": "bL3",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.97,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.78,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.453,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.922,
+     0.865,
+     0.977,
+     0.962
+    ],
+    "sliver": [
+     0.01,
+     0.025,
+     0.008,
+     0.011
+    ],
+    "area": [
+     0.338,
+     0.137,
+     0.153,
+     0.372
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 651,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 721,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.204
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL3_shuttle": {
+   "row": 3,
+   "tag": "bL3",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.92,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.91,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.447,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.812,
+     0.872,
+     0.799,
+     0.828
+    ],
+    "sliver": [
+     0.008,
+     0.009,
+     0.029,
+     0.008
+    ],
+    "area": [
+     0.262,
+     0.236,
+     0.292,
+     0.21
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 702,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 876,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.129
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL3_freighter": {
+   "row": 3,
+   "tag": "bL3",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.93,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.15,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.464,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.854,
+     0.829,
+     0.793,
+     0.947
+    ],
+    "sliver": [
+     0.009,
+     0.012,
+     0.014,
+     0.006
+    ],
+    "area": [
+     0.26,
+     0.336,
+     0.217,
+     0.187
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 753,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 953,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.306
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL3_cruiser": {
+   "row": 3,
+   "tag": "bL3",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.7,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.41,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.46,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.773,
+     0.868,
+     0.893,
+     0.943
+    ],
+    "sliver": [
+     0.005,
+     0.016,
+     0.028,
+     0.012
+    ],
+    "area": [
+     0.26,
+     0.264,
+     0.192,
+     0.284
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 726,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 870,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.347
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL3_capital": {
+   "row": 3,
+   "tag": "bL3",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.48,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.38,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.453,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.752,
+     0.673,
+     0.831,
+     0.937
+    ],
+    "sliver": [
+     0.047,
+     0.011,
+     0.005,
+     0.004
+    ],
+    "area": [
+     0.159,
+     0.393,
+     0.349,
+     0.099
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 702,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 535,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.658
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL4_drone": {
+   "row": 4,
+   "tag": "bL4",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.96,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.4,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.545,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.918,
+     0.883,
+     0.976,
+     0.942
+    ],
+    "sliver": [
+     0.01,
+     0.017,
+     0.01,
+     0.011
+    ],
+    "area": [
+     0.345,
+     0.139,
+     0.153,
+     0.364
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 708,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1136,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.294
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL4_shuttle": {
+   "row": 4,
+   "tag": "bL4",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.87,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.38,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.538,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.825,
+     0.79,
+     0.774,
+     0.985
+    ],
+    "sliver": [
+     0.004,
+     0.014,
+     0.019,
+     0.004
+    ],
+    "area": [
+     0.088,
+     0.148,
+     0.647,
+     0.117
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 759,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 921,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.191
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL4_freighter": {
+   "row": 4,
+   "tag": "bL4",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.31,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.08,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.456,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.741,
+     0.826,
+     0.795,
+     0.966
+    ],
+    "sliver": [
+     0.016,
+     0.008,
+     0.01,
+     0.004
+    ],
+    "area": [
+     0.344,
+     0.233,
+     0.226,
+     0.197
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 720,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 856,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.215
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL4_cruiser": {
+   "row": 4,
+   "tag": "bL4",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.15,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.08,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.459,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.744,
+     0.82,
+     0.869,
+     0.993
+    ],
+    "sliver": [
+     0.002,
+     0.005,
+     0.008,
+     0.007
+    ],
+    "area": [
+     0.296,
+     0.345,
+     0.203,
+     0.156
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 678,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1114,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.282
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL4_capital": {
+   "row": 4,
+   "tag": "bL4",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.18,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.32,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.546,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.834,
+     0.819,
+     0.827,
+     0.952
+    ],
+    "sliver": [
+     0.021,
+     0.011,
+     0.009,
+     0.011
+    ],
+    "area": [
+     0.253,
+     0.3,
+     0.297,
+     0.151
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 741,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 893,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.42
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL5_drone": {
+   "row": 5,
+   "tag": "bL5",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.25,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.8,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.512,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.913,
+     0.859,
+     0.979,
+     0.924
+    ],
+    "sliver": [
+     0.007,
+     0.011,
+     0.008,
+     0.016
+    ],
+    "area": [
+     0.355,
+     0.132,
+     0.154,
+     0.359
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 705,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 789,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.127
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL5_shuttle": {
+   "row": 5,
+   "tag": "bL5",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.75,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.13,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.506,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.647,
+     0.817,
+     0.797,
+     0.97
+    ],
+    "sliver": [
+     0.032,
+     0.014,
+     0.006,
+     0.005
+    ],
+    "area": [
+     0.524,
+     0.201,
+     0.089,
+     0.185
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 765,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 954,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.312
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL5_freighter": {
+   "row": 5,
+   "tag": "bL5",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.43,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.07,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.474,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.761,
+     0.812,
+     0.788,
+     0.966
+    ],
+    "sliver": [
+     0.006,
+     0.01,
+     0.016,
+     0.006
+    ],
+    "area": [
+     0.373,
+     0.214,
+     0.198,
+     0.214
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 726,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1098,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.246
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL5_cruiser": {
+   "row": 5,
+   "tag": "bL5",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.12,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.87,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.499,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.769,
+     0.833,
+     0.909,
+     0.983
+    ],
+    "sliver": [
+     0.005,
+     0.007,
+     0.007,
+     0.008
+    ],
+    "area": [
+     0.292,
+     0.313,
+     0.23,
+     0.166
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 753,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 622,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.461
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL5_capital": {
+   "row": 5,
+   "tag": "bL5",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.49,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.35,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.481,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.75,
+     0.775,
+     0.872,
+     0.943
+    ],
+    "sliver": [
+     0.032,
+     0.012,
+     0.006,
+     0.008
+    ],
+    "area": [
+     0.153,
+     0.24,
+     0.326,
+     0.28
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 684,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 721,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.516
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL6_drone": {
+   "row": 6,
+   "tag": "bL6",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.77,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.77,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.538,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.924,
+     0.839,
+     0.983,
+     0.935
+    ],
+    "sliver": [
+     0.008,
+     0.022,
+     0.01,
+     0.012
+    ],
+    "area": [
+     0.354,
+     0.135,
+     0.153,
+     0.358
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 711,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 942,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.177
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL6_shuttle": {
+   "row": 6,
+   "tag": "bL6",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.66,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.17,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.529,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.805,
+     0.849,
+     0.737,
+     0.993
+    ],
+    "sliver": [
+     0.011,
+     0.012,
+     0.019,
+     0.007
+    ],
+    "area": [
+     0.226,
+     0.24,
+     0.411,
+     0.122
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 738,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1210,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.151
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL6_freighter": {
+   "row": 6,
+   "tag": "bL6",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.21,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.72,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.488,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.787,
+     0.847,
+     0.807,
+     0.981
+    ],
+    "sliver": [
+     0.017,
+     0.013,
+     0.014,
+     0.003
+    ],
+    "area": [
+     0.278,
+     0.331,
+     0.22,
+     0.172
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 666,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 893,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.237
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL6_cruiser": {
+   "row": 6,
+   "tag": "bL6",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.68,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.4,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.454,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.761,
+     0.693,
+     0.729,
+     0.982
+    ],
+    "sliver": [
+     0.006,
+     0.016,
+     0.033,
+     0.012
+    ],
+    "area": [
+     0.326,
+     0.308,
+     0.191,
+     0.175
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 735,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 1084,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.36
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL6_capital": {
+   "row": 6,
+   "tag": "bL6",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.5,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.97,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.535,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.833,
+     0.829,
+     0.843,
+     0.942
+    ],
+    "sliver": [
+     0.02,
+     0.005,
+     0.006,
+     0.011
+    ],
+    "area": [
+     0.23,
+     0.326,
+     0.337,
+     0.107
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 633,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 563,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.574
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL7_drone": {
+   "row": 7,
+   "tag": "bL7",
+   "class": "drone",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.43,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.67,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.478,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.914,
+     0.975,
+     0.871,
+     0.904
+    ],
+    "sliver": [
+     0.006,
+     0.01,
+     0.016,
+     0.016
+    ],
+    "area": [
+     0.33,
+     0.17,
+     0.149,
+     0.351
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 756,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 923,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.294
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL7_shuttle": {
+   "row": 7,
+   "tag": "bL7",
+   "class": "shuttle",
+   "edges": {
+    "liveEdge": {
+     "w150": 1.89,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.78,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.501,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.797,
+     0.851,
+     0.793,
+     0.894
+    ],
+    "sliver": [
+     0.005,
+     0.008,
+     0.028,
+     0.011
+    ],
+    "area": [
+     0.275,
+     0.24,
+     0.299,
+     0.186
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 744,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 878,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.107
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL7_freighter": {
+   "row": 7,
+   "tag": "bL7",
+   "class": "freighter",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.1,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 1.62,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.523,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.846,
+     0.839,
+     0.818,
+     0.986
+    ],
+    "sliver": [
+     0.009,
+     0.007,
+     0.011,
+     0.003
+    ],
+    "area": [
+     0.26,
+     0.336,
+     0.22,
+     0.184
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 714,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 543,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.328
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL7_cruiser": {
+   "row": 7,
+   "tag": "bL7",
+   "class": "cruiser",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.3,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.09,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.473,
+   "wreck_pass": true,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.755,
+     0.835,
+     0.885,
+     0.982
+    ],
+    "sliver": [
+     0.012,
+     0.005,
+     0.005,
+     0.011
+    ],
+    "area": [
+     0.28,
+     0.368,
+     0.239,
+     0.113
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 723,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": true,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 595,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.506
+   },
+   "glow_pass": true,
+   "pass": true
+  },
+  "bL7_capital": {
+   "row": 7,
+   "tag": "bL7",
+   "class": "capital",
+   "edges": {
+    "liveEdge": {
+     "w150": 2.06,
+     "reg_ok": true
+    },
+    "wreckEdge": {
+     "w150": 2.22,
+     "reg_ok": true
+    }
+   },
+   "edges_pass": true,
+   "wreck_over_live_lum_54": 0.439,
+   "wreck_pass": false,
+   "plates": {
+    "comps": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "solidity": [
+     0.77,
+     0.756,
+     0.834,
+     0.946
+    ],
+    "sliver": [
+     0.027,
+     0.013,
+     0.007,
+     0.015
+    ],
+    "area": [
+     0.18,
+     0.378,
+     0.359,
+     0.084
+    ],
+    "overlap_px": 0,
+    "fallback_cuts": 0
+   },
+   "plates_pass": true,
+   "seam": {
+    "overlap_px": 0,
+    "exact_alpha_u8_diff": 0,
+    "exact_rgb_u8_diff_in_alpha": 726,
+    "seam_max_alpha_diff": 0.0,
+    "seam_max_premult_rgb_diff": 0.0
+   },
+   "seam_pass": true,
+   "frames": {
+    "live": {
+     "magenta_px": 1,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreck": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "liveEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "wreckEdge": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "glow": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": null
+    },
+    "plate0": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate1": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate2": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    },
+    "plate3": {
+     "magenta_px": 0,
+     "strays": 0,
+     "smoke_px": 0
+    }
+   },
+   "frames_pass": false,
+   "glow": {
+    "reg_ok": true,
+    "glow_px": 718,
+    "frac_within_16px_of_hull": 1.0,
+    "frac_on_hull": 0.5
+   },
+   "glow_pass": true,
+   "pass": false
+  }
+ },
+ "summary": {
+  "looks": 40,
+  "passed": 36,
+  "failed": [
+   "bL1_drone",
+   "bL1_shuttle",
+   "bL1_capital",
+   "bL7_capital"
+  ]
+ }
+}
