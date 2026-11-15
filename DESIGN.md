@@ -519,7 +519,7 @@ Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it 
 ## 12. Backlog (awaiting Brian's pick; don't start without asking)
 
 - **Open P3:** a meteor's entry streak (`render.js`, the hot-meteor tail) still aims from stored velocity, so it can disagree with the on-screen step the way comet tails used to. Comet tails are fixed; this one was left.
-- **Ships, known and left:** Armada crumbs set `ship: "scrap"`. The art drop has no scrap sheet, so those crumbs are not drawn. A bite of a ship no longer leaves debris shards, because there is no sprite canvas to cut; the four painted plates are the break-apart. `SOURCE.md` lists accepted art issues (cruiser looks that still read alike, a short capital wreck, and the rest). They are not papered over in code. The gold disc in `render.js` remains for everything that is not a ship, until step 8.
+- **Ships, known and left:** A crumb is one plate frame from the hull it came off (`scrapFrom`: that class, that look, plate index). A bite of a ship is those four plate frames in the debris field, not a mask cut. `SOURCE.md` lists accepted art issues (cruiser looks that still read alike, a short capital wreck, and the rest). They are not papered over in code. The gold edge is faint at catch size until the art team repaints it thicker. The gold disc in `render.js` remains for everything that is not a ship, until step 8.
 - **Open P3:** in Zen a planet's faint ring can touch the hole's edge.
 - **Open P3:** portrait lock (not approved).
 - **App polish** (parked by Brian): proper icon, splash screen, keep screen awake, landscape support.

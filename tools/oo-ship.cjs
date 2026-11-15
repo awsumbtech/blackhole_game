@@ -152,16 +152,70 @@ async function proof(page) {
     const painted = pg.getImageData(Math.round(body.e), Math.round(body.f), 1, 1).data;
     let gameDiff = 0;
     for (let i = 0; i < 3; i++) gameDiff = Math.max(gameDiff, Math.abs(game[i] - painted[i]));
-    const ok = centred && diff === 0 && fills === 0 && grads === 0 && want[3] > 200 && painted[3] > 200 && gameDiff <= 2;
+    const plateCols = [1280, 1600, 1920, 2240];
+    const isPlate = d => /assets\/ships\/[^/]+\.webp/.test(d.src) && plateCols.indexOf(d.sx) >= 0 && d.sw === 320;
+    const parent = { ship: "freighter", look: 2, seed: 99 };
+    const bit = ships.scrapFrom(parent, 1);
+    const again = ships.scrapFrom(parent, 1);
+    const stable = bit.cls === "freighter" && bit.look === 2 && bit.plate === 1
+      && again.cls === bit.cls && again.look === bit.look && again.plate === bit.plate;
+    const crumb = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
+    crumb.ship = "scrap";
+    crumb.scrapOf = bit.cls;
+    crumb.look = bit.look;
+    crumb.plate = bit.plate;
+    crumb.wreck = true;
+    crumb.steer = false;
+    crumb.depthT = 1;
+    crumb.radius = 28;
+    crumb.rotation = 0.4;
+    crumb.x = s.camX;
+    crumb.y = s.camY - s.viewH * 0.22;
+    s.entities = [crumb];
+    bh.debris.clear();
+    window.__shipDraws.length = 0;
+    bh.scene.draw(performance.now(), 0, true);
+    const scrapDraws = window.__shipDraws.filter(isPlate);
+    const scrapHit = scrapDraws.some(d => d.src.includes("assets/ships/" + bit.cls + ".webp") && d.sx === 1280 + bit.plate * 320);
+
+    const cruiser = sheetFor("cruiser");
+    cruiser.start();
+    const t1 = performance.now();
+    while (!cruiser.ready) {
+      if (performance.now() - t1 > 8000) return { ok: false, reason: "cruiser sheet did not decode" };
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const eaten = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
+    ships.adoptShip(eaten, 3, true, false);
+    eaten.ship = "cruiser";
+    eaten.look = 3;
+    eaten.depthT = 1;
+    eaten.radius = 30;
+    eaten.x = s.playerX + 40;
+    eaten.y = s.playerY;
+    s.entities = [];
+    bh.debris.clear();
+    bh.debris.spawn(eaten);
+    window.__shipDraws.length = 0;
+    bh.scene.draw(performance.now(), 0, true);
+    const bite = window.__shipDraws.filter(d => isPlate(d) && d.src.includes("assets/ships/cruiser.webp"));
+    const biteCols = {};
+    bite.forEach(d => { biteCols[d.sx] = (biteCols[d.sx] || 0) + 1; });
+    const debrisOk = plateCols.every(col => biteCols[col] >= 1);
+
+    const ok = centred && diff === 0 && fills === 0 && grads === 0 && want[3] > 200 && painted[3] > 200 && gameDiff <= 2
+      && stable && scrapHit && debrisOk;
     return {
       ok,
-      reason: ok ? "sheet" : "centre or hull check failed",
+      reason: ok ? "sheet" : "centre, scrap or debris check failed",
       centred, diff, fills, grads,
       centreAlpha: want[3],
       gameDiff, replayAlpha: painted[3],
       src: body.src,
       drawShip: typeof ships.drawShip === "function",
-      paintShip: typeof ships.paintShip === "function"
+      paintShip: typeof ships.paintShip === "function",
+      scrap: { stable, scrapHit, draws: scrapDraws.length, bit },
+      debris: { draws: bite.length, cols: biteCols }
     };
   });
 }
@@ -237,6 +291,38 @@ async function pictures(page) {
   out.push(await shot(page, "04-big-catch-edge.png"));
   const edge = await page.evaluate(() => window.__shipDraws.filter(d =>
     d.src.includes("assets/ships/capital.webp") && d.sx === 640).length);
+  await page.evaluate(async () => {
+    const entities = await import("/js/entities.js");
+    const ships = await import("/js/ships.js");
+    const { sheetFor } = await import("/js/core/SpriteSheet.js");
+    const bh = window.__bh;
+    const s = bh.state;
+    Object.assign(bh.dev.cfg, { galaxy: 4, biome: "Ruined Armada", tier: 3, depth: 1, zen: false, wisp: false });
+    bh.dev.enter();
+    bh.dev.frozen = true;
+    s.paused = true;
+    s.radius = 4;
+    s.anchorSmooth = 4;
+    bh.camera.updateScale(bh.display.w, bh.display.h, true);
+    const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
+    ships.adoptShip(e, 3, true, false);
+    e.ship = "cruiser";
+    e.look = 0;
+    e.depthT = 1;
+    e.radius = 36;
+    e.x = s.playerX + s.viewW * 0.2;
+    e.y = s.playerY - s.viewH * 0.08;
+    const sheet = sheetFor("cruiser");
+    sheet.start();
+    const t0 = performance.now();
+    while (!sheet.ready && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
+    s.entities = [];
+    bh.debris.clear();
+    bh.debris.spawn(e);
+    for (const p of bh.debris.pieces) if (p.on) p.age = p.life * 0.08;
+    bh.scene.draw(performance.now(), 0, true);
+  });
+  out.push(await shot(page, "05-bite-debris.png"));
   return { out, edgeDraws: edge };
 }
 

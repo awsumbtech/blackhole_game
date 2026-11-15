@@ -38,13 +38,21 @@ export class SpriteSheet {
    * `colName` is a column in the sheet JSON. Returns false when the picture
    * is not ready, so the caller leaves the craft undrawn.
    */
-  draw(ctx, colName, row, size) {
-    if (!this.ready || !(size > 0)) return false;
+  /** Source rect of one frame, or null when the picture is not ready. */
+  frameRect(colName, row) {
+    if (!this.ready) return null;
     const col = this.cols.indexOf(colName);
     const r = row | 0;
-    if (col < 0 || r < 0 || r >= this.rows) return false;
+    if (col < 0 || r < 0 || r >= this.rows || !(this.frame > 0)) return null;
     const f = this.frame;
-    ctx.drawImage(this.image, col * f, r * f, f, f, -size / 2, -size / 2, size, size);
+    return { image: this.image, sx: col * f, sy: r * f, sw: f, sh: f };
+  }
+
+  draw(ctx, colName, row, size) {
+    if (!(size > 0)) return false;
+    const rect = this.frameRect(colName, row);
+    if (!rect) return false;
+    ctx.drawImage(rect.image, rect.sx, rect.sy, rect.sw, rect.sh, -size / 2, -size / 2, size, size);
     return true;
   }
 }

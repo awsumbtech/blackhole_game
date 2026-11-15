@@ -236,7 +236,7 @@ Sizes use the phone formula at the top. "Big-catch frame" means the artist paint
 
 ### Ships and the Flagship
 
-- [x] **Five ship classes, eight looks, live and wreck.** Done in v9.8.0. `Ship` draws `assets/ships/<class>.webp` (live, wreck, liveEdge, wreckEdge, plate0–3, glow; 8 look rows). `paintShip` and `drawShip` are gone. Scrap crumbs have no sheet, so they are not drawn.
+- [x] **Five ship classes, eight looks, live and wreck.** Done in v9.8.0. `Ship` draws `assets/ships/<class>.webp` (live, wreck, liveEdge, wreckEdge, plate0–3, glow; 8 look rows). `paintShip` and `drawShip` are gone. A scrap crumb is one plate from the hull it came off.
   - **Looks:** 40 (5 classes × 8 looks). Live, wreck, the gold edge, the 4 plates, and the engine glow are 9 frames of each look, not extra looks. Scrap crumbs are a sixth class, one shape (`extent` 1.2), not a big catch.
   - **Size:** a morsel is about 18 CSS / 54 device px long. A big catch at 1.3× is about 50 CSS / 150 device px long.
   - **Asset px:** 320×320 per frame.
@@ -487,7 +487,7 @@ One PR each. Each PR is based on `main`. Do not stack them. Ships are first beca
 
 The test named in each step does not exist yet. The PR adds it. On the parent commit the test fails. On that PR it passes.
 
-1. **Ship and SpriteSheet.** Done in v9.8.0. `Ship` owns one craft entity. `SpriteSheet` loads a picture and draws a frame. `paintShip` and `drawShip` no longer exist. The sheet has live, wreck, gold-edge, plates, and the engine glow for all 5 classes and 8 looks. Scrap (`ship: "scrap"`) has no file in the art drop, so those crumbs draw nothing.
+1. **Ship and SpriteSheet.** Done in v9.8.0. `Ship` owns one craft entity. `SpriteSheet` loads a picture and draws a frame. `paintShip` and `drawShip` no longer exist. The sheet has live, wreck, gold-edge, plates, and the engine glow for all 5 classes and 8 looks. A scrap crumb draws one plate from the hull it came off. A ship bite's debris is those four plate frames, with no mask cut.
    - **Done when:** a sandbox Armada run shows a wreck and a living ship from the sheet, the wreck tumbles, the living ship flips when it faces left, and a big-catch ship shows the painted gold edge (breathing, then steady) with no radial gradient.
    - **Test:** `tools/oo-ship.cjs`. Fails while `paintShip` still fills a hull. Passes when the pixels come from an `HTMLImageElement` under `assets/ships/` and the centre of the ship matches the sheet.
 

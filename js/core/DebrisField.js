@@ -13,6 +13,7 @@
 
 import { spriteFor } from "../art.js";
 import { shadowRadius } from "../art/hole.js";
+import { Ship } from "./Ship.js";
 
 const CAP = 18;
 const PER_BITE = 4;
@@ -51,7 +52,7 @@ export class DebrisField {
       this.pieces[i] = {
         on: false, age: 0, life: LIFE_MIN, ang: 0, rad: 0, r0: 0,
         travel: TURN_MIN, slack0: 1, spin0: 0, spr: null, dw: 0, dh: 0,
-        visAlpha: 0, whole: false
+        visAlpha: 0, whole: false, frame: null
       };
     }
     this.live = 0;
@@ -184,6 +185,7 @@ export class DebrisField {
     p.travel = (still ? TURN_MIN * 0.45 : TURN_MIN);
     p.visAlpha = 0;
     p.spr = null;
+    p.frame = null;
     this.live++;
     this.spawned++;
   }
@@ -205,17 +207,41 @@ export class DebrisField {
     return { sc, rad, alpha, radial };
   }
 
+  /**
+   * A ship's bite is its own four plate frames. They ride the same rim as
+   * every other bite. Nothing is cut, masked, or copied onto a canvas.
+   */
+  _spawnShip(e, base, still, shadowR, zoom) {
+    const frames = Ship.for(e).plates();
+    if (!frames) return;
+    const item = Math.max(1, e.radius * 2);
+    const minW = 6 / zoom;
+    for (let i = 0; i < PER_BITE; i++) {
+      const frac = 0.25 + 0.15 * (i / (PER_BITE - 1));
+      const dw = Math.max(minW, item * frac);
+      const p = this._free();
+      this._arm(p, base + (i - 1.5) * 0.36, dw, dw, still, shadowR, false);
+      p.frame = frames[i];
+      const u = i / (PER_BITE - 1);
+      p.travel = still ? TURN_MIN * 0.45 : TURN_MIN + (TURN_MAX - TURN_MIN) * u;
+    }
+  }
+
   /** Start pieces on the rim at the eaten item's angle. The entity can go. */
   spawn(e) {
     const state = this.state;
     const zoom = state.zoom > 0 ? state.zoom : 1;
+    const base = Math.atan2(e.y - state.playerY, e.x - state.playerX);
+    const still = !!(state.settings && state.settings.reduceMotion);
+    const shadowR = shadowRadius(state.radius, state.gulp, still);
+    if (e.type === "craft") {
+      this._spawnShip(e, base, still, shadowR, zoom);
+      return;
+    }
     const px = Math.max(8, e.radius * zoom * (this.dpr || 1));
     const sp = spriteFor(e, px);
     const canvas = sp.c;
     if (!canvas || !canvas.width) return;
-    const base = Math.atan2(e.y - state.playerY, e.x - state.playerX);
-    const still = !!(state.settings && state.settings.reduceMotion);
-    const shadowR = shadowRadius(state.radius, state.gulp, still);
     const item = Math.max(1, e.radius * 2);
     const minW = 6 / zoom;
     if (!this.masksReady) {
@@ -245,6 +271,7 @@ export class DebrisField {
     for (let i = 0; i < CAP; i++) {
       this.pieces[i].on = false;
       this.pieces[i].spr = null;
+      this.pieces[i].frame = null;
     }
     this.live = 0;
   }
@@ -258,6 +285,7 @@ export class DebrisField {
       if (p.age >= p.life) {
         p.on = false;
         p.spr = null;
+        p.frame = null;
         p.visAlpha = 0;
         this.live--;
         this.finished++;
@@ -281,7 +309,7 @@ export class DebrisField {
     }
     for (let i = 0; i < CAP; i++) {
       const p = this.pieces[i];
-      if (!p.on || !p.spr) continue;
+      if (!p.on || (!p.spr && !p.frame)) continue;
       const below = Math.sin(p.ang) >= 0 ? 1 : -1;
       if (below !== side) continue;
       const pose = this._pose(p, still);
@@ -299,7 +327,10 @@ export class DebrisField {
       ctx.globalAlpha = pose.alpha;
       ctx.translate(x, y);
       ctx.rotate(p.ang - p.spin0);
-      ctx.drawImage(p.spr, -dw / 2, -dh / 2, dw, dh);
+      if (p.frame) {
+        const f = p.frame;
+        ctx.drawImage(f.image, f.sx, f.sy, f.sw, f.sh, -dw / 2, -dh / 2, dw, dh);
+      } else ctx.drawImage(p.spr, -dw / 2, -dh / 2, dw, dh);
       ctx.restore();
     }
   }

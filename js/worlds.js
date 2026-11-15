@@ -5,7 +5,7 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
-import { upgradeShip, shipLight } from "./ships.js";
+import { upgradeShip, shipLight, scrapFrom } from "./ships.js";
 import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
@@ -635,8 +635,9 @@ export function onWorldBump(state, e) {
     p.vy = Math.sin(a) * 0.5 * Math.sqrt(state.speedScale);
     p.color = e.color; p._mc = e._mc; p._ec = e._ec;
     p.crumb = true;   // v7: Armada goal counts these
-    // v9.4: crumbs are torn hull plates from the wreck they came off
-    p.type = "craft"; p.ship = "scrap"; p.wreck = true; p.look = (Math.random() * 8) | 0;
+    // A torn plate from this hull. Class, look and plate are fixed by the hull and the index.
+    const bit = scrapFrom(e, i);
+    p.type = "craft"; p.ship = "scrap"; p.scrapOf = bit.cls; p.look = bit.look; p.plate = bit.plate; p.wreck = true;
     p.rotation = Math.random() * TAU; p.rotSpeed = (Math.random() - 0.5) * 0.01;
     p._artBase = null; p._sp = null;
     p._spawnAge = 30; p._spawnAlpha = 0.5;

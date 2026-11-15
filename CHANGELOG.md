@@ -9,7 +9,8 @@ The first object-art step. A ship is a picture. Features are unchanged.
 - `SpriteSheet` loads one class sheet and its JSON, and draws a frame by column name and look row, pivoted at the centre. The nose in the art faces right.
 - `Ship` owns one craft: class, look, live or wreck, the horizontal flip when it faces left, the wreck tumble, the four plates, and the engine glow. The big-catch gold edge is the painted `liveEdge` or `wreckEdge` frame, breathing then steady on the same timing as the old disc. Ships do not use that disc.
 - `paintShip` and `drawShip` are gone. There is no code hull, gradient, or tint standing in for a missing picture. Until the sheet decodes, the ship is not drawn.
-- Looks are still chosen once in `adoptShip` (`(Math.random() * 8) | 0`) and kept. Sheets load when a galaxy that can show a ship starts, and they are not in the precache list. Scrap crumbs have no sheet.
+- Looks are still chosen once in `adoptShip` (`(Math.random() * 8) | 0`) and kept. Sheets load when a galaxy that can show a ship starts, and they are not in the precache list.
+- A scrap crumb is one plate frame from the hull it broke off (`scrapFrom`: that class, that look, and the crumb index as the plate). A bite of a ship leaves that hull's four plate frames in the debris field. They swirl and fade with the other debris. Nothing is masked or cut. A craft whose sheet has not decoded cannot be eaten.
 - Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.8.0`.
 
 ## v9.7.3 — Comet tails follow the comet (Nov 13 2026)

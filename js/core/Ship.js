@@ -17,9 +17,22 @@ export class Ship {
     return s;
   }
 
-  /** Painted classes only. Scrap and anything else have no sheet. */
+  /** Painted class. A crumb keeps the hull it was torn from. */
   get cls() {
     return SHIP_CLASSES.includes(this.e.ship) ? this.e.ship : null;
+  }
+
+  get artClass() {
+    if (this.e.ship === "scrap") {
+      if (SHIP_CLASSES.includes(this.e.scrapOf)) return this.e.scrapOf;
+      return SHIP_CLASSES[((this.e.seed | 0) >>> 0) % SHIP_CLASSES.length];
+    }
+    return this.cls;
+  }
+
+  /** Which plate a crumb is. 0..3, stored once. */
+  get plateIndex() {
+    return ((this.e.plate | 0) % 4 + 4) % 4;
   }
 
   /** Look row. adoptShip already stores 0..7; the modulo matches lookOf. */
@@ -30,8 +43,32 @@ export class Ship {
   }
 
   sheet() {
-    const c = this.cls;
+    const c = this.artClass;
     return c ? sheetFor(c) : null;
+  }
+
+  /** True once this craft's picture can be drawn. Starts the load. */
+  ready() {
+    const sheet = this.sheet();
+    if (!sheet) return false;
+    sheet.start();
+    return !!sheet.ready;
+  }
+
+  /** The four plate frames of this craft, or null until the sheet has decoded. */
+  plates() {
+    const sheet = this.sheet();
+    if (!sheet) return null;
+    sheet.start();
+    if (!sheet.ready) return null;
+    const row = this.row;
+    const frames = [];
+    for (let i = 0; i < 4; i++) {
+      const rect = sheet.frameRect("plate" + i, row);
+      if (!rect) return null;
+      frames.push(rect);
+    }
+    return frames;
   }
 
   /**
@@ -40,6 +77,7 @@ export class Ship {
    * Returns false when there is nothing to draw yet.
    */
   draw(ctx, sx, sy, size, alpha, breath, still, playerRadius, eatRatio, haloFrom) {
+    if (this.e.ship === "scrap") return this._scrap(ctx, sx, sy, size, alpha);
     const sheet = this.sheet();
     if (!sheet || !(alpha > 0)) return false;
     sheet.start();
@@ -81,6 +119,21 @@ export class Ship {
     }
     ctx.restore();
     return true;
+  }
+
+  /** One painted plate. A crumb is that frame, not a whole hull. */
+  _scrap(ctx, sx, sy, size, alpha) {
+    const sheet = this.sheet();
+    if (!sheet || !(alpha > 0) || !(size > 0)) return false;
+    sheet.start();
+    if (!sheet.ready) return false;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(this.e.rotation || 0);
+    ctx.globalAlpha = alpha;
+    const ok = sheet.draw(ctx, "plate" + this.plateIndex, this.row, size);
+    ctx.restore();
+    return ok;
   }
 
   /**

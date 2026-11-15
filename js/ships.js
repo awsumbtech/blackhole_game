@@ -39,6 +39,21 @@ export function upgradeShip(e) {
   if (i >= 0 && i < 4) { e.ship = SHIP_CLASSES[i + 1]; e._artBase = null; e._sp = null; }
 }
 
+/**
+ * A crumb torn off `parent`. Class and look come from that hull. The plate
+ * is the crumb's index, so three crumbs off one hull are three different
+ * plates and the same hull always gives the same ones.
+ */
+export function scrapFrom(parent, index) {
+  const cls = SHIP_CLASSES.includes(parent.ship)
+    ? parent.ship
+    : SHIP_CLASSES[((parent.seed | 0) >>> 0) % SHIP_CLASSES.length];
+  const lookSrc = parent.look >= 0 ? parent.look : ((parent.seed | 0) >>> 3);
+  const look = ((lookSrc % SHIP_LOOKS) + SHIP_LOOKS) % SHIP_LOOKS;
+  const plate = ((index % 4) + 4) % 4;
+  return { cls, look, plate };
+}
+
 // Galaxy light. Kept for the flagship and for callers that still ask.
 // Ship art is already painted, so this colour never recolours a hull.
 let bounce = [150, 170, 220], lightKey = "";
