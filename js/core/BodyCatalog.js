@@ -17,11 +17,14 @@ export class BodyCatalog {
     if (!res.ok) throw new Error(String(res.status));
     const meta = await res.json();
     const rows = Array.isArray(meta.types) ? meta.types : [];
+    const sizes = await this._pieceSizes(root);
     this.order = [];
     this.byName = new Map();
     for (const row of rows) {
       if (!row.type || !row.manifest) continue;
       const art = new ArtManifest(`${root}/${this.folder}/${row.manifest}`);
+      const key = `${this.folder}/${row.manifest.replace(/\/manifest\.json$/, "")}`;
+      art.setPieceSizes(sizes.get(key));
       if (row.test) art._indexTest = true;
       this.byName.set(row.type, art);
       this.order.push(row.type);
@@ -51,5 +54,26 @@ export class BodyCatalog {
 
   warm() {
     for (const name of this.order) this.byName.get(name).start();
+  }
+
+  /** Relative painted size of each debris file, from PROVENANCE.json. */
+  async _pieceSizes(root) {
+    const out = new Map();
+    try {
+      const res = await fetch(`${root}/${this.folder}/PROVENANCE.json`);
+      if (!res.ok) return out;
+      const prov = await res.json();
+      const entries = prov.entries || {};
+      for (const [key, entry] of Object.entries(entries)) {
+        const frames = entry.debris && entry.debris.frames;
+        if (!frames) continue;
+        const byFile = new Map();
+        for (const frame of frames) {
+          if (frame.file && frame.rel_size > 0) byFile.set(frame.file, frame.rel_size);
+        }
+        out.set(key, byFile);
+      }
+    } catch { /* no provenance: pieces stay at the full frame size */ }
+    return out;
   }
 }

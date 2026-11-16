@@ -222,8 +222,10 @@ export class DebrisField {
     const minW = 6 / zoom;
     const n = Math.min(PER_BITE, frames.length);
     for (let i = 0; i < n; i++) {
-      const frac = n === 1 ? 0.34 : 0.25 + 0.15 * (i / (n - 1));
-      const dw = Math.max(minW, item * frac);
+      // Each frame fills its canvas. rel_size is how big that piece is
+      // next to the largest one, from PROVENANCE.json.
+      const rel = frames[i].relSize > 0 ? frames[i].relSize : 1;
+      const dw = Math.max(minW, item * rel);
       const p = this._free();
       const spread = n === 1 ? 0 : (i - (n - 1) / 2) * 0.36;
       this._arm(p, base + spread, dw, dw, still, shadowR, false);

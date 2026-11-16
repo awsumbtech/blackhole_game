@@ -27,6 +27,9 @@ export class ArtManifest {
   get radiusPx() { return (this.raw && this.raw.radiusPx) || this.size / 2; }
   get anchor() { return (this.raw && this.raw.anchor) || [this.size / 2, this.size / 2]; }
 
+  /** file name -> relative painted size, from the folder's PROVENANCE.json. */
+  setPieceSizes(byFile) { this._pieceSizes = byFile || null; }
+
   /** Body world-width whose painted limb sits on `radius`. */
   bodyWidth(radius) {
     return radius * this.size / this.radiusPx;
@@ -66,7 +69,10 @@ export class ArtManifest {
           });
         }
         drawSpecs.sort((a, b) => (a.z | 0) - (b.z | 0));
-        const pictures = specs => specs.map(spec => ({ spec, image: new Image(), ok: false }));
+        const pictures = specs => specs.map(spec => {
+          const rel = this._pieceSizes && this._pieceSizes.get(spec.file);
+          return { spec, image: new Image(), ok: false, relSize: rel > 0 ? rel : 1 };
+        });
         this.layers = pictures(drawSpecs);
         this.debris = pictures(debrisSpecs);
         const all = this.layers.concat(this.debris);
@@ -90,7 +96,7 @@ export class ArtManifest {
       .catch(() => fail());
   }
 
-  /** Draw every layer centred on the current origin. `body` is the body world width. */
+  /** Draw body and ring layers only. Debris roles are bite pieces, not the body. */
   draw(ctx, body) {
     if (!this.ready || !(body > 0)) return false;
     const size = this.size;
@@ -113,7 +119,8 @@ export class ArtManifest {
       sx: 0,
       sy: 0,
       sw: d.image.naturalWidth,
-      sh: d.image.naturalHeight
+      sh: d.image.naturalHeight,
+      relSize: d.relSize > 0 ? d.relSize : 1
     }));
   }
 }

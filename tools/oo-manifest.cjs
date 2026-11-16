@@ -55,12 +55,11 @@ class OoManifest {
       const json = await res.json();
       json.type = "test-gem";
       json.test = false;
-      json.debris = ["debris0.png", "debris1.png", "debris2.png", "debris3.png"];
       await route.fulfill({ json });
     });
     await page.route("**/assets/planets/test-gem/v1/body.png", route => route.continue({ url: `${ORIGIN}/assets/planets/test-crystal/v1/body.png` }));
     for (let i = 0; i < 4; i++) {
-      await page.route(`**/assets/planets/test-gem/v1/debris${i}.png`, route => route.continue({ url: `${ORIGIN}/assets/planets/test-crystal/v1/body.png` }));
+      await page.route(`**/assets/planets/test-gem/v1/debris${i}.png`, route => route.continue({ url: `${ORIGIN}/assets/planets/test-crystal/v1/debris${i}.png` }));
     }
   }
 
@@ -84,6 +83,7 @@ class OoManifest {
       const { Theme } = await import("/js/core/Theme.js");
       const { ShipCatalog } = await import("/js/core/ShipCatalog.js");
       const { Planet } = await import("/js/core/Planet.js");
+      const { Moon } = await import("/js/core/Moon.js");
       const { Ship } = await import("/js/core/Ship.js");
       const entities = await import("/js/entities.js");
       const shipsMod = await import("/js/ships.js");
@@ -149,6 +149,7 @@ class OoManifest {
       const srcs = window.__artDraws.map(d => d.src);
       const gem = srcs.some(src => src.includes("assets/planets/test-gem/"));
       const probe = srcs.some(src => src.includes("assets/ships/probe.webp"));
+      const bodySkippedDebris = srcs.every(src => !src.includes("debris"));
       bh.debris.clear();
       window.__artDraws.length = 0;
       bh.debris.spawn(planet);
@@ -156,18 +157,35 @@ class OoManifest {
       bh.scene.draw(performance.now(), 0, true);
       const debrisSrc = window.__artDraws.map(d => d.src).filter(src => src.includes("assets/planets/test-gem/v1/debris"));
       const debrisOk = debrisSrc.length === 4;
-      const plain = entities.createEntity(entities.typeById("planet"), 0, 0, 1);
-      plain.artType = "rust-desert";
-      plain.depthT = 1;
-      const bare = Theme.planets.get("rust-desert");
-      bare.start();
-      const t2 = performance.now();
-      while (!bare.ready && performance.now() - t2 < 8000) await new Promise(r => setTimeout(r, 40));
-      const liveBefore = bh.debris.live;
-      bh.debris.spawn(plain);
-      const noFake = bh.debris.live === liveBefore;
-      const ok = gem && probe && fills === 0 && planet.artType === "test-gem" && ship.ship === "probe" && debrisOk && noFake;
-      return { ok, reason: ok ? "manifest" : "new entries did not draw from their files", gem, probe, fills, debris: debrisSrc.length, noFake, artType: planet.artType, ship: ship.ship, srcs: srcs.slice(0, 6) };
+      const bite = async (kind, typeName) => {
+        const cat = kind === "moon" ? Theme.moons : Theme.planets;
+        const Body = kind === "moon" ? Moon : Planet;
+        const ent = entities.createEntity(entities.typeById(kind), s.playerX, s.playerY, 1);
+        ent.artType = typeName;
+        ent.depthT = 1;
+        ent.radius = 18;
+        const piece = cat.get(typeName);
+        piece.start();
+        const t = performance.now();
+        while (!piece.ready && performance.now() - t < 8000) await new Promise(r => setTimeout(r, 40));
+        window.__artDraws.length = 0;
+        Body.for(ent).draw(g, 30, 30, 16, 1);
+        const bodyClean = window.__artDraws.every(d => !d.src.includes("debris"));
+        bh.debris.clear();
+        bh.debris.spawn(ent);
+        const born = bh.debris.pieces.filter(p => p.on);
+        const life = born.length ? Math.max(...born.map(p => p.life)) : 0;
+        if (born.length === 4) bh.debris.update(life * 0.35, false);
+        const stillThere = bh.debris.pieces.filter(p => p.on).length;
+        bh.debris.update(life + 1, false);
+        return { ready: !!piece.ready, pieces: born.length, bodyClean, stillThere, left: bh.debris.live };
+      };
+      const planetBite = await bite("planet", "rust-desert");
+      const moonBite = await bite("moon", "grey-cratered");
+      const bitesOk = planetBite.pieces === 4 && planetBite.bodyClean && planetBite.stillThere === 4 && planetBite.left === 0
+        && moonBite.pieces === 4 && moonBite.bodyClean && moonBite.stillThere === 4 && moonBite.left === 0;
+      const ok = gem && probe && fills === 0 && bodySkippedDebris && planet.artType === "test-gem" && ship.ship === "probe" && debrisOk && bitesOk;
+      return { ok, reason: ok ? "manifest" : "new entries did not draw from their files", gem, probe, fills, bodySkippedDebris, debris: debrisSrc.length, planetBite, moonBite, artType: planet.artType, ship: ship.ship };
     });
   }
 
@@ -322,6 +340,36 @@ class OoManifest {
       bh.scene.draw(performance.now(), 0, true);
     });
     out.push(await this.shot(page, "05-test-crystal.png"));
+    await place(async () => {
+      const bh = window.__bh;
+      const s = bh.state;
+      const entities = await import("/js/entities.js");
+      const { Theme } = await import("/js/core/Theme.js");
+      Object.assign(bh.dev.cfg, { galaxy: 3, biome: "Planet Nursery", tier: 5, depth: 1, zen: false, wisp: false });
+      bh.dev.enter();
+      bh.dev.frozen = true;
+      s.paused = true;
+      s.radius = 8;
+      s.anchorSmooth = 8;
+      bh.camera.updateScale(bh.display.w, bh.display.h, true);
+      const e = entities.createEntity(entities.typeById("planet"), 0, 0, 1);
+      e.artType = "rust-desert";
+      e.depthT = 1;
+      e.radius = 16;
+      e.x = s.playerX + s.viewW * 0.16;
+      e.y = s.playerY;
+      const art = Theme.planets.get(e.artType);
+      art.start();
+      const t0 = performance.now();
+      while (!art.ready && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
+      s.entities = [];
+      bh.debris.clear();
+      bh.debris.spawn(e);
+      const born = bh.debris.pieces.filter(p => p.on);
+      if (born.length) bh.debris.update(Math.max(...born.map(p => p.life)) * 0.22, false);
+      bh.scene.draw(performance.now(), 0, true);
+    });
+    out.push(await this.shot(page, "06-planet-bite-debris.png"));
     return out;
   }
 
