@@ -41,13 +41,13 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A3. Drawing god-function
 
-- [ ] `js/render.js` 13–27 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
+- [ ] `js/render.js` 13–22 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
 - [ ] `js/render.js` `drawEntities`. One loop paints every food type, heat streaks, and the swallow stretch. The gold disc and the too-big ring were removed in v9.8.1 (B20, B21), not moved onto art frames.
-- [ ] `js/render.js` 199–211 `swallowGlow` plus a module canvas.
-- [ ] `js/render.js` 219–267 `drawPowerupPickup`.
-- [ ] `js/render.js` 269–275 `drawBlackHole` (a wrapper around `art/hole.js`).
-- [ ] `js/render.js` 278–324 `drawParticles`, `drawRipples`.
-- [ ] `js/render.js` 333–459 minimap, edge arrows, mouse cursor, and the `TRAIL_STYLES` / `edgeE` module caches.
+- [ ] `js/render.js` 169–180 `swallowGlow` (module canvas `swGlow` at 168).
+- [ ] `js/render.js` 188–235 `drawPowerupPickup`.
+- [ ] `js/render.js` 238–242 `drawBlackHole` (a wrapper around `art/hole.js`).
+- [ ] `js/render.js` 247–273 `drawParticles`, 277–293 `drawRipples`.
+- [ ] `js/render.js` 309–382 minimap, 392–424 edge arrows, 428–449 mouse cursor, and the `TRAIL_STYLES` (302) / `edgeE` (391) module caches.
 - **Moves into:** each type's object draws itself. `Scene` keeps only the order. The gold disc and the too-big ring are already gone (v9.8.1, removed, not converted: B20, B21).
 - **Depends on:** `art/sprites.js`, `ships.js`, `CometTail`, `depth.js`.
 
