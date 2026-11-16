@@ -1,5 +1,6 @@
 import { blurFor } from "./depth.js";
-import { drawShip } from "./ships.js";
+import { shipExtent } from "./ships.js";
+import { Ship } from "./core/Ship.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
@@ -93,6 +94,28 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       }
     }
 
+    if (e.type === "craft") {
+      // The sheet draws the craft. No generated canvas, no gold disc.
+      const size = shipExtent(e.ship) * 2 * e.radius;
+      if (e.depthT < 1) {
+        const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
+        const dd = size * (e.depthK0 + (1 - e.depthK0) * q);
+        Ship.for(e).draw(ctx, sx, sy, dd, alpha * (0.6 + 0.4 * q) * q, breath, still, playerRadius, eatRatio, BIG_HALO_FROM);
+      } else {
+        Ship.for(e).draw(ctx, sx, sy, size, spawnAlpha, breath, still, playerRadius, eatRatio, BIG_HALO_FROM);
+      }
+      const shipTooBig = playerRadius <= e.radius * eatRatio;
+      if (shipTooBig && !e.consuming && e.depthT >= 1) {
+        const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
+        ctx.globalAlpha = spawnAlpha;
+        ctx.beginPath();
+        ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
+        ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
+        ctx.lineWidth = 1.8 / zoom;
+        ctx.stroke();
+      }
+      continue;
+    }
     const sp = spriteFor(e, rpx);
     let d = sp.k * r;
     if (e.depthT < 1) {
@@ -113,13 +136,12 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
         ctx.arc(sx, sy, dd * 0.85, 0, Math.PI * 2);
         ctx.fill();
       }
-      const tr = e.type === "craft" ? e.rotation : 0;   // ships keep their heading as they arrive
-      ctx.translate(sx, sy); ctx.rotate(tr);
+      ctx.translate(sx, sy);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
       ctx.drawImage(bl, -pd / 2, -pd / 2, pd, pd);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * q;
       ctx.drawImage(sp.c, -dd / 2, -dd / 2, dd, dd);
-      ctx.rotate(-tr); ctx.translate(-sx, -sy);
+      ctx.translate(-sx, -sy);
       continue;
     }
     if (e.type === "star" || e.type === "neutron") {
@@ -127,10 +149,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       d *= 0.98 + breath * 0.04;
     }
     ctx.globalAlpha = alpha;
-    if (e.type === "craft") {
-      // v9.4: ships draw themselves (heading, engine glow, break-apart)
-      drawShip(ctx, e, sp, sx, sy, sp.k * e.radius, spawnAlpha, breath, still);
-    } else if (e.consuming && e.swallow && !still) {
+    if (e.consuming && e.swallow && !still) {
       // v8.1 spaghettification: a big catch stretches toward the hole and glows as it goes in
       const p = e.consumeProgress, q = p * p * (3 - 2 * p);
       const ang = Math.atan2(hy - sy, hx - sx);
@@ -168,7 +187,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     // v6 big catches: a soft gold halo as you near something's size, steady once it fits
     const tooBig = playerRadius <= e.radius * eatRatio;
     const nearQ = playerRadius / (e.radius * eatRatio);
-    if (e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
+    if (e.type !== "craft" && e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
       const ready = !tooBig;
       const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
       const a = (0.14 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);

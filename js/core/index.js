@@ -12,6 +12,8 @@ export { GoldenVeil } from "./GoldenVeil.js";
 // sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
+export { SpriteSheet } from "./SpriteSheet.js";
+export { Ship } from "./Ship.js";
 
 // The game itself, one part per job (wired together in js/game.js).
 export { createState } from "./GameState.js";

@@ -4,6 +4,7 @@
 import * as audio from "../audio.js";
 import * as ui from "../ui.js";
 import { setShipLight } from "../ships.js";
+import { Ship } from "./Ship.js";
 import { getBiome, biomeCatalog } from "../entities.js";
 import { setHaloFrom } from "../render.js";
 import { initWorlds } from "../worlds.js";
@@ -124,6 +125,7 @@ export class Galaxy {
     if (state.golden) setTimeout(() => game.hud.show("A golden galaxy. Everything here shines: pass through it for +5 Dark Matter at your next collapse.", 5000), 2500);
     state.collapseNudge = false;
     $("collapse-pill").classList.add("hidden");
+    Ship.preloadForGalaxy(state);
     audio.startDrone(biome);
     audio.newPhrase();
     audio.setMusicLayers(state.tier, biome);

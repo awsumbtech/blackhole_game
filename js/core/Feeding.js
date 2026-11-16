@@ -6,6 +6,7 @@ import * as audio from "../audio.js";
 import * as ui from "../ui.js";
 import { rand } from "../entities.js";
 import { onWorldBump, worldMassMul } from "../worlds.js";
+import { Ship } from "./Ship.js";
 import { wispReact } from "../wisp.js";
 import { POWERUPS, activatePowerup } from "../powerups.js";
 
@@ -83,6 +84,8 @@ export class Feeding {
         continue;
       }
       if (e.depthT < 1) continue;   // v8.3: still drifting in from a back layer
+      // A craft with no decoded frame is not there yet. It cannot be eaten or bumped.
+      if (e.type === "craft" && !Ship.for(e).ready()) continue;
 
       const dx = e.x - state.playerX;
       const dy = e.y - state.playerY;

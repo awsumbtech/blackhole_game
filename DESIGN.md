@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.7.3** (v9.7.2, plus comet tails that follow the comet itself, not the camera)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.7.3"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.8.0** (ships draw from painted sheets; the code painter is gone)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.8.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -384,9 +384,9 @@ js/art/
 js/data/                plain data, no logic
   worlds.js             MECHANICS, SET_PREFIX, LAYOUTS (per-galaxy mechanics + landmarks)
   objects.js            objectTypes          biomes.js   biomeCatalog, BREATHERS, REGULARS
-js/ships.js             Ship system (v9.4): shipClassFor / adoptShip / setWreck / upgradeShip,
-                        paintShip (art PAINTERS.craft), drawShip (heading, breathing engines,
-                        plate break-apart), setShipLight (galaxy bounce rim). Entity fields: ship, wreck, steer
+js/ships.js             Ship identity (v9.8): shipClassFor / adoptShip / setWreck / upgradeShip,
+                        setShipLight (kept for the flagship; it does not tint a hull).
+                        Drawing is js/core/Ship.js + js/core/SpriteSheet.js. Entity fields: ship, wreck, steer, look
 js/entities.js          plain entity factory (createEntity declares every field), biome picking
 js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
 js/worlds.js            per-galaxy mechanics & landmarks (logic; data in js/data/worlds.js)
@@ -442,6 +442,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.8.0 Ships are painted sheets (Nov 15 2026):** `Ship` draws one craft from `assets/ships/<class>.webp`. `SpriteSheet` loads the picture and its JSON and draws a named frame, centred. The nose in the art faces right. Facing left is a vertical flip (`ctx.scale(1, -1)`). A wreck still tumbles, an eaten ship still breaks into four plates, and the engine glow still breathes. The big-catch gold edge is the `liveEdge` or `wreckEdge` frame, with the same breath-then-steady timing. `paintShip` and `drawShip` are deleted. Until a sheet has decoded, that ship is not drawn. A failed load tries again after a few seconds. The five sheets are not precached. Cache `blackhole-v9.8.0`.
 - **v9.7.3 Comet tails follow the comet (Nov 13 2026):** v9.7.2 sampled the head relative to the camera, so the player's steering became part of every tail. The tail now samples world position only. It is independent of the player and the camera. An orbit, a river or drift still turns it, because that is the comet's own step. Cache `blackhole-v9.7.3`.
 - **v9.7.2 Comet tails (Nov 13 2026):** `CometTail` owns the heading. Over 60s the old `atan2(-vy, -vx)` diverged wherever the on-screen step was not the stored velocity: Nursery orbits (velocity cleared, then a fresh speck of drift, so the tail jumped at random far from the hole), Comet Current (the river is added to position), and a drifting camera. The Golden Comet tail was a clock (`time * 0.0002`) and now uses the same object. Cache `blackhole-v9.7.2`.
 - **v9.7.1 Shard bookkeeping (Nov 13 2026):** the four P3 cleanups from the v9.7 review are done. The mask source sheet is committed (`assets/fx/source/shard_masks_sheet.jpg`). Shard reach uses half the true diagonal. The review script reads `display.dpr`. `shadowRadius()` stays, because it is the pre-v9.7 shadow size and the hole draws with it. Cache `blackhole-v9.7.1`. Orbit speed and timing were not touched.
@@ -518,6 +519,7 @@ Vanilla JS ES modules on canvas, with no build step and no dependencies. Run it 
 ## 12. Backlog (awaiting Brian's pick; don't start without asking)
 
 - **Open P3:** a meteor's entry streak (`render.js`, the hot-meteor tail) still aims from stored velocity, so it can disagree with the on-screen step the way comet tails used to. Comet tails are fixed; this one was left.
+- **Ships, known and left:** A crumb is one plate frame from the hull it came off (`scrapFrom`: that class, that look, plate index). A bite of a ship is those four plate frames in the debris field, not a mask cut. `SOURCE.md` lists accepted art issues (cruiser looks that still read alike, a short capital wreck, and the rest). They are not papered over in code. The gold edge is faint at catch size until the art team repaints it thicker. The gold disc in `render.js` remains for everything that is not a ship, until step 8.
 - **Open P3:** in Zen a planet's faint ring can touch the hole's edge.
 - **Open P3:** portrait lock (not approved).
 - **App polish** (parked by Brian): proper icon, splash screen, keep screen awake, landscape support.
