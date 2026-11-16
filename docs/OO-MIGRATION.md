@@ -378,10 +378,8 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Asset:** a second, already-soft frame on each type's sheet. `blurFor` goes away.
   - **Owner:** `DepthField`. Step 18.
 
-- [ ] **Arrival glow (`mergeGlow`).** `js/render.js` 101–117. While `depthT` is below 1 and `mergeGlow` is set, a warm radial disc sits on the arriving object. Out of scope for the old comet-tail note, in scope here.
-  - **Size:** about 0.85 of the arriving sprite.
-  - **Asset px:** 128×128, one soft gold disc, `arrival.png`.
-  - **Owner:** `DepthField`. Step 18.
+- [x] **Arrival glow (`mergeGlow`).** Removed in v9.8.1, not converted to a picture. It was a warm radial disc (`rgba(255, 220, 160)` to `rgba(255, 200, 120)`) on an object while `depthT` was below 1. The hazy-to-sharp merge stays. `mergeGlow` is gone from the entity and from `Growth`.
+  - **Asset:** none. `arrival.png` was not added.
 
 ### Event cues and veils
 
@@ -554,9 +552,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
     - **Done when:** `drawWorldsBG` and `drawWorldsOverlay` only blit.
     - **Test:** `tools/oo-scenic.cjs`.
 
-19. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim (`render.js` 101–117, `mergeGlow`) becomes `arrival.png`.
-    - **Done when:** a tier-up still merges the far layer, with no `ctx.filter` and no radial gradient on the arriving object.
-    - **Test:** `tools/oo-depth.cjs`. Fails while `mergeGlow` builds a gradient. Passes when that glow is a blit.
+19. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim was removed in v9.8.1, not converted to `arrival.png`.
+    - **Done when:** a tier-up still merges the far layer, with no `ctx.filter`. The arriving object already has no radial gradient (v9.8.1).
+    - **Test:** `tools/oo-depth.cjs` for the remaining haze work. `tools/v981-cues.cjs` already fails if a warm arrival disc is drawn.
 
 20. **Canvas UI.** Minimap frame, arrows, thumbstick, banner plate, cursor. Text stays text.
     - **Done when:** those draws are `drawImage` plus `fillText` only for words.
@@ -654,6 +652,6 @@ Strategy:
 ## Counts
 
 - **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until step 2 (the art manifest). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
-- **Section B:** 42 open checkboxes (the five ship classes are checked, and B20/B21 are checked as removed in v9.8.1). Plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint. The gold disc and the too-big ring are marked removed, not converted.
+- **Section B:** 41 open checkboxes (the five ship classes are checked, and B20/B21 plus the arrival glow are checked as removed in v9.8.1). Plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint. The gold disc, the too-big ring, and the arrival disc are marked removed, not converted.
 - **Order:** 36 PRs, ships first, each based on `main`. Step 2 is the art manifest. Steps 9 and 10 (the gold disc and the too-big ring) were removed in v9.8.1, not converted.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.

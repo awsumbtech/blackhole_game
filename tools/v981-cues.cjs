@@ -1,8 +1,10 @@
 // v9.8.1: no gold disc and no too-big ring, for every object type.
 // A dev-mode scene draws a planet, a moon, debris and a ship, each both
-// still too big and already a fit. The old disc was a radial fill of
-// rgba(255, 214, 140). The old ring was a stroke of rgba(240, 130, 140),
-// or rgba(235, 185, 110) in the soft palette. Ships keep liveEdge.
+// still too big and already a fit, plus a planet mid-merge from a back layer.
+// The old disc was a radial fill of rgba(255, 214, 140). The arrival disc was
+// rgba(255, 220, 160) fading to rgba(255, 200, 120). The old ring was a stroke
+// of rgba(240, 130, 140), or rgba(235, 185, 110) in the soft palette.
+// Ships keep liveEdge.
 //   node tools/v981-cues.cjs [port] [--shots]
 // Exit 0 when every check passed. Viewport 390x844.
 // Chrome: /usr/bin/google-chrome. Playwright: playwright-core.
@@ -25,11 +27,12 @@ const HOOK = () => {
   const origStroke = proto.stroke;
   const origDraw = proto.drawImage;
   const origAdd = CanvasGradient.prototype.addColorStop;
-  const bag = { discs: [], rings: [], edges: [] };
+  const bag = { discs: [], rings: [], warm: [], edges: [] };
   window.__cues = bag;
   window.__clearCues = () => {
     bag.discs.length = 0;
     bag.rings.length = 0;
+    bag.warm.length = 0;
     bag.edges.length = 0;
   };
   proto.createRadialGradient = function () {
@@ -42,6 +45,7 @@ const HOOK = () => {
     const c = String(color);
     if (list) list.push(c);
     if (c.indexOf("255, 214, 140") >= 0 || c.indexOf("255,214,140") >= 0) bag.discs.push(c);
+    if (c.indexOf("255, 220, 160") >= 0 || c.indexOf("255, 200, 120") >= 0) bag.warm.push(c);
     return origAdd.call(this, offset, color);
   };
   proto.fill = function () {
@@ -137,7 +141,6 @@ async function proof(page) {
       e.bigFish = true;
       e.depthT = 1;
       e.consuming = false;
-      e.mergeGlow = 0;
       e.hot = 0;
       e.look = 0;
       e.variant = 2;
@@ -157,10 +160,28 @@ async function proof(page) {
         e.bigFish = true;
         e.depthT = 1;
       }
-      made.push({ type: typeId, nearQ, tooBig: s.radius <= e.radius * eat, radius: e.radius });
+      made.push({ type: typeId, nearQ, tooBig: s.radius <= e.radius * eat, radius: e.radius, depthT: 1 });
       placed.push(e);
     }
+    // Mid-merge: this is the object that used to wear the warm arrival disc.
+    const merging = entities.createEntity(entities.typeById("planet"), 0, 0, 1);
+    merging.bigFish = true;
+    merging.depthT = 0.4;
+    merging.depthK0 = 0.55;
+    merging.consuming = false;
+    merging.hot = 0;
+    merging.look = 0;
+    merging.variant = 2;
+    merging.rotation = 0.2;
+    merging.radius = s.radius / eat;
+    merging.x = s.playerX + s.viewW * 0.05;
+    merging.y = s.playerY - s.viewH * 0.02;
+    merging.vx = 0;
+    merging.vy = 0;
+    made.push({ type: "planet", nearQ: 1, tooBig: s.radius <= merging.radius * eat, radius: merging.radius, depthT: merging.depthT });
+    placed.push(merging);
     s.entities = placed;
+    s.settings.reduceMotion = false;
     s.rivals = [];
     s.finds = [];
     s.particles = [];
@@ -173,6 +194,9 @@ async function proof(page) {
     const gr = g.createRadialGradient(0, 0, 0, 0, 0, 8);
     gr.addColorStop(0, "rgba(255, 214, 140, 0.4)");
     gr.addColorStop(1, "rgba(255, 214, 140, 0)");
+    const wr = g.createRadialGradient(0, 0, 0, 0, 0, 8);
+    wr.addColorStop(0, "rgba(255, 220, 160, 0.2)");
+    wr.addColorStop(1, "rgba(255, 200, 120, 0)");
     g.fillStyle = gr;
     g.beginPath();
     g.arc(4, 4, 4, 0, Math.PI * 2);
@@ -185,7 +209,7 @@ async function proof(page) {
     g.arc(3, 3, 2, 0, Math.PI * 2);
     g.strokeStyle = "rgba(235, 185, 110, 0.3)";
     g.stroke();
-    const probe = { discs: window.__cues.discs.length, rings: window.__cues.rings.length };
+    const probe = { discs: window.__cues.discs.length, rings: window.__cues.rings.length, warm: window.__cues.warm.length };
     window.__clearCues();
 
     const toast = document.getElementById("hint-toast");
@@ -194,27 +218,32 @@ async function proof(page) {
     const plain = {
       discs: window.__cues.discs.length,
       rings: window.__cues.rings.length,
+      warm: window.__cues.warm.length,
       edges: window.__cues.edges.filter(d => d.sw === 320 && d.sx === 640).length
     };
     window.__clearCues();
     render.setSoftPalette(true);
     bh.scene.draw(performance.now(), 0, true);
-    const soft = { discs: window.__cues.discs.length, rings: window.__cues.rings.length };
+    const soft = { discs: window.__cues.discs.length, rings: window.__cues.rings.length, warm: window.__cues.warm.length };
     render.setSoftPalette(false);
     window.__clearCues();
 
-    const hookOk = probe.discs >= 1 && probe.rings >= 2;
+    const hookOk = probe.discs >= 1 && probe.rings >= 2 && probe.warm >= 1;
     const noDisc = plain.discs === 0 && soft.discs === 0;
     const noRing = plain.rings === 0 && soft.rings === 0;
+    const noWarm = plain.warm === 0 && soft.warm === 0;
     const edgeKept = plain.edges >= 2;
+    const mergingOk = made.some(m => m.depthT > 0 && m.depthT < 1);
     const covered = ["planet", "moon", "junk", "craft"].every(t =>
-      made.some(m => m.type === t && m.tooBig) && made.some(m => m.type === t && !m.tooBig));
-    const ok = hookOk && noDisc && noRing && edgeKept && covered;
+      made.some(m => m.type === t && m.tooBig && m.depthT === 1) && made.some(m => m.type === t && !m.tooBig && m.depthT === 1));
+    const ok = hookOk && noDisc && noRing && noWarm && edgeKept && covered && mergingOk;
     let reason = "clear";
-    if (!hookOk) reason = "canvas hook did not see a probe disc and ring";
+    if (!hookOk) reason = "canvas hook did not see a probe disc, ring and warm stop";
     else if (!noDisc) reason = "a gold disc was drawn";
     else if (!noRing) reason = "a too-big ring was drawn";
+    else if (!noWarm) reason = "a warm arrival disc was drawn";
     else if (!edgeKept) reason = "ship liveEdge was not drawn";
+    else if (!mergingOk) reason = "scene had no merging object";
     else if (!covered) reason = "scene missed a type or a size";
     return { ok, reason, probe, plain, soft, made, eat, version: bh.version || null };
   });
@@ -246,7 +275,6 @@ async function shot(page, file, spec) {
     e.bigFish = true;
     e.depthT = 1;
     e.consuming = false;
-    e.mergeGlow = 0;
     e.hot = 0;
     e.look = spec.look;
     e.variant = spec.variant;

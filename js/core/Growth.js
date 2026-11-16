@@ -70,20 +70,12 @@ export class Growth {
     e.depthK0 = Math.min(2.5, Math.max(0.3, rad / (e.radius * z)));
     e.vx *= 0.4; e.vy *= 0.4;
     e._spawnAge = 60; e._spawnAlpha = 1;
-    // Soft arrival ring (drawn while depthT < 1)
-    e.mergeGlow = 1;
     state.entities.push(e);
   }
 
   update(dt) {
     if (this.mergePulse > 0) {
       this.mergePulse = Math.max(0, this.mergePulse - dt / (MERGE_FRAMES * 0.85));
-    }
-    // Fade per-entity merge glow with depthT (set each frame from living-world)
-    const ents = this.state.entities;
-    for (let i = 0; i < ents.length; i++) {
-      const e = ents[i];
-      if (e.mergeGlow && e.depthT >= 1) e.mergeGlow = 0;
     }
   }
 
