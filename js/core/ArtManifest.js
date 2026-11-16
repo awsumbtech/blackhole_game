@@ -12,6 +12,7 @@ export class ArtManifest {
     this.base = url.replace(/[^/]+$/, "");
     this.raw = null;
     this.layers = [];
+    this.debris = [];
     this.ready = false;
     this.started = false;
     this.failedAt = 0;
@@ -51,19 +52,34 @@ export class ArtManifest {
       .then(meta => {
         if (gen !== this._gen) return;
         this.raw = meta;
-        const layers = Array.isArray(meta.layers) ? meta.layers.slice() : [];
-        layers.sort((a, b) => (a.z | 0) - (b.z | 0));
-        this.layers = layers.map(layer => ({ spec: layer, image: new Image(), ok: false }));
+        const listed = Array.isArray(meta.layers) ? meta.layers.slice() : [];
+        const debrisSpecs = [];
+        const drawSpecs = [];
+        for (const layer of listed) {
+          if (/^debris\d+$/.test(layer.role || "")) debrisSpecs.push(layer);
+          else drawSpecs.push(layer);
+        }
+        if (Array.isArray(meta.debris)) {
+          meta.debris.forEach((item, i) => {
+            const file = typeof item === "string" ? item : item && item.file;
+            if (file) debrisSpecs.push({ role: "debris" + i, file, z: 0, scale: 1 });
+          });
+        }
+        drawSpecs.sort((a, b) => (a.z | 0) - (b.z | 0));
+        const pictures = specs => specs.map(spec => ({ spec, image: new Image(), ok: false }));
+        this.layers = pictures(drawSpecs);
+        this.debris = pictures(debrisSpecs);
+        const all = this.layers.concat(this.debris);
         if (!this.layers.length) { fail(); return; }
-        let left = this.layers.length;
-        for (const layer of this.layers) {
+        let left = all.length;
+        for (const layer of all) {
           const img = layer.image;
           img.onload = () => {
             if (gen !== this._gen) return;
             layer.ok = true;
             if (--left === 0) {
               if (this._timer) { clearTimeout(this._timer); this._timer = 0; }
-              this.ready = this.layers.every(l => l.ok);
+              this.ready = all.every(l => l.ok);
               if (!this.ready) fail();
             }
           };
@@ -86,5 +102,18 @@ export class ArtManifest {
       ctx.drawImage(layer.image, -w / 2 - ax * w, -w / 2 - ay * w, w, w);
     }
     return true;
+  }
+
+  /** Painted bite pieces, when the manifest lists them. Otherwise null. */
+  debrisFrames() {
+    if (!this.ready || !this.debris.length) return null;
+    if (!this.debris.every(d => d.ok)) return null;
+    return this.debris.map(d => ({
+      image: d.image,
+      sx: 0,
+      sy: 0,
+      sw: d.image.naturalWidth,
+      sh: d.image.naturalHeight
+    }));
   }
 }

@@ -55,9 +55,13 @@ class OoManifest {
       const json = await res.json();
       json.type = "test-gem";
       json.test = false;
+      json.debris = ["debris0.png", "debris1.png", "debris2.png", "debris3.png"];
       await route.fulfill({ json });
     });
     await page.route("**/assets/planets/test-gem/v1/body.png", route => route.continue({ url: `${ORIGIN}/assets/planets/test-crystal/v1/body.png` }));
+    for (let i = 0; i < 4; i++) {
+      await page.route(`**/assets/planets/test-gem/v1/debris${i}.png`, route => route.continue({ url: `${ORIGIN}/assets/planets/test-crystal/v1/body.png` }));
+    }
   }
 
   static async proof(page) {
@@ -145,8 +149,25 @@ class OoManifest {
       const srcs = window.__artDraws.map(d => d.src);
       const gem = srcs.some(src => src.includes("assets/planets/test-gem/"));
       const probe = srcs.some(src => src.includes("assets/ships/probe.webp"));
-      const ok = gem && probe && fills === 0 && planet.artType === "test-gem" && ship.ship === "probe";
-      return { ok, reason: ok ? "manifest" : "new entries did not draw from their files", gem, probe, fills, artType: planet.artType, ship: ship.ship, srcs: srcs.slice(0, 6) };
+      bh.debris.clear();
+      window.__artDraws.length = 0;
+      bh.debris.spawn(planet);
+      s.entities = [];
+      bh.scene.draw(performance.now(), 0, true);
+      const debrisSrc = window.__artDraws.map(d => d.src).filter(src => src.includes("assets/planets/test-gem/v1/debris"));
+      const debrisOk = debrisSrc.length === 4;
+      const plain = entities.createEntity(entities.typeById("planet"), 0, 0, 1);
+      plain.artType = "rust-desert";
+      plain.depthT = 1;
+      const bare = Theme.planets.get("rust-desert");
+      bare.start();
+      const t2 = performance.now();
+      while (!bare.ready && performance.now() - t2 < 8000) await new Promise(r => setTimeout(r, 40));
+      const liveBefore = bh.debris.live;
+      bh.debris.spawn(plain);
+      const noFake = bh.debris.live === liveBefore;
+      const ok = gem && probe && fills === 0 && planet.artType === "test-gem" && ship.ship === "probe" && debrisOk && noFake;
+      return { ok, reason: ok ? "manifest" : "new entries did not draw from their files", gem, probe, fills, debris: debrisSrc.length, noFake, artType: planet.artType, ship: ship.ship, srcs: srcs.slice(0, 6) };
     });
   }
 
