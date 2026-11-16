@@ -18,6 +18,30 @@
    "file": "body.png",
    "z": 0,
    "scale": 1.0
+  },
+  {
+   "role": "debris0",
+   "file": "debris0.png",
+   "z": 0,
+   "scale": 1
+  },
+  {
+   "role": "debris1",
+   "file": "debris1.png",
+   "z": 0,
+   "scale": 1
+  },
+  {
+   "role": "debris2",
+   "file": "debris2.png",
+   "z": 0,
+   "scale": 1
+  },
+  {
+   "role": "debris3",
+   "file": "debris3.png",
+   "z": 0,
+   "scale": 1
   }
  ]
 }
