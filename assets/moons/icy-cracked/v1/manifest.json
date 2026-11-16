@@ -1,0 +1,23 @@
+{
+ "kind": "moon",
+ "type": "icy-cracked",
+ "version": "v1",
+ "name": "Icy cracked",
+ "moonKind": 1,
+ "size": 512,
+ "anchor": [
+  256,
+  256
+ ],
+ "radiusPx": 215.1,
+ "light": "upper-left",
+ "ringed": false,
+ "layers": [
+  {
+   "role": "body",
+   "file": "body.png",
+   "z": 0,
+   "scale": 1.0
+  }
+ ]
+}

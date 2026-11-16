@@ -1,0 +1,122 @@
+{
+ "class": "courier",
+ "test": true,
+ "note": "TEST class to prove a ship add needs no code change. One painted look; rows 1-7 repeat row 0 exactly (no recolour). Same mechanical pipeline as ships-v1 stage 2 (keying, ECC register, chroma_clean2, glow difference, painted-cyan plate split, despill); edges by the compliant v2extract.py (no morphology). Plates: union of the painted cyan lines of cracks_v1 and cracks_v2 (as the v1 shuttle).",
+ "edge_width_150": {
+  "liveEdge": 5.3,
+  "wreckEdge": 6.54
+ },
+ "generations": [
+  {
+   "id": "tst_courier_live",
+   "prompt": "Game sprite. Top-down orthographic view of a single spaceship seen directly from above, nose pointing to the RIGHT, mirror-symmetric about its horizontal centreline, centred, the ship spanning about 80% of the image width. Ship design: TEST CLASS 'courier', a new design unlike any other ship: a twin-boom catamaran courier, two long slender parallel outrigger hulls joined in the middle by one short wide flat wing deck, a small rounded teardrop cockpit pod sitting on the wing deck between the hulls, each hull ending at the right in a sharp forward prong so the nose is a forked double point with a clear notch between the prongs, one round engine nozzle at the rear of each hull at the left, a small square radiator fin sticking out from the outer side of each hull near the rear, soft teal accent stripes along each boom, tiny warm windows on the pod. Cool pale blue-grey hull with soft teal accents. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms inside the hull, light falling straight from above so the upper edges are pale and luminous and the lower half settles into cool blue-violet shadow, calm pale desaturated colours, delicate thin hand-drawn panel lines, but a crisp clean opaque outer silhouette. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no shadow, no gradient, no stars, no text, no border. Paint it as a sibling of the reference ship: same painting style, brushwork, lighting, scale and detail level, but this new design and colours.",
+   "refs": [
+    "_raw/b_cruiser_live.jpg"
+   ],
+   "raw_sha256": "07d367cd81d7164fa8bed90f4900c76bf73b4b57a3121b27af97b3fea870c374",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_wreck",
+   "prompt": "Edit of the first reference image. Keep the exact same twin-boom courier spaceship in the exact same pose, position, size and outline, same top-down view, same soft watercolour wash painting style and brushwork, same flat solid magenta background. Turn it into a dead derelict wreck that reads at a glance even when tiny, painted like the second reference wreck: the hull and frame only a little darker and dimmer, about 15% darker than the first reference image, lightly scorched and desaturated, a few soft charred soot washes over parts of the hull while most of its own cool pale blue-grey and teal paint still shows, soot scorch marks streaking back toward the tail, three jagged holes punched clean through the two hull booms and the wing deck so the flat magenta background shows through, dark frame ribs visible inside the holes, torn plate edges, all windows and canopy dark, engines cold and dark, no lights. Calm, no fire, no smoke clouds, no red rust paint, nothing painted outside the ship.",
+   "refs": [
+    "_raw/tst_courier_live.jpg",
+    "_raw/b_cruiser_wreck.jpg"
+   ],
+   "raw_sha256": "8fdf12684c12a84f57bc860197f1d8e8b08fcd112b8f4b20058d2fd69204ca95",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_glow",
+   "prompt": "Edit of the reference image. Keep the exact same spaceship in the exact same pose, position, size and silhouette, same top-down view, same soft watercolour wash style. Replace the magenta background with a pure flat black background. Light the engines: a soft calm pale blue-white engine glow blooms from each of the two engine nozzles at the rear (left end) of the ship, brightest in the nozzle and fading smoothly to nothing a short distance behind the ship. Soft, gentle, painterly glow, no lens flare, no sparks, no exhaust beam. Nothing else changes.",
+   "refs": [
+    "_raw/tst_courier_live.jpg"
+   ],
+   "raw_sha256": "fce6ea969ff94c78928eb17a911df79c39e0b6448f5c67904ae82b7697503103",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_cracks_v1",
+   "prompt": "Edit of the reference image. Keep the exact same wrecked twin-boom spaceship completely unchanged in the exact same pose, position and size, same soft watercolour wash style, same flat solid magenta background. Add only three bold bright pure cyan (#00FFFF) fracture lines painted on top of the ship showing exactly where it will break apart into four solid chunks. The first cyan line runs along the whole seam where the UPPER hull boom joins the central flat wing deck, from the rear edge of the deck to its front edge, separating the upper boom from the deck. The second cyan line runs the same way along the whole seam where the LOWER hull boom joins the wing deck. The third cyan line crosses the wing deck from the first line to the second line, straight through the middle of the deck and the cockpit pod, splitting the deck into a rear half and a front half. Each cyan line is an irregular jagged zigzag crack, never a straight ruler line, passing through the painted holes where it can, and each one runs continuously from one outer edge of the deck to the other. Draw exactly three lines. Nothing else changes.",
+   "refs": [
+    "_raw/refs/tst_courier_wreck_full.png"
+   ],
+   "raw_sha256": "915b7464fe6546fc718d8b1f71c997a2d0fbe3b56e5a3100c24d85f5bcdd6440",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_cracks_v2",
+   "prompt": "Edit of the reference image. Keep the exact same wrecked twin-boom spaceship completely unchanged in the exact same pose, position and size, same soft watercolour wash style, same flat solid magenta background. Add only three bold bright pure cyan (#00FFFF) fracture lines painted on top of the ship showing exactly where it will break apart into four solid chunks. Each cyan line crosses the WHOLE ship from its very top outer edge to its very bottom outer edge: through the upper hull boom, across the central flat wing deck, and through the lower hull boom, cutting both booms completely. All three lines lie inside the length of the central wing deck, between the rear edge of the deck and the front of the cockpit pod: the first at the rear edge of the deck, the second through the middle of the cockpit pod, the third just in front of the cockpit pod, evenly spaced. Each line is an irregular jagged zigzag crack, never a straight ruler line, passing through the painted holes where it can. The three lines do not touch or cross each other. Never draw a line along the length of the ship. Nothing else changes.",
+   "refs": [
+    "_raw/refs/tst_courier_wreck_full.png"
+   ],
+   "raw_sha256": "5cff1893343b805a6a8db12b94cc55d94eb5aff277fe4c4e3ecce4c5494b4cfe",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_liveEdge_s08p11_v1",
+   "prompt": "Edit of the reference image (1024 x 1024 pixels). Keep the exact same ship in the exact same pose, position, size and silhouette (do not enlarge or move it), same top-down view, same soft watercolour wash style, same flat solid magenta background all around. Add only one thing: a wide, solid, filled warm metallic gold die-cut sticker border around the OUTSIDE of the whole outer silhouette, touching the hull with no gap. This is a broad flat band, not a thin outline: measured straight out from the hull it is about 11 pixels wide in this 1024-pixel image, everywhere, including around every wing tip, fin and nozzle. Follow every fin, nozzle and notch without bridging across gaps. Do not paint over the hull, do not recolour anything, no glow, no interior lines, do not fill or outline holes inside the hull. Nothing else changes.",
+   "refs": [
+    "_raw/refs/v2s08_tst_courier_live.png"
+   ],
+   "raw_sha256": "d9306afe66cf4372cf8d1af4267b13e4db8b0fd3bcd5c7d38ea40a63ec573b05",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_wreckEdge_s08p11_v1",
+   "prompt": "Edit of the reference image (1024 x 1024 pixels). Keep the exact same wrecked ship in the exact same pose, position, size and silhouette (do not enlarge or move it), same top-down view, same soft watercolour wash style, same flat solid magenta background all around. Add only one thing: a wide, solid, filled warm metallic gold die-cut sticker border around the OUTSIDE of the whole outer silhouette, touching the hull with no gap. This is a broad flat band, not a thin outline: measured straight out from the hull it is about 11 pixels wide in this 1024-pixel image, everywhere, including along the broken, jagged and torn edges of the damaged plating, where it follows the outer damaged outline at the same full width. Follow every fin, nozzle and notch without bridging across gaps. Do not paint over the hull, do not recolour anything, no glow, no interior lines, do not fill or outline holes inside the hull. Nothing else changes.",
+   "refs": [
+    "_raw/refs/v2s08_tst_courier_wreck.png"
+   ],
+   "raw_sha256": "ee78707368f4c13a86bee2ed6aa8dfa219a784822344981ead3855b108679508",
+   "tool": "cursor.GenerateImage"
+  },
+  {
+   "id": "tst_courier_liveEdge_s08p9_v2",
+   "prompt": "Edit of the reference image (1024 x 1024 pixels). Keep the exact same ship in the exact same pose, position, size and silhouette (do not enlarge or move it), same top-down view, same soft watercolour wash style, same flat solid magenta background all around. Add only one thing: a wide, solid, filled warm metallic gold die-cut sticker border around the OUTSIDE of the whole outer silhouette, touching the hull with no gap. This is a broad flat band, not a thin outline: measured straight out from the hull it is about 9 pixels wide in this 1024-pixel image, everywhere, including around every wing tip, fin and nozzle. Follow every fin, nozzle and notch without bridging across gaps. Do not paint over the hull, do not recolour anything, no glow, no interior lines, do not fill or outline holes inside the hull. The open gap between the two hull booms behind the wing deck and the open notch between the two front prongs stay flat empty magenta: the border goes into each gap following both booms and the deck edge at the same narrow width, it never fills or bridges a gap. Nothing else changes.",
+   "refs": [
+    "_raw/refs/v2s08_tst_courier_live.png"
+   ],
+   "raw_sha256": "47a81972bfc842c804f0f6ae0ea3b31d116e2f52bf71c0ffc8a8785091f5d863",
+   "tool": "cursor.GenerateImage"
+  }
+ ],
+ "frames": {
+  "live": {
+   "src": "variants/tst/frames/courier_live.png",
+   "sha256": "bc657415f86f00f5275dd02ee97f0094d3bfd078e16ef2bd2aeabee05c447271"
+  },
+  "wreck": {
+   "src": "variants/tst/frames/courier_wreck.png",
+   "sha256": "d196d06d365b84d7c9d46dbd3517d68d60e24505ae830b414f358bf866fec929"
+  },
+  "liveEdge": {
+   "src": "_scratch/v2/compliant/tst_courier_liveEdge_s08p9_v2.png",
+   "sha256": "6c2146e66538caadcf1d2328e18c1f869e4a307469c5af3ea02026c94e0eebf8"
+  },
+  "wreckEdge": {
+   "src": "_scratch/v2/compliant/tst_courier_wreckEdge_s08p11_v1.png",
+   "sha256": "2f058f9103a841c9b29775f493037903a27f2231329732aa5779392cdc970a97"
+  },
+  "plate0": {
+   "src": "variants/tst/frames/courier_plate0.png",
+   "sha256": "c22bb5a989e299fe267400070b7fb1d3ec92ca89d1cb0e459d3f5f8e5077ec56"
+  },
+  "plate1": {
+   "src": "variants/tst/frames/courier_plate1.png",
+   "sha256": "5303d42a574fe01e1d665427b2314ff19ed39f2440f9ab6a224fe2c1b1577c03"
+  },
+  "plate2": {
+   "src": "variants/tst/frames/courier_plate2.png",
+   "sha256": "0816d359dfb4dfd3b1a12181a5462881dae747b6bda4185bf8b43c4ff6fddf5f"
+  },
+  "plate3": {
+   "src": "variants/tst/frames/courier_plate3.png",
+   "sha256": "e039c0f08c9ff46ac95f32e204941358e8663333df2e3bf1235380c72b9799ef"
+  },
+  "glow": {
+   "src": "variants/tst/frames/courier_glow.png",
+   "sha256": "340d6bb5da13bc3264d3466629a775c7dccf94126625badbb95dc87e2855d085"
+  }
+ }
+}

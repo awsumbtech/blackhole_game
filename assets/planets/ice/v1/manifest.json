@@ -1,0 +1,23 @@
+{
+ "kind": "planet",
+ "type": "ice",
+ "version": "v1",
+ "name": "Ice",
+ "archetype": 3,
+ "size": 512,
+ "anchor": [
+  256,
+  256
+ ],
+ "radiusPx": 214.9,
+ "light": "upper-left",
+ "ringed": false,
+ "layers": [
+  {
+   "role": "body",
+   "file": "body.png",
+   "z": 0,
+   "scale": 1.0
+  }
+ ]
+}

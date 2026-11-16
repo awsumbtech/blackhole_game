@@ -1,0 +1,84 @@
+{
+ "tool": "cursor.GenerateImage",
+ "postprocess": "_tools/build.py (keying.key, chroma_clean2 on magenta keys, crop/resample)",
+ "entries": {
+  "moons/grey-cratered/v1": {
+   "raws": [
+    {
+     "id": "moon_grey-cratered_v1",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a grey cratered moon with no air: soft grey surface with darker grey maria patches, many round impact craters with bright rims, one bright young ray crater. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "d4865ac3e5d2c67d99f4f406e8e2e93a4424069e29c639fa17e040309ca12c18",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "f9448c88ef246aa8c424d2b2038cca9e630ca381ad1302f5553043573240033f"
+   }
+  },
+  "moons/icy-cracked/v1": {
+   "raws": [
+    {
+     "id": "moon_icy-cracked_v1",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: an icy cracked moon with no air: warm cream-white ice crossed by long curving rust-brown crack lines, very few craters. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "bc6860f8f1ea167333d847c46ccf025f629e8dbb81634e636f2208c39eb5fdf4",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "09034b77651ff00835c8308e1cae2ff4168f0372765e7faecaee4c834d8c1cf4"
+   }
+  },
+  "moons/volcanic/v1": {
+   "raws": [
+    {
+     "id": "moon_volcanic_v1",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a volcanic moon with no air: sulphur-yellow and orange surface with pale cream patches, dark brown-black volcanic vents with soft orange halos, no craters. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "6d59b5854f4bcdbe49beabe66c6ce7f979c97830cf2b1ac0ca5919015dd94c33",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "b73ade07e5eb9c2f84679120d3c6293805867b02bf584dd0bb8fa6d9dfa8ba7e"
+   }
+  },
+  "moons/dark-dusty/v1": {
+   "raws": [
+    {
+     "id": "moon_dark-dusty_v1",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a dark dusty moon with no air: dark brown-grey dusty surface covered with many small soft craters. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "6bcd3f037985847749263634c344125c04091164c0433e2a54c93ab876f62328",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "cceaa5821b29fc6764c12fe4ad6a90ab93db5a9263b30198624e09e761e39647"
+   }
+  },
+  "moons/bright-icy/v1": {
+   "raws": [
+    {
+     "id": "moon_bright-icy_v1",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a bright icy moon with no air: brilliant white and pale-blue ice with a few faint blue streaks and a few small craters. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "2f2ffe2f52591ba73a6c51c42d50c67ebfa7e391908847e28756475daaa5b7f2",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "029b57704e0f8f4327be745ada67807e123cfa647f2326c14c2b0726eaf6131b"
+   }
+  },
+  "moons/rusty/v1": {
+   "raws": [
+    {
+     "id": "moon_rusty_v2",
+     "prompt": "Game sprite. A single small moon seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a rusty moon with no air: rust-brown and muted red-brown surface, small craters and one large crater basin, the shading a smooth soft gradient from the bright upper left to the shadowed lower right with no stripes or bands of shadow. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "0354c24758a6c8deab97938bd13162744229e9cf9443b9d87faee515ba152883",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "1d8dbfe476db730b01bfd801ae6bea60a57bc22ecffece2926f5a328acb998aa"
+   }
+  }
+ }
+}
