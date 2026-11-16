@@ -13,6 +13,88 @@
    ],
    "files": {
     "body.png": "f9448c88ef246aa8c424d2b2038cca9e630ca381ad1302f5553043573240033f"
+   },
+   "debris": {
+    "chosen": "debris_grey-cratered_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of grey moon rock: grey and silver-grey cratered regolith with small craters and a dusty grey stone underside, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/grey-cratered/v1/body.png"
+    ],
+    "ref_sha256": [
+     "f9448c88ef246aa8c424d2b2038cca9e630ca381ad1302f5553043573240033f"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_grey-cratered_v2.jpg",
+    "raw_sha256": "89300a65b514a14714a2ed116eca385fd911db8ea798738c39a949316f991471",
+    "attempts": [
+     "debris_grey-cratered_v1",
+     "debris_grey-cratered_v2"
+    ],
+    "rejected": {
+     "debris_grey-cratered_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       127,
+       124,
+       501,
+       488
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 73921,
+      "scale": 0.2995,
+      "rel_size": 1.0,
+      "sha256": "4a7db8c084ffec0d39f3dec3734155ed8a6e05e92205e01068904a97d71a4696"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       571,
+       155,
+       919,
+       464
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 64173,
+      "scale": 0.3218,
+      "rel_size": 0.932,
+      "sha256": "4b4a248d12bd5923cfd0f87457e71a0a6bd3bd5cfabe1e1d5082d46a1ee17570"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       223,
+       597,
+       425,
+       845
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 26436,
+      "scale": 0.4516,
+      "rel_size": 0.598,
+      "sha256": "394a95b8c2f1956e498d017ff48c7723b46d82f29e0303517498c84178fdc114"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       684,
+       700,
+       781,
+       785
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 5709,
+      "scale": 1.1546,
+      "rel_size": 0.278,
+      "sha256": "52f47c254fabf4dffc9f8a6139d51e6a7f1c4b2e11fabd933ad452a67a0a9d5b"
+     }
+    ]
    }
   },
   "moons/icy-cracked/v1": {
@@ -26,6 +108,88 @@
    ],
    "files": {
     "body.png": "09034b77651ff00835c8308e1cae2ff4168f0372765e7faecaee4c834d8c1cf4"
+   },
+   "debris": {
+    "chosen": "debris_icy-cracked_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of cracked moon ice: off-white and ivory ice with thin brown-orange crack lines across it, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/icy-cracked/v1/body.png"
+    ],
+    "ref_sha256": [
+     "09034b77651ff00835c8308e1cae2ff4168f0372765e7faecaee4c834d8c1cf4"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_icy-cracked_v2.jpg",
+    "raw_sha256": "fa8eb6e6df00385057fb294db0c9bb674753a359c58a42c3c4fee4e87b8ce044",
+    "attempts": [
+     "debris_icy-cracked_v1",
+     "debris_icy-cracked_v2"
+    ],
+    "rejected": {
+     "debris_icy-cracked_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       103,
+       88,
+       473,
+       469
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 73941,
+      "scale": 0.294,
+      "rel_size": 0.975,
+      "sha256": "e0ad7ee571ace52072f039755dad9948da496835fae660df0c87e46dcca65204"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       570,
+       101,
+       918,
+       464
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 69521,
+      "scale": 0.3085,
+      "rel_size": 0.945,
+      "sha256": "d1e4e992f831e2e7e314549899a93d11ae1bac82016c65e5032ebaf66ad89aac"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       165,
+       564,
+       401,
+       911
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 39567,
+      "scale": 0.3228,
+      "rel_size": 0.713,
+      "sha256": "1ca7419f704aed4a2b254c7ab42a355189dc02557abecb4fe0aa2c29414d8590"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       585,
+       555,
+       899,
+       903
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 77787,
+      "scale": 0.3218,
+      "rel_size": 1.0,
+      "sha256": "7e9004a3fac80cc00fa872fde5ea52032bda3882fe2a30274fe93515257e1a41"
+     }
+    ]
    }
   },
   "moons/volcanic/v1": {
@@ -39,6 +203,88 @@
    ],
    "files": {
     "body.png": "b73ade07e5eb9c2f84679120d3c6293805867b02bf584dd0bb8fa6d9dfa8ba7e"
+   },
+   "debris": {
+    "chosen": "debris_volcanic_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of a volcanic moon: sulfur-yellow and orange crust with dark brown-black volcanic pits and spots, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/volcanic/v1/body.png"
+    ],
+    "ref_sha256": [
+     "b73ade07e5eb9c2f84679120d3c6293805867b02bf584dd0bb8fa6d9dfa8ba7e"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_volcanic_v2.jpg",
+    "raw_sha256": "1ced9be79189eefdece76e55699299c3fee8bfe5af606999f39ad783cbb653fe",
+    "attempts": [
+     "debris_volcanic_v1",
+     "debris_volcanic_v2"
+    ],
+    "rejected": {
+     "debris_volcanic_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       101,
+       91,
+       477,
+       486
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 79777,
+      "scale": 0.2835,
+      "rel_size": 0.994,
+      "sha256": "cc6bb66f836714ef36006a147bf580704d2eab803ad57d2304c9392af4704594"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       581,
+       99,
+       927,
+       480
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 80802,
+      "scale": 0.294,
+      "rel_size": 1.0,
+      "sha256": "fa40396691e34d570e8ca196f1f77c356e1a9b107d40f0b27e64897559374652"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       163,
+       563,
+       448,
+       928
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 45902,
+      "scale": 0.3068,
+      "rel_size": 0.754,
+      "sha256": "be659056cb14a173e1b8c608ae84c8ea83f17270a4bfed340d8972b1f695ad80"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       587,
+       567,
+       909,
+       912
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 75291,
+      "scale": 0.3246,
+      "rel_size": 0.965,
+      "sha256": "9541f24e758d76d451e930787e4f75da090a6c8436eaa89a8e08f7a5f5b9f2fe"
+     }
+    ]
    }
   },
   "moons/dark-dusty/v1": {
@@ -52,6 +298,88 @@
    ],
    "files": {
     "body.png": "cceaa5821b29fc6764c12fe4ad6a90ab93db5a9263b30198624e09e761e39647"
+   },
+   "debris": {
+    "chosen": "debris_dark-dusty_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of a dark dusty moon: dull grey-brown and dusky blue-grey dusty rock with soft powdery texture, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/dark-dusty/v1/body.png"
+    ],
+    "ref_sha256": [
+     "cceaa5821b29fc6764c12fe4ad6a90ab93db5a9263b30198624e09e761e39647"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_dark-dusty_v2.jpg",
+    "raw_sha256": "37dd85ff7c7ec86e333220e8d0d730c23c9438f415b4b4317472e716b0a13cba",
+    "attempts": [
+     "debris_dark-dusty_v1",
+     "debris_dark-dusty_v2"
+    ],
+    "rejected": {
+     "debris_dark-dusty_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       129,
+       121,
+       467,
+       503
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 73457,
+      "scale": 0.2932,
+      "rel_size": 0.978,
+      "sha256": "55c2bfc201266acdebcbfafca41e5b8d77f579f5d12fd0eac41dc979d85833d2"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       574,
+       141,
+       915,
+       498
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 76833,
+      "scale": 0.3137,
+      "rel_size": 1.0,
+      "sha256": "16368cc18ba59020b0fde2f70ac837602c8b93ae2b255196b9aeb8e04549c7bb"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       208,
+       602,
+       423,
+       877
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 30708,
+      "scale": 0.4073,
+      "rel_size": 0.632,
+      "sha256": "5c5157f2e17477603416343bf3c39b793de87e2dc6f7da20ee6b22b08ff94837"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       666,
+       688,
+       790,
+       814
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 10880,
+      "scale": 0.8889,
+      "rel_size": 0.376,
+      "sha256": "7783aadbdc11603ac40abe9821834959fc1226f21ecec7eb25677e80baab1e12"
+     }
+    ]
    }
   },
   "moons/bright-icy/v1": {
@@ -65,6 +393,88 @@
    ],
    "files": {
     "body.png": "029b57704e0f8f4327be745ada67807e123cfa647f2326c14c2b0726eaf6131b"
+   },
+   "debris": {
+    "chosen": "debris_bright-icy_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of a bright icy moon: brilliant white and pale-blue ice shards with faint blue streaks, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/bright-icy/v1/body.png"
+    ],
+    "ref_sha256": [
+     "029b57704e0f8f4327be745ada67807e123cfa647f2326c14c2b0726eaf6131b"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_bright-icy_v2.jpg",
+    "raw_sha256": "ae5c700ced26ab03acd29ec7b4df9fe5e9bb3b1c859e68f55e36e411e69bbef7",
+    "attempts": [
+     "debris_bright-icy_v1",
+     "debris_bright-icy_v2"
+    ],
+    "rejected": {
+     "debris_bright-icy_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       101,
+       119,
+       470,
+       473
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 72957,
+      "scale": 0.3035,
+      "rel_size": 1.0,
+      "sha256": "cfe6d2f93a6699765a67d8549af6b9e54452a4feebc365b2da3747a22fae1c8b"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       597,
+       207,
+       923,
+       478
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 53830,
+      "scale": 0.3436,
+      "rel_size": 0.859,
+      "sha256": "d0e4edac2501adef18f8660df238d628a05415df252524b75713be200163a752"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       217,
+       614,
+       411,
+       853
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 21388,
+      "scale": 0.4686,
+      "rel_size": 0.541,
+      "sha256": "1f436a574ef7d2e6ca65fdfc956023481eaeada211e056ef0270b0fcf5d1c66e"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       679,
+       683,
+       778,
+       793
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 7495,
+      "scale": 1.0182,
+      "rel_size": 0.321,
+      "sha256": "7efcb6562bdfdb161a339609361412357c88c0782c91859a125fb8d4797426a6"
+     }
+    ]
    }
   },
   "moons/rusty/v1": {
@@ -78,7 +488,90 @@
    ],
    "files": {
     "body.png": "1d8dbfe476db730b01bfd801ae6bea60a57bc22ecffece2926f5a328acb998aa"
+   },
+   "debris": {
+    "chosen": "debris_rusty_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of a rusty moon: rust-red and terracotta rock with small craters and darker brown pits, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/moons/rusty/v1/body.png"
+    ],
+    "ref_sha256": [
+     "1d8dbfe476db730b01bfd801ae6bea60a57bc22ecffece2926f5a328acb998aa"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_rusty_v2.jpg",
+    "raw_sha256": "9a27f5cb10e39cd9378390bd12ef9db8d48384586f883a90e0a90315a9b46687",
+    "attempts": [
+     "debris_rusty_v1",
+     "debris_rusty_v2"
+    ],
+    "rejected": {
+     "debris_rusty_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       139,
+       106,
+       464,
+       512
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 81721,
+      "scale": 0.2759,
+      "rel_size": 1.0,
+      "sha256": "9353efc02274dd0f48c30205020c7de7c6f653c28a55b419083fac2a11b33090"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       589,
+       134,
+       921,
+       524
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 73409,
+      "scale": 0.2872,
+      "rel_size": 0.948,
+      "sha256": "e81a7eb6df21d7b60ad55918eb47ce394e0b4125b879aa152443c7d5e2c0639c"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       236,
+       632,
+       389,
+       863
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 20318,
+      "scale": 0.4848,
+      "rel_size": 0.499,
+      "sha256": "6d58a5a0407b3b1d74dcac99e1ad2c66d8ab68eaf9c637ca62242b3987e251ab"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       677,
+       701,
+       792,
+       816
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 9395,
+      "scale": 0.9739,
+      "rel_size": 0.339,
+      "sha256": "7b99ecce739a55a3edd6d48c0e7b6f5fe79e91a569d89c19ccc20724969213da"
+     }
+    ]
    }
   }
- }
+ },
+ "postprocess_debris": "_tools/debris.py: ships-v1 keying.key (+ derive.chroma_clean2 on magenta keys) on one painted 2x2 GenerateImage sheet; connected components assigned to quadrants (TL,TR,BL,BR = debris0..3); specks under 2% of a quadrant's main piece dropped; uniform premultiplied Lanczos to 112 px long side, centred on 128x128. No pixel is painted in code."
 }
