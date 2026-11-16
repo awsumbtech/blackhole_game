@@ -5,7 +5,8 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
-import { upgradeShip, shipLight, scrapFrom } from "./ships.js";
+import { ShipCatalog } from "./core/ShipCatalog.js";
+import { FlagshipLight } from "./core/FlagshipLight.js";
 import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
@@ -254,7 +255,7 @@ function addHull(state, x, y, kMin, kMax) {
   e.bigFish = true;
   e.hull = true;
   e.baseSpeed = 0.08;
-  if (e.type === "craft") upgradeShip(e);   // v9.4: brittle hulls are a class bigger
+  if (e.type === "craft") ShipCatalog.upgrade(e);   // v9.4: brittle hulls are a class bigger
   state.entities.push(e);
   return e;
 }
@@ -636,7 +637,7 @@ export function onWorldBump(state, e) {
     p.color = e.color; p._mc = e._mc; p._ec = e._ec;
     p.crumb = true;   // v7: Armada goal counts these
     // A torn plate from this hull. Class, look and plate are fixed by the hull and the index.
-    const bit = scrapFrom(e, i);
+    const bit = ShipCatalog.scrapFrom(e, i);
     p.type = "craft"; p.ship = "scrap"; p.scrapOf = bit.cls; p.look = bit.look; p.plate = bit.plate; p.wreck = true;
     p.rotation = Math.random() * TAU; p.rotSpeed = (Math.random() - 0.5) * 0.01;
     p._artBase = null; p._sp = null;
@@ -855,7 +856,7 @@ const DRAW = {
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     // v9.6: the hi-res Flagship (core/Flagship.js) paints over a few frames as you
     // arrive, then fades in; until then nothing pops in on screen
-    const sp = FLAGSHIP.sprite(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
+    const sp = FLAGSHIP.sprite(fl.art.look, FlagshipLight.get(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
     if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
     const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
     if (!sp) return;
@@ -1088,7 +1089,7 @@ export function slicePaintReady(state) {
     const fl = W.flagship;
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     if (onScreen(state, x, y, s * 1.6, state.viewW, state.viewH)) {
-      const sp = FLAGSHIP.peek(fl.art.look, shipLight(), getArtQuality() !== "high", state.mode !== "zen");
+      const sp = FLAGSHIP.peek(fl.art.look, FlagshipLight.get(), getArtQuality() !== "high", state.mode !== "zen");
       if (!sp.ready || !(now > sp.born + 1300)) pending.push({ name: "flagship", born: sp.born, now });
     }
   }

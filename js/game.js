@@ -15,6 +15,7 @@ import { wisp, resetWisp, wispInfo, wispReact } from "./wisp.js";
 import { fireEvent, activeEventInfo, EVENT_INFO, densityInfo } from "./living-world.js";
 import { tierName, massForR, rForTier, TIERS } from "./tiers.js";
 import { shadowRadius } from "./art/hole.js";
+import { Theme } from "./core/Theme.js";
 import {
   Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, Backdrop, DebrisField, GoldenVeil,
   createState, Display, Hud, Player, Feeding, MEATY, RunTracker, Galaxy, PerfMonitor, Settings,
@@ -22,7 +23,7 @@ import {
 } from "./core/index.js";
 
 const $ = id => document.getElementById(id);
-const VERSION = "9.8.1";
+const VERSION = "9.9.0";
 
 const display = new Display($("game"), $("game-container"));
 const state = createState();
@@ -99,6 +100,7 @@ game.settings.applyQuality(state.settings.quality === "balanced" ? "balanced" : 
 audio.setVolume(state.volume);
 audio.setEnabled(state.audioEnabled);
 game.lifecycle.unlockAudioOnGesture();
+await Theme.start();
 game.galaxy.init(state.galaxy, resumeRun);
 game.screens.firstScreen(savedData, resumeRun);
 save(state);

@@ -8,7 +8,9 @@
 //
 // Screen space, hashed (no per-object state), pre-blurred cached sprites.
 
-import { shipClassFor, shipExtent } from "./ships.js";
+import { ShipCatalog } from "./core/ShipCatalog.js";
+import { Planet } from "./core/Planet.js";
+import { Moon } from "./core/Moon.js";
 import { Ship } from "./core/Ship.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
@@ -77,7 +79,7 @@ const samples = new Map();
 function sampleFor(id, v, L = 0) {
   // v9.4: distant ships are the class of the tier they belong to (wrecks drift, so they're
   // shown as quiet derelict silhouettes in the haze)
-  const ship = id === "craft" ? shipClassFor(L, false, (v + 0.5) / 8) : "";
+  const ship = id === "craft" ? ShipCatalog.classFor(L, false, (v + 0.5) / 8) : "";
   const key = id + v + ship;
   let e = samples.get(key);
   if (!e) {
@@ -132,7 +134,12 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       const e = sampleFor(id, v, L);
       if (e.type === "craft") {
         // No painted canvas to blur. The sheet draws when it has decoded.
-        Ship.for(e).draw(ctx, sx, sy, shipExtent(e.ship) * 2 * rad, a * (0.8 + 0.2 * r3), 0.5, true, 0, 1, 1);
+        Ship.for(e).draw(ctx, sx, sy, ShipCatalog.extent(e.ship) * 2 * rad, a * (0.8 + 0.2 * r3), 0.5, true, 0, 1, 1);
+        continue;
+      }
+      if (e.type === "planet" || e.type === "moon") {
+        const Body = e.type === "planet" ? Planet : Moon;
+        Body.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
         continue;
       }
       const sp = spriteFor(e, rad * dpr);

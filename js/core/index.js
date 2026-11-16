@@ -14,6 +14,13 @@ export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
 export { SpriteSheet } from "./SpriteSheet.js";
 export { Ship } from "./Ship.js";
+export { ShipCatalog } from "./ShipCatalog.js";
+export { Theme } from "./Theme.js";
+export { ArtManifest } from "./ArtManifest.js";
+export { BodyCatalog } from "./BodyCatalog.js";
+export { Planet } from "./Planet.js";
+export { Moon } from "./Moon.js";
+export { FlagshipLight } from "./FlagshipLight.js";
 
 // The game itself, one part per job (wired together in js/game.js).
 export { createState } from "./GameState.js";

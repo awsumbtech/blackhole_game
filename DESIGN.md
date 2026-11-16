@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.8.1** (the gold disc and the too-big ring are gone; a ship's painted gold edge stays)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.8.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.9.0** (ships, planets, and moons come from art manifests)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.9.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -380,7 +380,8 @@ js/art/
   quality.js            art quality + cache registry (artCache(); a quality change clears all)
   kit.js                shared paint helpers (colour, rng, shading, craters, rings, atmosphere)
   sprites.js            sprite cache + painter table (lookOf, spriteFor, beginArtFrame, artStats)
-  dust.js  rocks.js  comets.js  planets.js  stars.js  deepsky.js   painters by kind of object
+  dust.js  rocks.js  comets.js  stars.js  deepsky.js   painters by kind of object
+                        planets and moons are js/core/Planet.js and Moon.js (manifest layers)
   hole.js               the black hole, its disk and reveal fx; rival.js  rival holes
 js/data/                plain data, no logic
   worlds.js             MECHANICS, SET_PREFIX, LAYOUTS (per-galaxy mechanics + landmarks)
@@ -443,6 +444,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.9.0 Art manifests (Nov 16 2026):** Ships, planets, and moons are named by manifests under `assets/`. `Theme` loads the indexes. A new ship or planet is an image plus a manifest entry. The hard-coded ship class list and the planet painters are gone. The courier and test-crystal are test entries: they draw when asked for, and they are not on the random ladder. `FlagshipLight` still names the flagship's rim colour until that landmark is a sheet. Cache `blackhole-v9.9.0`.
 - **v9.8.1 No gold disc, no too-big ring (Nov 16 2026):** the filled gold disc is gone for every object type, and the stroked too-big ring is gone for every object type, including ships. The warm arrival disc on food merging in from a back layer is gone as well. The hazy-to-sharp merge stays, and so does the full-screen "world opens" pulse. Nothing replaces the removed discs or the ring. A ship's painted `liveEdge` / `wreckEdge` stays. The too-big cue is removed pending an art-object replacement. Big Appetite still adds 60% to a big catch and still brings a ship's gold edge in sooner (0.72 instead of 0.82). Cache `blackhole-v9.8.1`.
 - **v9.8.0 Ships are painted sheets (Nov 15 2026):** `Ship` draws one craft from `assets/ships/<class>.webp`. `SpriteSheet` loads the picture and its JSON and draws a named frame, centred. The nose in the art faces right. Facing left is a vertical flip (`ctx.scale(1, -1)`). A wreck still tumbles, an eaten ship still breaks into four plates, and the engine glow still breathes. The big-catch gold edge is the `liveEdge` or `wreckEdge` frame, with the same breath-then-steady timing. `paintShip` and `drawShip` are deleted. Until a sheet has decoded, that ship is not drawn. A failed load tries again after a few seconds. The five sheets are not precached. Cache `blackhole-v9.8.0`.
 - **v9.7.3 Comet tails follow the comet (Nov 13 2026):** v9.7.2 sampled the head relative to the camera, so the player's steering became part of every tail. The tail now samples world position only. It is independent of the player and the camera. An orbit, a river or drift still turns it, because that is the comet's own step. Cache `blackhole-v9.7.3`.
