@@ -196,10 +196,12 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.globalCompositeOperation = "source-over";
     }
 
-    // v6 big catches: a soft gold halo as you near something's size, steady once it fits
+    // v6 big catches: a soft gold halo as you near something's size, steady once it fits.
+    // Planets and moons are only their painted layers. No disc and no ring on them.
+    const layered = e.type === "planet" || e.type === "moon";
     const tooBig = playerRadius <= e.radius * eatRatio;
     const nearQ = playerRadius / (e.radius * eatRatio);
-    if (e.type !== "craft" && e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
+    if (!layered && e.type !== "craft" && e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
       const ready = !tooBig;
       const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
       const a = (0.14 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
@@ -214,7 +216,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.fill();
     }
 
-    if (tooBig && !e.consuming) {
+    if (!layered && tooBig && !e.consuming) {
       const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
       ctx.globalAlpha = spawnAlpha;
       ctx.beginPath();
