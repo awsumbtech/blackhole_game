@@ -136,13 +136,12 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
         ctx.arc(sx, sy, dd * 0.85, 0, Math.PI * 2);
         ctx.fill();
       }
-      const tr = e.type === "craft" ? e.rotation : 0;   // ships keep their heading as they arrive
-      ctx.translate(sx, sy); ctx.rotate(tr);
+      ctx.translate(sx, sy);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
       ctx.drawImage(bl, -pd / 2, -pd / 2, pd, pd);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * q;
       ctx.drawImage(sp.c, -dd / 2, -dd / 2, dd, dd);
-      ctx.rotate(-tr); ctx.translate(-sx, -sy);
+      ctx.translate(-sx, -sy);
       continue;
     }
     if (e.type === "star" || e.type === "neutron") {

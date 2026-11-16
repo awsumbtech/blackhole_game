@@ -53,13 +53,13 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A4. Ships are functions, not a Ship
 
-- [ ] `js/ships.js` 21–57 `shipExtent`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`, and the module `bounce` / `lightKey` (54–57).
+- [ ] `js/ships.js` 7–41 `SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`. The tier rolls, `Math.min(4, ...)`, and `upgradeShip`'s `i < 4` hard-code how many classes exist. `living-world.js` 350 picks a wingman's class the same way.
 - [x] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look. Removed in v9.8.0. The look row is the number `adoptShip` already stores.
 - [x] `js/ships.js` 226–421 `paintShip`. Code-draws the hull. Removed in v9.8.0. `Ship` draws a sheet frame.
 - [x] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates. Removed in v9.8.0. The glow and the plates are frames.
 - [x] `js/ships.js` 466–505 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates. Removed in v9.8.0. `Ship.draw` does that from the sheet.
-- **Moves into:** `Ship` (the first PR). One instance per craft entity. Art comes from a sheet, not `paintShip`.
-- **Depends on:** `art/sprites.js` (today), later `SpriteSheet`. Callers: `render.js` 130–132, `living-world.js` `adoptShip`, `worlds.js` `addHull` / crumbs, `depth.js` samples.
+- **Moves into:** step 2, the art manifest. `Ship` already draws one craft. `SpriteSheet` (`js/core/SpriteSheet.js`) already loads one picture. The class list, the frame layout, and the sizes move into that manifest.
+- **Depends on:** `SpriteSheet`. Callers: `render.js` around 97 (the craft branch), `living-world.js` `adoptShip` and line 350, `worlds.js` `addHull` / crumbs, `depth.js` samples.
 
 ### A5. Sprite cache and painters
 
@@ -491,139 +491,143 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** a sandbox Armada run shows a wreck and a living ship from the sheet, the wreck tumbles, the living ship flips when it faces left, and a big-catch ship shows the painted gold edge (breathing, then steady) with no radial gradient.
    - **Test:** `tools/oo-ship.cjs`. Fails while `paintShip` still fills a hull. Passes when the pixels come from an `HTMLImageElement` under `assets/ships/` and the centre of the ship matches the sheet.
 
-2. **Flagship.** Same loader. `Flagship` blits its sheet instead of painting one.
+2. **Art manifest.** One `manifest.json` per theme folder (`assets/<theme>/manifest.json`). Ships, planets, comets, and the other catchable types each get an entry: the image file, the frame layout, and the size. Code reads that file. `SHIP_CLASSES`, `EXTENT`, `SHIP_LOOKS`, `shipClassFor` (the tier rolls and `Math.min(4, ...)`), `upgradeShip`'s `i < 4`, and the wingman class pick at `living-world.js` 350 go away.
+   - **Done when:** adding a test ship and a test planet needs only an image plus a manifest entry, with zero code changes.
+   - **Test:** `tools/oo-manifest.cjs`. Fails while those class lists still live in code. Passes when a new entry in the manifest is drawn and the code lists are gone.
+
+3. **Flagship.** Same loader. `Flagship` blits its sheet instead of painting one.
    - **Done when:** the Armada landmark matches the new sheet and no longer builds a canvas over many frames.
    - **Test:** `tools/oo-flagship.cjs`.
 
-3. **Junk, dust, meteor.** Three small classes, one sheet each. Meteor includes the hot streak. Junk and meteor include the gold-edge frame.
+4. **Junk, dust, meteor.** Three small classes, one sheet each. Meteor includes the hot streak. Junk and meteor include the gold-edge frame.
    - **Done when:** those types no longer have a painter entry.
    - **Test:** `tools/oo-rocks.cjs`.
 
-4. **Comet.** Body, tail frames, gold-edge. `CometTail` only picks a frame and an angle.
+5. **Comet.** Body, tail frames, gold-edge. `CometTail` only picks a frame and an angle.
    - **Done when:** `tailFor` is gone and the tail still sits behind the comet's own world step.
    - **Test:** `tools/oo-comet.cjs`, plus the existing world-step check from `tools/v973-tails.cjs` still passes.
 
-5. **Moon and planet.** Rings are in the picture.
+6. **Moon and planet.** Rings are in the picture.
    - **Done when:** `PLANET_PAINTERS` is gone.
    - **Test:** `tools/oo-planet.cjs`.
 
-6. **Star, neutron, star system.**
+7. **Star, neutron, star system.**
    - **Done when:** `STAR_PAINTERS` is gone.
    - **Test:** `tools/oo-star.cjs`.
 
-7. **Nebula, cluster, galaxy body.**
+8. **Nebula, cluster, galaxy body.**
    - **Done when:** `DEEPSKY_PAINTERS` is gone and `kit.js` has no callers.
    - **Test:** `tools/oo-deepsky.cjs`.
 
-8. **Delete the gold disc.** After steps 3–7 every catchable has a gold-edge frame. Remove `render.js` 168–183.
+9. **Delete the gold disc.** After steps 4–8 every catchable has a gold-edge frame. Remove `render.js` 168–183.
    - **Done when:** nothing in `render.js` calls `createRadialGradient` for a catch.
    - **Test:** `tools/oo-halo.cjs`. Fails on today's disc. Passes when the only gold is the sheet frame.
 
-9. **Too-big ring.** Two ring pictures. Soft palette swaps the picture, it does not recolour in code.
+10. **Too-big ring.** Two ring pictures. Soft palette swaps the picture, it does not recolour in code.
    - **Done when:** `render.js` 185–193 is a `drawImage`.
    - **Test:** `tools/oo-toobig.cjs`.
 
-10. **Black hole.** Disk, ring, shadow, reveal, magnet ring, breath ring, and the four skins (classic, ember, aurora, pearl) as painted frames.
+11. **Black hole.** Disk, ring, shadow, reveal, magnet ring, breath ring, and the four skins (classic, ember, aurora, pearl) as painted frames.
     - **Done when:** `js/art/hole.js` no longer fills a gradient, and nothing sets `ctx.filter` on the hole (`render.js` 269–271 and `Settings.skinFilter` are gone).
     - **Test:** `tools/oo-hole.cjs`. Fails while a skin still applies `ctx.filter`. Passes when each skin is a frame and the filter count is 0.
 
-11. **Wisp.** Replace `makeRadial`.
+12. **Wisp.** Replace `makeRadial`.
     - **Done when:** the companion is a blit, including the lean toward a find.
     - **Test:** `tools/oo-wisp.cjs`.
 
-12. **Inflow.** Motes, burst, bloom from `inflow.webp`. Leave the grain cloud off.
+13. **Inflow.** Motes, burst, bloom from `inflow.webp`. Leave the grain cloud off.
     - **Done when:** `streakSprite` is gone.
     - **Test:** `tools/oo-inflow.cjs`.
 
-13. **Fx particles, ripples, swallow glow.**
+14. **Fx particles, ripples, swallow glow.**
     - **Done when:** `drawParticles` and `swallowGlow` only blit.
     - **Test:** `tools/oo-fx.cjs`.
 
-14. **Debris field.** Pre-cut shard frames painted on each type's sheet. The old mask PNGs are not composited at runtime.
+15. **Debris field.** Pre-cut shard frames painted on each type's sheet. The old mask PNGs are not composited at runtime.
     - **Done when:** a bite still shows shards outside the shadow, and `DebrisField` never sets `destination-in` or draws a mask over a sprite.
     - **Test:** the existing bite checks, plus `tools/oo-debris.cjs`. Fails while `destination-in` still runs. Passes when the shard is a frame blit.
 
-15. **Discoveries.** 21 painted finds.
+16. **Discoveries.** 21 painted finds.
     - **Done when:** `findSprite` and the discovery `tail()` canvas are gone.
     - **Test:** `tools/oo-finds.cjs`.
 
-16. **Rivals.** Its own two frames, normal and edible. No palette swap off the player's hole.
+17. **Rivals.** Its own two frames, normal and edible. No palette swap off the player's hole.
     - **Done when:** `rivalSprite` is gone and both states are `drawImage`s of `rival.webp`.
     - **Test:** `tools/oo-rival.cjs`. Fails while `js/art/rival.js` still paints. Passes when the two frames are image files.
 
-17. **World scenery.** One plate per mechanic.
+18. **World scenery.** One plate per mechanic.
     - **Done when:** `drawWorldsBG` and `drawWorldsOverlay` only blit.
     - **Test:** `tools/oo-scenic.cjs`.
 
-18. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim (`render.js` 101–117, `mergeGlow`) becomes `arrival.png`.
+19. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim (`render.js` 101–117, `mergeGlow`) becomes `arrival.png`.
     - **Done when:** a tier-up still merges the far layer, with no `ctx.filter` and no radial gradient on the arriving object.
     - **Test:** `tools/oo-depth.cjs`. Fails while `mergeGlow` builds a gradient. Passes when that glow is a blit.
 
-19. **Canvas UI.** Minimap frame, arrows, thumbstick, banner plate, cursor. Text stays text.
+20. **Canvas UI.** Minimap frame, arrows, thumbstick, banner plate, cursor. Text stays text.
     - **Done when:** those draws are `drawImage` plus `fillText` only for words.
     - **Test:** `tools/oo-hud.cjs`.
 
-20. **Constellation and star map.**
+21. **Constellation and star map.**
     - **Done when:** nodes and stars are pictures. `grade.js` is deleted.
     - **Test:** `tools/oo-map.cjs`.
 
-21. **Ship's code home, finished.** `entities.updateEntities` no longer special-cases craft steering. `Ship.update` owns it. This is the pattern for the other types.
+22. **Ship's code home, finished.** `entities.updateEntities` no longer special-cases craft steering. `Ship.update` owns it. This is the pattern for the other types.
     - **Done when:** a living ship still turns to face its travel with no branch in `updateEntities`.
     - **Test:** `tools/oo-ship-update.cjs`.
 
-22. **Entity factory.** `createEntity` and `spawnFood` / `spawnBigFish` return the right class.
+23. **Entity factory.** `createEntity` and `spawnFood` / `spawnBigFish` return the right class.
     - **Done when:** a spawned craft is a `Ship`, not a plain object with `type: "craft"`.
     - **Test:** `tools/oo-spawn.cjs`.
 
-23. **World.** Split `worlds.js` into mechanic classes. Behaviour unchanged.
+24. **World.** Split `worlds.js` into mechanic classes. Behaviour unchanged.
     - **Done when:** `W` is gone.
     - **Test:** `tools/oo-world.cjs` (reef, river, cradle, aurora, beams still register).
 
-24. **LivingWorld and events.**
+25. **LivingWorld and events.**
     - **Done when:** `fireEvent` constructs an event object.
     - **Test:** `tools/oo-events.cjs`.
 
-25. **Discovery, Rival, Wisp singletons.** Logic only, art already done.
+26. **Discovery, Rival, Wisp singletons.** Logic only, art already done.
     - **Done when:** no module-level `findSprites` Map and no module wisp singleton.
     - **Test:** `tools/oo-actors.cjs`.
 
-26. **Input.** `createInput` becomes `Input`.
+27. **Input.** `createInput` becomes `Input`.
     - **Done when:** stick and keys still steer, from the class.
     - **Test:** `tools/oo-input.cjs`.
 
-27. **Audio.**
+28. **Audio.**
     - **Done when:** `audio.js` exports a class. Bite, drone, and swell still play.
     - **Test:** `tools/oo-audio.cjs` (spy on the context; no speakers required).
 
-28. **SaveGame.**
+29. **SaveGame.**
     - **Done when:** a v9 save still loads. No save-version bump.
     - **Test:** `tools/oo-save.cjs`.
 
-29. **Ascension and TierTable.**
+30. **Ascension and TierTable.**
     - **Done when:** perk buy, dark matter, and `bigWeights` behave the same.
     - **Test:** `tools/oo-asc.cjs`.
 
-30. **Stats, logbook, menus.** DOM views as objects. No visual change.
+31. **Stats, logbook, menus.** DOM views as objects. No visual change.
     - **Done when:** `ui.js` is a class and the codex still opens.
     - **Test:** `tools/oo-ui.cjs`.
 
-31. **Game.** `game.js` becomes the `Game` class. `__bh` points at it.
+32. **Game.** `game.js` becomes the `Game` class. `__bh` points at it.
     - **Done when:** boot, the sandbox, and a bite still work.
     - **Test:** `tools/oo-boot.cjs`.
 
-32. **Service worker policy.** Stop precaching every new picture.
+33. **Service worker policy.** Stop precaching every new picture.
     - **Done when:** `ASSETS` is the shell plus the current galaxy's sheets, and a sheet that is not in the list still appears after a lazy load.
     - **Test:** `tools/oo-cache.cjs`.
 
-33. **Event cues.** Edge glow (`living-world.js` 493–508), Void Gift rings (598–628), Stellar Birth / Soft Bloom (673–693), and gravity-wave lines (725–744).
+34. **Event cues.** Edge glow (`living-world.js` 493–508), Void Gift rings (598–628), Stellar Birth / Soft Bloom (673–693), and gravity-wave lines (725–744).
     - **Done when:** those four draws are `drawImage` only, and `drawEdgeGlow` is gone.
     - **Test:** `tools/oo-events-art.cjs`. Fails while any of the four still calls `createRadialGradient` or strokes a wave in code. Passes when each is a picture.
 
-34. **Frame veils.** `Growth.drawPulse` (91–103), the slow-mo tint (`Scene.js` 94–101). The galaxy-flow veil (85–93) and the drift veil (`Scene.js` 122–126) are deleted: those moments crossfade real backdrops instead of filling a rectangle.
+35. **Frame veils.** `Growth.drawPulse` (91–103), the slow-mo tint (`Scene.js` 94–101). The galaxy-flow veil (85–93) and the drift veil (`Scene.js` 122–126) are deleted: those moments crossfade real backdrops instead of filling a rectangle.
     - **Done when:** `drawPulse` and the slow-mo block only blit, and `drawVeil` plus the drift `fillRect` are gone.
     - **Test:** `tools/oo-veils.cjs`. Fails while either veil still fills a rectangle. Passes when the pulse and the slow tint are images and the other two fills are absent.
 
-35. **Zen arc.** `#zen-arc-fg` stops being an SVG dash array. `ZenSession` draws `zen-arc.png` by source width.
+36. **Zen arc.** `#zen-arc-fg` stops being an SVG dash array. `ZenSession` draws `zen-arc.png` by source width.
     - **Done when:** `setArc` no longer writes `strokeDasharray`, and the arc is a picture.
     - **Test:** `tools/oo-zen.cjs`. Fails while `zen.js` 27–32 still sets the dash array. Passes when the progress is a blit.
 
@@ -654,7 +658,7 @@ Strategy:
 
 ## Counts
 
-- **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until a later step. The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
+- **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until step 2 (the art manifest). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
 - **Section B:** 44 open checkboxes (the five ship classes are checked), plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint.
-- **Order:** 35 PRs, ships first, each based on `main`.
+- **Order:** 36 PRs, ships first, each based on `main`. Step 2 is the art manifest.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.

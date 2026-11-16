@@ -2,19 +2,27 @@
 // the four plates and the engine glow. This class does not fill, stroke
 // or tint. Until the sheet has decoded, the craft is not drawn.
 
-import { SHIP_CLASSES, SHIP_LOOKS, shipExtent } from "../ships.js";
-import { sheetFor } from "./SpriteSheet.js";
-
-const owned = new WeakMap();
+import { SHIP_CLASSES, SHIP_LOOKS } from "../ships.js";
+import { SpriteSheet } from "./SpriteSheet.js";
 
 export class Ship {
+  static owned = new WeakMap();
+
   constructor(e) { this.e = e; }
 
   /** The same craft keeps the same Ship. */
   static for(e) {
-    let s = owned.get(e);
-    if (!s) { s = new Ship(e); owned.set(e, s); }
+    let s = Ship.owned.get(e);
+    if (!s) { s = new Ship(e); Ship.owned.set(e, s); }
     return s;
+  }
+
+  /** Start the five class sheets when this galaxy can show a ship. Never awaits. */
+  static preloadForGalaxy(state) {
+    const tier = state.tier | 0;
+    const armada = !!(state.biome && state.biome.name === "Ruined Armada");
+    if (!armada && tier < 2) return;
+    for (const name of SHIP_CLASSES) SpriteSheet.for(name).start();
   }
 
   /** Painted class. A crumb keeps the hull it was torn from. */
@@ -44,7 +52,7 @@ export class Ship {
 
   sheet() {
     const c = this.artClass;
-    return c ? sheetFor(c) : null;
+    return c ? SpriteSheet.for(c) : null;
   }
 
   /** True once this craft's picture can be drawn. Starts the load. */
@@ -163,12 +171,4 @@ export class Ship {
       ctx.restore();
     }
   }
-}
-
-/** Start the five class sheets when this galaxy can show a ship. Never awaits. */
-export function preloadForGalaxy(state) {
-  const tier = state.tier | 0;
-  const armada = !!(state.biome && state.biome.name === "Ruined Armada");
-  if (!armada && tier < 2) return;
-  for (const name of SHIP_CLASSES) sheetFor(name).start();
 }
