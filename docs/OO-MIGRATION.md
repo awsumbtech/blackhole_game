@@ -53,7 +53,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A4. Ships are functions, not a Ship
 
-- [ ] `js/ships.js` 7–41 `SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`. The tier rolls, `Math.min(4, ...)`, and `upgradeShip`'s `i < 4` hard-code how many classes exist. `living-world.js` 350 picks a wingman's class the same way.
+- [x] `js/ships.js` 7–41 `SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`. Done in v9.9.0. The class list, extents, look counts, tier bands, and the wingman step are read from `assets/ships/manifest.json`. `FlagshipLight` still holds the flagship rim colour until the Flagship step. It does not tint a ship.
 - [x] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look. Removed in v9.8.0. The look row is the number `adoptShip` already stores.
 - [x] `js/ships.js` 226–421 `paintShip`. Code-draws the hull. Removed in v9.8.0. `Ship` draws a sheet frame.
 - [x] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates. Removed in v9.8.0. The glow and the plates are frames.
@@ -154,7 +154,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 ### A17. Rivals
 
 - [ ] `js/rivals.js` and `js/art/rival.js` 9–66 `rivalSprite`. Rival motion is functions. The hole picture is a code-painted canvas, two states (too big, and edible gold).
-- **Moves into:** `Rival`, drawing its own two paintings (too big, and edible gold) from its own sheet. No recolor or palette swap of the `BlackHole` art (see B and step 16).
+- **Moves into:** `Rival`, drawing its own two paintings (too big, and edible gold) from its own sheet. No recolor or palette swap of the `BlackHole` art (see B and step 17).
 - **Depends on:** `Feeding` (swallow), `Player`.
 
 ### A18. Power-ups
@@ -190,8 +190,8 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 These are objects. They stay. The picture work inside them is section B.
 
 - `Inflow` (`js/core/Inflow.js` 46–70) builds streak, dot, and bloom canvases in the module.
-- `Flagship` (`js/core/Flagship.js` layout 47, class 115, paint 168) lays out and paints a capital wreck in code, then caches it.
-- `DebrisField` composites sprites through mask images today. After step 14 it only draws the pre-cut shard frames from each type's sheet, with no runtime mask.
+- `Flagship` (`js/core/Flagship.js` layout 47, class 115, paint 168) lays out and paints a capital wreck in code, then caches it. `FlagshipLight` (`js/core/FlagshipLight.js`) is the rim colour it still asks for. The Flagship step replaces both.
+- `DebrisField` composites sprites through mask images today. After step 15 it only draws the pre-cut shard frames from each type's sheet, with no runtime mask.
 - `CometTail` is a real object. It still blits a code-painted tail from `art/comets.js`.
 - `Scene`, `Player`, `Feeding`, `Camera`, `GameLoop`, `Hud`, `ScreenFlow`, `ZenSession`, `CollapseFlow`, `PlayControls`, `Menus`, `Lifecycle`, `Settings`, `PerfMonitor`, `Growth`, `Galaxy`, `GalaxyFlow`, `Fx`, `DevMode`, `Display`, `ScreenOverlay` are classes. They are not in the conversion list except where they call a loose painter.
 
@@ -208,14 +208,14 @@ Sizes use the phone formula at the top. "Big-catch frame" means the artist paint
   - **Size:** core radius 12 CSS / 36 device px. Disk out to 3.6 radii, about 94 CSS / 280 device px across. Glow to about 4.6 radii, about 110 CSS / 330 device px.
   - **Asset px:** one hole sheet, 640×640 per frame, the disk filling the frame.
   - **Owner:** `BlackHole`.
-  - **Asset:** 8 spin frames for the calm disk. The double-points palette is a second row, not a code tint. Step 10.
+  - **Asset:** 8 spin frames for the calm disk. The double-points palette is a second row, not a code tint. Step 11.
 
 - [ ] **Hole skins.** `js/ascension.js` 166–170 defines classic, ember, aurora, and pearl (Void Pearl). `js/core/Settings.js` 44–50 `skinFilter` turns ember, aurora, and pearl into a CSS filter string. `js/render.js` 269–271 applies that string with `ctx.filter` over the whole hole draw. Classic is no filter.
   - **Looks:** 4 painted frames. Classic, ember, aurora, pearl.
   - **Size:** same as the disk, about 94 CSS / 280 device px across.
   - **Asset px:** 640×640 each.
   - **Owner:** `BlackHole`.
-  - **Asset:** four full paintings on the hole sheet, one per skin. No `ctx.filter`. Step 10.
+  - **Asset:** four full paintings on the hole sheet, one per skin. No `ctx.filter`. Step 11.
 
 - [ ] **Shadow and the eat-rim.** `shadowRadius` `js/art/hole.js` 252–255, drawn with the ring sprite at 333–336. Gulps up to about 8% bigger. Reduce Motion skips the gulp.
   - **Size:** about 1.3× the core, 16 CSS / 47 device px radius.
@@ -324,7 +324,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 - [ ] **Debris field.** `js/core/DebrisField.js` 120–135 composites the eaten sprite through a mask with `destination-in`. Four slices ride the rim outside the shadow. States: in flight, or nothing. The mask PNGs stay as reference, but play does not composite them at runtime.
   - **Size:** each shard a fraction of the eaten sprite, at least about 6 CSS px.
   - **Asset px:** 4 pre-cut shard frames on each catchable type's sheet, painted by the artist.
-  - **Owner:** `DebrisField` (already a class). Step 14.
+  - **Owner:** `DebrisField` (already a class). Step 15.
 
 - [ ] **Inflow motes, burst, bloom.** `js/core/Inflow.js` 46–70 paints the dots and streaks. Draw at 181–225. Motes drift upward on a fixed `mvy` (104). Bursts are radial streaks on a big bite or a tier-up. The circling grain cloud is off (`nIn` is 0).
   - **Looks:** 6 streak colours, 1 dot, 1 bloom.
@@ -364,7 +364,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Size:** drawn like a small hole, often 20–40 CSS / 60–120 device px.
   - **Asset px:** 256×256 × 2.
   - **Owner:** `Rival`.
-  - **Asset:** `rival.webp`, two frames. Step 16.
+  - **Asset:** `rival.webp`, two frames. Step 17.
 
 - [ ] **World scenery still painted in code.** `js/worlds.js` 733–1006.
   - Reefs and rock haze.
@@ -381,12 +381,12 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 - [ ] **Depth haze.** `js/depth.js` 45–73 `blurFor`, 146 `drawDepth`. Far food is a blurred, dim copy of the play sprite. On a tier-up it sharpens and joins the play layer.
   - **Size:** smaller than the play sprite (`app(k)`).
   - **Asset:** a second, already-soft frame on each type's sheet. `blurFor` goes away.
-  - **Owner:** `DepthField`. Step 18.
+  - **Owner:** `DepthField`. Step 19.
 
 - [ ] **Arrival glow (`mergeGlow`).** `js/render.js` 101–117. While `depthT` is below 1 and `mergeGlow` is set, a warm radial disc sits on the arriving object. Out of scope for the old comet-tail note, in scope here.
   - **Size:** about 0.85 of the arriving sprite.
   - **Asset px:** 128×128, one soft gold disc, `arrival.png`.
-  - **Owner:** `DepthField`. Step 18.
+  - **Owner:** `DepthField`. Step 19.
 
 ### Event cues and veils
 
@@ -394,54 +394,54 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Size:** radius about 0.32 of the short screen side, about 125 CSS / 375 device px.
   - **Asset px:** 512×512.
   - **Owner:** `EventCue` on `LivingWorld`.
-  - **Asset:** `event-edge.png`, one soft circle. The event colour is a painted variant per event (a few frames), not a runtime tint. Step 33.
+  - **Asset:** `event-edge.png`, one soft circle. The event colour is a painted variant per event (a few frames), not a runtime tint. Step 34.
 
 - [ ] **Void Gift rings.** `js/living-world.js` 598–628. While warning, a contracting ring and a radial fill. While active, two stroked rings that shrink. Colour is the event rgb.
   - **Looks:** warning and active.
   - **Size:** warning ring from about 60 CSS px of world radius. Active rings sit on the gift's radius.
   - **Asset px:** 256×256 ring, 256×256 soft fill.
   - **Owner:** `VoidGift`.
-  - **Asset:** `void-gift.webp`, warning and active frames. Step 33.
+  - **Asset:** `void-gift.webp`, warning and active frames. Step 34.
 
 - [ ] **Stellar Birth and Soft Bloom.** `js/living-world.js` 673–693. One radial disc, cream to gold, that grows and fades. Soft Bloom is the same draw with a smaller scale (`sf`).
   - **Looks:** 1 shape, two sizes.
   - **Size:** up to about 70×`sf` world pixels. On screen, often 40–120 CSS / 120–360 device px.
   - **Asset px:** 512×512.
   - **Owner:** `StellarBirth`.
-  - **Asset:** `stellar-birth.png`. Step 33.
+  - **Asset:** `stellar-birth.png`. Step 34.
 
 - [ ] **Gravity wave lines.** `js/living-world.js` 725–744. Five parallel strokes rolling across the view. Alpha falls off toward the outer lines.
   - **Looks:** 1.
   - **Size:** each line spans the screen, about 1.5 CSS px wide.
   - **Asset px:** an 8×512 soft stroke, `wave-line.png`, drawn five times.
   - **Owner:** `GravityWave`.
-  - **Asset:** that one stroke. Step 33.
+  - **Asset:** that one stroke. Step 34.
 
 - [ ] **Tier-merge pulse.** `js/core/Growth.js` 91–103 `drawPulse`. A radial veil, bright at the centre and dark at the edge, while `mergePulse` eases out.
   - **Size:** full screen, 390×844 CSS / 1170×2532 device px.
   - **Asset px:** 512×512 stretched, `merge-pulse.png`.
   - **Owner:** `Growth` (already a class).
-  - **Asset:** that one picture. Step 34.
+  - **Asset:** that one picture. Step 35.
 
 - [ ] **Galaxy-flow veil.** `js/core/GalaxyFlow.js` 85–93 `drawVeil`. A flat fill in `flowRgb` while the galaxy fades out and back in.
   - **Size:** full screen.
-  - **Asset px:** none. This is a fade to a colour, and the colour is the next biome's backdrop. Deleted: `drawVeil` crossfades the two backdrop images instead of filling a rectangle. Step 34.
+  - **Asset px:** none. This is a fade to a colour, and the colour is the next biome's backdrop. Deleted: `drawVeil` crossfades the two backdrop images instead of filling a rectangle. Step 35.
 
 - [ ] **Slow-motion tint.** `js/core/Scene.js` 94–101. A blue radial wash while the slow power-up is active. Strength follows `powerupFade`.
   - **Size:** full screen.
   - **Asset px:** 512×512, `slow-tint.png`.
   - **Owner:** `Scene`.
-  - **Asset:** that one picture, opacity from the power-up. Step 34.
+  - **Asset:** that one picture, opacity from the power-up. Step 35.
 
 - [ ] **Drift-in veil.** `js/core/Scene.js` 122–126. A flat dark fill (`rgba(2, 3, 8, veil)`) as the title gives way to play.
   - **Size:** full screen.
-  - **Asset:** deleted. The title backdrop already covers the frame. `drift.veil` only fades that picture's opacity. No replacement paint. Step 34.
+  - **Asset:** deleted. The title backdrop already covers the frame. `drift.veil` only fades that picture's opacity. No replacement paint. Step 35.
 
 - [ ] **Zen progress arc.** `index.html` 190, `#zen-arc` SVG. `#zen-arc-fg` is the foreground stroke. `js/zen.js` 27–32 `setArc` sets `strokeDasharray` from the session progress. States: hidden, then a growing arc over the 3, 5, or 10 minute session.
   - **Size:** the SVG is 120×14 CSS, so about 360×42 device px.
   - **Asset px:** 256×32.
   - **Owner:** `ZenSession`.
-  - **Asset:** `zen-arc.png`, one ring segment. Progress is how much of the picture is drawn (source width), not a dash array. Step 35.
+  - **Asset:** `zen-arc.png`, one ring segment. Progress is how much of the picture is drawn (source width), not a dash array. Step 36.
 
 ### Canvas UI
 
@@ -491,9 +491,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** a sandbox Armada run shows a wreck and a living ship from the sheet, the wreck tumbles, the living ship flips when it faces left, and a big-catch ship shows the painted gold edge (breathing, then steady) with no radial gradient.
    - **Test:** `tools/oo-ship.cjs`. Fails while `paintShip` still fills a hull. Passes when the pixels come from an `HTMLImageElement` under `assets/ships/` and the centre of the ship matches the sheet.
 
-2. **Art manifest.** One `manifest.json` per theme folder (`assets/<theme>/manifest.json`). Ships, planets, comets, and the other catchable types each get an entry: the image file, the frame layout, and the size. Code reads that file. `SHIP_CLASSES`, `EXTENT`, `SHIP_LOOKS`, `shipClassFor` (the tier rolls and `Math.min(4, ...)`), `upgradeShip`'s `i < 4`, and the wingman class pick at `living-world.js` 350 go away.
-   - **Done when:** adding a test ship and a test planet needs only an image plus a manifest entry, with zero code changes.
-   - **Test:** `tools/oo-manifest.cjs`. Fails while those class lists still live in code. Passes when a new entry in the manifest is drawn and the code lists are gone.
+2. **Art manifest.** Done in v9.9.0. The theme root is `assets/`. `assets/ships/manifest.json`, `assets/planets/manifest.json`, and `assets/moons/manifest.json` are the indexes. A ship entry is `{class, extent, test?}`. A planet or moon entry is `{type, manifest, test?}` pointing at `<type>/<version>/manifest.json` with layers drawn in ascending `z`. `Theme` loads them. `SHIP_CLASSES`, `EXTENT`, `SHIP_LOOKS`, `shipClassFor`, `upgradeShip`'s `i < 4`, `scrapFrom`'s class index, and the wingman pick are gone. `PLANET_PAINTERS` is gone. Evidence: `tools/oo-manifest.cjs` adds `probe` and `test-gem` through the indexes alone and both draw.
+   - **Done when:** adding a test ship and a test planet needs only an image plus a manifest entry, with zero code changes. Met by the probe ship and the test-gem planet in that test.
+   - **Test:** `tools/oo-manifest.cjs`. Fails while those class lists still live in code or a planet painter still fills. Passes when a new entry in the manifest is drawn and the code lists are gone.
 
 3. **Flagship.** Same loader. `Flagship` blits its sheet instead of painting one.
    - **Done when:** the Armada landmark matches the new sheet and no longer builds a canvas over many frames.
@@ -507,9 +507,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** `tailFor` is gone and the tail still sits behind the comet's own world step.
    - **Test:** `tools/oo-comet.cjs`, plus the existing world-step check from `tools/v973-tails.cjs` still passes.
 
-6. **Moon and planet.** Rings are in the picture.
-   - **Done when:** `PLANET_PAINTERS` is gone.
-   - **Test:** `tools/oo-planet.cjs`.
+6. **Moon and planet.** Done in v9.9.0 with the manifest. `Planet` and `Moon` blit the layers. Dropping the ring layers removes the ring. `PLANET_PAINTERS` is gone.
+   - **Done when:** `PLANET_PAINTERS` is gone. Met. `tools/oo-manifest.cjs` fails while a planet painter still fills.
+   - **Test:** `tools/oo-manifest.cjs`.
 
 7. **Star, neutron, star system.**
    - **Done when:** `STAR_PAINTERS` is gone.
@@ -658,7 +658,7 @@ Strategy:
 
 ## Counts
 
-- **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until step 2 (the art manifest). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
+- **Section A:** 22 groups, 48 open checkboxes (the ship identity helpers were checked in v9.9.0). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
 - **Section B:** 44 open checkboxes (the five ship classes are checked), plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint.
 - **Order:** 36 PRs, ships first, each based on `main`. Step 2 is the art manifest.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.

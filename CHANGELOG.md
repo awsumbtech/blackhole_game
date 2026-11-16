@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.9.0 — Art manifests (Nov 16 2026)
+
+Ships, planets, and moons are named by the art files.
+
+- `Theme` loads `assets/ships/manifest.json`, `assets/planets/manifest.json`, and `assets/moons/manifest.json`. Another theme is a different root folder.
+- Ship class, extent, look count, the tier ladder, upgrades, wingmen, and scrap crumbs come from that ship index. `SHIP_CLASSES` and the planet painters are gone. A class or type marked `test` draws when asked for and is not rolled at random. The courier and test-crystal are those entries.
+- `Planet` and `Moon` draw the manifest layers with `drawImage` only, back ring then body then front ring. Until the pictures decode, the body is not drawn and cannot be eaten.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.9.0`.
+
 ## v9.8.0 — Ships draw from sheets (Nov 15 2026)
 
 The first object-art step. A ship is a picture. Features are unchanged.

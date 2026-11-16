@@ -81,7 +81,10 @@ class OoShip {
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const { Ship } = await import("/js/core/Ship.js");
       const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-      ships.adoptShip(e, 3, false, false);
+      const adopt = ships.adoptShip
+        ? (ent, tier, wreck, big) => ships.adoptShip(ent, tier, wreck, big)
+        : (ent, tier, wreck, big) => import("/js/core/ShipCatalog.js").then(m => m.ShipCatalog.adopt(ent, tier, wreck, big));
+      await adopt(e, 3, false, false);
       e.ship = "freighter";
       e.look = 0;
       e.wreck = false;
@@ -155,9 +158,14 @@ class OoShip {
       for (let i = 0; i < 3; i++) gameDiff = Math.max(gameDiff, Math.abs(game[i] - painted[i]));
       const plateCols = [1280, 1600, 1920, 2240];
       const isPlate = d => /assets\/ships\/[^/]+\.webp/.test(d.src) && plateCols.indexOf(d.sx) >= 0 && d.sw === 320;
-      const parent = { ship: "freighter", look: 2, seed: 99 };
-      const bit = ships.scrapFrom(parent, 1);
-      const again = ships.scrapFrom(parent, 1);
+    let scrapFrom = ships.scrapFrom;
+    if (!scrapFrom) {
+      const { ShipCatalog } = await import("/js/core/ShipCatalog.js");
+      scrapFrom = (parent, index) => ShipCatalog.scrapFrom(parent, index);
+    }
+    const parent = { ship: "freighter", look: 2, seed: 99 };
+    const bit = scrapFrom(parent, 1);
+    const again = scrapFrom(parent, 1);
       const stable = bit.cls === "freighter" && bit.look === 2 && bit.plate === 1
         && again.cls === bit.cls && again.look === bit.look && again.plate === bit.plate;
       const crumb = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
@@ -186,8 +194,8 @@ class OoShip {
         if (performance.now() - t1 > 8000) return { ok: false, reason: "cruiser sheet did not decode" };
         await new Promise(r => setTimeout(r, 40));
       }
-      const eaten = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-      ships.adoptShip(eaten, 3, true, false);
+    const eaten = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
+    await adopt(eaten, 3, true, false);
       eaten.ship = "cruiser";
       eaten.look = 3;
       eaten.depthT = 1;
@@ -249,7 +257,8 @@ class OoShip {
         bh.dev.frozen = true;
         s.paused = true;
         const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-        ships.adoptShip(e, 3, false, true);
+        if (ships.adoptShip) ships.adoptShip(e, 3, false, true);
+        else (await import("/js/core/ShipCatalog.js")).ShipCatalog.adopt(e, 3, false, true);
         e.ship = "cruiser";
         e.look = 0;
         e.depthT = 1;
@@ -306,7 +315,8 @@ class OoShip {
       s.anchorSmooth = 4;
       bh.camera.updateScale(bh.display.w, bh.display.h, true);
       const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-      ships.adoptShip(e, 3, true, false);
+      if (ships.adoptShip) ships.adoptShip(e, 3, true, false);
+      else (await import("/js/core/ShipCatalog.js")).ShipCatalog.adopt(e, 3, true, false);
       e.ship = "cruiser";
       e.look = 0;
       e.depthT = 1;
@@ -356,7 +366,8 @@ class OoShip {
       const ships = await import("/js/ships.js");
       const sheet = SpriteSheet.for("shuttle");
       const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-      ships.adoptShip(e, 2, false, false);
+      if (ships.adoptShip) ships.adoptShip(e, 2, false, false);
+      else (await import("/js/core/ShipCatalog.js")).ShipCatalog.adopt(e, 2, false, false);
       e.ship = "shuttle";
       e.look = 0;
       e.depthT = 1;
@@ -390,7 +401,8 @@ class OoShip {
       const s = bh.state;
       const sheet = SpriteSheet.for("shuttle");
       const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
-      ships.adoptShip(e, 2, false, false);
+      if (ships.adoptShip) ships.adoptShip(e, 2, false, false);
+      else (await import("/js/core/ShipCatalog.js")).ShipCatalog.adopt(e, 2, false, false);
       e.ship = "shuttle";
       e.look = 0;
       e.steer = false;

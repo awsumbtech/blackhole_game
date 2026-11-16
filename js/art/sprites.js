@@ -1,11 +1,10 @@
 // Sprite cache: looks, keys, size buckets and the painter table. Per frame only cache lookups.
 
-import { shipExtent, SHIP_LOOKS } from "../ships.js";
+import { ShipCatalog } from "../core/ShipCatalog.js";
 import { COMET_PAINTERS } from "./comets.js";
 import { DEEPSKY_PAINTERS } from "./deepsky.js";
 import { DUST_PAINTERS } from "./dust.js";
 import { rng, makeCanvas } from "./kit.js";
-import { ringedPlanet, PLANET_PAINTERS } from "./planets.js";
 import { artCache, quality, cacheGen, bucketFor } from "./quality.js";
 import { ROCK_PAINTERS } from "./rocks.js";
 import { STAR_PAINTERS } from "./stars.js";
@@ -42,7 +41,7 @@ function splitKey(k) { const i = k.lastIndexOf("|"); return [k.slice(0, i), +k.s
 // Every type has a set of looks (archetype + seeded details). The look comes from
 // the entity's seed (or an explicit e.look >= 0), so the cache holds one sprite
 // per type / look / size rather than one per object.
-const LOOKS = { craft: SHIP_LOOKS, dust: 8, junk: 10, meteor: 12, comet: 6, moon: 12, planet: 30, star: 12, system: 8, nebula: 10, cluster: 6, galaxy: 10 };
+const LOOKS = { dust: 8, junk: 10, meteor: 12, comet: 6, star: 12, system: 8, nebula: 10, cluster: 6, galaxy: 10 };
 // Types that paint their own palette from the look (e.color is only a minimap tint)
 const OWN = { dust: 1, junk: 1, meteor: 1, comet: 1, moon: 1, planet: 1, star: 1, system: 1 };
 export function lookOf(e) {
@@ -57,7 +56,6 @@ function extentFor(type, variant, look) {
     case "star": return 2.7;
     case "neutron": return 3.1;
     case "comet": return 2.3;
-    case "planet": return ringedPlanet(look, variant) ? 2.05 : variant === 1 ? 1.65 : 1.35;
     case "meteor": return 1.4;
     case "system": return 2.5;
     case "nebula": return 1.75;
@@ -77,10 +75,10 @@ function baseKeyFor(e) {
 /** Returns { c, size } where size is the drawn width in entity radii*2 units. */
 export function spriteFor(e, rpx) {
   // Ships are sheet frames on Ship. There is no painted canvas to cache.
-  if (e.type === "craft") {
-    const stub = e._sp && e._sp.ship
+  if (e.type === "craft" || e.type === "planet" || e.type === "moon") {
+    const stub = e._sp && e._sp.layered
       ? e._sp
-      : { c: null, k: shipExtent(e.ship) * 2, b: 0, g: cacheGen, ship: true };
+      : { c: null, k: e.type === "craft" ? ShipCatalog.extent(e.ship) * 2 : 2.4, b: 0, g: cacheGen, layered: true, ship: e.type === "craft" };
     stub.used = frameNo;
     e._sp = stub;
     return stub;
@@ -117,11 +115,11 @@ export function spriteFor(e, rpx) {
 
 function paint(e, b) {
   generated++;
-  if (e.type === "craft") {
-    return { c: null, k: shipExtent(e.ship) * 2, b, g: cacheGen, used: frameNo, ship: true };
+  if (e.type === "craft" || e.type === "planet" || e.type === "moon") {
+    return { c: null, k: 2.7, b, g: cacheGen, used: frameNo, ship: e.type === "craft" };
   }
   const variant = e.variant || 0, look = lookOf(e);
-  const ext = e.type === "craft" ? shipExtent(e.ship) : extentFor(e.type, variant, look);
+  const ext = extentFor(e.type, variant, look);
   const size = Math.ceil(b * ext * 2) + 2;
   const c = makeCanvas(size);
   const g = c.getContext("2d");
@@ -135,6 +133,6 @@ function paint(e, b) {
 }
 
 const PAINTERS = {
-  ...DUST_PAINTERS, ...ROCK_PAINTERS, ...COMET_PAINTERS, ...PLANET_PAINTERS,
+  ...DUST_PAINTERS, ...ROCK_PAINTERS, ...COMET_PAINTERS,
   ...STAR_PAINTERS, ...DEEPSKY_PAINTERS
 };
