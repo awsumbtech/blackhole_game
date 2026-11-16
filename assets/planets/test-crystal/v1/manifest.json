@@ -1,0 +1,24 @@
+{
+ "kind": "planet",
+ "type": "test-crystal",
+ "version": "v1",
+ "name": "TEST crystal world",
+ "archetype": null,
+ "test": true,
+ "size": 512,
+ "anchor": [
+  256,
+  256
+ ],
+ "radiusPx": 215.0,
+ "light": "upper-left",
+ "ringed": false,
+ "layers": [
+  {
+   "role": "body",
+   "file": "body.png",
+   "z": 0,
+   "scale": 1.0
+  }
+ ]
+}

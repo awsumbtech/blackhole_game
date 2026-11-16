@@ -1,0 +1,181 @@
+{
+ "tool": "cursor.GenerateImage",
+ "postprocess": "_tools/build.py (keying.key, chroma_clean2 on magenta keys, crop/resample, ring half split)",
+ "entries": {
+  "planets/rust-desert/v1": {
+   "raws": [
+    {
+     "id": "planet_rust-desert_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a rust-red desert world: terracotta and rust-orange plains, darker brown canyon scars, a few soft impact craters, a small white polar cap at the top, a thin warm peach haze along the lit limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "e056a63ccc5edfcd28f30e8eefa6df66fa280863cbde09c71e7bfb6d6e01f702",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "8665d51da27d0b8ce1c49a95303c9c9fddf97981df7910e5b6a211d095574d9f"
+   }
+  },
+  "planets/ocean-green/v1": {
+   "raws": [
+    {
+     "id": "planet_ocean-green_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: an ocean world: deep blue oceans with mossy green continents and soft tan coastlines, swirling white cloud streaks, white polar caps at the top and bottom, a soft blue atmosphere glow along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "4bb4d0f62d863e1a8fe025b8d70253b08be07a014af6f9e4e8faa61f919927ac",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "578eb27dbe59ff3c9c1ee93c1976202832bfd5b054fda93baef7d85af5b892c4"
+   }
+  },
+  "planets/sandy/v1": {
+   "raws": [
+    {
+     "id": "planet_sandy_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a sandy dune world: pale sand and ochre plains with long sweeping dune ridges, a few shallow craters, warm tan and biscuit tones, a faint warm haze along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "37cb5c7da5e04aa6082131ea881342b51732051b7b079ac95a3f0a1a590ead74",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "89a8376f5b6f974218935b009b64c1ad91bf8bfbdf49e402fca16daf3a0cf8b5"
+   }
+  },
+  "planets/ice/v1": {
+   "raws": [
+    {
+     "id": "planet_ice_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: an ice world: pale white and icy blue frozen sheets crossed by thin branching blue crack lines, a faint pale-blue atmosphere along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "38b628c3cb3d7887b6473be991fddaccfd05522856ed6be35a6ee588d8941678",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "e0a3d6b0d58749d1c7b7a606fd38e069522e63e09773abdfafd9fcc4d5f11473"
+   }
+  },
+  "planets/dark-rock/v1": {
+   "raws": [
+    {
+     "id": "planet_dark-rock_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a dark rocky world: charcoal-black and dark maroon-brown cracked crust in rough plates, thin glowing orange lava cracks winding across it, the lava glow visible on the night side too, no atmosphere. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "3edc28011c1db512d3e82812afd67600b2d0aac431f676c81c2fcdc3895d368d",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "c98fe1870f81e3f2d69778b0c0d66a2cb439c792bd6cceb00c1337a0d5a15048"
+   }
+  },
+  "planets/banded-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_banded-ringed-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a banded gas giant: soft horizontal bands of cream, tan, rust and caramel, one oval rust-red great storm in the southern half, a soft warm haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "831e310cd3db48ee9b38de966edd1440a91eb7fdbe39a5785e1d74a339c306dd",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_banded-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of warm beige, tan and cream ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "9af5a814f12fa7b91f342cd97dd3f7557b035ab38fcce8090f7ceda6e9c0c2c3",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "8ba7a4c463352d0ea1a62205f157e58be654abf98b6cb82c9cbf12fa88c3afac",
+    "ring_back.png": "62a9dea677d5f45bee6f9f1c0aa64c5d8d00932868741efbdada38bd6acf42b5",
+    "ring_front.png": "6f2001941b759f822344b4475f11196467a5a3157fa3ac71aec463351ea3cbfe"
+   }
+  },
+  "planets/blue-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_blue-ringed-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a blue gas giant: soft horizontal bands of cornflower blue, deep blue and pale sky blue, one small dark-blue oval storm with white cloud wisps, a soft blue haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "4d7eb76557ef63b84d302b5e6bda98b485879fcd84c23b995ff0ab6323d0d23b",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_blue-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale silver-blue and soft grey ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "8c0cbffe929eec2676d912fbeaa784ba03ca40986b28fb94d986ac2d7b357249",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "36a552f3b4e235e6877e7a6e3029f5034f0b417056e713e3f19e72b1f24c93c8",
+    "ring_back.png": "659759fcd85779696eb192e2fafd735e10afef090d272043e2a93879b63a39b0",
+    "ring_front.png": "a7a2283df3a915b3da5d82acb7f1328f087a4b69c54f4fe85598f9bb3ea51987"
+   }
+  },
+  "planets/pale-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_pale-ringed-giant_v2",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a pale gas giant: gentle low-contrast horizontal bands of pale cream, wheat and soft straw, very calm, a soft pale haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean smooth perfectly round outer edge with no ragged, torn or deckled rim and no glow outside it. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "3bf25f6344215f0119f047f744242402c4fe8952d25c90d3ec546382afef6fc7",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_pale-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale wheat, ivory and cream ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 30% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 50% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "aa05c24503c0a62e1f40f3206ba437abd1f8427f2aaf291926bc9cfea8fff313",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "58da8d4a5099f01a94d7d8f34f3d8999167adb7d6df8f3845eac7975a4c6bbf8",
+    "ring_back.png": "df721f396195cf763f432a3ad84e551f23af571ec71c2138cf4e22ea88fa83ce",
+    "ring_front.png": "5bfd86fbea16aea85eecba25af54a4fa2b0210004653436ebdea6e52b40c3f63"
+   }
+  },
+  "planets/cream-gas-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_cream-gas-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a cream gas giant: thick soft hazy horizontal bands of cream, butter and pale honey, blurred cloud swirls, a strong soft warm glow along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "94dc7c895798c14d6e45c8ea12fc4d6c627a48f41ac9663b8e7043da78b1c7d1",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "3232603ffa7a01d07b4b200b87ecf28e335fb9c35c7379503ce37a232cb3f90f"
+   }
+  },
+  "planets/purple-teal-ringed/v1": {
+   "raws": [
+    {
+     "id": "planet_purple-teal-ringed_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a purple and teal gas giant: soft horizontal bands of lavender purple and deep plum with a few teal-green bands between them, soft lilac haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure green (#00FF00) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "9f86010d8151aa8050667ca28c54a1ffbd3d92625d87658460d8cf0aff50d531",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_purple-teal-ringed_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale lavender and mint teal ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "88d9caa56409cd2f162d12d5ecbe2f6f57207014d88cc93f22161cd5bf34bee8",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "e9ef854eb50a4ab7ac41c89959ddd9b5a9b6792d19d699d4508601f02fd89af6",
+    "ring_back.png": "d7508c2f7740daebb0e548effa0ac4103cb25a7881977ccfb6b804a004ee8564",
+    "ring_front.png": "0065ef81fc43a2c3a39436f1b57312a22abb6e552b175387f81d35d0b5ad08c4"
+   }
+  },
+  "planets/test-crystal/v1": {
+   "raws": [
+    {
+     "id": "planet_test-crystal_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: TEST PLANET, a crystalline glass world: faceted emerald and aquamarine crystal plates with pale mint glints and thin bright seams between the facets. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "92cfaf40cbd0d0c52b78b44e234832541448454ed0e6f0d1e318e7d88b34e213",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "4d4ebca20aa7a9d084bb7668975b4974254bb856d4058ff0d0b4476df1df0437"
+   }
+  }
+ }
+}

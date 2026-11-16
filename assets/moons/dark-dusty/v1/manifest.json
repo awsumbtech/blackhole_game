@@ -1,0 +1,23 @@
+{
+ "kind": "moon",
+ "type": "dark-dusty",
+ "version": "v1",
+ "name": "Dark dusty",
+ "moonKind": 3,
+ "size": 512,
+ "anchor": [
+  256,
+  256
+ ],
+ "radiusPx": 215.0,
+ "light": "upper-left",
+ "ringed": false,
+ "layers": [
+  {
+   "role": "body",
+   "file": "body.png",
+   "z": 0,
+   "scale": 1.0
+  }
+ ]
+}
