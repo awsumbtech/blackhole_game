@@ -148,7 +148,7 @@ export class Feeding {
           audio.playBigCatch();
           game.impact(0.6);
           wispReact(state, "catch");
-          game.hud.hint("bigcatch", "Big catch! Golden halos show what's almost in reach.", 3600);
+          game.hud.hint("bigcatch", "Big catch. Drift into the ones that fit.", 3600);
         }
       } else if (!edible && state.invuln <= 0 && (e._spawnAlpha ?? 1) > 0.6 && dist < R + e.radius * 0.85) {
         this.bump(e, dx, dy, dist);
@@ -220,7 +220,7 @@ export class Feeding {
       });
     }
     audio.playBump();
-    game.hud.hint("bump", "Ringed objects are still too big. Grow a little, then come back for them.", 3800);
+    game.hud.hint("bump", "That one is still too big. Grow a little, then come back for it.", 3800);
   }
 
   collectPowerup(e) {

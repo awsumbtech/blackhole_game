@@ -2,6 +2,17 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.8.1 — No gold disc, no too-big ring (Nov 16 2026)
+
+Brian: remove every gold disc, and the circle around things that are still too big. A new way to show "too big" comes later, as an art object.
+
+- The filled gold disc is gone for every object type. It was the radial-gradient halo on a big catch.
+- The warm arrival disc on an object merging in from a back layer is gone too. The object still starts hazy and sharpens as it arrives. The full-screen "world opens" pulse on a tier-up stays.
+- The stroked too-big ring is gone for every object type, including ships. Nothing is drawn in its place.
+- A ship still draws the gold edge painted on its sheet (`liveEdge` / `wreckEdge`), on the same timing as before.
+- Big Appetite still gives big catches 60% more, and it still brings that ship edge in a little sooner. The codex, that perk, the first-catch hint and the bump hint no longer mention a halo, a disc or a ring. Soft palette still mutes the colours. Its only remaining colour swap is the radar dot for something still too big, amber instead of rose. That dot is unchanged.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.8.1`.
+
 ## v9.8.0 — Ships draw from sheets (Nov 15 2026)
 
 The first object-art step. A ship is a picture. Features are unchanged.

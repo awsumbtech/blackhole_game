@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. The rest is not started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -10,7 +10,7 @@ Phone for the size column: 390×844 CSS pixels, device pixel ratio 3 (the S25 Ul
 
 Coverage pass on `e93b0f2`: every `.js` file under `js/` (70 files) and `sw.js`. 28 of those files contain a canvas draw, a gradient, a composite, or a filter assignment: `art/comets.js`, `art/deepsky.js`, `art/dust.js`, `art/hole.js`, `art/kit.js`, `art/planets.js`, `art/rival.js`, `art/rocks.js`, `art/stars.js`, `constellation.js`, `core/Backdrop.js`, `core/CometTail.js`, `core/DebrisField.js`, `core/Flagship.js`, `core/GalaxyFlow.js`, `core/GoldenVeil.js`, `core/Growth.js`, `core/Inflow.js`, `core/Scene.js`, `core/ScreenOverlay.js`, `depth.js`, `discoveries.js`, `living-world.js`, `render.js`, `ships.js`, `starmap.js`, `wisp.js`, `worlds.js`. Every one of those calls belongs to an item in section B, or to `kit.js`, which only exists to serve those painters. The other 42 scripts do not draw. `sw.js` does not draw. `js/zen.js` does not draw on a canvas. It drives the SVG arc in section B.
 
-The gold cue today is a filled disc (`js/render.js` around lines 168–183). It does not become its own traced outline. The artist paints that gold edge **into** each catchable object's sheet, as its own frame. The object draws that frame. Code does not dilate, tint, or blur it.
+The filled gold disc and the stroked too-big ring were removed in v9.8.1. They were not converted into pictures. Ships keep the painted gold edge. A replacement for the too-big cue waits on an art object. For the other catchable types, the artist still paints a gold edge into each sheet as its own frame, and the object draws that frame. Code does not dilate, tint, or blur it.
 
 ## Already real images
 
@@ -41,14 +41,14 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A3. Drawing god-function
 
-- [ ] `js/render.js` 13–27 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
-- [ ] `js/render.js` 31–197 `drawEntities`. One loop paints every food type, the gold disc, the too-big ring, heat streaks, and the swallow stretch.
-- [ ] `js/render.js` 199–211 `swallowGlow` plus a module canvas.
-- [ ] `js/render.js` 219–267 `drawPowerupPickup`.
-- [ ] `js/render.js` 269–275 `drawBlackHole` (a wrapper around `art/hole.js`).
-- [ ] `js/render.js` 278–324 `drawParticles`, `drawRipples`.
-- [ ] `js/render.js` 333–459 minimap, edge arrows, mouse cursor, and the `TRAIL_STYLES` / `edgeE` module caches.
-- **Moves into:** each type's object draws itself. `Scene` keeps only the order. The gold disc and the too-big ring leave this file when the catchable objects own those frames (B20, B21).
+- [ ] `js/render.js` 13–22 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
+- [ ] `js/render.js` `drawEntities`. One loop paints every food type, heat streaks, and the swallow stretch. The gold disc and the too-big ring were removed in v9.8.1 (B20, B21), not moved onto art frames.
+- [ ] `js/render.js` 169–180 `swallowGlow` (module canvas `swGlow` at 168).
+- [ ] `js/render.js` 188–235 `drawPowerupPickup`.
+- [ ] `js/render.js` 238–242 `drawBlackHole` (a wrapper around `art/hole.js`).
+- [ ] `js/render.js` 247–273 `drawParticles`, 277–293 `drawRipples`.
+- [ ] `js/render.js` 309–382 minimap, 392–424 edge arrows, 428–449 mouse cursor, and the `TRAIL_STYLES` (302) / `edgeE` (391) module caches.
+- **Moves into:** each type's object draws itself. `Scene` keeps only the order. The gold disc and the too-big ring are already gone (v9.8.1, removed, not converted: B20, B21).
 - **Depends on:** `art/sprites.js`, `ships.js`, `CometTail`, `depth.js`.
 
 ### A4. Ships are functions, not a Ship
@@ -339,16 +339,11 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 ### The two catch cues that are not part of the sprite today
 
-- [ ] **Big-catch gold disc.** `js/render.js` 168–183. A filled gold radial gradient (`HALO_RGB` 255, 214, 140) over any `bigFish` once `nearQ` passes `BIG_HALO_FROM` (0.82, or 0.72 with perk a3a). States: nearly (still too big, the disc breathes with `breath`) and fits (steady, fuller). It covers the object.
-  - **Looks:** one disc, every catchable type.
-  - **Size:** about 1.35–1.65× the object's radius. On a ship, roughly 60 CSS / 180 device px across.
-  - **Owner:** deleted. The frame lives on the catchable object (see each sheet above).
-  - **Asset:** none of its own.
+- [x] **Big-catch gold disc (B20).** Removed in v9.8.1, not converted to a picture. The filled gold radial gradient (`HALO_RGB` 255, 214, 140) is gone for every object type. It used to cover a `bigFish` once `nearQ` passed `BIG_HALO_FROM` (0.82, or 0.72 with perk a3a), breathing while still too big and steady once it fit. Ships still draw the painted `liveEdge` / `wreckEdge` frame on that same threshold.
+  - **Asset:** none. Nothing replaced the disc.
 
-- [ ] **Too-big ring.** `js/render.js` 186–194. A thin rose circle (amber if the soft palette is on), pulsing, only while the object is still too big to eat.
-  - **Size:** just outside the object's radius, about 2 CSS px of line.
-  - **Asset px:** `ring-toobig.png` and `ring-toobig-soft.png`, 128×128.
-  - **Owner:** the catchable object, drawn from those two pictures. Not a code `arc`.
+- [x] **Too-big ring (B21).** Removed in v9.8.1, not converted to a picture. The thin rose circle (amber in the soft palette) is gone for every object type, including ships. It used to pulse just outside the radius while the object was still too big to eat. A replacement cue waits on an art object. No marker stands in for it.
+  - **Asset:** none. `ring-toobig.png` was not added.
 
 ### Finds, rivals, world scenery
 
@@ -383,10 +378,8 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Asset:** a second, already-soft frame on each type's sheet. `blurFor` goes away.
   - **Owner:** `DepthField`. Step 18.
 
-- [ ] **Arrival glow (`mergeGlow`).** `js/render.js` 101–117. While `depthT` is below 1 and `mergeGlow` is set, a warm radial disc sits on the arriving object. Out of scope for the old comet-tail note, in scope here.
-  - **Size:** about 0.85 of the arriving sprite.
-  - **Asset px:** 128×128, one soft gold disc, `arrival.png`.
-  - **Owner:** `DepthField`. Step 18.
+- [x] **Arrival glow (`mergeGlow`).** Removed in v9.8.1, not converted to a picture. It was a warm radial disc (`rgba(255, 220, 160)` to `rgba(255, 200, 120)`) on an object while `depthT` was below 1. The hazy-to-sharp merge stays. `mergeGlow` is gone from the entity and from `Growth`.
+  - **Asset:** none. `arrival.png` was not added.
 
 ### Event cues and veils
 
@@ -519,13 +512,13 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** `DEEPSKY_PAINTERS` is gone and `kit.js` has no callers.
    - **Test:** `tools/oo-deepsky.cjs`.
 
-9. **Delete the gold disc.** After steps 4–8 every catchable has a gold-edge frame. Remove `render.js` 168–183.
-   - **Done when:** nothing in `render.js` calls `createRadialGradient` for a catch.
-   - **Test:** `tools/oo-halo.cjs`. Fails on today's disc. Passes when the only gold is the sheet frame.
+9. **Gold disc.** Removed in v9.8.1, not converted. Brian asked for the disc gone before the other sheets exist. `render.js` no longer fills a gold radial gradient on a catch. Ships keep the painted edge.
+   - **Done when:** a dev-mode scene of a planet, a moon, debris and a ship draws no gold disc. Met in v9.8.1.
+   - **Test:** `tools/v981-cues.cjs`.
 
-10. **Too-big ring.** Two ring pictures. Soft palette swaps the picture, it does not recolour in code.
-   - **Done when:** `render.js` 185–193 is a `drawImage`.
-   - **Test:** `tools/oo-toobig.cjs`.
+10. **Too-big ring.** Removed in v9.8.1, not converted to ring pictures. The stroked circle is gone for every type, including ships. A replacement is a later art-object step.
+   - **Done when:** that same scene draws no too-big ring. Met in v9.8.1.
+   - **Test:** `tools/v981-cues.cjs`.
 
 11. **Black hole.** Disk, ring, shadow, reveal, magnet ring, breath ring, and the four skins (classic, ember, aurora, pearl) as painted frames.
     - **Done when:** `js/art/hole.js` no longer fills a gradient, and nothing sets `ctx.filter` on the hole (`render.js` 269–271 and `Settings.skinFilter` are gone).
@@ -559,9 +552,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
     - **Done when:** `drawWorldsBG` and `drawWorldsOverlay` only blit.
     - **Test:** `tools/oo-scenic.cjs`.
 
-19. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim (`render.js` 101–117, `mergeGlow`) becomes `arrival.png`.
-    - **Done when:** a tier-up still merges the far layer, with no `ctx.filter` and no radial gradient on the arriving object.
-    - **Test:** `tools/oo-depth.cjs`. Fails while `mergeGlow` builds a gradient. Passes when that glow is a blit.
+19. **Depth field.** Soft frame from each sheet. Delete `blurFor`. The arrival rim was removed in v9.8.1, not converted to `arrival.png`.
+    - **Done when:** a tier-up still merges the far layer, with no `ctx.filter`. The arriving object already has no radial gradient (v9.8.1).
+    - **Test:** `tools/oo-depth.cjs` for the remaining haze work. `tools/v981-cues.cjs` already fails if a warm arrival disc is drawn.
 
 20. **Canvas UI.** Minimap frame, arrows, thumbstick, banner plate, cursor. Text stays text.
     - **Done when:** those draws are `drawImage` plus `fillText` only for words.
@@ -659,6 +652,6 @@ Strategy:
 ## Counts
 
 - **Section A:** 22 groups, 49 open checkboxes (4 ship-drawing items checked in v9.8.0). The identity helpers in A4 stay until step 2 (the art manifest). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
-- **Section B:** 44 open checkboxes (the five ship classes are checked), plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint.
-- **Order:** 36 PRs, ships first, each based on `main`. Step 2 is the art manifest.
+- **Section B:** 41 open checkboxes (the five ship classes are checked, and B20/B21 plus the arrival glow are checked as removed in v9.8.1). Plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint. The gold disc, the too-big ring, and the arrival disc are marked removed, not converted.
+- **Order:** 36 PRs, ships first, each based on `main`. Step 2 is the art manifest. Steps 9 and 10 (the gold disc and the too-big ring) were removed in v9.8.1, not converted.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.

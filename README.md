@@ -1,6 +1,6 @@
 # Black Hole: Galaxy Eater
 
-**v9.7.2** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v9.8.1** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
 No ads, no purchases, no timers, no way to lose.
 
@@ -23,11 +23,10 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
 - **Move:** on a phone, touch anywhere and drag. A soft thumbstick appears under your finger;
   the further you drag, the faster you drift. Let go to coast. (Settings can switch to
   "follow finger".) On a computer, use the mouse, or WASD / arrow keys.
-- **Eat** anything smaller than you (it glows softly when it's edible). Bumping into something
-  bigger just nudges you away. Each bite is a real mouthful and plays the next note of a slow,
-  evolving tune in the galaxy's key.
-- **Big catches:** a soft gold halo means something big is almost in reach. When it's steady,
-  drift in for a slow swallow and a warm chime.
+- **Eat** anything smaller than you. Bumping into something bigger nudges you away. Each bite
+  is a real mouthful and plays the next note of a slow, evolving tune in the galaxy's key.
+- **Big catches:** something close to your size. When it fits, drift in for a slow swallow and
+  a warm chime. A ship near that size shows the thin gold edge painted on its picture.
 - **Discoveries:** a few rare finds hide in every galaxy (a golden comet, a lost probe, a whale
   nebula...). A faint glow at the screen edge, and your wisp leaning that way, mean one is near.
   Everything you find goes in your **Logbook** (title screen or Stats).

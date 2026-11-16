@@ -10,10 +10,10 @@ const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without 
 
 const TAU = Math.PI * 2;
 
-// "Too big to eat" ring colour: soft rose by default, warm amber in the soft palette
+// Radar mark for something still too big to eat: soft rose, warm amber in the soft palette.
+// The stroked ring that used this colour was removed in v9.8.1.
 let TOO_BIG_RGB = "240, 130, 140", TOO_BIG_DOT = "rgba(240, 130, 140, 0.8)";
-// v6 big-catch halo: warm gold; starts once you're 82% of the way to its size
-const HALO_RGB = "255, 214, 140";
+// A ship's painted gold edge starts once you're 82% of the way to its size.
 let BIG_HALO_FROM = 0.82;
 export function setHaloFrom(v) { BIG_HALO_FROM = v; }
 export function setSoftPalette(on) {
@@ -104,16 +104,6 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       } else {
         Ship.for(e).draw(ctx, sx, sy, size, spawnAlpha, breath, still, playerRadius, eatRatio, BIG_HALO_FROM);
       }
-      const shipTooBig = playerRadius <= e.radius * eatRatio;
-      if (shipTooBig && !e.consuming && e.depthT >= 1) {
-        const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
-        ctx.globalAlpha = spawnAlpha;
-        ctx.beginPath();
-        ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
-        ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
-        ctx.lineWidth = 1.8 / zoom;
-        ctx.stroke();
-      }
       continue;
     }
     const sp = spriteFor(e, rpx);
@@ -121,21 +111,9 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     if (e.depthT < 1) {
       // v8.3: drifting in from a back layer: starts hazy, dim and at its apparent
       // size, then sharpens, brightens and grows into the play layer
-      // v9.1: a soft warm arrival rim while mergeGlow is set (calm, no flash)
       const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
       const dd = d * (e.depthK0 + (1 - e.depthK0) * q);
       const bl = blurFor(sp.c, still ? 2 : 3), pd = dd * (1 + 2 * bl._pad);
-      if (e.mergeGlow && !still) {
-        const ga = (1 - q) * 0.55 + q * 0.2;
-        const gr = ctx.createRadialGradient(sx, sy, dd * 0.35, sx, sy, dd * 0.85);
-        gr.addColorStop(0, `rgba(255, 220, 160, ${0.18 * ga})`);
-        gr.addColorStop(1, `rgba(255, 200, 120, 0)`);
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = gr;
-        ctx.beginPath();
-        ctx.arc(sx, sy, dd * 0.85, 0, Math.PI * 2);
-        ctx.fill();
-      }
       ctx.translate(sx, sy);
       ctx.globalAlpha = alpha * (0.6 + 0.4 * q) * (1 - q);
       ctx.drawImage(bl, -pd / 2, -pd / 2, pd, pd);
@@ -182,34 +160,6 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.drawImage(hs.c, -hd / 2, -hd / 2, hd, hd);
       ctx.rotate(-hang); ctx.translate(-sx, -sy);
       ctx.globalCompositeOperation = "source-over";
-    }
-
-    // v6 big catches: a soft gold halo as you near something's size, steady once it fits
-    const tooBig = playerRadius <= e.radius * eatRatio;
-    const nearQ = playerRadius / (e.radius * eatRatio);
-    if (e.type !== "craft" && e.bigFish && !e.consuming && nearQ > BIG_HALO_FROM) {
-      const ready = !tooBig;
-      const k = ready ? 1 : (nearQ - BIG_HALO_FROM) / (1 - BIG_HALO_FROM);
-      const a = (0.14 + 0.22 * k) * spawnAlpha * (0.85 + breath * 0.15);
-      const hr = e.radius * (ready ? 1.65 : 1.35 + 0.25 * k);
-      const g = ctx.createRadialGradient(sx, sy, e.radius * 0.85, sx, sy, hr);
-      g.addColorStop(0, `rgba(${HALO_RGB}, ${a.toFixed(3)})`);
-      g.addColorStop(1, `rgba(${HALO_RGB}, 0)`);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(sx, sy, hr, 0, TAU);
-      ctx.fill();
-    }
-
-    if (tooBig && !e.consuming) {
-      const pulse = 0.26 + Math.sin(time * 0.0016 + e.rotation * 3) * 0.08;
-      ctx.globalAlpha = spawnAlpha;
-      ctx.beginPath();
-      ctx.arc(sx, sy, e.radius + 3 / zoom, 0, TAU);
-      ctx.strokeStyle = `rgba(${TOO_BIG_RGB}, ${pulse})`;
-      ctx.lineWidth = 1.8 / zoom;
-      ctx.stroke();
     }
   }
   ctx.globalAlpha = 1;
