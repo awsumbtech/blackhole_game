@@ -8,7 +8,8 @@ Ships, planets, and moons are named by the art files.
 
 - `Theme` loads `assets/ships/manifest.json`, `assets/planets/manifest.json`, and `assets/moons/manifest.json`. Another theme is a different root folder.
 - Ship class, extent, look count, the tier ladder, upgrades, wingmen, and scrap crumbs come from that ship index. `SHIP_CLASSES` and the planet painters are gone. A class or type marked `test` draws when asked for and is not rolled at random. The courier and test-crystal are those entries.
-- `Planet` and `Moon` draw the manifest layers with `drawImage` only, back ring then body then front ring. Until the pictures decode, the body is not drawn and cannot be eaten.
+- `Planet` and `Moon` draw the manifest layers with `drawImage` only, back ring then body then front ring. Until the pictures decode, the body is not drawn and cannot be eaten. A bite can use that type's painted debris frames.
+- Based on v9.8.1: the gold disc, the too-big ring, and the arrival disc stay gone for every object, including planets and moons. A ship still draws its painted `liveEdge` / `wreckEdge`.
 - Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.9.0`.
 
 ## v9.8.1 — No gold disc, no too-big ring (Nov 16 2026)

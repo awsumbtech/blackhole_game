@@ -369,6 +369,12 @@ js/core/
   GalaxyFlow.js         in-play galaxy transition + collapse nudge
   Fx.js                 particles, ripples, floaters
   Flagship.js           v9.6 Armada landmark: layout / paint (time-sliced) / draw, cached sprite
+  FlagshipLight.js      rim colour the flagship still asks for; does not tint a ship
+  Theme.js              loads the art indexes under assets/
+  ArtManifest.js        one type's painted layers
+  BodyCatalog.js        planet or moon index
+  ShipCatalog.js        ship classes, extents, looks, and identity helpers
+  Planet.js  Moon.js    blit manifest layers for one body
   Inflow.js             v9.5 motes and impact burst (v9.7: the circling grain cloud, nIn, is off)
   Backdrop.js           v9.7 painted galaxy sky (one JPG per biome, no parallax)
   DebrisField.js        v9.7 pieces of the eaten sprite, only while a bite is in flight
@@ -386,9 +392,10 @@ js/art/
 js/data/                plain data, no logic
   worlds.js             MECHANICS, SET_PREFIX, LAYOUTS (per-galaxy mechanics + landmarks)
   objects.js            objectTypes          biomes.js   biomeCatalog, BREATHERS, REGULARS
-js/ships.js             Ship identity (v9.8): shipClassFor / adoptShip / setWreck / upgradeShip,
-                        setShipLight (kept for the flagship; it does not tint a hull).
-                        Drawing is js/core/Ship.js + js/core/SpriteSheet.js. Entity fields: ship, wreck, steer, look
+js/ships.js             2-line stub so an old cache entry does not 404. Identity is js/core/ShipCatalog.js
+                        (v9.9.0, from assets/ships/manifest.json). Drawing is js/core/Ship.js + SpriteSheet.js.
+                        FlagshipLight names the flagship rim colour and does not tint a hull.
+                        Entity fields: ship, wreck, steer, look
 js/entities.js          plain entity factory (createEntity declares every field), biome picking
 js/living-world.js      gravity, spawn, EventSystem (fireEvent / eventFor)
 js/worlds.js            per-galaxy mechanics & landmarks (logic; data in js/data/worlds.js)
@@ -444,7 +451,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
-- **v9.9.0 Art manifests (Nov 16 2026):** Ships, planets, and moons are named by manifests under `assets/`. `Theme` loads the indexes. A new ship or planet is an image plus a manifest entry. The hard-coded ship class list and the planet painters are gone. The courier and test-crystal are test entries: they draw when asked for, and they are not on the random ladder. `FlagshipLight` still names the flagship's rim colour until that landmark is a sheet. Cache `blackhole-v9.9.0`.
+- **v9.9.0 Art manifests (Nov 16 2026):** Ships, planets, and moons are named by manifests under `assets/`. `Theme` loads the indexes. A new ship or planet is an image plus a manifest entry. The hard-coded ship class list and the planet painters are gone. The courier and test-crystal are test entries: they draw when asked for, and they are not on the random ladder. `Planet` and `Moon` blit painted layers (back ring, body, front ring). A bite can use that type's painted debris frames. Based on v9.8.1: the gold disc, the too-big ring, and the arrival disc stay gone for every object, including planets and moons. A ship still draws its painted `liveEdge` / `wreckEdge`. `FlagshipLight` still names the flagship's rim colour until that landmark is a sheet. Cache `blackhole-v9.9.0`.
 - **v9.8.1 No gold disc, no too-big ring (Nov 16 2026):** the filled gold disc is gone for every object type, and the stroked too-big ring is gone for every object type, including ships. The warm arrival disc on food merging in from a back layer is gone as well. The hazy-to-sharp merge stays, and so does the full-screen "world opens" pulse. Nothing replaces the removed discs or the ring. A ship's painted `liveEdge` / `wreckEdge` stays. The too-big cue is removed pending an art-object replacement. Big Appetite still adds 60% to a big catch and still brings a ship's gold edge in sooner (0.72 instead of 0.82). Cache `blackhole-v9.8.1`.
 - **v9.8.0 Ships are painted sheets (Nov 15 2026):** `Ship` draws one craft from `assets/ships/<class>.webp`. `SpriteSheet` loads the picture and its JSON and draws a named frame, centred. The nose in the art faces right. Facing left is a vertical flip (`ctx.scale(1, -1)`). A wreck still tumbles, an eaten ship still breaks into four plates, and the engine glow still breathes. The big-catch gold edge is the `liveEdge` or `wreckEdge` frame, with the same breath-then-steady timing. `paintShip` and `drawShip` are deleted. Until a sheet has decoded, that ship is not drawn. A failed load tries again after a few seconds. The five sheets are not precached. Cache `blackhole-v9.8.0`.
 - **v9.7.3 Comet tails follow the comet (Nov 13 2026):** v9.7.2 sampled the head relative to the camera, so the player's steering became part of every tail. The tail now samples world position only. It is independent of the player and the camera. An orbit, a river or drift still turns it, because that is the comet's own step. Cache `blackhole-v9.7.3`.
@@ -479,12 +486,13 @@ js/game.js          boot only (~140 lines); systems in js/core/ (map in §7e)
 js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
                     RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
                     GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Backdrop,
-                    DebrisField, GoldenVeil, Flagship, DevMode, HudControls
-js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, planets, stars, deepsky), hole, rival, kit
+                    DebrisField, GoldenVeil, Flagship, DevMode, HudControls,
+                    Theme, ArtManifest, BodyCatalog, ShipCatalog, Planet, Moon, FlagshipLight
+js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, stars, deepsky), hole, rival, kit; planets and moons are js/core/Planet.js and Moon.js
 js/data/            plain data: worlds (mechanics, landmark layouts), objects (types), biomes
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      entity factory, biome picking   js/living-world.js gravity, spawning, gentle events (CFG)
-js/ships.js          v9.4 ship classes, painter, motion, break-apart
+js/ships.js          stub (identity is ShipCatalog; drawing is Ship)
 js/grade.js         v8 vignette/grade (CSS layer)
 js/core/GoldenVeil.js  golden-galaxy veil, full frame, screen at 0.35 (assets/sky/golden_veil.jpg)
 js/depth.js         DepthLayers (back tiers + merge snapshot); Growth owns the spectacle

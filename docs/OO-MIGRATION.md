@@ -41,31 +41,31 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A3. Drawing god-function
 
-- [ ] `js/render.js` 13–22 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
+- [ ] `js/render.js` 15–24 module colour state (`TOO_BIG_RGB`, `BIG_HALO_FROM`, `setHaloFrom`, `setSoftPalette`).
 - [ ] `js/render.js` `drawEntities`. One loop paints every food type, heat streaks, and the swallow stretch. The gold disc and the too-big ring were removed in v9.8.1 (B20, B21), not moved onto art frames.
-- [ ] `js/render.js` 169–180 `swallowGlow` (module canvas `swGlow` at 168).
-- [ ] `js/render.js` 188–235 `drawPowerupPickup`.
-- [ ] `js/render.js` 238–242 `drawBlackHole` (a wrapper around `art/hole.js`).
-- [ ] `js/render.js` 247–273 `drawParticles`, 277–293 `drawRipples`.
-- [ ] `js/render.js` 309–382 minimap, 392–424 edge arrows, 428–449 mouse cursor, and the `TRAIL_STYLES` (302) / `edgeE` (391) module caches.
+- [ ] `js/render.js` 181–192 `swallowGlow` (module canvas `swGlow` at 180).
+- [ ] `js/render.js` 200–247 `drawPowerupPickup`.
+- [ ] `js/render.js` 250–254 `drawBlackHole` (a wrapper around `art/hole.js`).
+- [ ] `js/render.js` 259–285 `drawParticles`, 289–305 `drawRipples`.
+- [ ] `js/render.js` 321–394 minimap, 404–436 edge arrows, 440–461 mouse cursor, and the `TRAIL_STYLES` (314) / `edgeE` (403) module caches.
 - **Moves into:** each type's object draws itself. `Scene` keeps only the order. The gold disc and the too-big ring are already gone (v9.8.1, removed, not converted: B20, B21).
 - **Depends on:** `art/sprites.js`, `ships.js`, `CometTail`, `depth.js`.
 
 ### A4. Ships are functions, not a Ship
 
-- [x] `js/ships.js` 7–41 `SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`. Done in v9.9.0. The class list, extents, look counts, tier bands, and the wingman step are read from `assets/ships/manifest.json`. `FlagshipLight` still holds the flagship rim colour until the Flagship step. It does not tint a ship.
+- [x] `js/ships.js` ship identity (`SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`). Done in v9.9.0. The class list, extents, look counts, tier bands, and the wingman step are read from `assets/ships/manifest.json`. `js/ships.js` is now a 2-line stub so an old cache entry does not 404. Identity lives on `ShipCatalog`. `FlagshipLight` still holds the flagship rim colour until the Flagship step. It does not tint a ship.
 - [x] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look. Removed in v9.8.0. The look row is the number `adoptShip` already stores.
 - [x] `js/ships.js` 226–421 `paintShip`. Code-draws the hull. Removed in v9.8.0. `Ship` draws a sheet frame.
 - [x] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates. Removed in v9.8.0. The glow and the plates are frames.
 - [x] `js/ships.js` 466–505 `drawShip`. Heading, the vertical flip when a living ship faces left, engine glow, and the eaten-ship plates. Removed in v9.8.0. `Ship.draw` does that from the sheet.
-- **Moves into:** step 2, the art manifest. `Ship` already draws one craft. `SpriteSheet` (`js/core/SpriteSheet.js`) already loads one picture. The class list, the frame layout, and the sizes move into that manifest.
-- **Depends on:** `SpriteSheet`. Callers: `render.js` around 97 (the craft branch), `living-world.js` `adoptShip` and line 350, `worlds.js` `addHull` / crumbs, `depth.js` samples.
+- **Moves into:** step 2, the art manifest, done in v9.9.0. `Ship` draws one craft. `SpriteSheet` (`js/core/SpriteSheet.js`) loads one picture. The class list, the frame layout, and the sizes live in that manifest.
+- **Depends on:** `SpriteSheet`. Callers: `render.js` around 99 (the craft branch), `living-world.js` `ShipCatalog.adopt` and `ShipCatalog.below` (354), `worlds.js` `addHull` / crumbs, `depth.js` samples.
 
 ### A5. Sprite cache and painters
 
 - [ ] `js/art/sprites.js` 14–20 module cache, frame counter, and paint budget. `spriteFor` (79) and `paint` (110) pick a painter and draw a canvas.
 - [ ] `js/art/kit.js`. Shared code paints: shade, craters, blobs, rings, atmosphere. Every painter below uses it.
-- [ ] `js/art/dust.js`, `rocks.js`, `comets.js`, `planets.js`, `stars.js`, `deepsky.js`. One painter function per type.
+- [ ] `js/art/dust.js`, `rocks.js`, `comets.js`, `stars.js`, `deepsky.js`. One painter function per type. The planet painter is gone (v9.9.0; `Planet` and `Moon` blit manifest layers).
 - [ ] `js/art/quality.js` 3–26. `artCache()`, `quality`, `cacheGen`, `bucketFor`. This registry can stay; it is already a small object. Painters must stop calling it to store generated canvases.
 - **Moves into:** `SpriteSheet` (load and draw a picture) plus one class per type. `kit.js` goes away as each painter is deleted.
 - **Depends on:** the entity's `type`, `look`, `variant`, `seed`.
@@ -266,7 +266,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Owner:** `Junk`.
   - **Asset:** `junk.webp`, 10 looks × (body, gold-edge). Junk is a big catch at the first tiers (`tiers.js` 14–16).
 
-- [ ] **Meteor.** `js/art/rocks.js`. 12 looks. Tumbles. Hot entry streak when `e.hot` (`render.js` 80–94, `heatFor` in `rocks.js` 33). Extent 1.4.
+- [ ] **Meteor.** `js/art/rocks.js`. 12 looks. Tumbles. Hot entry streak when `e.hot` (`render.js` 83–97, `heatFor` in `rocks.js` 33). Extent 1.4.
   - **Size:** morsel about 8 CSS / 25 device px. Big catch about 45 CSS / 135 device px. Streak about 6–10 radii long.
   - **Asset px:** 256×256 body, streak on the same sheet.
   - **Owner:** `Meteor`.
@@ -278,17 +278,17 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Owner:** `Comet`. It keeps a `CometTail`, which becomes a frame index instead of a code blit.
   - **Asset:** `comet.webp`, 6 looks × (head, gold-edge, dust tail, ion tail).
 
-- [ ] **Moon.** `js/art/planets.js` 33. 12 looks (6 kinds). Craters, no air. Extent 1.3.
+- [x] **Moon.** Done in v9.9.0. `Moon` (`js/core/Moon.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 42 CSS / 126 device px.
-  - **Asset px:** 256×256.
+  - **Asset px:** the painted body, plus optional debris frames.
   - **Owner:** `Moon`.
-  - **Asset:** `moon.webp`, 12 × (body, gold-edge).
+  - **Asset:** one folder per type under `assets/moons/`.
 
-- [ ] **Planet and rings.** `js/art/planets.js` 30–end. 30 looks, 4 variants. Rings on some (`ringedPlanet`, line 7). Extent 1.35, or 1.65, or 2.05 with a ring. Variant and look change the silhouette.
+- [x] **Planet and rings.** Done in v9.9.0. `Planet` (`js/core/Planet.js`) blits manifest layers (back ring, body, front ring) from `assets/planets/<type>/v1/`. `PLANET_PAINTERS` and `js/art/planets.js` are gone. Rings are painted layers; dropping those files removes the ring. Ten playable types plus the test-crystal, which is not on the random ladder. A bite can use that type's painted debris frames. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 44–80 CSS / 130–240 device px across, rings included.
-  - **Asset px:** 512×512.
+  - **Asset px:** the painted layers, plus optional debris frames.
   - **Owner:** `Planet`.
-  - **Asset:** `planet.webp` is too big as one file. One sheet per 10 looks. Columns: body, gold-edge. Rings are in the picture, not a code ellipse.
+  - **Asset:** one folder per type under `assets/planets/`.
 
 - [ ] **Star.** `js/art/stars.js` 34. 12 looks, one spectral type each (`SPEC_OF`, line 15). Corona and rays. Extent 2.7.
   - **Size:** big catch about 84 CSS / 250 device px across the corona.
@@ -410,7 +410,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Owner:** `GravityWave`.
   - **Asset:** that one stroke. Step 34.
 
-- [ ] **Tier-merge pulse.** `js/core/Growth.js` 91–103 `drawPulse`. A radial veil, bright at the centre and dark at the edge, while `mergePulse` eases out.
+- [ ] **Tier-merge pulse.** `js/core/Growth.js` 83–95 `drawPulse`. A radial veil, bright at the centre and dark at the edge, while `mergePulse` eases out.
   - **Size:** full screen, 390×844 CSS / 1170×2532 device px.
   - **Asset px:** 512×512 stretched, `merge-pulse.png`.
   - **Owner:** `Growth` (already a class).
@@ -616,7 +616,7 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
     - **Done when:** those four draws are `drawImage` only, and `drawEdgeGlow` is gone.
     - **Test:** `tools/oo-events-art.cjs`. Fails while any of the four still calls `createRadialGradient` or strokes a wave in code. Passes when each is a picture.
 
-35. **Frame veils.** `Growth.drawPulse` (91–103), the slow-mo tint (`Scene.js` 94–101). The galaxy-flow veil (85–93) and the drift veil (`Scene.js` 122–126) are deleted: those moments crossfade real backdrops instead of filling a rectangle.
+35. **Frame veils.** `Growth.drawPulse` (83–95), the slow-mo tint (`Scene.js` 94–101). The galaxy-flow veil (85–93) and the drift veil (`Scene.js` 122–126) are deleted: those moments crossfade real backdrops instead of filling a rectangle.
     - **Done when:** `drawPulse` and the slow-mo block only blit, and `drawVeil` plus the drift `fillRect` are gone.
     - **Test:** `tools/oo-veils.cjs`. Fails while either veil still fills a rectangle. Passes when the pulse and the slow tint are images and the other two fills are absent.
 
@@ -652,6 +652,6 @@ Strategy:
 ## Counts
 
 - **Section A:** 22 groups, 48 open checkboxes (4 ship-drawing items checked in v9.8.0, and the ship identity helpers checked in v9.9.0). The core classes that already exist (Scene, Player, Feeding, and the rest in A21) are not in that count.
-- **Section B:** 41 open checkboxes (the five ship classes are checked, and B20/B21 plus the arrival glow are checked as removed in v9.8.1). Plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint. The gold disc, the too-big ring, and the arrival disc are marked removed, not converted.
+- **Section B:** 39 open checkboxes (the five ship classes, the moon, and the planet are checked as converted in v9.8.0 / v9.9.0, and B20/B21 plus the arrival glow are checked as removed in v9.8.1). Plus 4 already-real images marked done (7 backdrops, the golden veil, 4 shard masks, the app icons). Two veil items (galaxy-flow and drift-in) are marked to be deleted, not replaced with new paint. The gold disc, the too-big ring, and the arrival disc are marked removed, not converted.
 - **Order:** 36 PRs, ships first, each based on `main`. Step 2 (the art manifest) is done in v9.9.0. Steps 9 and 10 (the gold disc and the too-big ring) were removed in v9.8.1, not converted.
 - **Coverage:** 70 files under `js/`, plus `sw.js`. 28 files draw. Every canvas, gradient, composite, and filter call in those 28 is named in section B or is `kit.js` serving those painters.
