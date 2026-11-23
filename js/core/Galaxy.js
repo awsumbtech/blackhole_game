@@ -3,8 +3,9 @@
 
 import * as audio from "../audio.js";
 import * as ui from "../ui.js";
-import { setShipLight } from "../ships.js";
 import { Ship } from "./Ship.js";
+import { Body } from "./Body.js";
+import { FlagshipLight } from "./FlagshipLight.js";
 import { getBiome, biomeCatalog } from "../entities.js";
 import { setHaloFrom } from "../render.js";
 import { initWorlds } from "../worlds.js";
@@ -16,7 +17,7 @@ import { wisp, resetWisp } from "../wisp.js";
 import { initPowerups, freshActive } from "../powerups.js";
 import { baseMods, freshRun } from "../progression.js";
 import { ascMods, depthInfo, rollGolden, GOALS, starsFor } from "../ascension.js";
-import { START_R, tierIndexForR, massForR, targetMassFrom } from "../tiers.js";
+import { START_R, tier, tierIndexForR, massForR, targetMassFrom } from "../tiers.js";
 
 const $ = id => document.getElementById(id);
 function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
@@ -73,7 +74,7 @@ export class Galaxy {
     // Golden galaxies: ship rim still picks up the warm nebula. The sky veil is GoldenVeil.
     const neb = state.golden ? tintNebula(biome.nebula, [255, 200, 90], 0.45) : biome.nebula;
     game.backdrop.set(biome.name);
-    setShipLight(neb[1] || neb[0], biome.name + (state.golden ? "*" : ""));   // v9.4 ship rim bounce
+    FlagshipLight.set(neb[1] || neb[0], biome.name + (state.golden ? "*" : ""));   // flagship rim, until that step
     if (!state.seenHints["biome_" + biome.name]) state.seenHints["biome_" + biome.name] = true;
 
     state.mass = resume ? clamp(resume.mass, state.startMass, state.targetMass * 0.97) : state.startMass;
@@ -126,6 +127,11 @@ export class Galaxy {
     state.collapseNudge = false;
     $("collapse-pill").classList.add("hidden");
     Ship.preloadForGalaxy(state);
+    const row = tier(state.tier || 0);
+    const w = biome.weights || {};
+    const uses = id => !!(w[id] || (row.food && row.food[id]) || (row.big && row.big[id]));
+    if (uses("planet") || biome.signature === "planet") Body.warm("planet");
+    if (uses("moon")) Body.warm("moon");
     audio.startDrone(biome);
     audio.newPhrase();
     audio.setMusicLayers(state.tier, biome);

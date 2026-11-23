@@ -9,14 +9,15 @@
 
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || "/tmp/pw/node_modules/playwright-core");
+const { Browser } = require("./lib/browser.cjs");
+const { chromium } = Browser.playwrightCore();
 
 const ARGS = process.argv.slice(2).filter(a => a !== "--golden");
 const GOLDEN = process.argv.includes("--golden");
 const PORT = ARGS[0] || "8091";
 const OUT_DIR = path.join(__dirname, "..", "qa", "v9.7");
 const OUT = path.join(OUT_DIR, "review-tests.json");
-const CHROME = process.env.CHROME || "/usr/local/bin/google-chrome";
+const CHROME = Browser.chromePath(chromium);
 
 // Five simulated minutes, sampled as real draws. dt is in 60Hz frames.
 const MINUTES = 5;
@@ -58,15 +59,29 @@ async function enter(page, cfg) {
 async function bite(page) {
   await enter(page, { biome: "Planet Nursery", tier: 5, galaxy: 5, zen: false });
   await page.waitForFunction(() => window.__bh.debris.masksReady);
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
     const bh = window.__bh;
     const s = bh.state;
     const field = bh.debris;
     field.clear();
-    const eds = s.entities.filter(ent => !ent.powerup && !ent.consumed && s.radius > ent.radius * s.eatRatio && ent.radius > s.radius * 0.45);
-    eds.sort((a, b) => b.radius - a.radius);
-    const e = eds[0];
-    if (!e) return { ok: false, why: "no large edible" };
+    // Always the same target: a ship, whose plates are the debris. A random
+    // nursery planet may now leave painted debris frames, so picking "the
+    // biggest edible" made this check depend on the spawn.
+    const entities = await import("/js/entities.js");
+    const e = entities.createEntity(entities.typeById("craft"), s.playerX, s.playerY, 1);
+    e.radius = s.radius * 0.62;
+    e.depthT = 1;
+    e.ship = "freighter";
+    e.look = 0;
+    e.steer = false;
+    e.wreck = true;
+    e.rotation = 0.4;
+    try {
+      const { Ship } = await import("/js/core/Ship.js");
+      const t0 = performance.now();
+      while (!Ship.for(e).ready() && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
+    } catch { /* main paints the ship on the bite; the sheet wait is for v9.8+ */ }
+    s.entities.push(e);
     const mass0 = s.mass;
     const n0 = s.entities.length;
     const reach = s.radius + e.radius * (0.4 + (s.mods.reachBonus || 0));
@@ -94,7 +109,9 @@ async function bite(page) {
       const gone = !s.entities.includes(e);
       const live = field.pieces.filter(p => p.on);
       const lives = live.map(p => p.life);
-      const fromSprite = live.every(p => p.spr && p.spr.width > 0);
+      const fromSprite = live.every(p =>
+        (p.spr && p.spr.width > 0) ||
+        (p.frame && p.frame.image && (p.frame.image.naturalWidth || p.frame.image.width) > 0));
       const maxLife = lives.length ? Math.max(...lives) : 0;
       const now = performance.now();
       s.paused = true;

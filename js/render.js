@@ -1,6 +1,7 @@
 import { blurFor } from "./depth.js";
-import { shipExtent } from "./ships.js";
+import { ShipCatalog } from "./core/ShipCatalog.js";
 import { Ship } from "./core/Ship.js";
+import { Body } from "./core/Body.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
@@ -96,7 +97,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
     if (e.type === "craft") {
       // The sheet draws the craft. No generated canvas, no gold disc.
-      const size = shipExtent(e.ship) * 2 * e.radius;
+      const size = ShipCatalog.extent(e.ship) * 2 * e.radius;
       if (e.depthT < 1) {
         const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
         const dd = size * (e.depthK0 + (1 - e.depthK0) * q);
@@ -106,6 +107,14 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       }
       continue;
     }
+    if (e.type === "planet" || e.type === "moon") {
+      let bodyAlpha = spawnAlpha;
+      if (e.depthT < 1) {
+        const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
+        bodyAlpha = alpha * (0.6 + 0.4 * q) * q;
+      }
+      Body.for(e).draw(ctx, sx, sy, e.radius, bodyAlpha);
+    } else {
     const sp = spriteFor(e, rpx);
     let d = sp.k * r;
     if (e.depthT < 1) {
@@ -150,6 +159,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.translate(-sx, -sy);
     } else {
       ctx.drawImage(sp.c, sx - d / 2, sy - d / 2, d, d);
+    }
     }
     if (heat > 0.05) {
       // the heated leading edge faces where it is going

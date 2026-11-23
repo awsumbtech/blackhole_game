@@ -2,6 +2,20 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.9.0 — Art manifests (Nov 16 2026)
+
+Ships, planets, and moons are named by the art files.
+
+- `Theme` loads `assets/ships/manifest.json`, `assets/planets/manifest.json`, and `assets/moons/manifest.json`. Another theme is a different root folder.
+- Ship class, extent, look count, the tier ladder, upgrades, wingmen, and scrap crumbs come from that ship index. `SHIP_CLASSES` and the planet painters are gone. A class or type marked `test` draws when asked for and is not rolled at random. The courier and test-crystal are those entries.
+- `Body` draws the manifest layers with `drawImage` only, back ring then body then front ring. Until the pictures decode, the body is not drawn and cannot be eaten. A bite can use that type's painted debris frames.
+- Based on v9.8.1: the gold disc, the too-big ring, and the arrival disc stay gone for every object, including planets and moons. A ship still draws its painted `liveEdge` / `wreckEdge`.
+- `Theme.start` never rejects into boot: a missing or hanging index is caught, timed out, and retried with backoff (2s, doubling to a 30s cap) plus a retry on the window `online` event. The race timer is cleared. The three index files are in the service worker precache. The play or title screen still appears, and bodies and ships appear once the index recovers. A craft spawned while the ship index was missing picks its class once the catalog is ready, the same way a body picks its type.
+- A body's `ready` state depends only on its body and ring layers. Missing debris frames draw nothing; the body can still be eaten.
+- Ship tier bands live in `assets/ships/manifest.json`. Adding another class does not move capital off tier 8+.
+- Planets and moons share one `Body` class (`js/core/Body.js`). The `js/ships.js` stub is gone. Test-only art (courier, test-crystal) stays out of play preloads and out of random scrap picks. `createEntity` declares `artType`. Debris frame lists are cached on the manifest.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.9.0`.
+
 ## v9.8.1 — No gold disc, no too-big ring (Nov 16 2026)
 
 Brian: remove every gold disc, and the circle around things that are still too big. A new way to show "too big" comes later, as an art object.

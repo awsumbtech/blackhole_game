@@ -1,0 +1,1084 @@
+{
+ "tool": "cursor.GenerateImage",
+ "postprocess": "Art source pack tool `_tools/build.py` (keying.key, chroma_clean2 on magenta keys, crop/resample, ring half split). That script lives in the planets-v1 art source pack and is not shipped in this game repository; only the finished frames and this record are.",
+ "entries": {
+  "planets/rust-desert/v1": {
+   "raws": [
+    {
+     "id": "planet_rust-desert_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a rust-red desert world: terracotta and rust-orange plains, darker brown canyon scars, a few soft impact craters, a small white polar cap at the top, a thin warm peach haze along the lit limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "e056a63ccc5edfcd28f30e8eefa6df66fa280863cbde09c71e7bfb6d6e01f702",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "8665d51da27d0b8ce1c49a95303c9c9fddf97981df7910e5b6a211d095574d9f"
+   },
+   "debris": {
+    "chosen": "debris_rust-desert_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of rust-red desert rock: iron-oxide red and burnt orange stone with darker canyon cracks and dusty ochre crust on top, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/rust-desert/v1/body.png"
+    ],
+    "ref_sha256": [
+     "8665d51da27d0b8ce1c49a95303c9c9fddf97981df7910e5b6a211d095574d9f"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_rust-desert_v2.jpg",
+    "raw_sha256": "519a06547ed6a03969482df14185e8a7123f99195f3ae8c93f30a9d88031475a",
+    "attempts": [
+     "debris_rust-desert_v1",
+     "debris_rust-desert_v2"
+    ],
+    "rejected": {
+     "debris_rust-desert_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       135,
+       104,
+       475,
+       443
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 61511,
+      "scale": 0.3294,
+      "rel_size": 0.968,
+      "sha256": "a25aaeb94b9c0491bb61cf3c4254f53ddb66aca0edf4c302e58e896f143052c4"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       583,
+       102,
+       881,
+       443
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 58185,
+      "scale": 0.3284,
+      "rel_size": 0.941,
+      "sha256": "81ec3c0c5174bfb9973022bef21a6a0dc7cf35ba0c860449fa599eda9f7f2db6"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       155,
+       546,
+       412,
+       873
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 38126,
+      "scale": 0.3425,
+      "rel_size": 0.762,
+      "sha256": "a6db04479603ce98d03126479ab4c7fe3fd6c6c36f92c196285fde1318b2390a"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       567,
+       547,
+       865,
+       871
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 65646,
+      "scale": 0.3457,
+      "rel_size": 1.0,
+      "sha256": "8f2357cdd8edd57d14913dd1eeb809ef0c3089e541e240070fe496d60a0217f1"
+     }
+    ]
+   }
+  },
+  "planets/ocean-green/v1": {
+   "raws": [
+    {
+     "id": "planet_ocean-green_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: an ocean world: deep blue oceans with mossy green continents and soft tan coastlines, swirling white cloud streaks, white polar caps at the top and bottom, a soft blue atmosphere glow along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "4bb4d0f62d863e1a8fe025b8d70253b08be07a014af6f9e4e8faa61f919927ac",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "578eb27dbe59ff3c9c1ee93c1976202832bfd5b054fda93baef7d85af5b892c4"
+   },
+   "debris": {
+    "chosen": "debris_ocean-green_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of ocean-world crust: blue ocean-water surface on top with small patches of green land and white cloud wisps, over a cross-section of brown-grey rock and crust underneath, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/ocean-green/v1/body.png"
+    ],
+    "ref_sha256": [
+     "578eb27dbe59ff3c9c1ee93c1976202832bfd5b054fda93baef7d85af5b892c4"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_ocean-green_v2.jpg",
+    "raw_sha256": "ba0981fbe2d1e631f71266dc3941f596b538cc70f17ef362b9470616d5d8662e",
+    "attempts": [
+     "debris_ocean-green_v1",
+     "debris_ocean-green_v2"
+    ],
+    "rejected": {
+     "debris_ocean-green_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       101,
+       151,
+       471,
+       479
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 67897,
+      "scale": 0.3027,
+      "rel_size": 1.0,
+      "sha256": "18e6796266eb07bcaaab8ddb179099fa7148162888f0f33076ee1d49c107e427"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       565,
+       173,
+       945,
+       440
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 58770,
+      "scale": 0.2947,
+      "rel_size": 0.93,
+      "sha256": "23b7a17243c59ebec964649708a5067641087c556e45aac312ec89e062db8a97"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       201,
+       609,
+       400,
+       861
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 20998,
+      "scale": 0.4444,
+      "rel_size": 0.556,
+      "sha256": "38ab5e80eadbd0f0fce4a5de2f97bb5f7a535015b2d141c600728a89bc1a9e50"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       682,
+       666,
+       805,
+       791
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 10144,
+      "scale": 0.896,
+      "rel_size": 0.387,
+      "sha256": "c19753de65a54e5608d07b1f809cf1ce62581cbbac562b16322abb856e3dad03"
+     }
+    ]
+   }
+  },
+  "planets/sandy/v1": {
+   "raws": [
+    {
+     "id": "planet_sandy_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a sandy dune world: pale sand and ochre plains with long sweeping dune ridges, a few shallow craters, warm tan and biscuit tones, a faint warm haze along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "37cb5c7da5e04aa6082131ea881342b51732051b7b079ac95a3f0a1a590ead74",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "89a8376f5b6f974218935b009b64c1ad91bf8bfbdf49e402fca16daf3a0cf8b5"
+   },
+   "debris": {
+    "chosen": "debris_sandy_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of sandy desert world: warm tan, sand and peach stone with soft wind-swept dune streaks and a crumbly sandstone edge, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/sandy/v1/body.png"
+    ],
+    "ref_sha256": [
+     "89a8376f5b6f974218935b009b64c1ad91bf8bfbdf49e402fca16daf3a0cf8b5"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_sandy_v2.jpg",
+    "raw_sha256": "962919d6252adf65d511140858e33489c19723d86c494b96848d54bb585c6748",
+    "attempts": [
+     "debris_sandy_v1",
+     "debris_sandy_v2"
+    ],
+    "rejected": {
+     "debris_sandy_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       123,
+       143,
+       453,
+       464
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 59749,
+      "scale": 0.3394,
+      "rel_size": 1.0,
+      "sha256": "765ef7565f8a8b5835260f442f4f18970a8502a9e94174fc59f6482482f85426"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       562,
+       171,
+       909,
+       453
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 57499,
+      "scale": 0.3228,
+      "rel_size": 0.981,
+      "sha256": "78f9e10a48f090790d66b6904e1e198af7d4f4b06c7a36ceeb2a9a98d394852f"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       212,
+       595,
+       416,
+       845
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 24412,
+      "scale": 0.448,
+      "rel_size": 0.639,
+      "sha256": "7bf890a4dabcc2c3852f38da185cd9e311a33b99b915b98148c8b5a1e08bdf13"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       652,
+       657,
+       777,
+       776
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 10315,
+      "scale": 0.896,
+      "rel_size": 0.415,
+      "sha256": "5f4afd873c07815d4d45400e18f7554a1a0cce5a2967c57b8cb6a9ebce1310fc"
+     }
+    ]
+   }
+  },
+  "planets/ice/v1": {
+   "raws": [
+    {
+     "id": "planet_ice_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: an ice world: pale white and icy blue frozen sheets crossed by thin branching blue crack lines, a faint pale-blue atmosphere along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "38b628c3cb3d7887b6473be991fddaccfd05522856ed6be35a6ee588d8941678",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "e0a3d6b0d58749d1c7b7a606fd38e069522e63e09773abdfafd9fcc4d5f11473"
+   },
+   "debris": {
+    "chosen": "debris_ice_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are jagged ice shards from an ice world: pale white and light-blue translucent ice with faint blue cracks and frosty edges, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/ice/v1/body.png"
+    ],
+    "ref_sha256": [
+     "e0a3d6b0d58749d1c7b7a606fd38e069522e63e09773abdfafd9fcc4d5f11473"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_ice_v2.jpg",
+    "raw_sha256": "a280f65023c033ba12cf0fb050cc8d432a50c72c5bd67674266aa0e711512fe6",
+    "attempts": [
+     "debris_ice_v1",
+     "debris_ice_v2"
+    ],
+    "rejected": {
+     "debris_ice_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       110,
+       108,
+       479,
+       461
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 72049,
+      "scale": 0.3035,
+      "rel_size": 0.966,
+      "sha256": "c008285f0790e8d25c09b5c8f3c55e2e527b9fb7c8a933414166f0681297d99b"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       571,
+       128,
+       945,
+       444
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 67905,
+      "scale": 0.2995,
+      "rel_size": 0.938,
+      "sha256": "cb68da7811f9faed09d0a423e34379662875d53f81fecbb675b98eb031ade647"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       167,
+       547,
+       443,
+       895
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 45918,
+      "scale": 0.3218,
+      "rel_size": 0.771,
+      "sha256": "c39050fb3dd98e01fb300648b22b8e4340625332132146d0f3e5a87f8ba25ed7"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       571,
+       566,
+       901,
+       894
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 77245,
+      "scale": 0.3394,
+      "rel_size": 1.0,
+      "sha256": "1bb2764591516d6cb2f14dad879950a17b2312e9b0dbae7e29c73589c1bde76b"
+     }
+    ]
+   }
+  },
+  "planets/dark-rock/v1": {
+   "raws": [
+    {
+     "id": "planet_dark-rock_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a dark rocky world: charcoal-black and dark maroon-brown cracked crust in rough plates, thin glowing orange lava cracks winding across it, the lava glow visible on the night side too, no atmosphere. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "3edc28011c1db512d3e82812afd67600b2d0aac431f676c81c2fcdc3895d368d",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "c98fe1870f81e3f2d69778b0c0d66a2cb439c792bd6cceb00c1337a0d5a15048"
+   },
+   "debris": {
+    "chosen": "debris_dark-rock_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are chunks of dark volcanic rock: charcoal black and dark grey basalt with glowing orange-red lava veins in the cracks, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long jagged wedge-shaped fragment; top-right: a MEDIUM flat angular slab with one sharp point; bottom-left: a SMALL narrow triangular splinter; bottom-right: a TINY lumpy crumb. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/dark-rock/v1/body.png"
+    ],
+    "ref_sha256": [
+     "c98fe1870f81e3f2d69778b0c0d66a2cb439c792bd6cceb00c1337a0d5a15048"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_dark-rock_v2.jpg",
+    "raw_sha256": "d00cd4a0d606ef91da5f31bd278dad8a3a6e0daac36b153b8070531aed571022",
+    "attempts": [
+     "debris_dark-rock_v1",
+     "debris_dark-rock_v2"
+    ],
+    "rejected": {
+     "debris_dark-rock_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       92,
+       108,
+       468,
+       514
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 86141,
+      "scale": 0.2759,
+      "rel_size": 1.0,
+      "sha256": "a109af317dcf5c39a254b30996111a13c3f9b0449e62db76c734a774bc0f4eee"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       611,
+       155,
+       946,
+       530
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 77585,
+      "scale": 0.2987,
+      "rel_size": 0.949,
+      "sha256": "cf72a484299d5e4ae745ef21afe2913529a976162b9608f43d8b0c9867ba3555"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       186,
+       633,
+       405,
+       871
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 29413,
+      "scale": 0.4706,
+      "rel_size": 0.584,
+      "sha256": "4acb286df378a53641fda9efe6a708c85d0ffcf633a62da1b4be608b2a556182"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       674,
+       685,
+       811,
+       831
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 14354,
+      "scale": 0.7671,
+      "rel_size": 0.408,
+      "sha256": "ab25b09f0586e81532f4a998db79aaeed3a6ca9d335966afca3df25867598dd1"
+     }
+    ]
+   }
+  },
+  "planets/banded-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_banded-ringed-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a banded gas giant: soft horizontal bands of cream, tan, rust and caramel, one oval rust-red great storm in the southern half, a soft warm haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "831e310cd3db48ee9b38de966edd1440a91eb7fdbe39a5785e1d74a339c306dd",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_banded-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of warm beige, tan and cream ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "9af5a814f12fa7b91f342cd97dd3f7557b035ab38fcce8090f7ceda6e9c0c2c3",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "8ba7a4c463352d0ea1a62205f157e58be654abf98b6cb82c9cbf12fa88c3afac",
+    "ring_back.png": "62a9dea677d5f45bee6f9f1c0aa64c5d8d00932868741efbdada38bd6acf42b5",
+    "ring_front.png": "6f2001941b759f822344b4475f11196467a5a3157fa3ac71aec463351ea3cbfe"
+   },
+   "debris": {
+    "chosen": "debris_banded-ringed-giant_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are torn chunks of a banded gas giant's clouds: dense swirled gas clumps and torn cloud-band wisps in cream, tan, rust-orange and brown stripes, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long ragged torn strip of cloud band with frayed wispy ends; top-right: a MEDIUM curling torn wisp shaped like a hook; bottom-left: a SMALL dense lumpy gas clump with ragged edges; bottom-right: a TINY thin trailing wisp. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/banded-ringed-giant/v1/body.png"
+    ],
+    "ref_sha256": [
+     "8ba7a4c463352d0ea1a62205f157e58be654abf98b6cb82c9cbf12fa88c3afac"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_banded-ringed-giant_v2.jpg",
+    "raw_sha256": "61335660f86ca0f0606a34c9280c9f749ac768a3cf94b88794deb22a003b89b8",
+    "attempts": [
+     "debris_banded-ringed-giant_v1",
+     "debris_banded-ringed-giant_v2"
+    ],
+    "rejected": {
+     "debris_banded-ringed-giant_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       79,
+       131,
+       516,
+       441
+      ],
+      "pieces": 1,
+      "dropped_specks": 1,
+      "src_area_px": 80521,
+      "scale": 0.2563,
+      "rel_size": 1.0,
+      "sha256": "cd3548c9404d8311bb6efe1dce7a4efc37f1102dc28350214d2d3d488bf4ae33"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       576,
+       83,
+       928,
+       465
+      ],
+      "pieces": 1,
+      "dropped_specks": 2,
+      "src_area_px": 56060,
+      "scale": 0.2932,
+      "rel_size": 0.834,
+      "sha256": "3f534ced3459d1d5b20d1c1309cad4274dbbc2a3f5caa946da96d213b2a172ec"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       107,
+       569,
+       449,
+       877
+      ],
+      "pieces": 1,
+      "dropped_specks": 4,
+      "src_area_px": 67508,
+      "scale": 0.3275,
+      "rel_size": 0.916,
+      "sha256": "f9ceb61f5b567ad22fba2aa8b5b851c032390866b7659727d44aade773853127"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       576,
+       577,
+       935,
+       893
+      ],
+      "pieces": 1,
+      "dropped_specks": 6,
+      "src_area_px": 39014,
+      "scale": 0.312,
+      "rel_size": 0.696,
+      "sha256": "fd0c0eb6a077942e6cc3a41cf3c23abf1a86dff664bb0335c3f9ec1c2bcac2cf"
+     }
+    ]
+   }
+  },
+  "planets/blue-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_blue-ringed-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a blue gas giant: soft horizontal bands of cornflower blue, deep blue and pale sky blue, one small dark-blue oval storm with white cloud wisps, a soft blue haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "4d7eb76557ef63b84d302b5e6bda98b485879fcd84c23b995ff0ab6323d0d23b",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_blue-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale silver-blue and soft grey ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "8c0cbffe929eec2676d912fbeaa784ba03ca40986b28fb94d986ac2d7b357249",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "36a552f3b4e235e6877e7a6e3029f5034f0b417056e713e3f19e72b1f24c93c8",
+    "ring_back.png": "659759fcd85779696eb192e2fafd735e10afef090d272043e2a93879b63a39b0",
+    "ring_front.png": "a7a2283df3a915b3da5d82acb7f1328f087a4b69c54f4fe85598f9bb3ea51987"
+   },
+   "debris": {
+    "chosen": "debris_blue-ringed-giant_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are torn chunks of a blue gas giant's clouds: dense swirled gas clumps and torn cloud-band wisps in deep blue, azure and white streaks, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long ragged torn strip of cloud band with frayed wispy ends; top-right: a MEDIUM curling torn wisp shaped like a hook; bottom-left: a SMALL dense lumpy gas clump with ragged edges; bottom-right: a TINY thin trailing wisp. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/blue-ringed-giant/v1/body.png"
+    ],
+    "ref_sha256": [
+     "36a552f3b4e235e6877e7a6e3029f5034f0b417056e713e3f19e72b1f24c93c8"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_blue-ringed-giant_v2.jpg",
+    "raw_sha256": "12e516e7d06d2455791af65a28bfc0f50dcb06f3b87b6c86f3b459471090108e",
+    "attempts": [
+     "debris_blue-ringed-giant_v1",
+     "debris_blue-ringed-giant_v2"
+    ],
+    "rejected": {
+     "debris_blue-ringed-giant_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       79,
+       137,
+       563,
+       411
+      ],
+      "pieces": 1,
+      "dropped_specks": 13,
+      "src_area_px": 51214,
+      "scale": 0.2314,
+      "rel_size": 0.911,
+      "sha256": "b0ed0376ebbe467d0a34d8156de64bd38bf8ac95e4001aa690d246ec29245b7a"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       618,
+       92,
+       897,
+       441
+      ],
+      "pieces": 1,
+      "dropped_specks": 5,
+      "src_area_px": 43460,
+      "scale": 0.3209,
+      "rel_size": 0.839,
+      "sha256": "09e20fe006f43773933046ac091ee0d8eda5a7c4efd7f88c348b7677a5995dee"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       139,
+       558,
+       480,
+       863
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 61712,
+      "scale": 0.3284,
+      "rel_size": 1.0,
+      "sha256": "b0df6916f96308ae5efa5dbb3ca1e8e5608e2512bd0c6edb3b14535d8d247d85"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       600,
+       596,
+       927,
+       830
+      ],
+      "pieces": 1,
+      "dropped_specks": 11,
+      "src_area_px": 13788,
+      "scale": 0.3425,
+      "rel_size": 0.473,
+      "sha256": "40df7a0bfe293e6e971bfadf6074013b0b28a746d683d905ba5978e265c81d18"
+     }
+    ]
+   }
+  },
+  "planets/pale-ringed-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_pale-ringed-giant_v2",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a pale gas giant: gentle low-contrast horizontal bands of pale cream, wheat and soft straw, very calm, a soft pale haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean smooth perfectly round outer edge with no ragged, torn or deckled rim and no glow outside it. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "3bf25f6344215f0119f047f744242402c4fe8952d25c90d3ec546382afef6fc7",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_pale-ringed-giant_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale wheat, ivory and cream ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 30% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 50% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "aa05c24503c0a62e1f40f3206ba437abd1f8427f2aaf291926bc9cfea8fff313",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "58da8d4a5099f01a94d7d8f34f3d8999167adb7d6df8f3845eac7975a4c6bbf8",
+    "ring_back.png": "df721f396195cf763f432a3ad84e551f23af571ec71c2138cf4e22ea88fa83ce",
+    "ring_front.png": "5bfd86fbea16aea85eecba25af54a4fa2b0210004653436ebdea6e52b40c3f63"
+   },
+   "debris": {
+    "chosen": "debris_pale-ringed-giant_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are torn chunks of a pale gas giant's clouds: dense soft gas clumps and torn cloud-band wisps in pale cream, wheat and soft straw, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long ragged torn strip of cloud band with frayed wispy ends; top-right: a MEDIUM curling torn wisp shaped like a hook; bottom-left: a SMALL dense lumpy gas clump with ragged edges; bottom-right: a TINY thin trailing wisp. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/pale-ringed-giant/v1/body.png"
+    ],
+    "ref_sha256": [
+     "58da8d4a5099f01a94d7d8f34f3d8999167adb7d6df8f3845eac7975a4c6bbf8"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_pale-ringed-giant_v2.jpg",
+    "raw_sha256": "1dbb594913247f61fb771e64632a3f01164d128bc018aa01c459576bf422390a",
+    "attempts": [
+     "debris_pale-ringed-giant_v1",
+     "debris_pale-ringed-giant_v2"
+    ],
+    "rejected": {
+     "debris_pale-ringed-giant_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       76,
+       115,
+       523,
+       470
+      ],
+      "pieces": 1,
+      "dropped_specks": 4,
+      "src_area_px": 57532,
+      "scale": 0.2506,
+      "rel_size": 0.964,
+      "sha256": "1abcb8b23c6c2de7e69963276efe404f1979a844832e146ac0d4c0ef56310cd7"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       563,
+       110,
+       976,
+       467
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 45154,
+      "scale": 0.2712,
+      "rel_size": 0.854,
+      "sha256": "2bbc3167e5fd3a8b3774a4f675acb7984bb1774bf5c992ddf6a51b9093bee04a"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       101,
+       575,
+       479,
+       890
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 61902,
+      "scale": 0.2963,
+      "rel_size": 1.0,
+      "sha256": "af6eb7ae8e8fd06d1c11e6a91390f4c120cfad45a24244c514fa3fbf9ea105fc"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       613,
+       612,
+       929,
+       865
+      ],
+      "pieces": 1,
+      "dropped_specks": 4,
+      "src_area_px": 15209,
+      "scale": 0.3544,
+      "rel_size": 0.496,
+      "sha256": "77eea9160cc28df11a99dc363c648e367c6933a017dd6b730af0cf802cc0daad"
+     }
+    ]
+   }
+  },
+  "planets/cream-gas-giant/v1": {
+   "raws": [
+    {
+     "id": "planet_cream-gas-giant_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a cream gas giant: thick soft hazy horizontal bands of cream, butter and pale honey, blurred cloud swirls, a strong soft warm glow along the limb. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "94dc7c895798c14d6e45c8ea12fc4d6c627a48f41ac9663b8e7043da78b1c7d1",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "3232603ffa7a01d07b4b200b87ecf28e335fb9c35c7379503ce37a232cb3f90f"
+   },
+   "debris": {
+    "chosen": "debris_cream-gas-giant_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are torn chunks of a cream gas giant's clouds: dense swirled gas clumps and torn cloud-band wisps in cream, ivory, beige and light caramel bands, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long ragged torn strip of cloud band with frayed wispy ends; top-right: a MEDIUM curling torn wisp shaped like a hook; bottom-left: a SMALL dense lumpy gas clump with ragged edges; bottom-right: a TINY thin trailing wisp. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/cream-gas-giant/v1/body.png"
+    ],
+    "ref_sha256": [
+     "3232603ffa7a01d07b4b200b87ecf28e335fb9c35c7379503ce37a232cb3f90f"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_cream-gas-giant_v2.jpg",
+    "raw_sha256": "d15de02292d2c6c3ee8bc8268ba063c41f6eb6d58b185120ee9c0f6ec15a70e0",
+    "attempts": [
+     "debris_cream-gas-giant_v1",
+     "debris_cream-gas-giant_v2"
+    ],
+    "rejected": {
+     "debris_cream-gas-giant_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       73,
+       119,
+       571,
+       421
+      ],
+      "pieces": 1,
+      "dropped_specks": 1,
+      "src_area_px": 65466,
+      "scale": 0.2249,
+      "rel_size": 0.933,
+      "sha256": "57bc3e5afc02270c8683f48cb732f18d64a8fc1a036beaf0e301f87b772913d2"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       587,
+       122,
+       968,
+       438
+      ],
+      "pieces": 1,
+      "dropped_specks": 1,
+      "src_area_px": 37024,
+      "scale": 0.294,
+      "rel_size": 0.701,
+      "sha256": "622a0248906aa370c75e8c8cae4919d767f133e270a92f33a7fc3f07ddb77b00"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       101,
+       543,
+       507,
+       893
+      ],
+      "pieces": 1,
+      "dropped_specks": 2,
+      "src_area_px": 75285,
+      "scale": 0.2759,
+      "rel_size": 1.0,
+      "sha256": "3dcec5a487cd01d055c6fb894b774b1529588c3d344fa5af0039d371c7f8250a"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       629,
+       568,
+       931,
+       822
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 14622,
+      "scale": 0.3709,
+      "rel_size": 0.441,
+      "sha256": "d9d3e46c993ae7535d5990af07c476bd1f29e6d494960b5e6a7a60d2f055e08e"
+     }
+    ]
+   }
+  },
+  "planets/purple-teal-ringed/v1": {
+   "raws": [
+    {
+     "id": "planet_purple-teal-ringed_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: a purple and teal gas giant: soft horizontal bands of lavender purple and deep plum with a few teal-green bands between them, soft lilac haze along the limb. The planet has NO rings in this image. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure green (#00FF00) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "9f86010d8151aa8050667ca28c54a1ffbd3d92625d87658460d8cf0aff50d531",
+     "tool": "cursor.GenerateImage"
+    },
+    {
+     "id": "ring_purple-teal-ringed_v1",
+     "prompt": "Game sprite. A planetary ring system ALONE, with NO planet: a wide flat ring of pale lavender and mint teal ice and dust seen from slightly above at a low angle, so it appears as a thin horizontal ellipse, centred, spanning about 92% of the image width and about 24% of the image height, with a large EMPTY elliptical hole in the middle where a planet would sit (the hole is about 60% of the ring's width). Several concentric bands with thin darker gaps between them, slightly translucent, the left side a little brighter (lit from the upper left). Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail. Isolated on a perfectly flat solid pure black (#000000) background; the middle hole is the same flat black with nothing inside it. No planet, no sphere, no moons, no stars, no text.",
+     "raw_sha256": "88d9caa56409cd2f162d12d5ecbe2f6f57207014d88cc93f22161cd5bf34bee8",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "e9ef854eb50a4ab7ac41c89959ddd9b5a9b6792d19d699d4508601f02fd89af6",
+    "ring_back.png": "d7508c2f7740daebb0e548effa0ac4103cb25a7881977ccfb6b804a004ee8564",
+    "ring_front.png": "0065ef81fc43a2c3a39436f1b57312a22abb6e552b175387f81d35d0b5ad08c4"
+   },
+   "debris": {
+    "chosen": "debris_purple-teal-ringed_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are torn chunks of a purple and teal gas giant's clouds: dense swirled gas clumps and torn cloud-band wisps in violet, lavender and teal stripes, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long ragged torn strip of cloud band with frayed wispy ends; top-right: a MEDIUM curling torn wisp shaped like a hook; bottom-left: a SMALL dense lumpy gas clump with ragged edges; bottom-right: a TINY thin trailing wisp. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure green (#00FF00) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/purple-teal-ringed/v1/body.png"
+    ],
+    "ref_sha256": [
+     "e9ef854eb50a4ab7ac41c89959ddd9b5a9b6792d19d699d4508601f02fd89af6"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_purple-teal-ringed_v2.jpg",
+    "raw_sha256": "c2b254f9d30c574195a8e652663df5c3d2d1096ea164bab3f44f2ca89e57af9d",
+    "attempts": [
+     "debris_purple-teal-ringed_v1",
+     "debris_purple-teal-ringed_v2"
+    ],
+    "rejected": {
+     "debris_purple-teal-ringed_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       77,
+       164,
+       564,
+       426
+      ],
+      "pieces": 1,
+      "dropped_specks": 2,
+      "src_area_px": 67517,
+      "scale": 0.23,
+      "rel_size": 0.994,
+      "sha256": "d6ce20bc4e465881755fbe9071490c230af765cc11184d2e37130018151996b4"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       624,
+       138,
+       909,
+       481
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 42859,
+      "scale": 0.3265,
+      "rel_size": 0.792,
+      "sha256": "e8fc367cf430e406ffcfe504fa5663e9d02ba7d02200a7666adada981d2deabe"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       126,
+       550,
+       505,
+       835
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 68352,
+      "scale": 0.2955,
+      "rel_size": 1.0,
+      "sha256": "47985667b478d9963740ee01cb46aa02c4d7b7c2d40ca0ae58dee1f8a71a2235"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       607,
+       623,
+       912,
+       814
+      ],
+      "pieces": 1,
+      "dropped_specks": 1,
+      "src_area_px": 16641,
+      "scale": 0.3672,
+      "rel_size": 0.493,
+      "sha256": "e4c6a4b14106a0a6a80c3f4d12fe01bf7b356114157a69ea74ec2aec7371afbc"
+     }
+    ]
+   }
+  },
+  "planets/test-crystal/v1": {
+   "raws": [
+    {
+     "id": "planet_test-crystal_v1",
+     "prompt": "Game sprite. A single planet seen from space as a perfect round sphere, centred, filling about 82% of a square image, completely inside the frame with empty margin all around. Lit from the UPPER LEFT: the upper-left part is bright and luminous, a soft day/night terminator crosses the lower right, and the lower-right limb settles into deep cool shadow. Surface: TEST PLANET, a crystalline glass world: faceted emerald and aquamarine crystal plates with pale mint glints and thin bright seams between the facets. Style: soft watercolour and ink-wash illustration, translucent layered washes with gentle pigment granulation and soft wet blooms, calm slightly desaturated colours, delicate hand-painted surface detail, a crisp clean round outer edge. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no rings, no moons, no text, no border, no drop shadow.",
+     "raw_sha256": "92cfaf40cbd0d0c52b78b44e234832541448454ed0e6f0d1e318e7d88b34e213",
+     "tool": "cursor.GenerateImage"
+    }
+   ],
+   "files": {
+    "body.png": "4d4ebca20aa7a9d084bb7668975b4974254bb856d4058ff0d0b4476df1df0437"
+   },
+   "debris": {
+    "chosen": "debris_test-crystal_v2",
+    "prompt": "Game sprite sheet. Exactly FOUR separate small broken debris pieces torn off the surface of the planet or moon in the reference image, arranged as a 2x2 grid, one chunk centred in each quadrant, each chunk completely inside its quadrant with wide empty margins, the four chunks never touching each other or the image edges. The chunks are faceted crystal shards from a crystal world: translucent emerald-green and teal crystal with sharp angular facets and bright highlights, matching the reference image's palette, texture and materials exactly. The four pieces have clearly different shapes and sizes: top-left: a LARGE long pointed crystal shard; top-right: a MEDIUM broken hexagonal prism with a snapped end; bottom-left: a SMALL thin triangular splinter; bottom-right: a TINY angular chip. None of them is round: NOT spheres, NOT balls, NOT small planets, NOT copies of each other; irregular rough broken silhouettes, solid and readable at small size. Lit from the UPPER LEFT: bright upper-left faces, deep shadow on the lower-right sides. Style: the same soft watercolour and ink-wash illustration as the reference, translucent layered washes with gentle pigment granulation, delicate hand-painted detail, crisp clean outer edges. Isolated on a perfectly flat solid pure magenta (#FF00FF) background, no stars, no planet, no text, no grid lines, no border, no drop shadow.",
+    "refs": [
+     "out/planets/test-crystal/v1/body.png"
+    ],
+    "ref_sha256": [
+     "4d4ebca20aa7a9d084bb7668975b4974254bb856d4058ff0d0b4476df1df0437"
+    ],
+    "tool": "cursor.GenerateImage",
+    "raw_file": "_raw/debris_test-crystal_v2.jpg",
+    "raw_sha256": "04a9d101d3e14eaa2e8dc37ab417d7ab84b52023255e72f01235c3839b727607",
+    "attempts": [
+     "debris_test-crystal_v1",
+     "debris_test-crystal_v2"
+    ],
+    "rejected": {
+     "debris_test-crystal_v1": "four near-identical round balls; the brief asks for clearly different irregular shapes and sizes"
+    },
+    "frames": [
+     {
+      "file": "debris0.png",
+      "src_bbox": [
+       156,
+       119,
+       433,
+       484
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 62867,
+      "scale": 0.3068,
+      "rel_size": 0.98,
+      "sha256": "73f83de242dd782fde20549fe784d5d6ede56b943163929ffd728c7972337ad2"
+     },
+     {
+      "file": "debris1.png",
+      "src_bbox": [
+       583,
+       153,
+       880,
+       456
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 65393,
+      "scale": 0.3696,
+      "rel_size": 1.0,
+      "sha256": "57d272b1fbdc33373d2a539b3fe0d3b6cf8a595c37d32c123aee0f80862c8ec5"
+     },
+     {
+      "file": "debris2.png",
+      "src_bbox": [
+       191,
+       599,
+       396,
+       852
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 23020,
+      "scale": 0.4427,
+      "rel_size": 0.593,
+      "sha256": "61c7874707b7b8e5519aacea36db51d5fd516b6d5d790afe5da2eac5579d034a"
+     },
+     {
+      "file": "debris3.png",
+      "src_bbox": [
+       585,
+       575,
+       872,
+       878
+      ],
+      "pieces": 1,
+      "dropped_specks": 0,
+      "src_area_px": 52078,
+      "scale": 0.3696,
+      "rel_size": 0.892,
+      "sha256": "3d125028314096e81edf1b5f5c9cf8eda71f6ea749999fc26b76d6568b6034a4"
+     }
+    ]
+   }
+  }
+ },
+ "postprocess_debris": "_tools/debris.py: ships-v1 keying.key (+ derive.chroma_clean2 on magenta keys) on one painted 2x2 GenerateImage sheet; connected components assigned to quadrants (TL,TR,BL,BR = debris0..3); specks under 2% of a quadrant's main piece dropped; uniform premultiplied Lanczos to 112 px long side, centred on 128x128. No pixel is painted in code. The `_tools/debris.py` helper is in that same art source pack, not in this game repository."
+}

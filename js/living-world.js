@@ -7,7 +7,8 @@ import { playEventCue } from "./audio.js";
 import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
 import { MERGE_FRAMES } from "./depth.js";
-import { adoptShip, upgradeShip, setWreck, SHIP_CLASSES } from "./ships.js";
+import { ShipCatalog } from "./core/ShipCatalog.js";
+import { Body } from "./core/Body.js";
 import { foodWeights, bigWeights, eventType, eventBigType, fitType, eventFor, topFood } from "./tiers.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
@@ -216,7 +217,8 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
   e.y = pos.y;
   if (opts.near ?? true) aimAtPlayer(state, e, 1.0, e.baseSpeed);
   // v9.4: ships are wrecks in the Armada, living ships elsewhere
-  if (type.id === "craft") adoptShip(e, state.tier, state.biome && state.biome.name === "Ruined Armada");
+  if (type.id === "craft") ShipCatalog.adopt(e, state.tier, state.biome && state.biome.name === "Ruined Armada");
+  if (type.id === "planet" || type.id === "moon") Body.assign(e);
   return finishSpawn(e);
 }
 
@@ -262,7 +264,7 @@ function spawnBigFish(state) {
   e.depthT = 0; e.depthK0 = 0.45;   // drifts in from the back layer
   e.baseSpeed = rand(0.2, 0.45) * Math.sqrt(state.speedScale);
   aimAtPlayer(state, e, 0.9, e.baseSpeed);
-  if (e.type === "craft") { upgradeShip(e); if (e.steer) e.rotation = Math.atan2(e.vy, e.vx); }
+  if (e.type === "craft") { ShipCatalog.upgrade(e); if (e.steer) e.rotation = Math.atan2(e.vy, e.vx); }
   return e;
 }
 
@@ -347,8 +349,8 @@ function addWingmen(state, lead) {
     e.x = lead.x - ch * back - sh * off; e.y = lead.y - sh * back + ch * off;
     e.vx = lead.vx; e.vy = lead.vy; e.baseSpeed = lead.baseSpeed;
     e.gainK = lead.gainK;
-    e.ship = SHIP_CLASSES[Math.max(0, SHIP_CLASSES.indexOf(lead.ship) - 1)]; e.look = (lead.look + 1 + i) % 8;
-    setWreck(e, false);
+    e.ship = ShipCatalog.below(lead.ship); e.look = (lead.look + 1 + i) % ShipCatalog.looks(e.ship);
+    ShipCatalog.setWreck(e, false);
     e.rotation = h;
     state.entities.push(finishSpawn(e));
   }
@@ -534,7 +536,7 @@ function streamEvent(state, opts) {
           // v9.4: a derelict flotilla is a slow line of dead ships on one heading
           if (this.head == null) this.head = inward;
           e.vx = Math.cos(this.head) * speed * 0.8; e.vy = Math.sin(this.head) * speed * 0.8;
-          setWreck(e, true);
+          ShipCatalog.setWreck(e, true);
         }
         if (type.id === "meteor") e.hot = 1;   // v9 art: shower meteors arrive glowing
         st.entities.push(e);

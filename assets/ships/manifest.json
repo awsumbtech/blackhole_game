@@ -1,0 +1,56 @@
+{
+ "kind": "ship-classes",
+ "version": 1,
+ "format": "<class>.webp + <class>.json {frame, cols, rows}; rows = looks",
+ "classes": [
+  {
+   "class": "drone",
+   "extent": 1.45
+  },
+  {
+   "class": "shuttle",
+   "extent": 1.45
+  },
+  {
+   "class": "freighter",
+   "extent": 1.5
+  },
+  {
+   "class": "cruiser",
+   "extent": 1.5
+  },
+  {
+   "class": "capital",
+   "extent": 1.55
+  },
+  {
+   "class": "courier",
+   "extent": 1.5,
+   "test": true
+  }
+ ],
+ "tiers": [
+  {
+   "max": 2,
+   "i": 0,
+   "p": 0.6
+  },
+  {
+   "max": 3,
+   "i": 1,
+   "p": 0.55
+  },
+  {
+   "max": 5,
+   "i": 2,
+   "p": 0.6
+  },
+  {
+   "max": 7,
+   "i": 3
+  },
+  {
+   "class": "capital"
+  }
+ ]
+}

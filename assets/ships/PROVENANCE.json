@@ -1,6 +1,6 @@
 {
  "generator": "GenerateImage (cursor namespace, Grok Bot first-party). No PixelLab, no third-party packs, no code-drawn pixels.",
- "rule": "All visible pixels originate in the raws below; post-processing is mechanical only (key, unmix, register, resample, mask, split, crop). See _tools/ and PIPELINE.md.",
+ "rule": "All visible pixels originate in the raws below; post-processing is mechanical only (key, unmix, register, resample, mask, split, crop). The `_tools/` scripts and PIPELINE.md live in the ships-v1 art source pack and are not shipped in this game repository.",
  "raws": [
   {
    "id": "a_capital_live",

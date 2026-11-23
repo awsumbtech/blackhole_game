@@ -1,0 +1,52 @@
+{
+ "kind": "planet",
+ "version": 1,
+ "format": "each entry points at <type>/<version>/manifest.json; layers are drawn in ascending z, centred on the body anchor, each at scale x the body's drawn size",
+ "types": [
+  {
+   "type": "rust-desert",
+   "manifest": "rust-desert/v1/manifest.json"
+  },
+  {
+   "type": "ocean-green",
+   "manifest": "ocean-green/v1/manifest.json"
+  },
+  {
+   "type": "sandy",
+   "manifest": "sandy/v1/manifest.json"
+  },
+  {
+   "type": "ice",
+   "manifest": "ice/v1/manifest.json"
+  },
+  {
+   "type": "dark-rock",
+   "manifest": "dark-rock/v1/manifest.json"
+  },
+  {
+   "type": "banded-ringed-giant",
+   "manifest": "banded-ringed-giant/v1/manifest.json"
+  },
+  {
+   "type": "blue-ringed-giant",
+   "manifest": "blue-ringed-giant/v1/manifest.json"
+  },
+  {
+   "type": "pale-ringed-giant",
+   "manifest": "pale-ringed-giant/v1/manifest.json"
+  },
+  {
+   "type": "cream-gas-giant",
+   "manifest": "cream-gas-giant/v1/manifest.json"
+  },
+  {
+   "type": "purple-teal-ringed",
+   "manifest": "purple-teal-ringed/v1/manifest.json"
+  },
+  {
+   "type": "test-crystal",
+   "manifest": "test-crystal/v1/manifest.json",
+   "test": true
+  }
+ ]
+}

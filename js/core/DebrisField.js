@@ -14,6 +14,7 @@
 import { spriteFor } from "../art.js";
 import { shadowRadius } from "../art/hole.js";
 import { Ship } from "./Ship.js";
+import { Body } from "./Body.js";
 
 const CAP = 18;
 const PER_BITE = 4;
@@ -208,6 +209,31 @@ export class DebrisField {
   }
 
   /**
+   * A planet or moon bite uses the debris frames named in its manifest.
+   * No frames means no pieces. Nothing is cut or invented.
+   */
+  _spawnListed(e, base, still, shadowR, zoom) {
+    const art = Body.for(e).art();
+    const frames = art && art.debrisFrames();
+    if (!frames || !frames.length) return;
+    const item = Math.max(1, e.radius * 2);
+    const minW = 6 / zoom;
+    const n = Math.min(PER_BITE, frames.length);
+    for (let i = 0; i < n; i++) {
+      // Each frame fills its canvas. rel_size is how big that piece is
+      // next to the largest one, from PROVENANCE.json.
+      const rel = frames[i].relSize > 0 ? frames[i].relSize : 1;
+      const dw = Math.max(minW, item * rel);
+      const p = this._free();
+      const spread = n === 1 ? 0 : (i - (n - 1) / 2) * 0.36;
+      this._arm(p, base + spread, dw, dw, still, shadowR, false);
+      p.frame = frames[i];
+      const u = n === 1 ? 0 : i / (n - 1);
+      p.travel = still ? TURN_MIN * 0.45 : TURN_MIN + (TURN_MAX - TURN_MIN) * u;
+    }
+  }
+
+  /**
    * A ship's bite is its own four plate frames. They ride the same rim as
    * every other bite. Nothing is cut, masked, or copied onto a canvas.
    */
@@ -236,6 +262,10 @@ export class DebrisField {
     const shadowR = shadowRadius(state.radius, state.gulp, still);
     if (e.type === "craft") {
       this._spawnShip(e, base, still, shadowR, zoom);
+      return;
+    }
+    if (e.type === "planet" || e.type === "moon") {
+      this._spawnListed(e, base, still, shadowR, zoom);
       return;
     }
     const px = Math.max(8, e.radius * zoom * (this.dpr || 1));

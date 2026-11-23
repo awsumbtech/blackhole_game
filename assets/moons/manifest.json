@@ -1,0 +1,31 @@
+{
+ "kind": "moon",
+ "version": 1,
+ "format": "each entry points at <type>/<version>/manifest.json; layers are drawn in ascending z, centred on the body anchor, each at scale x the body's drawn size",
+ "types": [
+  {
+   "type": "grey-cratered",
+   "manifest": "grey-cratered/v1/manifest.json"
+  },
+  {
+   "type": "icy-cracked",
+   "manifest": "icy-cracked/v1/manifest.json"
+  },
+  {
+   "type": "volcanic",
+   "manifest": "volcanic/v1/manifest.json"
+  },
+  {
+   "type": "dark-dusty",
+   "manifest": "dark-dusty/v1/manifest.json"
+  },
+  {
+   "type": "bright-icy",
+   "manifest": "bright-icy/v1/manifest.json"
+  },
+  {
+   "type": "rusty",
+   "manifest": "rusty/v1/manifest.json"
+  }
+ ]
+}

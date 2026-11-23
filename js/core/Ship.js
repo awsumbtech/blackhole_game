@@ -2,8 +2,8 @@
 // the four plates and the engine glow. This class does not fill, stroke
 // or tint. Until the sheet has decoded, the craft is not drawn.
 
-import { SHIP_CLASSES, SHIP_LOOKS } from "../ships.js";
 import { SpriteSheet } from "./SpriteSheet.js";
+import { ShipCatalog } from "./ShipCatalog.js";
 
 export class Ship {
   static owned = new WeakMap();
@@ -22,18 +22,21 @@ export class Ship {
     const tier = state.tier | 0;
     const armada = !!(state.biome && state.biome.name === "Ruined Armada");
     if (!armada && tier < 2) return;
-    for (const name of SHIP_CLASSES) SpriteSheet.for(name).start();
+    for (const name of ShipCatalog.playable()) SpriteSheet.for(name).start();
   }
 
-  /** Painted class. A crumb keeps the hull it was torn from. */
+  /** Painted class. A crumb keeps the hull it was torn from.
+   *  If the craft was spawned before the ship index loaded, pick a class now. */
   get cls() {
-    return SHIP_CLASSES.includes(this.e.ship) ? this.e.ship : null;
+    if (!this.e.ship) ShipCatalog.ensure(this.e);
+    return ShipCatalog.has(this.e.ship) ? this.e.ship : null;
   }
 
   get artClass() {
     if (this.e.ship === "scrap") {
-      if (SHIP_CLASSES.includes(this.e.scrapOf)) return this.e.scrapOf;
-      return SHIP_CLASSES[((this.e.seed | 0) >>> 0) % SHIP_CLASSES.length];
+      if (ShipCatalog.has(this.e.scrapOf)) return this.e.scrapOf;
+      const names = ShipCatalog.playable();
+      return names[((this.e.seed | 0) >>> 0) % Math.max(1, names.length)] || null;
     }
     return this.cls;
   }
@@ -45,7 +48,7 @@ export class Ship {
 
   /** Look row. adoptShip already stores 0..7; the modulo matches lookOf. */
   get row() {
-    const n = SHIP_LOOKS;
+    const n = ShipCatalog.looks(this.artClass);
     const look = this.e.look >= 0 ? this.e.look : ((this.e.seed | 0) >>> 3);
     return ((look % n) + n) % n;
   }

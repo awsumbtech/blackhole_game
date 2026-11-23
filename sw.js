@@ -2,7 +2,7 @@
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
 // Bump on each release so phones drop the old offline copy.
-const CACHE_NAME = "blackhole-v9.8.1";
+const CACHE_NAME = "blackhole-v9.9.0";
 const ASSETS = [
   "./",
   "./index.html",
@@ -18,7 +18,6 @@ const ASSETS = [
   "./js/powerups.js",
   "./js/ui.js",
   "./js/art.js",
-  "./js/ships.js",
   "./js/tiers.js",
   "./js/wisp.js",
   "./js/grade.js",
@@ -47,6 +46,12 @@ const ASSETS = [
   "./js/core/Flagship.js",
   "./js/core/SpriteSheet.js",
   "./js/core/Ship.js",
+  "./js/core/ShipCatalog.js",
+  "./js/core/ArtManifest.js",
+  "./js/core/BodyCatalog.js",
+  "./js/core/Theme.js",
+  "./js/core/Body.js",
+  "./js/core/FlagshipLight.js",
   "./js/core/CollapseFlow.js",
   "./js/core/Display.js",
   "./js/core/Feeding.js",
@@ -71,7 +76,6 @@ const ASSETS = [
   "./js/art/dust.js",
   "./js/art/hole.js",
   "./js/art/kit.js",
-  "./js/art/planets.js",
   "./js/art/quality.js",
   "./js/art/rival.js",
   "./js/art/rocks.js",
@@ -81,6 +85,9 @@ const ASSETS = [
   "./js/data/objects.js",
   "./js/data/worlds.js",
   "./manifest.json",
+  "./assets/ships/manifest.json",
+  "./assets/planets/manifest.json",
+  "./assets/moons/manifest.json",
   "./assets/backdrop_reef.jpg",
   "./assets/backdrop_current.jpg",
   "./assets/backdrop_nursery.jpg",
