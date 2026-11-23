@@ -18,8 +18,7 @@ export { ShipCatalog } from "./ShipCatalog.js";
 export { Theme } from "./Theme.js";
 export { ArtManifest } from "./ArtManifest.js";
 export { BodyCatalog } from "./BodyCatalog.js";
-export { Planet } from "./Planet.js";
-export { Moon } from "./Moon.js";
+export { Body } from "./Body.js";
 export { FlagshipLight } from "./FlagshipLight.js";
 
 // The game itself, one part per job (wired together in js/game.js).

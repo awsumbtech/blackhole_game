@@ -8,8 +8,7 @@ import { foodScaleFor } from "./progression.js";
 import { powerupFade, MAGNET_RANGE, MAGNET_PULL } from "./powerups.js";
 import { MERGE_FRAMES } from "./depth.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
-import { Planet } from "./core/Planet.js";
-import { Moon } from "./core/Moon.js";
+import { Body } from "./core/Body.js";
 import { foodWeights, bigWeights, eventType, eventBigType, fitType, eventFor, topFood } from "./tiers.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
@@ -219,8 +218,7 @@ export function spawnScaled(state, type, ratioMin, ratioMax, opts = {}) {
   if (opts.near ?? true) aimAtPlayer(state, e, 1.0, e.baseSpeed);
   // v9.4: ships are wrecks in the Armada, living ships elsewhere
   if (type.id === "craft") ShipCatalog.adopt(e, state.tier, state.biome && state.biome.name === "Ruined Armada");
-  if (type.id === "planet") Planet.assign(e);
-  if (type.id === "moon") Moon.assign(e);
+  if (type.id === "planet" || type.id === "moon") Body.assign(e);
   return finishSpawn(e);
 }
 

@@ -98,8 +98,10 @@ export function createEntity(type, x, y, scale = 1) {
     // v9 art (visual only): look = painted look (-1: from the seed); hot = a meteor
     // entering hot (glowing streak and leading edge), set by meteor showers
     look: -1, hot: 0,
-    // v9.4 ships (ships.js): class, wreck (tumbles) or living (steers nose-first)
+    // v9.4 ships (ShipCatalog): class, wreck (tumbles) or living (steers nose-first)
     ship: "", wreck: false, steer: false,
+    // v9.9.0: painted planet or moon type from the body catalog
+    artType: "",
     _mc: color + "88", _ec: color + "55"   // minimap dot / edge arrow colours
   };
 }

@@ -22,7 +22,7 @@ export class Ship {
     const tier = state.tier | 0;
     const armada = !!(state.biome && state.biome.name === "Ruined Armada");
     if (!armada && tier < 2) return;
-    for (const name of ShipCatalog.names()) SpriteSheet.for(name).start();
+    for (const name of ShipCatalog.playable()) SpriteSheet.for(name).start();
   }
 
   /** Painted class. A crumb keeps the hull it was torn from. */
@@ -33,7 +33,7 @@ export class Ship {
   get artClass() {
     if (this.e.ship === "scrap") {
       if (ShipCatalog.has(this.e.scrapOf)) return this.e.scrapOf;
-      const names = ShipCatalog.names();
+      const names = ShipCatalog.playable();
       return names[((this.e.seed | 0) >>> 0) % Math.max(1, names.length)] || null;
     }
     return this.cls;

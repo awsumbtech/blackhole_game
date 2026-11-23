@@ -5,12 +5,13 @@
 
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || "/tmp/pw/node_modules/playwright-core");
+const { playwrightCore, chromePath } = require("./_browser.cjs");
+const { chromium } = playwrightCore();
 
 const args = process.argv.slice(2).filter(a => a !== "--shots");
 const SHOTS = process.argv.includes("--shots");
 const PORT = args[0] || "8096";
-const CHROME = process.env.CHROME || "/usr/bin/google-chrome";
+const CHROME = chromePath(chromium);
 const SHOT_DIR = path.join("docs", "shots", "v9.8.0");
 
 class OoShip {
@@ -56,7 +57,7 @@ class OoShip {
 
   static async proof(page) {
     return page.evaluate(async () => {
-      const ships = await import("/js/ships.js");
+      let ships = {}; try { ships = await import("/js/ships.js"); } catch { ships = {}; }
       const entities = await import("/js/entities.js");
       const bh = window.__bh;
       const s = bh.state;
@@ -247,7 +248,7 @@ class OoShip {
   static async pictures(page) {
     const base = async (extra) => {
       await page.evaluate(async (extraSrc) => {
-        const ships = await import("/js/ships.js");
+        let ships = {}; try { ships = await import("/js/ships.js"); } catch { ships = {}; }
         const entities = await import("/js/entities.js");
         const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
         const bh = window.__bh;
@@ -303,7 +304,7 @@ class OoShip {
       d.src.includes("assets/ships/capital.webp") && d.sx === 640).length);
     await page.evaluate(async () => {
       const entities = await import("/js/entities.js");
-      const ships = await import("/js/ships.js");
+      let ships = {}; try { ships = await import("/js/ships.js"); } catch { ships = {}; }
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const bh = window.__bh;
       const s = bh.state;
@@ -363,7 +364,7 @@ class OoShip {
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const { Ship } = await import("/js/core/Ship.js");
       const entities = await import("/js/entities.js");
-      const ships = await import("/js/ships.js");
+      let ships = {}; try { ships = await import("/js/ships.js"); } catch { ships = {}; }
       const sheet = SpriteSheet.for("shuttle");
       const e = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
       if (ships.adoptShip) ships.adoptShip(e, 2, false, false);
@@ -396,7 +397,7 @@ class OoShip {
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const { Ship } = await import("/js/core/Ship.js");
       const entities = await import("/js/entities.js");
-      const ships = await import("/js/ships.js");
+      let ships = {}; try { ships = await import("/js/ships.js"); } catch { ships = {}; }
       const bh = window.__bh;
       const s = bh.state;
       const sheet = SpriteSheet.for("shuttle");

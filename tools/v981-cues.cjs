@@ -11,13 +11,14 @@
 
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || "/tmp/pw/node_modules/playwright-core");
+const { playwrightCore, chromePath } = require("./_browser.cjs");
+const { chromium } = playwrightCore();
 
 class OoCues {
   static args = process.argv.slice(2).filter(a => a !== "--shots");
   static shots = process.argv.includes("--shots");
   static port = process.argv.slice(2).filter(a => a !== "--shots")[0] || "8097";
-  static chrome = process.env.CHROME || "/usr/bin/google-chrome";
+  static chrome = chromePath(chromium);
   static shotDir = path.join("docs", "shots", "v9.8.1");
 
   static hook = function () {
@@ -91,8 +92,7 @@ class OoCues {
     return page.evaluate(async () => {
       const entities = await import("/js/entities.js");
       const { ShipCatalog } = await import("/js/core/ShipCatalog.js");
-      const { Planet } = await import("/js/core/Planet.js");
-      const { Moon } = await import("/js/core/Moon.js");
+      const { Body } = await import("/js/core/Body.js");
       const render = await import("/js/render.js");
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const bh = window.__bh;
@@ -163,8 +163,7 @@ class OoCues {
           e.bigFish = true;
           e.depthT = 1;
         }
-        if (typeId === "planet") Planet.assign(e);
-        if (typeId === "moon") Moon.assign(e);
+        if (typeId === "planet" || typeId === "moon") Body.assign(e);
         made.push({ type: typeId, nearQ, tooBig: s.radius <= e.radius * eat, radius: e.radius, depthT: 1 });
         placed.push(e);
       }
@@ -183,14 +182,13 @@ class OoCues {
       merging.y = s.playerY - s.viewH * 0.02;
       merging.vx = 0;
       merging.vy = 0;
-      Planet.assign(merging);
+      Body.assign(merging);
       made.push({ type: "planet", nearQ: 1, tooBig: s.radius <= merging.radius * eat, radius: merging.radius, depthT: merging.depthT });
       placed.push(merging);
       const waitArt = performance.now();
       while (performance.now() - waitArt < 8000) {
         const ready = placed.every(ent => {
-          if (ent.type === "planet") return Planet.for(ent).ready();
-          if (ent.type === "moon") return Moon.for(ent).ready();
+          if (ent.type === "planet" || ent.type === "moon") return Body.for(ent).ready();
           return true;
         });
         if (ready) break;
@@ -269,8 +267,7 @@ class OoCues {
     await page.evaluate(async (spec) => {
       const entities = await import("/js/entities.js");
       const { ShipCatalog } = await import("/js/core/ShipCatalog.js");
-      const { Planet } = await import("/js/core/Planet.js");
-      const { Moon } = await import("/js/core/Moon.js");
+      const { Body } = await import("/js/core/Body.js");
       const { SpriteSheet } = await import("/js/core/SpriteSheet.js");
       const bh = window.__bh;
       const s = bh.state;
@@ -317,14 +314,14 @@ class OoCues {
         while (!sheet.ready && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
       }
       if (spec.type === "planet") {
-        Planet.assign(e);
+        Body.assign(e);
         const t0 = performance.now();
-        while (!Planet.for(e).ready() && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
+        while (!Body.for(e).ready() && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
       }
       if (spec.type === "moon") {
-        Moon.assign(e);
+        Body.assign(e);
         const t0 = performance.now();
-        while (!Moon.for(e).ready() && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
+        while (!Body.for(e).ready() && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
       }
       s.entities = [e];
       s.rivals = [];

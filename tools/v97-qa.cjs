@@ -4,14 +4,36 @@
 
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require("/tmp/pw/node_modules/playwright-core");
+const { playwrightCore, chromePath } = require("./_browser.cjs");
+
+const LA_CANDIDATES = [
+  path.join(__dirname, "layout-audit_c8c5.js"),
+  "/home/ubuntu/.cursor/projects/workspace/uploads/layout-audit_c8c5.js"
+];
+const GA_CANDIDATES = [
+  path.join(__dirname, "geometry-audit_5e3a.js"),
+  "/home/ubuntu/.cursor/projects/workspace/uploads/geometry-audit_5e3a.js"
+];
+function firstFile(paths) {
+  for (const p of paths) if (fs.existsSync(p)) return p;
+  return null;
+}
+const LA_PATH = process.env.LAYOUT_AUDIT || firstFile(LA_CANDIDATES);
+const GA_PATH = process.env.GEOMETRY_AUDIT || firstFile(GA_CANDIDATES);
+if (!LA_PATH || !GA_PATH) {
+  console.log("skip: v97-qa audit scripts were not found.");
+  console.log("Looked for tools/layout-audit_c8c5.js and tools/geometry-audit_5e3a.js, then the original uploads path. Neither file is in this repository, so this check exits 0 without running.");
+  process.exit(0);
+}
+
+const { chromium } = playwrightCore();
 
 const BEFORE = process.argv[2] || "8090";
 const AFTER = process.argv[3] || "8091";
 const OUT = process.argv[4] || path.join(__dirname, "..", "qa", "v9.7");
-const CHROME = process.env.CHROME || "/usr/local/bin/google-chrome";
-const LA = fs.readFileSync("/home/ubuntu/.cursor/projects/workspace/uploads/layout-audit_c8c5.js", "utf8");
-const GA = fs.readFileSync("/home/ubuntu/.cursor/projects/workspace/uploads/geometry-audit_5e3a.js", "utf8");
+const CHROME = chromePath(chromium);
+const LA = fs.readFileSync(LA_PATH, "utf8");
+const GA = fs.readFileSync(GA_PATH, "utf8");
 
 const BIOMES = [
   ["reef", "Debris Reef", 2],

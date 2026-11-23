@@ -5,11 +5,12 @@
 // Exit 0 when every check passed. On v9.7.2 this fails.
 
 const fs = require("fs");
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || "/tmp/pw/node_modules/playwright-core");
+const { playwrightCore, chromePath } = require("./_browser.cjs");
+const { chromium } = playwrightCore();
 
 const PORT = process.argv[2] || "8091";
 const OUT = process.argv[3] || "";
-const CHROME = process.env.CHROME || "/usr/local/bin/google-chrome";
+const CHROME = chromePath(chromium);
 const LEVELS = [
   ["Planet Nursery", 3, 3],
   ["Comet Current", 3, 2],

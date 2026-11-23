@@ -18,6 +18,7 @@ export class ArtManifest {
     this.failedAt = 0;
     this._gen = 0;
     this._timer = 0;
+    this._debrisFrames = undefined;
   }
 
   get type() { return this.raw && this.raw.type; }
@@ -75,21 +76,38 @@ export class ArtManifest {
         });
         this.layers = pictures(drawSpecs);
         this.debris = pictures(debrisSpecs);
-        const all = this.layers.concat(this.debris);
+        this._debrisFrames = undefined;
         if (!this.layers.length) { fail(); return; }
-        let left = all.length;
-        for (const layer of all) {
+        const markReady = () => {
+          if (this.layers.every(l => l.ok)) {
+            if (this._timer) { clearTimeout(this._timer); this._timer = 0; }
+            this.ready = true;
+          }
+        };
+        for (const layer of this.layers) {
           const img = layer.image;
           img.onload = () => {
             if (gen !== this._gen) return;
             layer.ok = true;
-            if (--left === 0) {
-              if (this._timer) { clearTimeout(this._timer); this._timer = 0; }
-              this.ready = all.every(l => l.ok);
-              if (!this.ready) fail();
-            }
+            markReady();
           };
           img.onerror = () => fail();
+          img.src = this.base + layer.spec.file;
+        }
+        // Debris is optional: a missing piece is skipped, the body still draws.
+        for (const layer of this.debris) {
+          const img = layer.image;
+          img.onload = () => {
+            if (gen !== this._gen) return;
+            layer.ok = true;
+            this._debrisFrames = undefined;
+          };
+          img.onerror = () => {
+            if (gen !== this._gen) return;
+            layer.ok = false;
+            layer.failed = true;
+            this._debrisFrames = undefined;
+          };
           img.src = this.base + layer.spec.file;
         }
       })
@@ -110,17 +128,26 @@ export class ArtManifest {
     return true;
   }
 
-  /** Painted bite pieces, when the manifest lists them. Otherwise null. */
+  /** Painted bite pieces, when the manifest lists them. Otherwise null.
+   *  The frame list is built once and reused so a bite does not allocate. */
   debrisFrames() {
-    if (!this.ready || !this.debris.length) return null;
-    if (!this.debris.every(d => d.ok)) return null;
-    return this.debris.map(d => ({
+    if (!this.ready) return null;
+    if (this._debrisFrames !== undefined) return this._debrisFrames;
+    if (!this.debris.length) {
+      this._debrisFrames = null;
+      return null;
+    }
+    // Still loading: do not cache an empty result.
+    if (this.debris.some(d => !d.ok && !d.failed)) return null;
+    const ok = this.debris.filter(d => d.ok);
+    this._debrisFrames = ok.length ? ok.map(d => ({
       image: d.image,
       sx: 0,
       sy: 0,
       sw: d.image.naturalWidth,
       sh: d.image.naturalHeight,
       relSize: d.relSize > 0 ? d.relSize : 1
-    }));
+    })) : null;
+    return this._debrisFrames;
   }
 }

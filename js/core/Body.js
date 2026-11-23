@@ -1,33 +1,43 @@
-// One planet. The type comes from the planet index. The picture is the
-// manifest's layers, drawn with drawImage only.
+// One planet or moon. The type comes from that body's index. The picture
+// is the manifest's layers, drawn with drawImage only.
 
 import { Theme } from "./Theme.js";
 
-export class Planet {
+export class Body {
   static owned = new WeakMap();
 
   constructor(e) { this.e = e; }
 
+  static catalogFor(e) {
+    return e && e.type === "moon" ? Theme.moons : Theme.planets;
+  }
+
   static for(e) {
-    let s = Planet.owned.get(e);
-    if (!s) { s = new Planet(e); Planet.owned.set(e, s); }
+    let s = Body.owned.get(e);
+    if (!s) { s = new Body(e); Body.owned.set(e, s); }
     return s;
   }
 
   /** Remember a playable type from the seed, and start its pictures. */
   static assign(e) {
-    const type = Theme.planets.pick(e.seed | 0);
+    const catalog = Body.catalogFor(e);
+    const type = catalog.pick(e.seed | 0);
     e.artType = type;
-    const art = Theme.planets.get(type);
+    const art = catalog.get(type);
     if (art) art.start();
   }
 
-  static warm() { Theme.planets.warm(); }
+  static warm(kind) {
+    (kind === "moon" ? Theme.moons : Theme.planets).warm();
+  }
+
+  catalog() { return Body.catalogFor(this.e); }
 
   art() {
-    const type = this.e.artType || Theme.planets.pick(this.e.seed | 0);
+    const catalog = this.catalog();
+    const type = this.e.artType || catalog.pick(this.e.seed | 0);
     if (!this.e.artType && type) this.e.artType = type;
-    return type ? Theme.planets.get(type) : null;
+    return type ? catalog.get(type) : null;
   }
 
   ready() {

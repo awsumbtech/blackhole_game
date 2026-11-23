@@ -1,8 +1,7 @@
 import { blurFor } from "./depth.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
 import { Ship } from "./core/Ship.js";
-import { Planet } from "./core/Planet.js";
-import { Moon } from "./core/Moon.js";
+import { Body } from "./core/Body.js";
 // ─── RENDER ENGINE ───
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
@@ -109,7 +108,6 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       continue;
     }
     if (e.type === "planet" || e.type === "moon") {
-      const Body = e.type === "planet" ? Planet : Moon;
       let bodyAlpha = spawnAlpha;
       if (e.depthT < 1) {
         const q = e.depthT * e.depthT * (3 - 2 * e.depthT);

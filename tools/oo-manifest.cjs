@@ -5,12 +5,13 @@
 
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require(process.env.PLAYWRIGHT_CORE || "/tmp/pw/node_modules/playwright-core");
+const { playwrightCore, chromePath } = require("./_browser.cjs");
+const { chromium } = playwrightCore();
 
 const args = process.argv.slice(2).filter(a => a !== "--shots");
 const SHOTS = process.argv.includes("--shots");
 const PORT = args[0] || "8098";
-const CHROME = process.env.CHROME || "/usr/bin/google-chrome";
+const CHROME = chromePath(chromium);
 const SHOT_DIR = path.join("docs", "shots", "v9.9.0");
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
@@ -82,11 +83,11 @@ class OoManifest {
 
       const { Theme } = await import("/js/core/Theme.js");
       const { ShipCatalog } = await import("/js/core/ShipCatalog.js");
-      const { Planet } = await import("/js/core/Planet.js");
-      const { Moon } = await import("/js/core/Moon.js");
+      const { Body } = await import("/js/core/Body.js");
       const { Ship } = await import("/js/core/Ship.js");
       const entities = await import("/js/entities.js");
-      const shipsMod = await import("/js/ships.js");
+      let shipsMod = {};
+      try { shipsMod = await import("/js/ships.js"); } catch { shipsMod = {}; }
       const bh = window.__bh;
       const s = bh.state;
       if (shipsMod.SHIP_CLASSES || shipsMod.shipClassFor || shipsMod.EXTENT) {
@@ -95,8 +96,12 @@ class OoManifest {
       if (!ShipCatalog.playable().includes("probe")) {
         return { ok: false, reason: "probe ship was not read from the manifest", classes: ShipCatalog.names() };
       }
-      if (ShipCatalog.classFor(99, false, 0) !== "probe") {
-        return { ok: false, reason: "high tier did not pick the new last class", got: ShipCatalog.classFor(99, false, 0) };
+      const high = [8, 9, 12, 99].map(tier => ShipCatalog.classFor(tier, false, 0));
+      if (high.some(name => name !== "capital")) {
+        return { ok: false, reason: "capital was not reachable at tier 8+ after adding a sixth class", high, classes: ShipCatalog.playable() };
+      }
+      if (!ShipCatalog.playable().includes("probe")) {
+        return { ok: false, reason: "sixth class via data was not playable", classes: ShipCatalog.playable() };
       }
       if (!Theme.planets.has("test-gem")) {
         return { ok: false, reason: "test-gem was not read from the planet index", types: Theme.planets.names() };
@@ -121,10 +126,14 @@ class OoManifest {
       art.start();
       const t0 = performance.now();
       while (!art.ready && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
-      if (!Planet.for(planet).ready()) return { ok: false, reason: "test-gem did not become edible" };
+      if (!Body.for(planet).ready()) return { ok: false, reason: "test-gem did not become edible" };
 
       const ship = entities.createEntity(entities.typeById("craft"), 0, 0, 1);
       ShipCatalog.adopt(ship, 99, false, false, 0);
+      if (ship.ship !== "capital") {
+        return { ok: false, reason: "adopt at tier 99 did not keep capital after adding a sixth class", got: ship.ship };
+      }
+      ship.ship = "probe";
       ship.depthT = 1;
       ship.steer = false;
       ship.rotation = 0;
@@ -144,7 +153,7 @@ class OoManifest {
       const orig = g.fill.bind(g);
       g.fill = (...a) => { fills++; return orig(...a); };
       window.__artDraws.length = 0;
-      Planet.for(planet).draw(g, 100, 100, 40, 1);
+      Body.for(planet).draw(g, 100, 100, 40, 1);
       Ship.for(ship).draw(g, 100, 100, 80, 1, 0.5, true, 0, 1, 0.82);
       const srcs = window.__artDraws.map(d => d.src);
       const gem = srcs.some(src => src.includes("assets/planets/test-gem/"));
@@ -159,7 +168,6 @@ class OoManifest {
       const debrisOk = debrisSrc.length === 4;
       const bite = async (kind, typeName) => {
         const cat = kind === "moon" ? Theme.moons : Theme.planets;
-        const Body = kind === "moon" ? Moon : Planet;
         const ent = entities.createEntity(entities.typeById(kind), s.playerX, s.playerY, 1);
         ent.artType = typeName;
         ent.depthT = 1;
@@ -215,10 +223,10 @@ class OoManifest {
       bh.dev.enter();
       bh.dev.frozen = true;
       s.paused = true;
-      const { Planet } = await import("/js/core/Planet.js");
+      const { Body } = await import("/js/core/Body.js");
       const t0 = performance.now();
       while (performance.now() - t0 < 8000) {
-        const planet = s.entities.find(e => e.type === "planet" && Planet.for(e).ready());
+        const planet = s.entities.find(e => e.type === "planet" && Body.for(e).ready());
         if (planet) break;
         await new Promise(r => setTimeout(r, 40));
       }
@@ -231,7 +239,7 @@ class OoManifest {
       const s = bh.state;
       const entities = await import("/js/entities.js");
       const { Theme } = await import("/js/core/Theme.js");
-      const { Planet } = await import("/js/core/Planet.js");
+      const { Body } = await import("/js/core/Body.js");
       Object.assign(bh.dev.cfg, { galaxy: 3, biome: "Planet Nursery", tier: 6, depth: 1, zen: false, wisp: false });
       bh.dev.enter();
       bh.dev.frozen = true;
@@ -250,7 +258,7 @@ class OoManifest {
       const t0 = performance.now();
       while (!art.ready && performance.now() - t0 < 8000) await new Promise(r => setTimeout(r, 40));
       s.entities = [e];
-      Planet.for(e);
+      Body.for(e);
       bh.scene.draw(performance.now(), 0, true);
     });
     out.push(await this.shot(page, "02-ringed-giant.png"));

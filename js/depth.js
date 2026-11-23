@@ -9,8 +9,7 @@
 // Screen space, hashed (no per-object state), pre-blurred cached sprites.
 
 import { ShipCatalog } from "./core/ShipCatalog.js";
-import { Planet } from "./core/Planet.js";
-import { Moon } from "./core/Moon.js";
+import { Body } from "./core/Body.js";
 import { Ship } from "./core/Ship.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
@@ -138,8 +137,7 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
         continue;
       }
       if (e.type === "planet" || e.type === "moon") {
-        const Body = e.type === "planet" ? Planet : Moon;
-        Body.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
+          Body.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
         continue;
       }
       const sp = spriteFor(e, rad * dpr);

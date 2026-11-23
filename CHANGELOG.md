@@ -10,6 +10,10 @@ Ships, planets, and moons are named by the art files.
 - Ship class, extent, look count, the tier ladder, upgrades, wingmen, and scrap crumbs come from that ship index. `SHIP_CLASSES` and the planet painters are gone. A class or type marked `test` draws when asked for and is not rolled at random. The courier and test-crystal are those entries.
 - `Planet` and `Moon` draw the manifest layers with `drawImage` only, back ring then body then front ring. Until the pictures decode, the body is not drawn and cannot be eaten. A bite can use that type's painted debris frames.
 - Based on v9.8.1: the gold disc, the too-big ring, and the arrival disc stay gone for every object, including planets and moons. A ship still draws its painted `liveEdge` / `wreckEdge`.
+- `Theme.start` never rejects into boot: a missing or hanging index is caught, timed out, and retried, and a cached rejection is cleared. The three index files are in the service worker precache. The play or title screen still appears, and bodies appear once the index recovers.
+- A body's `ready` state depends only on its body and ring layers. Missing debris frames draw nothing; the body can still be eaten.
+- Ship tier bands live in `assets/ships/manifest.json`. Adding another class does not move capital off tier 8+.
+- Planets and moons share one `Body` class (`js/core/Body.js`). The `js/ships.js` stub is gone. Test-only art (courier, test-crystal) stays out of play preloads and out of random scrap picks. `createEntity` declares `artType`. Debris frame lists are cached on the manifest.
 - Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.9.0`.
 
 ## v9.8.1 — No gold disc, no too-big ring (Nov 16 2026)

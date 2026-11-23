@@ -1,6 +1,6 @@
 {
  "tool": "cursor.GenerateImage",
- "postprocess": "_tools/build.py (keying.key, chroma_clean2 on magenta keys, crop/resample)",
+ "postprocess": "Art source pack tool `_tools/build.py` (keying.key, chroma_clean2 on magenta keys, crop/resample). That script lives in the planets-v1 art source pack and is not shipped in this game repository; only the finished frames and this record are.",
  "entries": {
   "moons/grey-cratered/v1": {
    "raws": [
@@ -573,5 +573,5 @@
    }
   }
  },
- "postprocess_debris": "_tools/debris.py: ships-v1 keying.key (+ derive.chroma_clean2 on magenta keys) on one painted 2x2 GenerateImage sheet; connected components assigned to quadrants (TL,TR,BL,BR = debris0..3); specks under 2% of a quadrant's main piece dropped; uniform premultiplied Lanczos to 112 px long side, centred on 128x128. No pixel is painted in code."
+ "postprocess_debris": "_tools/debris.py: ships-v1 keying.key (+ derive.chroma_clean2 on magenta keys) on one painted 2x2 GenerateImage sheet; connected components assigned to quadrants (TL,TR,BL,BR = debris0..3); specks under 2% of a quadrant's main piece dropped; uniform premultiplied Lanczos to 112 px long side, centred on 128x128. No pixel is painted in code. The `_tools/debris.py` helper is in that same art source pack, not in this game repository."
 }

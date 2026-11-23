@@ -53,7 +53,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 ### A4. Ships are functions, not a Ship
 
-- [x] `js/ships.js` ship identity (`SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`). Done in v9.9.0. The class list, extents, look counts, tier bands, and the wingman step are read from `assets/ships/manifest.json`. `js/ships.js` is now a 2-line stub so an old cache entry does not 404. Identity lives on `ShipCatalog`. `FlagshipLight` still holds the flagship rim colour until the Flagship step. It does not tint a ship.
+- [x] `js/ships.js` ship identity (`SHIP_CLASSES`, `EXTENT`, `shipExtent`, `SHIP_LOOKS`, `shipClassFor`, `adoptShip`, `setWreck`, `upgradeShip`). Done in v9.9.0. The class list, extents, look counts, tier bands, and the wingman step are read from `assets/ships/manifest.json`. The `js/ships.js` stub has been deleted. Identity lives on `ShipCatalog`. `FlagshipLight` still holds the flagship rim colour until the Flagship step. It does not tint a ship.
 - [x] `js/ships.js` 91–199 `design()` plus the `designs` Map. Module-level RNG builds a parts list per class and look. Removed in v9.8.0. The look row is the number `adoptShip` already stores.
 - [x] `js/ships.js` 226–421 `paintShip`. Code-draws the hull. Removed in v9.8.0. `Ship` draws a sheet frame.
 - [x] `js/ships.js` 423–464 `glow()` and `piecesFor()`. Module canvases for the engine glow and the four break-apart plates. Removed in v9.8.0. The glow and the plates are frames.
@@ -65,7 +65,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 
 - [ ] `js/art/sprites.js` 14–20 module cache, frame counter, and paint budget. `spriteFor` (79) and `paint` (110) pick a painter and draw a canvas.
 - [ ] `js/art/kit.js`. Shared code paints: shade, craters, blobs, rings, atmosphere. Every painter below uses it.
-- [ ] `js/art/dust.js`, `rocks.js`, `comets.js`, `stars.js`, `deepsky.js`. One painter function per type. The planet painter is gone (v9.9.0; `Planet` and `Moon` blit manifest layers).
+- [ ] `js/art/dust.js`, `rocks.js`, `comets.js`, `stars.js`, `deepsky.js`. One painter function per type. The planet painter is gone (v9.9.0; `Body` blits manifest layers).
 - [ ] `js/art/quality.js` 3–26. `artCache()`, `quality`, `cacheGen`, `bucketFor`. This registry can stay; it is already a small object. Painters must stop calling it to store generated canvases.
 - **Moves into:** `SpriteSheet` (load and draw a picture) plus one class per type. `kit.js` goes away as each painter is deleted.
 - **Depends on:** the entity's `type`, `look`, `variant`, `seed`.
@@ -278,13 +278,13 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Owner:** `Comet`. It keeps a `CometTail`, which becomes a frame index instead of a code blit.
   - **Asset:** `comet.webp`, 6 looks × (head, gold-edge, dust tail, ion tail).
 
-- [x] **Moon.** Done in v9.9.0. `Moon` (`js/core/Moon.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. No gold-edge frame: the disc was removed in v9.8.1, not converted.
+- [x] **Moon.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 42 CSS / 126 device px.
   - **Asset px:** the painted body, plus optional debris frames.
   - **Owner:** `Moon`.
   - **Asset:** one folder per type under `assets/moons/`.
 
-- [x] **Planet and rings.** Done in v9.9.0. `Planet` (`js/core/Planet.js`) blits manifest layers (back ring, body, front ring) from `assets/planets/<type>/v1/`. `PLANET_PAINTERS` and `js/art/planets.js` are gone. Rings are painted layers; dropping those files removes the ring. Ten playable types plus the test-crystal, which is not on the random ladder. A bite can use that type's painted debris frames. No gold-edge frame: the disc was removed in v9.8.1, not converted.
+- [x] **Planet and rings.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits manifest layers (back ring, body, front ring) from `assets/planets/<type>/v1/`. `PLANET_PAINTERS` and `js/art/planets.js` are gone. Rings are painted layers; dropping those files removes the ring. Ten playable types plus the test-crystal, which is not on the random ladder and is not preloaded in play. A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 44–80 CSS / 130–240 device px across, rings included.
   - **Asset px:** the painted layers, plus optional debris frames.
   - **Owner:** `Planet`.
@@ -500,7 +500,7 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** `tailFor` is gone and the tail still sits behind the comet's own world step.
    - **Test:** `tools/oo-comet.cjs`, plus the existing world-step check from `tools/v973-tails.cjs` still passes.
 
-6. **Moon and planet.** Done in v9.9.0 with the manifest. `Planet` and `Moon` blit the layers. Dropping the ring layers removes the ring. `PLANET_PAINTERS` is gone.
+6. **Moon and planet.** Done in v9.9.0 with the manifest. `Body` blits the layers for both. Dropping the ring layers removes the ring. `PLANET_PAINTERS` is gone.
    - **Done when:** `PLANET_PAINTERS` is gone. Met. `tools/oo-manifest.cjs` fails while a planet painter still fills.
    - **Test:** `tools/oo-manifest.cjs`.
 

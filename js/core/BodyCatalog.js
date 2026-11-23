@@ -12,24 +12,33 @@ export class BodyCatalog {
     this.ready = false;
   }
 
-  async load(root) {
-    const res = await fetch(`${root}/${this.folder}/manifest.json`);
-    if (!res.ok) throw new Error(String(res.status));
-    const meta = await res.json();
-    const rows = Array.isArray(meta.types) ? meta.types : [];
-    const sizes = await this._pieceSizes(root);
-    this.order = [];
-    this.byName = new Map();
-    for (const row of rows) {
-      if (!row.type || !row.manifest) continue;
-      const art = new ArtManifest(`${root}/${this.folder}/${row.manifest}`);
-      const key = `${this.folder}/${row.manifest.replace(/\/manifest\.json$/, "")}`;
-      art.setPieceSizes(sizes.get(key));
-      if (row.test) art._indexTest = true;
-      this.byName.set(row.type, art);
-      this.order.push(row.type);
+  async load(root, timeoutMs = 6000) {
+    try {
+      const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? { signal: AbortSignal.timeout(timeoutMs) }
+        : undefined;
+      const res = await fetch(`${root}/${this.folder}/manifest.json`, opts);
+      if (!res.ok) throw new Error(String(res.status));
+      const meta = await res.json();
+      const rows = Array.isArray(meta.types) ? meta.types : [];
+      const sizes = await this._pieceSizes(root, timeoutMs);
+      this.order = [];
+      this.byName = new Map();
+      for (const row of rows) {
+        if (!row.type || !row.manifest) continue;
+        const art = new ArtManifest(`${root}/${this.folder}/${row.manifest}`);
+        const key = `${this.folder}/${row.manifest.replace(/\/manifest\.json$/, "")}`;
+        art.setPieceSizes(sizes.get(key));
+        if (row.test) art._indexTest = true;
+        this.byName.set(row.type, art);
+        this.order.push(row.type);
+      }
+      this.ready = this.order.length > 0;
+    } catch {
+      this.order = [];
+      this.byName = new Map();
+      this.ready = false;
     }
-    this.ready = this.order.length > 0;
   }
 
   names() { return this.order.slice(); }
@@ -53,14 +62,17 @@ export class BodyCatalog {
   }
 
   warm() {
-    for (const name of this.order) this.byName.get(name).start();
+    for (const name of this.playable()) this.byName.get(name).start();
   }
 
   /** Relative painted size of each debris file, from PROVENANCE.json. */
-  async _pieceSizes(root) {
+  async _pieceSizes(root, timeoutMs = 6000) {
     const out = new Map();
     try {
-      const res = await fetch(`${root}/${this.folder}/PROVENANCE.json`);
+      const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
+        ? { signal: AbortSignal.timeout(timeoutMs) }
+        : undefined;
+      const res = await fetch(`${root}/${this.folder}/PROVENANCE.json`, opts);
       if (!res.ok) return out;
       const prov = await res.json();
       const entries = prov.entries || {};

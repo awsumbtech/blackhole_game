@@ -4,8 +4,7 @@
 import * as audio from "../audio.js";
 import * as ui from "../ui.js";
 import { Ship } from "./Ship.js";
-import { Planet } from "./Planet.js";
-import { Moon } from "./Moon.js";
+import { Body } from "./Body.js";
 import { FlagshipLight } from "./FlagshipLight.js";
 import { getBiome, biomeCatalog } from "../entities.js";
 import { setHaloFrom } from "../render.js";
@@ -131,8 +130,8 @@ export class Galaxy {
     const row = tier(state.tier || 0);
     const w = biome.weights || {};
     const uses = id => !!(w[id] || (row.food && row.food[id]) || (row.big && row.big[id]));
-    if (uses("planet") || biome.signature === "planet") Planet.warm();
-    if (uses("moon")) Moon.warm();
+    if (uses("planet") || biome.signature === "planet") Body.warm("planet");
+    if (uses("moon")) Body.warm("moon");
     audio.startDrone(biome);
     audio.newPhrase();
     audio.setMusicLayers(state.tier, biome);

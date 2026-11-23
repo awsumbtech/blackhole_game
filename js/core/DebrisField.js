@@ -14,8 +14,7 @@
 import { spriteFor } from "../art.js";
 import { shadowRadius } from "../art/hole.js";
 import { Ship } from "./Ship.js";
-import { Planet } from "./Planet.js";
-import { Moon } from "./Moon.js";
+import { Body } from "./Body.js";
 
 const CAP = 18;
 const PER_BITE = 4;
@@ -214,7 +213,6 @@ export class DebrisField {
    * No frames means no pieces. Nothing is cut or invented.
    */
   _spawnListed(e, base, still, shadowR, zoom) {
-    const Body = e.type === "planet" ? Planet : Moon;
     const art = Body.for(e).art();
     const frames = art && art.debrisFrames();
     if (!frames || !frames.length) return;
