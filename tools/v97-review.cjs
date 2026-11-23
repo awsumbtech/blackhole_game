@@ -9,15 +9,15 @@
 
 const fs = require("fs");
 const path = require("path");
-const { playwrightCore, chromePath } = require("./_browser.cjs");
-const { chromium } = playwrightCore();
+const { Browser } = require("./lib/browser.cjs");
+const { chromium } = Browser.playwrightCore();
 
 const ARGS = process.argv.slice(2).filter(a => a !== "--golden");
 const GOLDEN = process.argv.includes("--golden");
 const PORT = ARGS[0] || "8091";
 const OUT_DIR = path.join(__dirname, "..", "qa", "v9.7");
 const OUT = path.join(OUT_DIR, "review-tests.json");
-const CHROME = chromePath(chromium);
+const CHROME = Browser.chromePath(chromium);
 
 // Five simulated minutes, sampled as real draws. dt is in 60Hz frames.
 const MINUTES = 5;

@@ -281,13 +281,13 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 - [x] **Moon.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 42 CSS / 126 device px.
   - **Asset px:** the painted body, plus optional debris frames.
-  - **Owner:** `Moon`.
+  - **Owner:** `Body`.
   - **Asset:** one folder per type under `assets/moons/`.
 
 - [x] **Planet and rings.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits manifest layers (back ring, body, front ring) from `assets/planets/<type>/v1/`. `PLANET_PAINTERS` and `js/art/planets.js` are gone. Rings are painted layers; dropping those files removes the ring. Ten playable types plus the test-crystal, which is not on the random ladder and is not preloaded in play. A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 44–80 CSS / 130–240 device px across, rings included.
   - **Asset px:** the painted layers, plus optional debris frames.
-  - **Owner:** `Planet`.
+  - **Owner:** `Body`.
   - **Asset:** one folder per type under `assets/planets/`.
 
 - [ ] **Star.** `js/art/stars.js` 34. 12 looks, one spectral type each (`SPEC_OF`, line 15). Corona and rays. Extent 2.7.

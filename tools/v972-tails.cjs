@@ -5,12 +5,12 @@
 // Prints one JSON object. Exit 0 when every check passed.
 
 const fs = require("fs");
-const { playwrightCore, chromePath } = require("./_browser.cjs");
-const { chromium } = playwrightCore();
+const { Browser } = require("./lib/browser.cjs");
+const { chromium } = Browser.playwrightCore();
 
 const PORT = process.argv[2] || "8091";
 const OUT = process.argv[3] || "";
-const CHROME = chromePath(chromium);
+const CHROME = Browser.chromePath(chromium);
 const FRAMES = 500;
 const LEVELS = [
   ["Planet Nursery", 3, 3],

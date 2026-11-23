@@ -108,10 +108,30 @@ export class ShipCatalog {
   }
 
   static adopt(e, tier, wreck, big = false, roll = Math.random()) {
-    e.ship = this.classFor(tier, big, roll);
-    const n = this.looks(e.ship);
-    e.look = (Math.random() * n) | 0;
+    e._shipTier = tier | 0;
+    e._shipBig = !!big;
+    e._shipRoll = roll;
+    const name = this.classFor(tier, big, roll);
+    e.ship = name || "";
+    if (e.ship && !(e.look >= 0)) e.look = (Math.random() * this.looks(e.ship)) | 0;
     this.setWreck(e, wreck);
+  }
+
+  /**
+   * If this craft was spawned before the ship index loaded (`e.ship` empty),
+   * pick its class once the catalog is ready, the same way Body.art() picks
+   * a type. Already-named crafts, including scraps, are left alone.
+   */
+  static ensure(e, state) {
+    if (e.ship) return e.ship;
+    if (!this.ready) return "";
+    const tier = e._shipTier != null ? e._shipTier : ((state && state.tier) | 0);
+    const big = !!e._shipBig;
+    const roll = e._shipRoll != null ? e._shipRoll : (((e.seed | 0) >>> 0) / 4294967296);
+    const wreck = !!e.wreck;
+    this.adopt(e, tier, wreck, big, roll);
+    if (e._shipUpgrade) this.upgrade(e);
+    return e.ship || "";
   }
 
   static setWreck(e, wreck) {
@@ -123,12 +143,14 @@ export class ShipCatalog {
   }
 
   static upgrade(e) {
+    if (!e.ship) { e._shipUpgrade = true; return; }
     const names = this.playable();
     const i = names.indexOf(e.ship);
     if (i >= 0 && i < names.length - 1) {
       e.ship = names[i + 1];
       e._artBase = null; e._sp = null;
     }
+    e._shipUpgrade = false;
   }
 
   /** The class before this one in the manifest. The first class stays put. */

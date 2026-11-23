@@ -25,8 +25,10 @@ export class Ship {
     for (const name of ShipCatalog.playable()) SpriteSheet.for(name).start();
   }
 
-  /** Painted class. A crumb keeps the hull it was torn from. */
+  /** Painted class. A crumb keeps the hull it was torn from.
+   *  If the craft was spawned before the ship index loaded, pick a class now. */
   get cls() {
+    if (!this.e.ship) ShipCatalog.ensure(this.e);
     return ShipCatalog.has(this.e.ship) ? this.e.ship : null;
   }
 

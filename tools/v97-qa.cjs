@@ -4,7 +4,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { playwrightCore, chromePath } = require("./_browser.cjs");
+const { Browser } = require("./lib/browser.cjs");
 
 const LA_CANDIDATES = [
   path.join(__dirname, "layout-audit_c8c5.js"),
@@ -26,12 +26,12 @@ if (!LA_PATH || !GA_PATH) {
   process.exit(0);
 }
 
-const { chromium } = playwrightCore();
+const { chromium } = Browser.playwrightCore();
 
 const BEFORE = process.argv[2] || "8090";
 const AFTER = process.argv[3] || "8091";
 const OUT = process.argv[4] || path.join(__dirname, "..", "qa", "v9.7");
-const CHROME = chromePath(chromium);
+const CHROME = Browser.chromePath(chromium);
 const LA = fs.readFileSync(LA_PATH, "utf8");
 const GA = fs.readFileSync(GA_PATH, "utf8");
 

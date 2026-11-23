@@ -11,14 +11,14 @@
 
 const fs = require("fs");
 const path = require("path");
-const { playwrightCore, chromePath } = require("./_browser.cjs");
-const { chromium } = playwrightCore();
+const { Browser } = require("./lib/browser.cjs");
+const { chromium } = Browser.playwrightCore();
 
 class OoCues {
   static args = process.argv.slice(2).filter(a => a !== "--shots");
   static shots = process.argv.includes("--shots");
   static port = process.argv.slice(2).filter(a => a !== "--shots")[0] || "8097";
-  static chrome = chromePath(chromium);
+  static chrome = Browser.chromePath(chromium);
   static shotDir = path.join("docs", "shots", "v9.8.1");
 
   static hook = function () {

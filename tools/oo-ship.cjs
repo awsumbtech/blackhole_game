@@ -5,13 +5,13 @@
 
 const fs = require("fs");
 const path = require("path");
-const { playwrightCore, chromePath } = require("./_browser.cjs");
-const { chromium } = playwrightCore();
+const { Browser } = require("./lib/browser.cjs");
+const { chromium } = Browser.playwrightCore();
 
 const args = process.argv.slice(2).filter(a => a !== "--shots");
 const SHOTS = process.argv.includes("--shots");
 const PORT = args[0] || "8096";
-const CHROME = chromePath(chromium);
+const CHROME = Browser.chromePath(chromium);
 const SHOT_DIR = path.join("docs", "shots", "v9.8.0");
 
 class OoShip {
