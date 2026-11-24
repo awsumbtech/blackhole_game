@@ -1,7 +1,8 @@
 // The art theme. The root is `assets` today. Another folder can replace it
 // by setting Theme.root before start. Ships, planets, moons, comets, rocks,
 // dust, the current, the radar, pulsar jets, neutron cores, reef beds,
-// the flagship, and Star Meadow each have an index under that root.
+// the flagship, Star Meadow, and the Void Rift aurora each have an index
+// under that root.
 
 import { BodyCatalog } from "./BodyCatalog.js";
 import { PictureCatalog } from "./PictureCatalog.js";
@@ -22,6 +23,7 @@ export class Theme {
   static reef = new PictureCatalog("reef");
   static flagship = new PictureCatalog("flagship");
   static meadow = new PictureCatalog("meadow");
+  static aurora = new PictureCatalog("aurora");
   static ready = false;
   static TIMEOUT_MS = 6000;
   static RETRY_MS = 2000;
@@ -100,7 +102,8 @@ export class Theme {
           this.neutron.load(root, ms),
           this.reef.load(root, ms),
           this.flagship.load(root, ms),
-          this.meadow.load(root, ms)
+          this.meadow.load(root, ms),
+          this.aurora.load(root, ms)
         ]),
         new Promise((_, reject) => {
           timer = setTimeout(() => reject(new Error("theme timeout")), ms);
@@ -116,6 +119,6 @@ export class Theme {
       && this.current.ready && this.radar.ready
       && this.pulsar.ready && this.neutron.ready
       && this.reef.ready && this.flagship.ready
-      && this.meadow.ready;
+      && this.meadow.ready && this.aurora.ready;
   }
 }

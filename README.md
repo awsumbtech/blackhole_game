@@ -1,6 +1,6 @@
 # Black Hole: Galaxy Eater
 
-**v9.13.0** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
+**v9.14.0** · A calm, ad-free little space game. You're a tiny black hole drifting through space:
 eat what's smaller than you, grow, and slowly climb from space dust to the cosmic web.
 No ads, no purchases, no timers, no way to lose.
 
@@ -33,8 +33,8 @@ Play: **https://awsumbtech.github.io/blackhole_game/**
 - **Grow through scales.** Each galaxy grows you a little. Cross into a new scale (Asteroids,
   Moons, Planets, Stars, Nebulae, Galaxies...) and the camera slowly pulls back to show the bigger
   universe. Your size carries into the next galaxy.
-- **Galaxies** each have their own feel: ride Comet Current's rivers, graze Debris Reef, bloom
-  stars in Star Meadow (painted fields and a thin ring while a bud grows), sit in Neutron Forge's pulsar beams for +50%... Every third galaxy is a
+- **Galaxies** each have their own feel: ride Comet Current's rivers, graze Debris Reef, follow
+  Void Rift's faint aurora, bloom stars in Star Meadow (painted fields and a thin ring while a bud grows), sit in Neutron Forge's pulsar beams for +50%... Every third galaxy is a
   quick, generous breather. Gentle events (with a soft warning first) are explained in Stats >
   "What's that?".
 - **One loop: born, grow, collapse, reborn stronger.** Outgrow a galaxy and the next one opens

@@ -1,0 +1,84 @@
+{
+ "pack": "vast-g5-void-rift-subtle",
+ "version": "2.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/check.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "note": "Shipped wisps only. The live Void Rift sky is the existing assets/backdrop_void.jpg and was not replaced. Backdrop generation metadata stays in the source pack.",
+ "folder": "assets/aurora",
+ "files": [
+  {
+   "file": "aurora-wisp-subtle-1.png",
+   "sha256": "d8e95e99052bfb7b407b4e37908b7e6a32d86062864cc7c03251202ff57ed0e1",
+   "prompt": "Isolated game VFX sprite on a pure solid black #000000 background: a single soft, sheer, translucent horizontal aurora silk veil, mist-teal and pale-aqua, flowing smoothly from left to right across the center of the frame like a long thin strand of chiffon light. Gentle, continuous, longitudinal wisps that run parallel to the ribbon's horizontal direction, softly undulating, airy and dim, low brightness, feathery soft edges that fade gradually into black at top and bottom, and tapering to nothing at both left and right ends well inside the frame. Hand-painted ethereal glow, smooth gradients, delicate and calm. Absolutely no vertical streaks, no curtain rays, no comb-like spikes, no vertical striations, no jagged edges, no bright white highlights, no opaque knots, no stars, no other objects, plenty of empty black around it.",
+   "aspect_ratio": "16:9",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~20:44-20:46)",
+   "raw": "_raw/aurora-wisp-subtle-1.jpg",
+   "raw_sha256": "6bd49b5dcf960ea11524e1ddb4a132f6e899eeb41e8c8b71acab5ec55b0ca05a",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "rejected_generations": [],
+   "processing": {
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> crop to alpha bbox -> isotropic premultiplied lanczos fit (scale 0.4000) centred in 512x160 -> alpha-only raised-cosine feather x 0.24 / y 0.24 (outer 2px exactly 0)",
+    "raw_bbox": [
+     0,
+     244,
+     1280,
+     481
+    ],
+    "content": [
+     512,
+     95
+    ],
+    "offset": [
+     0,
+     32
+    ]
+   },
+   "recolor": "none (no tint, no hue shift, no channel gain; backdrop exposure x1.00)"
+  },
+  {
+   "file": "aurora-wisp-subtle-2.png",
+   "sha256": "7e92b71f16df609bca227fcdf31e79a68ae35dd59994ed72c302782bc0084469",
+   "prompt": "Game VFX sprite isolated on pure flat black #000000: one delicate, slender seafoam-blue luminous ribbon of mist drifting horizontally through the middle of the frame, narrow and softly glowing, with a gentle organic S-like drift and soft silky trailing wisps flowing lengthwise left to right. Very dim and subdued, translucent smoke-like light, smooth painterly soft-focus gradients, both ends taper and dissolve softly into black far from the image borders, top and bottom edges blur away gently. Calm and understated. Strictly no vertical lines, no rays, no spikes, no comb teeth, no hard bright highlights, no white core, no particles, no stars, nothing else in the frame, large empty black margins.",
+   "aspect_ratio": "16:9",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~20:44-20:46)",
+   "raw": "_raw/aurora-wisp-subtle-2.jpg",
+   "raw_sha256": "4b161d7f5c305b2dd11f3fbd9f51991c8291cb7b3ba60a529f180faf6aa2fdbc",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "rejected_generations": [],
+   "processing": {
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> crop to alpha bbox -> isotropic premultiplied lanczos fit (scale 0.3925) centred in 512x160 -> alpha-only raised-cosine feather x 0.20 / y 0.24 (outer 2px exactly 0)",
+    "raw_bbox": [
+     98,
+     266,
+     1246,
+     449
+    ],
+    "content": [
+     451,
+     72
+    ],
+    "offset": [
+     30,
+     44
+    ]
+   },
+   "recolor": "none (no tint, no hue shift, no channel gain; backdrop exposure x1.00)"
+  }
+ ],
+ "license": "Original generations made for this project with Grok Bot GenerateImage; no third-party or reference artwork used as input. For use in Vast by the project owner.",
+ "created": "2026-11-23T20:48:14-05:00"
+}
