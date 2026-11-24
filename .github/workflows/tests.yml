@@ -32,6 +32,7 @@ jobs:
           node tools/v97-review.cjs 8765
           node tools/v990-resilience.cjs 8765
           node tools/v910-g2-art.cjs 8765
+          node tools/v911-g7-forge.cjs 8765
           # v97-qa skips cleanly when its audit scripts are absent.
           node tools/v97-qa.cjs 8765 8765
       # F1 (DESIGN.md §12): v972-tails fails on this branch and on main

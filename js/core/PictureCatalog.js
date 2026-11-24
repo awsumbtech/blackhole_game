@@ -132,7 +132,19 @@ export class PictureCatalog {
 
   variants() {
     const rows = this._meta && Array.isArray(this._meta.variants) ? this._meta.variants : [];
-    return rows.filter(row => row && row.coma && row.nucleus && row.tail);
+    const out = [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || typeof row !== "object") continue;
+      // Comet rows name a coma, a nucleus, and a tail. Any other catalog
+      // lists a variant by id, so a new row is visible with no code change.
+      if (row.coma || row.nucleus || row.tail) {
+        if (row.coma && row.nucleus && row.tail) out.push(row);
+        continue;
+      }
+      if (row.id) out.push(row);
+    }
+    return out;
   }
 
   /** Manifest order. Includes a picture that has not decoded yet. */

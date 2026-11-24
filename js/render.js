@@ -11,6 +11,7 @@ import { CometSparkle } from "./core/CometSparkle.js";
 import { CometTail } from "./core/CometTail.js";
 import { EdgeCue } from "./core/EdgeCue.js";
 import { RadarInstrument } from "./core/RadarInstrument.js";
+import { NeutronStar } from "./core/NeutronStar.js";
 import { SpaceDust } from "./core/SpaceDust.js";
 import { SpaceRock } from "./core/SpaceRock.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
@@ -128,7 +129,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
         bodyAlpha = alpha * (0.6 + 0.4 * q) * q;
       }
       Body.for(e).draw(ctx, sx, sy, e.radius, bodyAlpha);
-    } else if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor") {
+    } else if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "neutron") {
       let bodyAlpha = alpha;
       if (e.depthT < 1) {
         const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
@@ -136,6 +137,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       }
       if (e.type === "comet") Comet.for(e).draw(ctx, sx, sy, r, bodyAlpha);
       else if (e.type === "dust") SpaceDust.for(e).draw(ctx, sx, sy, r, bodyAlpha);
+      else if (e.type === "neutron") NeutronStar.for(e).draw(ctx, sx, sy, r, bodyAlpha, e.depthT >= 1 ? breath : null);
       else SpaceRock.for(e).draw(ctx, sx, sy, r, bodyAlpha);
     } else {
     const sp = spriteFor(e, rpx);
@@ -154,7 +156,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       ctx.translate(-sx, -sy);
       continue;
     }
-    if (e.type === "star" || e.type === "neutron") {
+    if (e.type === "star") {
       alpha *= twinkle;
       d *= 0.98 + breath * 0.04;
     }

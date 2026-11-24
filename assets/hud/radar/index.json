@@ -6,7 +6,8 @@
     { "id": "bezel", "role": "bezel", "file": "radar-bezel.png", "w": 256, "h": 256, "pivot": [128, 128] },
     { "id": "current", "role": "ribbon", "file": "radar-current.png", "w": 256, "h": 96, "pivot": [128, 48] },
     { "id": "player", "role": "player", "file": "radar-player.png", "w": 48, "h": 48, "pivot": [24, 24] },
-    { "id": "pip-edible", "role": "pip", "file": "radar-pip-edible.png", "w": 32, "h": 32, "pivot": [16, 16] },
-    { "id": "pip-big", "role": "pip", "file": "radar-pip-big.png", "w": 32, "h": 32, "pivot": [16, 16] }
+    { "id": "pip-edible", "role": "pip-edible", "file": "radar-pip-edible.png", "w": 32, "h": 32, "pivot": [16, 16] },
+    { "id": "pip-big", "role": "pip-big", "file": "radar-pip-big.png", "w": 32, "h": 32, "pivot": [16, 16] },
+    { "id": "pip-pulsar", "role": "landmark-pulsar", "file": "radar-pip-pulsar.png", "w": 32, "h": 32, "pivot": [16, 16] }
   ]
 }

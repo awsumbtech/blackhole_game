@@ -1,0 +1,39 @@
+{
+  "kind": "pulsar",
+  "version": 1,
+  "format": "painted jets along +x. Rotate about the pivot. The picture already fans; width scales with the beam. No tint.",
+  "variants": [
+    {
+      "id": "beam-cool",
+      "role": "beam"
+    },
+    {
+      "id": "beam-ember",
+      "role": "beam"
+    }
+  ],
+  "sprites": [
+    {
+      "id": "beam-cool",
+      "role": "beam",
+      "file": "pulsar-beam-cool.png",
+      "w": 1024,
+      "h": 256,
+      "pivot": [
+        64,
+        128
+      ]
+    },
+    {
+      "id": "beam-ember",
+      "role": "beam",
+      "file": "pulsar-beam-ember.png",
+      "w": 1024,
+      "h": 256,
+      "pivot": [
+        64,
+        128
+      ]
+    }
+  ]
+}

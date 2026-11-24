@@ -40,9 +40,7 @@ export class RadarInstrument {
       const dx = ex - cx, dy = ey - cy;
       if (dx * dx + dy * dy > reach) continue;
       const tooBig = !e.powerup && playerRadius <= e.radius * eatRatio;
-      const pips = cat.idsByRole("pip");
-      const id = tooBig ? (pips[1] || pips[0]) : pips[0];
-      const spr = id ? cat.sprite(id) : null;
+      const spr = this._role(cat, tooBig ? "pip-big" : "pip-edible");
       if (!spr) continue;
       const s = tooBig ? 7 : 5;
       ctx.globalAlpha = tooBig ? 0.9 : 0.8;
@@ -84,9 +82,19 @@ export class RadarInstrument {
     }
   }
 
-  /** One painted landmark or pulsar mark. */
-  static mark(ctx, x, y, size, id, alpha) {
-    const spr = Theme.radar.sprite(id || "pip-edible");
+  /**
+   * Role for a landmark kind. Pulsars use their own pip. Other kinds keep
+   * the edible and big pips they already had.
+   */
+  static landmarkRole(kind) {
+    if (kind === "pulsar") return "landmark-pulsar";
+    if (kind === "flagship") return "pip-big";
+    return "pip-edible";
+  }
+
+  /** One painted landmark mark, looked up by role. A missing pip draws nothing. */
+  static mark(ctx, x, y, size, role, alpha) {
+    const spr = this._role(Theme.radar, role);
     if (!spr || !(size > 0)) return false;
     ctx.globalAlpha = alpha > 0 ? alpha : 0.85;
     Theme.radar.blit(ctx, spr, x, y, size, size);

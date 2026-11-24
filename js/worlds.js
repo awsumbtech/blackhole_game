@@ -7,6 +7,8 @@
 
 import { CurrentStream } from "./core/CurrentStream.js";
 import { EdgeCue } from "./core/EdgeCue.js";
+import { NeutronStar } from "./core/NeutronStar.js";
+import { PulsarBeam } from "./core/PulsarBeam.js";
 import { RadarInstrument } from "./core/RadarInstrument.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
 import { FlagshipLight } from "./core/FlagshipLight.js";
@@ -235,9 +237,9 @@ const SETUP = {
   "Neutron Forge"(state, r, b0, L) {
     ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]).forEach(([x, y], i) => {
       const P = L.pulsars[i];
-      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * L.spin,
-        art: { type: "neutron", color: P.color, seed: 99 + i, variant: 0, radius: b0 * 0.012 },
-        rgb: P.rgb, grad: null });
+      W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * L.spin, variant: i,
+        art: { type: "neutron", color: P.color, seed: 99 + i, variant: 0, look: i, radius: b0 * 0.012 },
+        rgb: P.rgb });
       W.lms.push(landmark(setName(P.name), "pulsar", x, y, b0 * L.lmR, P.rgb));
     });
   }
@@ -909,41 +911,10 @@ const DRAW = {
   },
 
   "Neutron Forge"(ctx, state, fx, vw, vh) {
-    const hw = beamHalfWidth();
-    const L = wx(W.b0 * 1.6);
-    for (const p of W.pulsars) {
-      const x = px(p.x), y = py(p.y);
-      if (!p.grad || p.gradL !== L || p.gradF !== (W.flare > 0)) {
-        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
-        const k = W.flare > 0 ? 1.4 : 1;
-        g.addColorStop(0, `rgba(${p.rgb}, ${0.055 * k})`);
-        g.addColorStop(0.4, `rgba(${p.rgb}, ${0.018 * k})`);
-        g.addColorStop(1, `rgba(${p.rgb}, 0)`);
-        p.grad = g; p.gradL = L; p.gradF = W.flare > 0;
-      }
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(p.ang);
-      ctx.globalAlpha = AM * 0.55;
-      ctx.fillStyle = p.grad;
-      for (let k = 0; k < 2; k++) {
-        const side = k * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, L, side - hw, side + hw);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
-      const r = wx(p.art.radius);
-      if (onScreen(state, x, y, r * 4, vw, vh)) {
-        p.art.radius = W.b0 * 0.012;
-        const sp = spriteFor(p.art, r * fx.zoom * fx.dpr);
-        const d = sp.k * r;
-        ctx.globalAlpha = AM * (0.95);
-        ctx.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
-      }
-    }
+    const len = wx(W.b0 * 1.6);
+    const breath = fx.reduceMotion ? 0.5 : fx.breath;
+    PulsarBeam.draw(ctx, W.pulsars, AM, beamHalfWidth(), len, W.ox, W.oy, W.f, state.camX, state.camY, vw, vh);
+    NeutronStar.landmarks(ctx, W.pulsars, AM, breath, W.ox, W.oy, W.f, state.camX, state.camY, vw, vh);
     // The beam still pays +50%. It does not put a second glow on the hole.
   }
 };
@@ -1003,21 +974,19 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   const k = f * sc;
   for (const rv of W.rivers) RadarInstrument.ribbon(ctx, rv.pts, ox, oy, k, rim, 0.35);
   if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.35);
-  for (const p of W.pulsars) {
-    RadarInstrument.mark(ctx, cx + p.x * f * sc, cy + p.y * f * sc, 8, "pip-big", 0.7);
-  }
   for (const lm of W.lms) {
     let x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
+    const role = RadarInstrument.landmarkRole(lm.kind);
     if (rim) {
       const dx = x - rim.cx, dy = y - rim.cy, d = hypot(dx, dy);
       if (d > rim.r - 4) {
         const kk = (rim.r - 4) / d;
-        RadarInstrument.mark(ctx, rim.cx + dx * kk, rim.cy + dy * kk, 7, "pip-edible", lm.visited ? 0.4 : 0.7);
+        RadarInstrument.mark(ctx, rim.cx + dx * kk, rim.cy + dy * kk, 7, role, lm.visited ? 0.4 : 0.7);
         continue;
       }
     }
-    const size = lm.kind === "flagship" || lm.kind === "cradle" ? 9 : 7;
-    RadarInstrument.mark(ctx, x, y, size, lm.kind === "flagship" ? "pip-big" : "pip-edible", lm.visited ? 0.5 : 0.9);
+    const size = lm.kind === "flagship" || lm.kind === "cradle" ? 9 : (lm.kind === "pulsar" ? 8 : 7);
+    RadarInstrument.mark(ctx, x, y, size, role, lm.visited ? 0.5 : 0.9);
   }
 }
 

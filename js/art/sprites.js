@@ -51,7 +51,6 @@ export function lookOf(e) {
 function extentFor(type, variant, look) {
   switch (type) {
     case "star": return 2.7;
-    case "neutron": return 3.1;
     case "comet": return 2.3;
     case "meteor": return 1.4;
     case "system": return 2.5;
@@ -73,10 +72,12 @@ function baseKeyFor(e) {
 export function spriteFor(e, rpx) {
   // Ships are sheet frames on Ship. There is no painted canvas to cache.
   if (e.type === "craft" || e.type === "planet" || e.type === "moon"
-      || e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "comet") {
-    const painted = e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "comet";
+      || e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "comet"
+      || e.type === "neutron") {
+    const painted = e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "comet" || e.type === "neutron";
     const k = e.type === "craft" ? ShipCatalog.extent(e.ship) * 2
-      : e.type === "comet" ? 4.6 : e.type === "dust" ? 3.2 : e.type === "meteor" ? 2.8 : 2.6;
+      : e.type === "comet" ? 4.6 : e.type === "dust" ? 3.2 : e.type === "meteor" ? 2.8
+      : e.type === "neutron" ? 5.8 : 2.6;
     const stub = e._sp && (e._sp.layered || e._sp.painted)
       ? e._sp
       : { c: null, k, b: 0, g: cacheGen, layered: !painted, painted, ship: e.type === "craft" };
