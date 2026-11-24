@@ -1,0 +1,102 @@
+{
+ "pack": "vast-g6-star-meadow-subtle",
+ "version": "2.0.0",
+ "note": "First dispatch of the 4 generations was interrupted before any image was produced; re-issued once, not counted as rerolls.",
+ "folder": "assets/meadow",
+ "files": [
+  {
+   "file": "../backdrop_meadow.jpg",
+   "sha256": "c65269d287818be2675dcfaf6ee4f360fd7136c323bb90a51de2793189a539bc",
+   "prompt": "Minimalist calm deep space background painting for a mobile game, portrait. Almost entirely dark warm espresso-umber velvet space (very dark brown-black, around #1c130b), extremely low contrast and serene. Only a barely perceptible, soft velvety warm bronze-amber atmospheric sheen gently glowing in a broad diffuse area, fading smoothly into darkness. Scattered sparse ultra-fine tiny distant pinpoint stars, very few and very small. About 85 percent quiet empty dark negative space. No smoke clouds, no fog, no bright blobs, no nebula swirls, no stripes, no beams, no light rays, no planets, no sun, no text, no UI. Subtle refined painterly texture, soft and breathable.",
+   "tool": "Grok Bot GenerateImage (one dedicated generation per slot; no recolour/tint/hue shift/duplication; no code-drawn art)",
+   "generated": "2026-11-23",
+   "raw": "_raw/backdrop_meadow_subtle.jpg",
+   "raw_sha256": "c405f0b68a097ed8251aff7bf53ab32e2bab4d3da6d46484198d7999f7cd46ac",
+   "raw_size": [
+    720,
+    1280
+   ],
+   "aspect_ratio": "9:16",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "centre crop 591x1280 -> lanczos 780x1688, uniform exposure x1.00 (all channels, no hue change), JPEG q92 4:4:4"
+   },
+   "license": "Original AI-generated artwork created for Brian Awsumb / Vast; no third-party source imagery or references used.",
+   "final_sha256": "c65269d287818be2675dcfaf6ee4f360fd7136c323bb90a51de2793189a539bc"
+  },
+  {
+   "file": "bloom-halo-subtle-1.png",
+   "sha256": "336485f1a492864eb0eea61efb6d9f339306cba03f24255c70b5e445ddc5d109",
+   "prompt": "A single whisper-thin delicate luminous champagne-gold ring centered on a pure solid black #000000 background, game sprite asset. The ring is a perfect slender circle like a gossamer filament of soft glowing starlight dust, very thin line with a feather-soft faint glow, barely organic hand-painted softness. The ring fills about 70 percent of the image width, centered, with lots of empty black margin around it. The center inside the ring is completely empty pure black. No petals, no scallops, no spikes, no rays, no flames, no floral shapes, no thick wreath, no sparkles, no text. Minimalist, serene, refined.",
+   "tool": "Grok Bot GenerateImage (one dedicated generation per slot; no recolour/tint/hue shift/duplication; no code-drawn art)",
+   "generated": "2026-11-23",
+   "raw": "_raw/bloom-halo-subtle-1.jpg",
+   "raw_sha256": "8f7ecf411efd1e79819c5bfcdfcc7c6418823ddc7ba03a78bce8b6de3d5f04ef",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> least-squares circle fit -> square crop centred on ring -> premultiplied lanczos 256x256 -> alpha-only edge fade 0.06",
+    "raw_center": [
+     512.1,
+     495.8
+    ],
+    "raw_R": 328.3,
+    "target_R": 94,
+    "scale": 0.2863
+   },
+   "license": "Original AI-generated artwork created for Brian Awsumb / Vast; no third-party source imagery or references used.",
+   "final_sha256": "336485f1a492864eb0eea61efb6d9f339306cba03f24255c70b5e445ddc5d109"
+  },
+  {
+   "file": "bloom-halo-subtle-2.png",
+   "sha256": "7d2023e15e95a23a44c91605e6abde06e21976a162daf1e1adabde85c524b2d0",
+   "prompt": "A slender quiet warm amber-cream glowing halo ring centered on a pure solid black #000000 background, game sprite asset. Thin soft painted circle of starlight, with a faint wispy silk-like luminous shimmer gently brightening along one arc on the upper right, the rest of the ring dimmer and very thin. The ring spans about 70 percent of the image width, perfectly centered, with generous empty black margin. Inside the ring is completely empty pure black. No petals, no scallops, no sunburst, no spikes, no rays, no floral shapes, no thick wreath, no text. Ultra-minimal, elegant, calm.",
+   "tool": "Grok Bot GenerateImage (one dedicated generation per slot; no recolour/tint/hue shift/duplication; no code-drawn art)",
+   "generated": "2026-11-23",
+   "raw": "_raw/bloom-halo-subtle-2.jpg",
+   "raw_sha256": "39c4c1f5dfdd92acbe51e4cdd0da5f18cb8b6cf82190e64a56b7ee81d1ae34e7",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> least-squares circle fit -> square crop centred on ring -> premultiplied lanczos 256x256 -> alpha-only edge fade 0.06",
+    "raw_center": [
+     511.5,
+     503.6
+    ],
+    "raw_R": 313.8,
+    "target_R": 92,
+    "scale": 0.2931
+   },
+   "license": "Original AI-generated artwork created for Brian Awsumb / Vast; no third-party source imagery or references used.",
+   "final_sha256": "7d2023e15e95a23a44c91605e6abde06e21976a162daf1e1adabde85c524b2d0"
+  },
+  {
+   "file": "meadow-field-subtle-1.png",
+   "sha256": "dd5d822317fc37266e6afd56ead5f2b2c0953df7f1c6a4ea6f16d84c3ede44d6",
+   "prompt": "An ultra-airy delicate scattered constellation of tiny pinpoint warm-gold pollen motes and stardust specks on a pure solid black #000000 background, game particle asset. The specks are very small glowing points of varied sizes, sparsely spread in a loose soft roughly round area in the middle of the image, resting in a barely visible sheer whisper of very faint warm amber mist. Mostly open empty black space. The edges of the image are completely pure black with nothing near them. No smoke clouds, no fog puffs, no dense dust clumps, no bright blobs, no stars with spikes, no text.",
+   "tool": "Grok Bot GenerateImage (one dedicated generation per slot; no recolour/tint/hue shift/duplication; no code-drawn art)",
+   "generated": "2026-11-23",
+   "raw": "_raw/meadow-field-subtle-1.jpg",
+   "raw_sha256": "dc169407f68d396b630c06e2a9e9fe6bde94e594511355ea3946d2ff91608a6a",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix floor 0.012 -> full-frame premultiplied lanczos 512x512 (centred, pivot at centre) -> alpha-only edge fade 0.14"
+   },
+   "license": "Original AI-generated artwork created for Brian Awsumb / Vast; no third-party source imagery or references used.",
+   "final_sha256": "dd5d822317fc37266e6afd56ead5f2b2c0953df7f1c6a4ea6f16d84c3ede44d6"
+  }
+ ]
+}

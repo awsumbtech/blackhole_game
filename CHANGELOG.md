@@ -2,6 +2,17 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.13.0 — Galaxy 6 painted overhaul (Nov 24 2026)
+
+Star Meadow's sky, fields, and growing-bud rings are paintings, about a fifth of the old glow. The black hole, the HUD, and the save are the same.
+
+- `assets/backdrop_meadow.jpg` is the calm espresso meadow sky. `Backdrop` is unchanged.
+- `MeadowField` blits `assets/meadow/meadow-field-subtle-1.png` with a screen blend at 0.32, over the meadow's old diameter, turned once from the meadow's place. The glow disc and `lmSprite("meadow")` are gone. A missing picture draws nothing.
+- `BloomHalo` blits `bloom-halo-subtle-1` and `bloom-halo-subtle-2` on a growing bud. The seed picks the ring, and the manifest's `ringRadiusPx` / `sizePx` keeps that painted ring on the live bloom radius. The stroked circle is gone. A missing picture draws nothing. Buds still grow and can be eaten.
+- The Star Meadow minimap mark is `radar-pip-meadow-subtle.png`, chosen by `landmarkRole`. Edible, too-big, pulsar, reef, and flagship pips stay on their own roles.
+- Placement, bloom timing, and the stellar-birth hurry are unchanged. Galaxies 1 through 5 and Galaxy 7 stay as they are.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.13.0`.
+
 ## v9.12.0 — Galaxy 1 and Galaxy 4 painted overhaul (Nov 24 2026)
 
 Debris Reef and the Ruined Armada landmark are paintings, on top of the v9.11.0 Neutron Forge. The black hole, the HUD, and the save are the same.

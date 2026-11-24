@@ -83,13 +83,14 @@ export class RadarInstrument {
   }
 
   /**
-   * Role for a landmark kind. Forge, reef, and flagship each have a painted
-   * pip. Every other kind stays on the edible pip. No sprite id is named here.
+   * Role for a landmark kind. Forge, reef, flagship, and meadow each have a
+   * painted pip. Every other kind stays on the edible pip. No sprite id is named here.
    */
   static landmarkRole(kind) {
     if (kind === "pulsar") return "landmark-pulsar";
     if (kind === "reef") return "landmark-reef";
     if (kind === "flagship") return "landmark-flagship";
+    if (kind === "meadow") return "landmark-meadow";
     return "pip-edible";
   }
 

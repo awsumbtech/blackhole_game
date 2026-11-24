@@ -259,6 +259,33 @@
    "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation.",
    "final_sha256": "80b539c7b9f0d875cadb446d53c00a8a82fab6a51bb34192022980f336cb8f95",
    "part": "de"
+  },
+  {
+   "file": "radar-pip-meadow-subtle.png",
+   "sha256": "58b9934180db05bbfb7be892b2f0f7ecb0c7c8f1573dd458151a266084d73baf",
+   "prompt": "A tiny minimal radar map icon: one small clean warm-gold glowing ring centered on a pure solid black #000000 background. Bold simple readable circle outline with a soft gentle glow, clear empty black center, ring spans about 60 percent of the image width, large empty black margin all around. Designed to read crisply when shrunk to a few pixels. No petals, no scallops, no spikes, no rays, no flower, no dot in the middle, no text.",
+   "tool": "Grok Bot GenerateImage (one dedicated generation per slot; no recolour/tint/hue shift/duplication; no code-drawn art)",
+   "generated": "2026-11-23",
+   "raw": "_raw/radar-pip-meadow-subtle.jpg",
+   "raw_sha256": "a93a6c670762711aa4b4b6f56d1e07eb8d990ffd7cd5cef0d042829e89810c11",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> least-squares circle fit -> square crop centred on ring -> premultiplied lanczos 32x32 -> alpha-only edge fade 0.12",
+    "raw_center": [
+     511.8,
+     503.5
+    ],
+    "raw_R": 239.6,
+    "target_R": 11.5,
+    "scale": 0.048
+   },
+   "license": "Original AI-generated artwork created for Brian Awsumb / Vast; no third-party source imagery or references used.",
+   "final_sha256": "58b9934180db05bbfb7be892b2f0f7ecb0c7c8f1573dd458151a266084d73baf"
   }
  ]
 }

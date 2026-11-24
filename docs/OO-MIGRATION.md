@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. Galaxy 7's pulsar jets, neutron cores, Forge sky, and pulsar radar pip are in v9.11.0. Step 3 (Flagship) and the Debris Reef beds are in v9.12.0. Star, system, nebula, cluster, and galaxy stay code-painted. The hot-meteor streak is still code. The rest is not started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. Galaxy 7's pulsar jets, neutron cores, Forge sky, and pulsar radar pip are in v9.11.0. Step 3 (Flagship) and the Debris Reef beds are in v9.12.0. Star Meadow's fields, bloom rings, sky, and meadow radar pip are in v9.13.0. Star, system, nebula, cluster, and galaxy stay code-painted. The hot-meteor streak is still code. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -367,7 +367,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - Cradle rings and the young sun (Planet Nursery).
   - Aurora ribbons (Void Rift).
   - Pulsar beams (Neutron Forge, v9.11.0, `PulsarBeam`). Two opposing paintings, rotated about the pivot. Flare scales the cross-width. Not a code cone.
-  - Meadow buds and specks (Star Meadow).
+  - Meadow fields and bloom rings (Star Meadow, v9.13.0, `MeadowField` and `BloomHalo`, `assets/meadow`). The bud body is still the star painter. The old glow disc, `lmSprite("meadow")`, and the stroked bloom ring are gone. A missing picture draws nothing, and the bud still blooms and can be eaten.
   - **Size:** landmarks are a large fraction of the view, often 100–300 CSS / 300–900 device px.
   - **Asset px:** one painted plate per biome mechanic, 1024 on the long side, plus a short streak strip for the river.
   - **Owner:** the mechanic classes in A8.

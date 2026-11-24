@@ -23,6 +23,8 @@ export { GoldenVeil } from "./GoldenVeil.js";
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
 export { ReefBed } from "./ReefBed.js";
+export { MeadowField } from "./MeadowField.js";
+export { BloomHalo } from "./BloomHalo.js";
 export { SpriteSheet } from "./SpriteSheet.js";
 export { Ship } from "./Ship.js";
 export { ShipCatalog } from "./ShipCatalog.js";

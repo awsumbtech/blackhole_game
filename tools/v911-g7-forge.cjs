@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { Browser } = require("./lib/browser.cjs");
+const { releaseAgrees } = require("./lib/release.cjs");
 const { chromium } = Browser.playwrightCore();
 
 const PORT = process.argv[2] || "8111";
@@ -16,7 +17,6 @@ const ORIGIN = `http://127.0.0.1:${PORT}`;
 const SHOT = "/opt/cursor/artifacts/v911-g7-forge-390x844.png";
 
 const PRECACHE = [
-  "blackhole-v9.12.0",
   "assets/pulsar/index.json",
   "assets/pulsar/pulsar-beam-cool.png",
   "assets/pulsar/pulsar-beam-ember.png",
@@ -25,8 +25,7 @@ const PRECACHE = [
   "assets/neutron/neutron-ember.png",
   "assets/hud/radar/radar-pip-pulsar.png",
   "js/core/PulsarBeam.js",
-  "js/core/NeutronStar.js",
-  "\"9.12.0\""
+  "js/core/NeutronStar.js"
 ];
 
 const PROVENANCE = [
@@ -45,8 +44,9 @@ function staticChecks() {
   const worlds = fs.readFileSync("js/worlds.js", "utf8");
   const stars = fs.readFileSync("js/art/stars.js", "utf8");
   const data = fs.readFileSync("js/data/worlds.js", "utf8");
-  const missing = PRECACHE.filter(s => (s === "\"9.12.0\"" ? game : sw).indexOf(s) < 0);
-  if (game.indexOf('VERSION = "9.12.0"') < 0) missing.push("VERSION 9.12.0");
+  const missing = PRECACHE.filter(s => sw.indexOf(s) < 0);
+  const release = releaseAgrees("9.11.0");
+  if (!release.ok) missing.push("release " + JSON.stringify(release));
   const forge = worlds.slice(worlds.indexOf('"Neutron Forge"(ctx'), worlds.indexOf("export function drawWorldsOverlay"));
   const map = worlds.slice(worlds.indexOf("export function drawWorldsMinimap"), worlds.indexOf("export function worldsFeature"));
   const hashes = [];

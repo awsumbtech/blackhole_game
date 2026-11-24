@@ -1,0 +1,10 @@
+{
+  "kind": "meadow",
+  "version": 1,
+  "format": "painted Star Meadow fields and bloom rings. Screen blend. Ring size is ringRadiusPx inside sizePx. No tint, no code glow.",
+  "sprites": [
+    { "id": "meadow-field-subtle-1", "role": "field", "file": "meadow-field-subtle-1.png", "w": 512, "h": 512, "pivot": [256, 256] },
+    { "id": "bloom-halo-subtle-1", "role": "halo", "file": "bloom-halo-subtle-1.png", "w": 256, "h": 256, "pivot": [128, 128], "ringRadiusPx": 94, "sizePx": 256 },
+    { "id": "bloom-halo-subtle-2", "role": "halo", "file": "bloom-halo-subtle-2.png", "w": 256, "h": 256, "pivot": [128, 128], "ringRadiusPx": 94, "sizePx": 256 }
+  ]
+}

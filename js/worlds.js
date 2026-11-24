@@ -11,11 +11,13 @@ import { NeutronStar } from "./core/NeutronStar.js";
 import { PulsarBeam } from "./core/PulsarBeam.js";
 import { RadarInstrument } from "./core/RadarInstrument.js";
 import { ReefBed } from "./core/ReefBed.js";
+import { MeadowField } from "./core/MeadowField.js";
+import { BloomHalo } from "./core/BloomHalo.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
 import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
-import { spriteFor, getArtQuality, rng } from "./art.js";
+import { spriteFor, rng } from "./art.js";
 import { fitType } from "./tiers.js";
 import { MECHANICS, SET_PREFIX, LAYOUTS } from "./data/worlds.js";
 export { MECHANICS };   // the codex reads it from here
@@ -744,52 +746,6 @@ function updateLandmarks(state, dt) {
   if (h.lm) h.last = h.lm;
 }
 
-// ─── Drawing ───
-const glowCache = new Map();
-function glow(rgb) {
-  let c = glowCache.get(rgb);
-  if (c) return c;
-  c = document.createElement("canvas");
-  c.width = c.height = 128;
-  const g = c.getContext("2d");
-  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, `rgba(${rgb}, 1)`);
-  gr.addColorStop(0.4, `rgba(${rgb}, 0.45)`);
-  gr.addColorStop(1, `rgba(${rgb}, 0)`);
-  g.fillStyle = gr;
-  g.fillRect(0, 0, 128, 128);
-  glowCache.set(rgb, c);
-  return c;
-}
-
-// v8.1: painted landmark sprites (cached once per kind)
-const LM = {};
-function lmRng(seed) { let t = seed >>> 0; return () => { t = (t + 0x6D2B79F5) >>> 0; let x = Math.imul(t ^ (t >>> 15), t | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; }
-function lmSprite(kind) {
-  if (LM[kind]) return LM[kind];
-  const S = getArtQuality() === "high" ? 256 : 160, h = S / 2;
-  const c = document.createElement("canvas");
-  c.width = c.height = S;
-  const g = c.getContext("2d");
-  g.translate(h, h);
-  const r = lmRng(kind.length * 131);
-  g.globalCompositeOperation = "lighter";
-  const blob = (x, y, rr, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(${col}, ${a})`); gr.addColorStop(1, `rgba(${col}, 0)`); g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); };
-  if (kind === "meadow") {
-    // one soft field. The old seventy blossoms read as specks.
-    blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
-  }
-  LM[kind] = c;
-  return c;
-}
-
-function drawGlow(ctx, rgb, x, y, r, a) {
-  a *= AM;
-  if (a <= 0.005) return;
-  ctx.globalAlpha = a;
-  ctx.drawImage(glow(rgb), x - r, y - r, r * 2, r * 2);
-}
-
 /**
  * Inside the zoomed world transform, before entities. vw/vh = world viewport.
  * fx: { zoom, dpr, time, breath, reduceMotion }
@@ -871,25 +827,8 @@ const DRAW = {
   },
 
   "Star Meadow"(ctx, state, fx, vw, vh) {
-    for (const m of W.meadows) {
-      const x = px(m.x), y = py(m.y), r = wx(m.r);
-      if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      drawGlow(ctx, "255, 205, 110", x, y, r * 1.1, 0.04);
-      ctx.globalAlpha = AM * 0.35;
-      ctx.drawImage(lmSprite("meadow"), x - r * 1.2, y - r * 1.2, r * 2.4, r * 2.4);
-    }
-    // One quiet ring on a growing bud. No orbiting specks.
-    ctx.lineWidth = 1.2 / fx.zoom;
-    for (const e of state.entities) {
-      if (!e.bloom || e.consuming || !onScreen(state, e.x, e.y, e.radius * 3, vw, vh)) continue;
-      const k = smooth(e.bloom.t / e.bloom.dur);
-      const a = (1 - k) * 0.35 * (e._spawnAlpha ?? 1);
-      ctx.globalAlpha = AM * (a);
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.radius * (1.7 + k * 0.6), 0, TAU);
-      ctx.strokeStyle = "rgba(255, 225, 150, 1)";
-      ctx.stroke();
-    }
+    MeadowField.draw(ctx, W.meadows, px, py, wx, AM, state, vw, vh);
+    BloomHalo.draw(ctx, state.entities, AM, state, vw, vh);
   },
 
   "Neutron Forge"(ctx, state, fx, vw, vh) {

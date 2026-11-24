@@ -47,6 +47,8 @@ export class PictureCatalog {
           visibleEndX: row.visibleEndX > 0 ? row.visibleEndX : 0,
           hitProfile: profile && profile.length ? profile : null,
           axis: typeof row.axis === "number" ? row.axis : null,
+          ringRadiusPx: row.ringRadiusPx > 0 ? row.ringRadiusPx : 0,
+          sizePx: row.sizePx > 0 ? row.sizePx : 0,
           image,
           ok: false,
           failed: false,
