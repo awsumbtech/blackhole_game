@@ -5,9 +5,9 @@
 import { Theme } from "./Theme.js";
 
 export class CometSparkle {
-  static CAP = 64;
-  static PER = 3;
-  static slots = Array.from({ length: 64 }, () => (
+  static CAP = 128;
+  static PER = 6;
+  static slots = Array.from({ length: this.CAP }, () => (
     { on: false, e: null, x: 0, y: 0, vx: 0, vy: 0, life: 1, age: 0, which: 0 }
   ));
   static stampOf = new WeakMap();
@@ -15,6 +15,7 @@ export class CometSparkle {
   static frame = 0;
   static stepDt = 0;
   static still = false;
+  static at = { x: 0, y: 0, ang: 0 };
 
   static hash(n) {
     n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
@@ -31,12 +32,18 @@ export class CometSparkle {
       const s = this.slots[i];
       if (!s.on) continue;
       const stamped = this.stampOf.get(s.e);
-      if (!s.e || s.e.consumed || s.e.consuming || stamped == null || this.frame - stamped > 1) {
+      if (!s.e || s.e.consumed || stamped == null || this.frame - stamped > 1) {
         s.on = false;
         s.e = null;
         continue;
       }
-      s.age += this.stepDt;
+      if (s.e.consuming) {
+        const p = s.e.consumeProgress || 0;
+        s.age += this.stepDt * (1.6 + p * 2.4);
+        if (p >= 0.9) { s.on = false; s.e = null; continue; }
+      } else {
+        s.age += this.stepDt;
+      }
       if (s.age >= s.life) { s.on = false; s.e = null; continue; }
       if (!this.still) {
         s.x += s.vx * this.stepDt;
@@ -66,30 +73,41 @@ export class CometSparkle {
   }
 
   /**
-   * One mote behind the head, along `ang` (the tail's trailing angle).
-   * `speed` is the comet's own step. Still frames and a resting comet spawn nothing.
+   * One mote on the comet's curved wake. `ang` is the fallback trailing
+   * angle when the tail has no path yet. `speed` is the comet's own step.
+   * Still frames, a resting comet, and a comet being eaten spawn nothing.
    */
-  static spawn(e, ang, speed, r) {
+  static spawn(e, ang, speed, r, tail) {
     if (this.still || !(speed > 0.04) || !(r > 0) || e.consuming || e.consumed) return;
     let st = this.stateOf.get(e);
     if (!st) { st = { cool: 0 }; this.stateOf.set(e, st); }
     st.cool -= this.stepDt;
     if (st.cool > 0) return;
-    if (this._count(e) >= this.PER) { st.cool = 8; return; }
+    const quick = speed >= 1.15 ? 5 : 9;
+    if (this._count(e) >= this.PER) { st.cool = quick; return; }
     const s = this._free();
     if (!s) return;
-    st.cool = 9;
+    st.cool = quick;
     const ids = Theme.comets.idsByRole("sparkle");
     const h = this.hash((e.seed >>> 0) ^ Math.imul(this.frame + 1, 0x9e3779b1));
     const u = (h >>> 8) / 4294967296;
     const v = ((h >>> 16) & 1023) / 1023;
     const along = r * (1.6 + u * 5.2);
     const side = (v - 0.5) * r * 1.1;
-    const c = Math.cos(ang), sn = Math.sin(ang);
+    let c = Math.cos(ang);
+    let sn = Math.sin(ang);
+    let x = e.x + c * along - sn * side;
+    let y = e.y + sn * along + c * side;
+    if (tail && tail.pointAt && tail.pointAt(along, this.at)) {
+      c = Math.cos(this.at.ang);
+      sn = Math.sin(this.at.ang);
+      x = this.at.x - sn * side;
+      y = this.at.y + c * side;
+    }
     s.on = true;
     s.e = e;
-    s.x = e.x + c * along - sn * side;
-    s.y = e.y + sn * along + c * side;
+    s.x = x;
+    s.y = y;
     s.vx = c * (0.04 + u * 0.08) - sn * (v - 0.5) * 0.03;
     s.vy = sn * (0.04 + u * 0.08) + c * (v - 0.5) * 0.03;
     s.life = 42 + (h & 31);
@@ -109,7 +127,8 @@ export class CometSparkle {
       const s = this.slots[i];
       if (!s.on || s.e !== e) continue;
       const k = 1 - s.age / s.life;
-      const a = alpha * k * k * 0.72;
+      let a = alpha * k * k * 0.72;
+      if (s.e.consuming) a *= Math.pow(1 - Math.min(1, s.e.consumeProgress || 0), 1.4);
       if (a < 0.03) continue;
       const spr = cat.sprite(ids[s.which % ids.length]);
       if (!spr) continue;

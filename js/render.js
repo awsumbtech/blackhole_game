@@ -44,11 +44,11 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
   for (const e of entities) {
     // Aim every comet, including ones off screen, from the step it just took.
+    if (e.hasTail && e.consumed) CometSparkle.release(e);
     if (e.hasTail && !e.consumed) {
       if (!e.tail) e.tail = new CometTail();
-      if (e.consuming) CometSparkle.release(e);
-      else CometSparkle.note(e);
-      e.tail.sample(e.x, e.y, dt, Math.hypot(w, h));
+      CometSparkle.note(e);
+      e.tail.sample(e.x, e.y, dt, Math.hypot(w, h), still);
     }
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
@@ -87,8 +87,9 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
     if (e.hasTail && e.tail) {
       const speed = hypot(e.vx, e.vy);
-      e.tail.drawComet(ctx, sx, sy, r, alpha, e.color, rpx, speed, Comet.variant(e));
-      if (!e.consuming) CometSparkle.spawn(e, e.tail.ang, speed, r);
+      const consume = e.consuming ? e.consumeProgress : 0;
+      e.tail.drawComet(ctx, sx, sy, r, alpha, e.color, rpx, speed, Comet.variant(e), still, consume);
+      if (!e.consuming) CometSparkle.spawn(e, e.tail.ang, Math.max(e.tail.speed, speed), r, e.tail);
       CometSparkle.draw(ctx, e, camX, camY, w, h, alpha);
     }
 

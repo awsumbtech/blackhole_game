@@ -49,6 +49,7 @@ export class PictureCatalog {
           axis: typeof row.axis === "number" ? row.axis : null,
           ringRadiusPx: row.ringRadiusPx > 0 ? row.ringRadiusPx : 0,
           sizePx: row.sizePx > 0 ? row.sizePx : 0,
+          inkEndPx: Number.isFinite(row.inkEndPx) && row.inkEndPx > 0 ? row.inkEndPx : 0,
           image,
           ok: false,
           failed: false,
@@ -178,6 +179,52 @@ export class PictureCatalog {
     const ax = spr.w > 0 ? spr.pivot[0] / spr.w : 0.5;
     const ay = spr.h > 0 ? spr.pivot[1] / spr.h : 0.5;
     ctx.drawImage(spr.image, x - ax * w, y - ay * h, w, h);
+    return true;
+  }
+
+  /**
+   * One source rectangle of a painting. The caller sets alpha and rotation.
+   * This only calls drawImage. No tint and no second canvas.
+   */
+  blitSlice(ctx, spr, sx, sy, sw, sh, x, y, w, h) {
+    if (!spr || !spr.ok || !(sw > 0) || !(sh > 0) || !(w > 0) || !(h > 0)) return false;
+    const img = spr.image;
+    const iw = img && img.naturalWidth > 0 ? img.naturalWidth : spr.w;
+    const ih = img && img.naturalHeight > 0 ? img.naturalHeight : spr.h;
+    if (!(iw > 0) || !(ih > 0)) return false;
+    let x0 = sx;
+    let y0 = sy;
+    let rw = sw;
+    let rh = sh;
+    let dx = x;
+    let dy = y;
+    let dw = w;
+    let dh = h;
+    if (x0 < 0) {
+      const cut = -x0 / rw;
+      dx += dw * cut;
+      dw *= 1 - cut;
+      rw += x0;
+      x0 = 0;
+    }
+    if (y0 < 0) {
+      const cut = -y0 / rh;
+      dy += dh * cut;
+      dh *= 1 - cut;
+      rh += y0;
+      y0 = 0;
+    }
+    if (x0 >= iw || y0 >= ih) return false;
+    if (x0 + rw > iw) {
+      dw *= (iw - x0) / rw;
+      rw = iw - x0;
+    }
+    if (y0 + rh > ih) {
+      dh *= (ih - y0) / rh;
+      rh = ih - y0;
+    }
+    if (!(rw > 0) || !(rh > 0) || !(dw > 0) || !(dh > 0)) return false;
+    ctx.drawImage(img, x0, y0, rw, rh, dx, dy, dw, dh);
     return true;
   }
 }

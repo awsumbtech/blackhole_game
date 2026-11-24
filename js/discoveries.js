@@ -190,7 +190,7 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) 
     if (!f.planted || f.found) continue;
     if (f.def.kind === "comet") {
       if (!f.tail) f.tail = new CometTail(f.at + Math.PI);
-      f.tail.sample(f.x, f.y, dt, Math.hypot(vw, vh));
+      f.tail.sample(f.x, f.y, dt, Math.hypot(vw, vh), reduceMotion);
     }
     const x = f.x + ox, y = f.y + oy;
     if (x < -r * 8 || y < -r * 8 || x > vw + r * 8 || y > vh + r * 8) continue;
@@ -199,7 +199,7 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) 
     if (f.def.kind === "comet") {
       const tails = Theme.comets.idsByRole("tail");
       const spr = tails.length ? Theme.comets.sprite(tails[hashId(f.def.id) % tails.length]) : null;
-      if (spr) f.tail.drawPainted(ctx, x, y, spr, r * 7.2, 0.55 * fade);
+      if (spr) f.tail.drawPainted(ctx, x, y, spr, r * 7.2, 0.55 * fade, reduceMotion, f.radius);
     }
     const sp = findSprite(f.def), d = r * 8.3 * (0.96 + 0.04 * tw);
     const rot = reduceMotion ? 0.4 : time * 0.0003 + f.at;

@@ -1,6 +1,5 @@
-// Comet tails trail the on-screen step. The angle is the one actually drawn
-// (ctx.rotate + drawImage of the tail sprites), so this file runs on main
-// and on the fix without any edit.
+// Comet tails trail the comet's own world step, not the camera pan.
+// The angle is the one actually drawn (ctx.rotate + drawImage of comet-tail).
 //   node tools/v972-tails.cjs [port]
 // Prints one JSON object. Exit 0 when every check passed.
 
@@ -27,10 +26,13 @@ const HOOK = () => {
     return origRot.call(this, ang);
   };
   proto.drawImage = function (img) {
-    // Tail pictures are wide canvases (dust, ion, and the find tail).
-    if (img && img.width >= 16 && img.height > 0 && img.width / img.height >= 2.5) {
+    const src = img && (img.currentSrc || img.src || "");
+    if (typeof src === "string" && src.indexOf("comet-tail") >= 0) {
       const m = this.getTransform();
-      bag.push({ ang: Math.atan2(m.b, m.a), x: m.e, y: m.f, w: img.width, h: img.height });
+      bag.push({
+        ang: Math.atan2(m.b, m.a), x: m.e, y: m.f,
+        w: img.naturalWidth || img.width, h: img.naturalHeight || img.height
+      });
     }
     return origDraw.apply(this, arguments);
   };
@@ -107,7 +109,7 @@ async function level(page, biome, tier, galaxy) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
     const prev = new Map();
@@ -129,32 +131,31 @@ async function level(page, biome, tier, galaxy) {
         if (!e.hasTail || e.consumed) continue;
         if (!e._tid) e._tid = ++window.__tailSeq;
         seen.add(e._tid);
-        const ang = drawn(e.x, e.y);
-        const sx = e.x - s.camX, sy = e.y - s.camY;
-        const p = prev.get(e._tid);
-        if (p && ang != null) {
-          drawnCount++;
-          const dx = sx - p.sx, dy = sy - p.sy, sp = Math.hypot(dx, dy);
-          const back = Math.atan2(-dy, -dx);
-          let steady = p.steady;
-          if (sp > 0.25) {
-            const turn = p.sp > 0.25 ? diff(back, p.back) : 1;
-            steady = turn < 0.22 ? steady + 1 : 0;
-            if (steady >= 6 && p.ang != null) {
-              const err = diff(ang, back);
-              checked++;
-              const dist = Math.hypot(e.x - s.playerX, e.y - s.playerY);
-              if (dist > s.radius * 8) far++;
-              if (err > worst) worst = err;
-              if (err > 0.4 && !bad) bad = {
-                f, err: +err.toFixed(3), dist: Math.round(dist), sp: +sp.toFixed(2),
-                ang: +ang.toFixed(3), back: +back.toFixed(3),
-                stored: e.tail ? +e.tail.ang.toFixed(3) : null, orbit: !!e.orbit
-              };
-            }
-          } else steady = 0;
-          prev.set(e._tid, { sx, sy, back, sp, steady, ang });
-        } else prev.set(e._tid, { sx, sy, back: 0, sp: 0, steady: 0, ang });
+          const ang = drawn(e.x, e.y);
+          const p = prev.get(e._tid);
+          if (p && ang != null) {
+            drawnCount++;
+            const dx = e.x - p.x, dy = e.y - p.y, sp = Math.hypot(dx, dy);
+            const back = Math.atan2(-dy, -dx);
+            let steady = p.steady;
+            if (sp > 0.25) {
+              const turn = p.sp > 0.25 ? diff(back, p.back) : 1;
+              steady = turn < 0.22 ? steady + 1 : 0;
+              if (steady >= 6 && p.ang != null) {
+                const err = diff(ang, back);
+                checked++;
+                const dist = Math.hypot(e.x - s.playerX, e.y - s.playerY);
+                if (dist > s.radius * 8) far++;
+                if (err > worst) worst = err;
+                if (err > 0.4 && !bad) bad = {
+                  f, err: +err.toFixed(3), dist: Math.round(dist), sp: +sp.toFixed(2),
+                  ang: +ang.toFixed(3), back: +back.toFixed(3),
+                  stored: e.tail ? +e.tail.ang.toFixed(3) : null, orbit: !!e.orbit
+                };
+              }
+            } else steady = 0;
+            prev.set(e._tid, { x: e.x, y: e.y, back, sp, steady, ang });
+          } else prev.set(e._tid, { x: e.x, y: e.y, back: 0, sp: 0, steady: 0, ang });
       }
       for (const id of prev.keys()) if (!seen.has(id)) prev.delete(id);
     }
@@ -181,8 +182,8 @@ async function finds(page) {
       at: 0.4, planted: true, found: false, cue: 0, age: 200,
       x: s.playerX + ox, y: s.playerY + oy
     });
-    const gold = make("goldcomet", "Golden Comet", 420, -180);
-    const twin = make("twincomets", "Twin Comets", -380, 220);
+    const gold = make("goldcomet", "Golden Comet", 150, -70);
+    const twin = make("twincomets", "Twin Comets", -140, 110);
     s.finds = [gold, twin];
     const TAU = Math.PI * 2;
     const wrap = a => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -202,37 +203,37 @@ async function finds(page) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
-    s.playerVX = 1.1;
-    s.playerVY = -0.35;
-    const prev = { gold: null, twin: null };
+    // The finds travel in the world. The camera pans on a different heading.
+    // A tail that followed the pan would miss worldBack.
+    const wvx = 0.7, wvy = 0;
+    const worldBack = Math.atan2(-wvy, -wvx);
+    s.playerVX = 0.4;
+    s.playerVY = 0.55;
     const stat = {
       gold: { checked: 0, worst: 0, bad: null, misses: 0 },
       twin: { checked: 0, worst: 0, bad: null, misses: 0 }
     };
-    for (let i = 0; i < 36; i++) {
+    for (let i = 0; i < 40; i++) {
+      gold.x += wvx; gold.y += wvy;
+      twin.x += wvx; twin.y += wvy;
       s.playerX += s.playerVX;
       s.playerY += s.playerVY;
       s.camX = s.playerX;
       s.camY = s.playerY;
       window.__tailDraws.length = 0;
       bh.scene.draw(0, 1, false);
+      if (i <= 10) continue;
       for (const key of ["gold", "twin"]) {
         const f = key === "gold" ? gold : twin;
         const ang = measure(f);
-        const sx = f.x - s.camX, sy = f.y - s.camY;
-        const p = prev[key];
-        if (ang == null) stat[key].misses++;
-        if (p && ang != null && i > 8) {
-          const back = Math.atan2(-(sy - p.sy), -(sx - p.sx));
-          const err = diff(ang, back);
-          stat[key].checked++;
-          if (err > stat[key].worst) stat[key].worst = err;
-          if (err > 0.45 && !stat[key].bad) stat[key].bad = { i, err: +err.toFixed(3) };
-        }
-        prev[key] = { sx, sy };
+        if (ang == null) { stat[key].misses++; continue; }
+        const err = diff(ang, worldBack);
+        stat[key].checked++;
+        if (err > stat[key].worst) stat[key].worst = err;
+        if (err > 0.45 && !stat[key].bad) stat[key].bad = { i, err: +err.toFixed(3) };
       }
     }
     for (const k of ["gold", "twin"]) {
@@ -280,7 +281,7 @@ async function zoomStill(page) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
     for (const e of s.entities) if (e.hasTail) e._spawnAlpha = 1;
