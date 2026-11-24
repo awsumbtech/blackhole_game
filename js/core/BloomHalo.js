@@ -17,10 +17,22 @@ export class BloomHalo {
     return u * u * (3 - 2 * u);
   }
 
-  /** Stable variant. Position is not part of the pick, so drift does not flicker. */
-  static _pick(e, n) {
+  /**
+   * The bud's own ring, stable for its seed. If that picture has not decoded,
+   * the first decoded sibling is used. Nothing is returned when every halo is missing.
+   */
+  static _pick(e, ids) {
+    const n = ids && ids.length;
+    if (!n) return null;
+    const cat = Theme.meadow;
     const s = e && e.seed ? (e.seed >>> 0) : 0;
-    return s % n;
+    const chosen = cat.sprite(ids[s % n]);
+    if (chosen) return chosen;
+    for (let i = 0; i < n; i++) {
+      const spr = cat.sprite(ids[i]);
+      if (spr) return spr;
+    }
+    return null;
   }
 
   /**
@@ -56,12 +68,11 @@ export class BloomHalo {
     const ids = this.ids();
     if (!ids.length) return false;
     const cat = Theme.meadow;
-    const n = ids.length;
     let any = false;
     for (let i = 0; i < entities.length; i++) {
       const e = entities[i];
       if (!e || !e.bloom || e.consuming || !(e.radius > 0)) continue;
-      const spr = cat.sprite(ids[this._pick(e, n)]);
+      const spr = this._pick(e, ids);
       if (!spr) continue;
       const geom = this._geom(spr);
       if (!geom) continue;

@@ -429,6 +429,186 @@ async function missingArt() {
   return { ok, reason: ok ? result.reason : (result.reason || "missing art threw"), result, pageErrors, logs };
 }
 
+async function extraManifest() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.route("**/assets/meadow/index.json", async route => {
+    const res = await route.fetch();
+    const json = await res.json();
+    json.sprites = json.sprites.concat([
+      { id: "field-extra", role: "field", file: "meadow-field-subtle-1.png", w: 512, h: 512, pivot: [256, 256] },
+      { id: "halo-extra", role: "halo", file: "bloom-halo-subtle-2.png", w: 256, h: 256, pivot: [128, 128], ringRadiusPx: 94, sizePx: 256 }
+    ]);
+    await route.fulfill({ json });
+  });
+  await boot(page, "?debug");
+  const result = await page.evaluate(async () => {
+    const bh = window.__bh;
+    const s = bh.state;
+    const { Theme } = await import("/js/core/Theme.js");
+    const { PictureCatalog } = await import("/js/core/PictureCatalog.js");
+    const { MeadowField } = await import("/js/core/MeadowField.js");
+    const { BloomHalo } = await import("/js/core/BloomHalo.js");
+    const worlds = await import("/js/worlds.js");
+    const t0 = performance.now();
+    while (!(Theme.meadow.ready && Theme.radar.ready) && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const fields = Theme.meadow.idsByRole("field");
+    const halos = Theme.meadow.idsByRole("halo");
+    if (fields.indexOf("field-extra") < 0 || halos.indexOf("halo-extra") < 0) {
+      return { ok: false, reason: "extra meadow rows were not read", fields, halos };
+    }
+    Object.assign(bh.dev.cfg, { galaxy: 6, biome: "Star Meadow", tier: 7, depth: 1, zen: false, wisp: false });
+    bh.dev.enter();
+    s.paused = true;
+    const info = worlds.worldsInfo();
+    const marks = info && info.landmarks ? info.landmarks : [];
+    const lm = marks[1] || marks[0];
+    if (lm) {
+      s.playerX = lm.x;
+      s.playerY = lm.y;
+      s.camX = lm.x;
+      s.camY = lm.y;
+    }
+    const bud = {
+      x: 0, y: 0,
+      radius: 16,
+      seed: halos.indexOf("halo-extra"),
+      type: "star",
+      bloom: { t: 160, dur: 2000 },
+      _spawnAlpha: 1
+    };
+    const drawn = [];
+    const orig = PictureCatalog.prototype.blit;
+    PictureCatalog.prototype.blit = function (ctx, spr) {
+      if (spr && spr.id) drawn.push(spr.id);
+      return orig.apply(this, arguments);
+    };
+    const c = document.createElement("canvas").getContext("2d");
+    const id = v => v;
+    const meadows = fields.map((_, i) => ({ x: i * 40, y: 0, r: 18 }));
+    const drewField = MeadowField.draw(c, meadows, id, id, id, 1, { camX: 0, camY: 0 }, 100000, 100000);
+    const drewHalo = BloomHalo.draw(c, [bud], 1, { camX: 0, camY: 0 }, 100000, 100000);
+    s.birth = 0;
+    bh.scene.draw(performance.now(), 0, true);
+    PictureCatalog.prototype.blit = orig;
+    const ok = !!(drewField && drewHalo && drawn.indexOf("field-extra") >= 0 && drawn.indexOf("halo-extra") >= 0);
+    return {
+      ok,
+      reason: ok ? "extra meadow rows drawn" : "extra meadow rows were not drawn",
+      drewField, drewHalo, fields, halos, drawn
+    };
+  });
+  const pageErrors = page._errs.slice();
+  const logs = page._logs.filter(t => !isAbortNoise(t));
+  await browser.close();
+  const ok = !!(result.ok && !pageErrors.length && !logs.length);
+  return { ok, reason: ok ? result.reason : (result.reason || "extra manifest threw"), result, pageErrors, logs };
+}
+
+async function onePngDown(which) {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.addInitScript(hook);
+  const aborted = which === "field"
+    ? "**/assets/meadow/meadow-field-subtle-1.png"
+    : "**/assets/meadow/bloom-halo-subtle-1.png";
+  await page.route(aborted, route => route.abort());
+  await boot(page, "?debug");
+  const result = await page.evaluate(async (which) => {
+    const bh = window.__bh;
+    const s = bh.state;
+    const worlds = await import("/js/worlds.js");
+    const { Theme } = await import("/js/core/Theme.js");
+    const { PictureCatalog } = await import("/js/core/PictureCatalog.js");
+    const { MeadowField } = await import("/js/core/MeadowField.js");
+    const { BloomHalo } = await import("/js/core/BloomHalo.js");
+    const t0 = performance.now();
+    while (!(Theme.meadow.ready && Theme.radar.ready) && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    Object.assign(bh.dev.cfg, { galaxy: 6, biome: "Star Meadow", tier: 7, depth: 1, zen: false, wisp: false });
+    bh.dev.enter();
+    s.paused = true;
+    const info = worlds.worldsInfo();
+    const lm = info && info.landmarks && info.landmarks[0];
+    if (lm) {
+      s.playerX = lm.x;
+      s.playerY = lm.y;
+      s.camX = lm.x;
+      s.camY = lm.y;
+    }
+    const bud = s.entities.find(e => e && e.bloom);
+    if (!bud) return { ok: false, reason: "no blooming bud was planted", which };
+    const tStart = bud.bloom.t;
+    const rStart = bud.radius;
+    worlds.updateWorlds(s, 1, 40);
+    const grew = bud.bloom ? (bud.bloom.t > tStart && bud.radius + 1e-4 >= rStart) : bud.radius + 1e-4 >= rStart;
+    const halos = Theme.meadow.idsByRole("halo");
+    const n = halos.length || 1;
+    const seedFor = (id) => {
+      const at = halos.indexOf(id);
+      return at < 0 ? 0 : at;
+    };
+    const make = (seed, x) => ({
+      x, y: 0, radius: 16, seed,
+      bloom: { t: 180, dur: 2000 }, _spawnAlpha: 1, type: "star"
+    });
+    const picksHalo1 = make(seedFor("bloom-halo-subtle-1"), 40);
+    const picksHalo2 = make(seedFor("bloom-halo-subtle-2"), -40);
+    const drawn = [];
+    const orig = PictureCatalog.prototype.blit;
+    PictureCatalog.prototype.blit = function (ctx, spr) {
+      if (spr && spr.id) drawn.push(spr.id);
+      return orig.apply(this, arguments);
+    };
+    window.__g6reset();
+    const c = document.createElement("canvas").getContext("2d");
+    const id = v => v;
+    const view = { camX: 0, camY: 0 };
+    MeadowField.draw(c, [{ x: 0, y: 0, r: 24 }], id, id, id, 1, view, 100000, 100000);
+    const drewWanted = BloomHalo.draw(c, [picksHalo2], 1, view, 100000, 100000);
+    const drewFallback = BloomHalo.draw(c, [picksHalo1], 1, view, 100000, 100000);
+    s.birth = 0;
+    bh.scene.draw(performance.now(), 0, true);
+    PictureCatalog.prototype.blit = orig;
+    const halo2 = drawn.indexOf("bloom-halo-subtle-2") >= 0;
+    const halo1 = drawn.indexOf("bloom-halo-subtle-1") >= 0;
+    const field = drawn.indexOf("meadow-field-subtle-1") >= 0;
+    const procedural = window.__g6.meadowGlow + window.__g6.bloomStroke + window.__g6.budArc;
+    let ok = Theme.meadow.ready && grew && procedural === 0;
+    if (which === "halo") {
+      ok = ok && !Theme.meadow.has("bloom-halo-subtle-1")
+        && Theme.meadow.has("bloom-halo-subtle-2")
+        && Theme.meadow.has("meadow-field-subtle-1")
+        && drewWanted && drewFallback && halo2 && !halo1;
+    } else {
+      ok = ok && !Theme.meadow.has("meadow-field-subtle-1")
+        && Theme.meadow.has("bloom-halo-subtle-1")
+        && Theme.meadow.has("bloom-halo-subtle-2")
+        && (drewWanted || drewFallback) && (halo1 || halo2) && !field;
+    }
+    return {
+      ok, which, grew, drewWanted, drewFallback, halo1, halo2, field, procedural, drawn,
+      has: {
+        field: Theme.meadow.has("meadow-field-subtle-1"),
+        halo1: Theme.meadow.has("bloom-halo-subtle-1"),
+        halo2: Theme.meadow.has("bloom-halo-subtle-2")
+      }
+    };
+  }, which);
+  const pageErrors = page._errs.slice();
+  const logs = page._logs.filter(t => !isAbortNoise(t));
+  await browser.close();
+  const ok = !!(result.ok && !pageErrors.length && !logs.length);
+  return {
+    ok,
+    reason: ok ? (which === "halo" ? "sibling halo still draws" : "halos still draw without the field") : "single png recovery failed",
+    result, pageErrors, logs
+  };
+}
+
 async function main() {
   const fail = [];
   const files = filesGate();
@@ -465,7 +645,16 @@ async function main() {
   const missing = await missingArt();
   if (!missing.ok) fail.push(missing);
 
-  const result = { ok: fail.length === 0, files, g6, missing, shot: SHOT, devAfter, fail };
+  const extra = await extraManifest();
+  if (!extra.ok) fail.push(extra);
+
+  const haloSibling = await onePngDown("halo");
+  if (!haloSibling.ok) fail.push(haloSibling);
+
+  const fieldDown = await onePngDown("field");
+  if (!fieldDown.ok) fail.push(fieldDown);
+
+  const result = { ok: fail.length === 0, files, g6, missing, extra, haloSibling, fieldDown, shot: SHOT, devAfter, fail };
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.ok ? 0 : 1);
 }

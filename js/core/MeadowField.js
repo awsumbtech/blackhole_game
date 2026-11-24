@@ -28,6 +28,24 @@ export class MeadowField {
   }
 
   /**
+   * The meadow's own picture, or the first decoded sibling if that one failed.
+   * Nothing is returned when every field picture is still missing.
+   */
+  static _sprite(ids, index) {
+    const n = ids && ids.length;
+    if (!n) return null;
+    const cat = Theme.meadow;
+    const at = ((index % n) + n) % n;
+    const chosen = cat.sprite(ids[at]);
+    if (chosen) return chosen;
+    for (let i = 0; i < n; i++) {
+      const spr = cat.sprite(ids[i]);
+      if (spr) return spr;
+    }
+    return null;
+  }
+
+  /**
    * World space, inside the camera transform. `px/py/wx` are the set
    * transform. `cover` is the receding-set fade (1 for the live set).
    */
@@ -45,7 +63,7 @@ export class MeadowField {
       const r = wx(m.r);
       if (!(r > 0)) continue;
       if (!this._onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      const spr = cat.sprite(ids[i % ids.length]);
+      const spr = this._sprite(ids, i);
       if (!spr) continue;
       const d = r * 2.4;
       ctx.save();
