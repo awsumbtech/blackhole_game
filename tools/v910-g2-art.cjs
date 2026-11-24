@@ -197,8 +197,12 @@ async function scene(page, cfg) {
       s.camX = s.playerX;
       s.camY = s.playerY;
     }
+    // The river update adds flow * dt to the player. Remember the frame so
+    // the hole can be put back in the centre after that shove.
+    const anchorX = s.playerX, anchorY = s.playerY;
+    const placed = [];
     const place = (id, ox, oy, radius, seed, look, vx) => {
-      const e = entities.createEntity(entities.typeById(id), s.playerX + ox, s.playerY + oy, 1);
+      const e = entities.createEntity(entities.typeById(id), anchorX + ox, anchorY + oy, 1);
       e.radius = radius;
       e.seed = seed;
       e.look = look;
@@ -207,6 +211,7 @@ async function scene(page, cfg) {
       e.vx = vx;
       e.vy = 0.05;
       s.entities.push(e);
+      placed.push({ e, ox, oy });
       return e;
     };
     if (cfg.biome === "Comet Current") {
@@ -229,6 +234,7 @@ async function scene(page, cfg) {
     off.depthT = 1;
     off._spawnAlpha = 1;
     s.entities.push(off);
+    placed.push({ e: off, ox: -s.viewW, oy: -30 });
     for (let i = 0; i < 8; i++) {
       const living = await import("/js/living-world.js");
       living.updateLivingWorld(s, 1, 1);
@@ -236,7 +242,19 @@ async function scene(page, cfg) {
       entities.updateEntities(s.entities, s.bounds, 1);
     }
     // Let the landmark caption finish so the shot is the sky, not the name.
+    // That update also rides the river, which walks the player off the camera.
     for (let i = 0; i < 18; i++) worlds.updateWorlds(s, 20, 0);
+    s.birth = 0;
+    s.playerX = anchorX;
+    s.playerY = anchorY;
+    s.playerVX = 0;
+    s.playerVY = 0;
+    s.camX = anchorX;
+    s.camY = anchorY;
+    for (const p of placed) {
+      p.e.x = anchorX + p.ox;
+      p.e.y = anchorY + p.oy;
+    }
     window.__g2reset();
     for (let i = 0; i < 3; i++) bh.scene.draw(1000 + i * 16, 1, true);
     const src = window.__g2.src;
@@ -286,7 +304,13 @@ async function reveal(page) {
     if (hint) hint.classList.add("hidden");
     const badge = document.getElementById("dev-badge");
     if (badge) badge.style.visibility = "hidden";
-    if (window.__bh && window.__bh.scene) window.__bh.scene.draw(2400, 0, true);
+    const bh = window.__bh;
+    if (bh && bh.state) {
+      bh.state.birth = 0;
+      bh.state.camX = bh.state.playerX;
+      bh.state.camY = bh.state.playerY;
+    }
+    if (bh && bh.scene) bh.scene.draw(2400, 0, true);
   });
 }
 

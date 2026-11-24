@@ -19,11 +19,12 @@ export class EdgeCue {
   static draw(ctx, x, y, ang, alpha, which) {
     const spr = Theme.current.sprite(which ? "mote-2" : "mote-1");
     if (!spr || !(alpha > 0)) return false;
-    const w = 30;
+    const w = 18;
     const h = w * (spr.h / spr.w);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(ang);
+    ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = alpha;
     Theme.current.blit(ctx, spr, 0, 0, w, h);
     ctx.restore();
@@ -32,7 +33,7 @@ export class EdgeCue {
 
   /** Screen-space cues for the nearest off-screen edibles and power-ups. */
   static marks(ctx, entities, w, h, camX, camY, playerRadius, zoom, eatRatio) {
-    const margin = 22;
+    const margin = 16;
     let n = 0;
     for (const e of entities) {
       if (e.consuming) continue;
@@ -61,7 +62,7 @@ export class EdgeCue {
       const ang = Math.atan2(sy - h / 2, sx - w / 2);
       const edgeX = w / 2 + Math.cos(ang) * (w / 2 - margin);
       const edgeY = h / 2 + Math.sin(ang) * (h / 2 - margin);
-      EdgeCue.draw(ctx, edgeX, edgeY, ang, e.powerup ? 0.62 : 0.48, e.powerup ? 1 : 0);
+      EdgeCue.draw(ctx, edgeX, edgeY, ang, e.powerup ? 0.55 : 0.36, e.powerup ? 1 : 0);
     }
   }
 }

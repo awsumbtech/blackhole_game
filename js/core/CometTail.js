@@ -71,7 +71,7 @@ export class CometTail {
   drawComet(ctx, x, y, r, alpha, color, rpx, speed, variant = 0) {
     const spr = Theme.comets.sprite(variant ? "tail-silver" : "tail-cyan");
     if (!spr || !(alpha > 0) || !(r > 0)) return false;
-    const len = r * (9.2 + Math.min(3.6, (speed || 0) * 2.4));
+    const len = r * (14.0 + Math.min(5.0, (speed || 0) * 3.2));
     return this.drawPainted(ctx, x, y, spr, len, alpha * 0.92);
   }
 
@@ -82,6 +82,7 @@ export class CometTail {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(this.ang);
+    ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = alpha;
     Theme.comets.blit(ctx, spr, 0, 0, len, h);
     ctx.restore();

@@ -1001,8 +1001,8 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   const f = W.f;
   const ox = cx + W.ox * sc, oy = cy + W.oy * sc;
   const k = f * sc;
-  for (const rv of W.rivers) RadarInstrument.ribbon(ctx, rv.pts, ox, oy, k, rim, 0.5);
-  if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.4);
+  for (const rv of W.rivers) RadarInstrument.ribbon(ctx, rv.pts, ox, oy, k, rim, 0.35);
+  if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.35);
   for (const p of W.pulsars) {
     RadarInstrument.mark(ctx, cx + p.x * f * sc, cy + p.y * f * sc, 8, "pip-big", 0.7);
   }

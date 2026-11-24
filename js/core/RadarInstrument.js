@@ -13,7 +13,7 @@ export class RadarInstrument {
    * map pixels. The rim disc is the glass, not a stroke.
    */
   static draw(ctx, w, h, playerX, playerY, entities, range, playerRadius, eatRatio, overlay) {
-    const map = 104;
+    const map = 92;
     const r = map / 2;
     const cx = w - r - 14;
     const cy = h - r - 20;
@@ -44,7 +44,7 @@ export class RadarInstrument {
       const id = tooBig ? "pip-big" : "pip-edible";
       const spr = cat.sprite(id);
       if (!spr) continue;
-      const s = tooBig ? 12 : 8;
+      const s = tooBig ? 7 : 5;
       ctx.globalAlpha = tooBig ? 0.9 : 0.8;
       cat.blit(ctx, spr, ex, ey, s, s);
     }
@@ -52,7 +52,7 @@ export class RadarInstrument {
     const player = cat.sprite("player");
     if (player) {
       ctx.globalAlpha = 1;
-      cat.blit(ctx, player, cx, cy, 18, 18);
+      cat.blit(ctx, player, cx, cy, 11, 11);
     }
     ctx.restore();
   }
@@ -61,10 +61,10 @@ export class RadarInstrument {
   static ribbon(ctx, pts, ox, oy, k, rim, alpha) {
     const spr = Theme.radar.sprite("current");
     if (!spr || !pts || pts.length < 2 || !(k > 0)) return;
-    const drawW = 22;
+    const drawW = 28;
     const drawH = drawW * (spr.h / spr.w);
     const lim = rim ? (rim.r + drawW) * (rim.r + drawW) : 0;
-    const a = alpha > 0 ? alpha : 0.55;
+    const a = alpha > 0 ? alpha : 0.35;
     for (let s = 0; s < pts.length - 1; s += 2) {
       const ax = pts[s][0], ay = pts[s][1];
       const bx = pts[s + 1][0], by = pts[s + 1][1];
@@ -77,6 +77,7 @@ export class RadarInstrument {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.atan2(by - ay, bx - ax));
+      ctx.globalCompositeOperation = "screen";
       ctx.globalAlpha = a;
       Theme.radar.blit(ctx, spr, 0, 0, drawW, drawH);
       ctx.restore();

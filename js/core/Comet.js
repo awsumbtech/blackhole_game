@@ -51,12 +51,14 @@ export class Comet {
     const coma = Theme.comets.sprite(look.coma);
     const nucleus = Theme.comets.sprite(look.nucleus);
     if (!coma || !nucleus) return false;
-    const cd = r * 5.6;
+    const cd = r * 3.8;
     const nd = r * 1.45;
     ctx.save();
     ctx.translate(x, y);
-    ctx.globalAlpha = alpha * 0.92;
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = alpha * 0.9;
     Theme.comets.blit(ctx, coma, 0, 0, cd, cd);
+    ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = alpha;
     Theme.comets.blit(ctx, nucleus, 0, 0, nd, nd);
     ctx.restore();

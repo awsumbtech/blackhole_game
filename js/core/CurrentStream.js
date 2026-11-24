@@ -95,10 +95,9 @@ export class CurrentStream {
       const rv = rivers[r];
       const pts = rv.pts;
       if (!pts || pts.length < 2) continue;
-      const thick = rv.w * 0.28;
-      const drawH = thick;
+      const drawH = rv.w * 1.15;
       const drawW = drawH * (a.w / a.h);
-      const step = drawW * 0.5;
+      const step = drawW * 0.42;
       if (!(step > 1)) continue;
       let acc = 0;
       let next = step * 0.35;
@@ -114,10 +113,12 @@ export class CurrentStream {
           const x = ax + dx * k, y = ay + dy * k;
           const ang = Math.atan2(dy, dx);
           const spr = ((n + r) & 1) ? b : a;
+          const op = (n % 3 === 0 ? 0.14 : n % 3 === 1 ? 0.17 : 0.2) * cover;
           ctx.save();
           ctx.translate(x, y);
           ctx.rotate(ang);
-          ctx.globalAlpha = (n % 3 === 0 ? 0.18 : n % 3 === 1 ? 0.22 : 0.26) * cover;
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = op;
           cat.blit(ctx, spr, 0, 0, drawW, drawH);
           ctx.restore();
           next += step;
@@ -143,12 +144,13 @@ export class CurrentStream {
       const x = p.x + nx * m.side * rv.w;
       const y = p.y + ny * m.side * rv.w;
       const spr = m.which ? s1 : s0;
-      const len = rv.w * 0.2;
+      const len = rv.w * 0.14;
       const h = len * (spr.h / spr.w);
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(m.ang);
-      ctx.globalAlpha = 0.42 * cover;
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.28 * cover;
       cat.blit(ctx, spr, 0, 0, len, h);
       ctx.restore();
     }
