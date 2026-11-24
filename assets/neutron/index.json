@@ -1,0 +1,40 @@
+{
+  "kind": "neutron",
+  "version": 1,
+  "format": "painted neutron cores, centred on the pivot. axis is the baked polar-jet angle. No tint.",
+  "variants": [
+    {
+      "id": "core-cool",
+      "role": "core"
+    },
+    {
+      "id": "core-ember",
+      "role": "core"
+    }
+  ],
+  "sprites": [
+    {
+      "id": "core-cool",
+      "role": "core",
+      "file": "neutron-cool.png",
+      "w": 256,
+      "h": 256,
+      "pivot": [
+        128,
+        128
+      ],
+      "axis": -1.885
+    },
+    {
+      "id": "core-ember",
+      "role": "core",
+      "file": "neutron-ember.png",
+      "w": 256,
+      "h": 256,
+      "pivot": [
+        128,
+        128
+      ]
+    }
+  ]
+}

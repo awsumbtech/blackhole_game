@@ -15,6 +15,8 @@ export { SpaceDust } from "./SpaceDust.js";
 export { CurrentStream } from "./CurrentStream.js";
 export { EdgeCue } from "./EdgeCue.js";
 export { RadarInstrument } from "./RadarInstrument.js";
+export { PulsarBeam } from "./PulsarBeam.js";
+export { NeutronStar } from "./NeutronStar.js";
 export { PictureCatalog } from "./PictureCatalog.js";
 export { GoldenVeil } from "./GoldenVeil.js";
 // sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.

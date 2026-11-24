@@ -1,6 +1,7 @@
 // The art theme. The root is `assets` today. Another folder can replace it
 // by setting Theme.root before start. Ships, planets, moons, comets, rocks,
-// dust, the current, the radar, the reef beds, and the flagship each have an index under that root.
+// dust, the current, the radar, pulsar jets, neutron cores, reef beds, and
+// the flagship each have an index under that root.
 
 import { BodyCatalog } from "./BodyCatalog.js";
 import { PictureCatalog } from "./PictureCatalog.js";
@@ -16,6 +17,8 @@ export class Theme {
   static dust = new PictureCatalog("dust");
   static current = new PictureCatalog("current");
   static radar = new PictureCatalog("hud/radar");
+  static pulsar = new PictureCatalog("pulsar");
+  static neutron = new PictureCatalog("neutron");
   static reef = new PictureCatalog("reef");
   static flagship = new PictureCatalog("flagship");
   static ready = false;
@@ -92,6 +95,8 @@ export class Theme {
           this.dust.load(root, ms),
           this.current.load(root, ms),
           this.radar.load(root, ms),
+          this.pulsar.load(root, ms),
+          this.neutron.load(root, ms),
           this.reef.load(root, ms),
           this.flagship.load(root, ms)
         ]),
@@ -107,6 +112,7 @@ export class Theme {
     this.ready = ShipCatalog.ready && this.planets.ready && this.moons.ready
       && this.comets.ready && this.rocks.ready && this.dust.ready
       && this.current.ready && this.radar.ready
+      && this.pulsar.ready && this.neutron.ready
       && this.reef.ready && this.flagship.ready;
   }
 }

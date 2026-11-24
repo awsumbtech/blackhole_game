@@ -153,6 +153,42 @@
    "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
   },
   {
+   "file": "radar-pip-pulsar.png",
+   "sha256": "12261559d111119b937d91744d117703044c23b1b57ab66d0d4066530bfba19c",
+   "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing radar landmark pip of a pulsar beacon, a small bright pale ice-blue white core with four short soft periwinkle-blue cross beams forming a plus-shaped cross-star, the beams short, soft and tapered, with a gentle periwinkle glow, simple and readable. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:15-19:25)",
+   "raw": "_raw/part_de/radar-pip-pulsar.jpg",
+   "raw_sha256": "fbc7c75b93bebb0c832787495d126ec944d6a81fd435f17defa2a2642283cd05",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "raw_bbox": [
+     344,
+     341,
+     691,
+     679
+    ],
+    "scale": 0.07493,
+    "offset": [
+     3,
+     3
+    ],
+    "content": [
+     26,
+     25
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox crop -> premultiplied lanczos -> edge opacity fade 0.12"
+   },
+   "processed": "2026-11-23T19:17:21-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation.",
+   "final_sha256": "12261559d111119b937d91744d117703044c23b1b57ab66d0d4066530bfba19c",
+   "part": "de"
+  },
+  {
    "file": "radar-pip-reef.png",
    "sha256": "261355473ce2920de301237a6d39c9108e7fe75106eb315ee06678c5a3047473",
    "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing radar landmark pip shaped like a small luminous ring of sea-teal and aqua mineral light around a bright pale aqua glowing center dot, like a tiny coral-reef atoll glowing in the dark, simple and readable, no rays, no spikes. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",

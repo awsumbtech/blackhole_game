@@ -8,6 +8,7 @@
     { "id": "player", "role": "player", "file": "radar-player.png", "w": 48, "h": 48, "pivot": [24, 24] },
     { "id": "pip-edible", "role": "pip-edible", "file": "radar-pip-edible.png", "w": 32, "h": 32, "pivot": [16, 16] },
     { "id": "pip-big", "role": "pip-big", "file": "radar-pip-big.png", "w": 32, "h": 32, "pivot": [16, 16] },
+    { "id": "pip-pulsar", "role": "landmark-pulsar", "file": "radar-pip-pulsar.png", "w": 32, "h": 32, "pivot": [16, 16] },
     { "id": "landmark-reef", "role": "landmark-reef", "file": "radar-pip-reef.png", "w": 32, "h": 32, "pivot": [16, 16] },
     { "id": "landmark-flagship", "role": "landmark-flagship", "file": "radar-pip-flagship.png", "w": 32, "h": 32, "pivot": [16, 16] }
   ]

@@ -47,15 +47,55 @@ function sha256(file) {
 function hook() {
   const proto = CanvasRenderingContext2D.prototype;
   const origDraw = proto.drawImage;
-  const bag = { src: [] };
+  const origRadial = proto.createRadialGradient;
+  const origLinear = proto.createLinearGradient;
+  const origFill = proto.fillRect;
+  const origArc = proto.arc;
+  const origStroke = proto.stroke;
+  const bag = { src: [], reefGlow: 0, reefArc: 0, flagshipPaint: 0 };
   window.__g12 = bag;
-  window.__g12reset = () => { bag.src.length = 0; };
+  window.__g12reset = () => {
+    bag.src.length = 0;
+    bag.reefGlow = 0;
+    bag.reefArc = 0;
+    bag.flagshipPaint = 0;
+  };
+  const reefColor = (color) => {
+    const c = String(color);
+    return c.indexOf("90, 200, 180") >= 0 || c.indexOf("80, 200, 180") >= 0 || c.indexOf("110, 150, 230") >= 0;
+  };
   proto.drawImage = function (img) {
     if (img && img instanceof HTMLImageElement) {
       const src = img.currentSrc || img.src || "";
       if (src) bag.src.push(src);
     }
     return origDraw.apply(this, arguments);
+  };
+  proto.createRadialGradient = function () {
+    const grad = origRadial.apply(this, arguments);
+    const add = grad.addColorStop;
+    grad.addColorStop = function (offset, color) {
+      if (reefColor(color)) bag.reefGlow++;
+      return add.apply(this, arguments);
+    };
+    return grad;
+  };
+  proto.createLinearGradient = function () {
+    if (this.canvas && this.canvas.width >= 1000) bag.flagshipPaint++;
+    return origLinear.apply(this, arguments);
+  };
+  proto.fillRect = function (x, y, w, h) {
+    if (this.canvas && this.canvas.width >= 1000 && w > 8 && h > 8) bag.flagshipPaint++;
+    return origFill.apply(this, arguments);
+  };
+  proto.arc = function () {
+    this.__g12arc = true;
+    return origArc.apply(this, arguments);
+  };
+  proto.stroke = function () {
+    if (this.__g12arc && reefColor(this.strokeStyle)) bag.reefArc++;
+    this.__g12arc = false;
+    return origStroke.apply(this, arguments);
   };
 }
 
@@ -107,8 +147,11 @@ function filesGate() {
     }
   }
   const ok = !missing.length && cache && version && !hashMiss.length && !provMiss.length
-    && reefDraw.indexOf("lmSprite") < 0 && reefDraw.indexOf("drawGlow") < 0 && reefDraw.indexOf("ReefBed") >= 0
+    && reefDraw.indexOf("lmSprite") < 0 && reefDraw.indexOf("drawGlow") < 0
+    && reefDraw.indexOf("createRadialGradient") < 0 && reefDraw.indexOf("arc(") < 0
+    && reefDraw.indexOf("ReefBed") >= 0
     && armadaDraw.indexOf("present") >= 0 && armadaDraw.indexOf("createRadialGradient") < 0
+    && armadaDraw.indexOf("createLinearGradient") < 0 && armadaDraw.indexOf("fillRect") < 0
     && owners.every(o => o.classes === 1 && !o.looseFn && !o.looseState && !o.procedural);
   return { ok, missing, cache, version, hashMiss, provMiss, owners, reefClean: reefDraw.indexOf("lmSprite") < 0 };
 }
@@ -178,6 +221,16 @@ async function scene(page, cfg) {
     }
     s.playerVX = 0;
     s.playerVY = 0;
+    const entities = await import("/js/entities.js");
+    const place = (id, ox, oy, radius) => {
+      const e = entities.createEntity(entities.typeById(id), s.playerX + ox, s.playerY + oy, 1);
+      e.radius = radius;
+      e.depthT = 1;
+      e._spawnAlpha = 1;
+      s.entities.push(e);
+    };
+    place("dust", 36, 18, Math.max(2, s.radius * 0.2));
+    place("junk", -48, 24, s.radius * 2.2);
     bh.scene.draw(performance.now(), 1, true);
   }, cfg);
   await page.waitForTimeout(1400);
@@ -201,13 +254,16 @@ async function scene(page, cfg) {
     const w = canvas.width, h = canvas.height;
     const cx = (w / 2) | 0, cy = (h / 2) | 0;
     const mid = ctx.getImageData(cx, cy, 1, 1).data;
+    const lum = (p) => p[0] + p[1] + p[2];
     let warm = 0;
+    let disk = 0;
     const rad = Math.max(28, Math.round(Math.min(w, h) * 0.055));
     for (let i = 0; i < 16; i++) {
       const a = i / 16 * Math.PI * 2;
       const x = cx + Math.cos(a) * rad;
       const y = cy + Math.sin(a) * rad * 0.35;
       const p = ctx.getImageData(x | 0, y | 0, 1, 1).data;
+      disk = Math.max(disk, lum(p));
       if (p[0] > 60 && p[0] > p[2] + 12) warm++;
     }
     return {
@@ -217,12 +273,18 @@ async function scene(page, cfg) {
       ember: needle("flagship-ember"),
       pipReef: needle("radar-pip-reef"),
       pipFlag: needle("radar-pip-flagship"),
+      pipEdible: needle("radar-pip-edible"),
+      pipBig: needle("radar-pip-big"),
       bezel: needle("radar-bezel"),
       player: needle("radar-player"),
       skyReef: needle("backdrop_reef"),
       skyArmada: needle("backdrop_armada"),
       holeDark: mid[0] < 30 && mid[1] < 30 && mid[2] < 30,
+      holeDarkerThanDisk: lum(mid) < disk,
       holeWarm: warm,
+      reefGlow: window.__g12.reefGlow,
+      reefArc: window.__g12.reefArc,
+      flagshipPaint: window.__g12.flagshipPaint,
       slice: bh.slicePaintReady()
     };
   });
@@ -308,6 +370,43 @@ async function extraVariants() {
   return { ok: !!(result.ok && !pageErrors.length), result, pageErrors };
 }
 
+async function bedDown() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.route("**/assets/reef/reef-bed-2.png", route => route.abort());
+  await boot(page);
+  const result = await page.evaluate(async () => {
+    const { Theme } = await import("/js/core/Theme.js");
+    const { ReefBed } = await import("/js/core/ReefBed.js");
+    const t0 = performance.now();
+    while (!Theme.reef.ready && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const kept = Theme.reef.has("reef-bed-1");
+    const missing = Theme.reef.has("reef-bed-2");
+    const bag = [];
+    const orig = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (img) {
+      if (img && (img.src || img.currentSrc)) bag.push(img.src || img.currentSrc);
+      return orig.apply(this, arguments);
+    };
+    const c = document.createElement("canvas").getContext("2d");
+    const reefs = [
+      { x: 0, y: 0, r: 18, haze: false, born: 0 },
+      { x: 40, y: 0, r: 18, haze: false, born: 0 }
+    ];
+    const drew = ReefBed.drawSet(c, reefs, { ox: 0, oy: 0, f: 1, timer: 1000 }, { camX: 0, camY: 0 }, { breath: 0.5 }, 100000, 100000, 1);
+    CanvasRenderingContext2D.prototype.drawImage = orig;
+    const src = bag.join("\n");
+    const ok = Theme.reef.ready && kept && !missing && drew && src.indexOf("reef-bed-1") >= 0 && src.indexOf("reef-bed-2") < 0;
+    return { ok, ready: Theme.reef.ready, kept, missing, drew };
+  });
+  const pageErrors = page._errs.slice();
+  await browser.close();
+  const ok = !!(result.ok && !pageErrors.length);
+  return { ok, reason: ok ? "sibling reef bed still draws" : "a missing reef bed hid its sibling", result, pageErrors };
+}
+
 async function emberDown() {
   const browser = await launch();
   const page = await newPage(browser, 1);
@@ -361,8 +460,9 @@ async function main() {
   g1.pageErrors = page._errs.slice();
   g1.consoleErrors = page._logs.slice();
   if (page._errs.length || page._logs.length) fail.push({ ok: false, reason: "galaxy 1 console or page errors", errors: page._errs, logs: page._logs });
-  if (!g1.reef || !g1.pipReef || !g1.skyReef || !g1.bezel || !g1.player) fail.push({ ok: false, reason: "galaxy 1 paintings missing", g1 });
-  if (!g1.holeDark || g1.holeWarm < 1) fail.push({ ok: false, reason: "galaxy 1 black hole missing", g1 });
+  if (!g1.reef || !g1.pipReef || !g1.pipEdible || !g1.pipBig || !g1.skyReef || !g1.bezel || !g1.player) fail.push({ ok: false, reason: "galaxy 1 paintings missing", g1 });
+  if (!g1.holeDark || !g1.holeDarkerThanDisk || g1.holeWarm < 1) fail.push({ ok: false, reason: "galaxy 1 black hole missing", g1 });
+  if (g1.reefGlow || g1.reefArc || g1.flagshipPaint) fail.push({ ok: false, reason: "galaxy 1 still painted a reef or a flagship in code", g1 });
   fs.mkdirSync(SHOT_DIR, { recursive: true });
   await reveal(page);
   await page.screenshot({ path: path.join(SHOT_DIR, "v912-g1-reef-390x844.png") });
@@ -373,8 +473,9 @@ async function main() {
   g4.pageErrors = page._errs.slice();
   g4.consoleErrors = page._logs.slice();
   if (page._errs.length || page._logs.length) fail.push({ ok: false, reason: "galaxy 4 console or page errors", errors: page._errs, logs: page._logs });
-  if (!g4.hull || !g4.ember || !g4.pipFlag || !g4.skyArmada || !g4.bezel) fail.push({ ok: false, reason: "galaxy 4 paintings missing", g4 });
-  if (!g4.holeDark || g4.holeWarm < 1) fail.push({ ok: false, reason: "galaxy 4 black hole missing", g4 });
+  if (!g4.hull || !g4.ember || !g4.pipFlag || !g4.pipEdible || !g4.pipBig || !g4.skyArmada || !g4.bezel) fail.push({ ok: false, reason: "galaxy 4 paintings missing", g4 });
+  if (!g4.holeDark || !g4.holeDarkerThanDisk || g4.holeWarm < 1) fail.push({ ok: false, reason: "galaxy 4 black hole missing", g4 });
+  if (g4.reefGlow || g4.reefArc || g4.flagshipPaint) fail.push({ ok: false, reason: "galaxy 4 still painted a reef or a flagship in code", g4 });
   if (!g4.slice || !g4.slice.ready) fail.push({ ok: false, reason: "flagship catalog was not ready", g4 });
   await reveal(page);
   await page.screenshot({ path: path.join(SHOT_DIR, "v912-g4-armada-390x844.png") });
@@ -384,12 +485,14 @@ async function main() {
   if (!extra.ok) fail.push(extra);
   const sibling = await emberDown();
   if (!sibling.ok) fail.push(sibling);
+  const reefSibling = await bedDown();
+  if (!reefSibling.ok) fail.push(reefSibling);
 
   const shots = {
     g1: path.join(SHOT_DIR, "v912-g1-reef-390x844.png"),
     g4: path.join(SHOT_DIR, "v912-g4-armada-390x844.png")
   };
-  const result = { ok: fail.length === 0, files, g1, g4, extra, sibling, shots, fail };
+  const result = { ok: fail.length === 0, files, g1, g4, extra, sibling, reefSibling, shots, fail };
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.ok ? 0 : 1);
 }

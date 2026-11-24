@@ -1,0 +1,83 @@
+{
+ "pack": "vast-g7-neutron-forge-v1",
+ "version": "1.0.0",
+ "folder": "assets/neutron",
+ "files": [
+  {
+   "file": "neutron-cool.png",
+   "sha256": "6e5ce9c04c94298911201db09c8165ced1007115aaeb7e76b1278f00ff1ec61e",
+   "prompt": "Game asset, soft painterly astronomical realism digital painting: a tiny blazing ice-white and pale-periwinkle neutron star (pulsar) core, a small intensely bright point-like sphere with a soft cool periwinkle glow. Around it a delicate tilted magnetic plasma ring, painted as a thin wispy luminous torus of pale lavender-blue energy seen at about 25 degrees tilt, organic and slightly uneven like glowing gas, not a geometric line. Two faint short polar shimmer wisps of pale blue light rising above and below the core. Centered, whole object about 60 percent of frame width, wide empty pure black margin on all sides. Isolated on a pure solid black #000000 background. No text, no frame, no lens flare spikes, no background stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:12-19:20)",
+   "raw": "_raw/part_c/neutron-cool.jpg",
+   "raw_sha256": "bcaa9dc316c77c51c2093388903c9a613818a741859fd9b6b8fe20ccc3a6e624",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "raw_centre": [
+     519.6,
+     509.3
+    ],
+    "raw_half_extent": 355,
+    "scale": 0.3169,
+    "offset": [
+     15,
+     15
+    ],
+    "content": [
+     225,
+     225
+    ],
+    "method": "black-unmix a=(max(RGB)-0.03)/0.97; RGB = P/A (exact un-premultiply); centred on bright centroid; premultiplied Lanczos resize; smoothstep edge opacity fade 6% -> border alpha 0"
+   },
+   "processed": "2026-11-23T19:18:54-05:00",
+   "check": {
+    "PASS": true
+   },
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation with its own prompt.",
+   "final_sha256": "6e5ce9c04c94298911201db09c8165ced1007115aaeb7e76b1278f00ff1ec61e",
+   "part": "c"
+  },
+  {
+   "file": "neutron-ember.png",
+   "sha256": "92282fe9be9de05e3b146daf878cbb86fca90f2fc553bf830f9bdbce55ae1a07",
+   "prompt": "Game asset, soft painterly astronomical realism digital painting: a small radiant warm peach-white ember neutron star, a compact dazzling sphere glowing pale amber and soft peach, wrapped in a warm apricot glow. A tilted fiery-gold magnetosphere ring around it, painted as a glowing wispy torus of molten gold and copper plasma, tilted about 30 degrees the other way, with flickering ember filaments, organic and uneven, not a geometric stroke. Soft warm haze. Centered, whole object about 60 percent of frame width, wide empty pure black margin on all sides. Isolated on a pure solid black #000000 background. No text, no frame, no lens flare spikes, no background stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:12-19:20)",
+   "raw": "_raw/part_c/neutron-ember.jpg",
+   "raw_sha256": "0517cecfefa38d1801ea76133cdd47ed2445ad3e7076d826c74fe130c79135e7",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "raw_centre": [
+     484.7,
+     501.7
+    ],
+    "raw_half_extent": 399,
+    "scale": 0.282,
+    "offset": [
+     15,
+     15
+    ],
+    "content": [
+     225,
+     225
+    ],
+    "method": "black-unmix a=(max(RGB)-0.03)/0.97; RGB = P/A (exact un-premultiply); centred on bright centroid; premultiplied Lanczos resize; smoothstep edge opacity fade 6% -> border alpha 0"
+   },
+   "processed": "2026-11-23T19:18:54-05:00",
+   "check": {
+    "PASS": true
+   },
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation with its own prompt.",
+   "final_sha256": "92282fe9be9de05e3b146daf878cbb86fca90f2fc553bf830f9bdbce55ae1a07",
+   "part": "c"
+  }
+ ]
+}

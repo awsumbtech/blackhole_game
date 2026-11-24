@@ -85,8 +85,8 @@ export const LAYOUTS = {
     spots: [2, 0.3, 0.55], lmR: 0.08,
     spin: 0.0019,   // v9.3: slower sweep (was 0.0028): calmer bands, easier to ride
     pulsars: [
-      { name: "The Lighthouse", color: "#e0e8ff", rgb: "200, 190, 255" },
-      { name: "Ember Pulsar", color: "#ffd2b0", rgb: "255, 190, 140" }
+      { name: "The Lighthouse", color: "#e0e8ff", rgb: "200, 190, 255", beam: "beam-cool", core: "core-cool" },
+      { name: "Ember Pulsar", color: "#ffd2b0", rgb: "255, 190, 140", beam: "beam-ember", core: "core-ember" }
     ]
   }
 };

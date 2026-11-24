@@ -34,6 +34,9 @@ export class PictureCatalog {
         const image = new Image();
         image.decoding = "async";
         const role = row.role || "";
+        const profile = Array.isArray(row.hitProfile)
+          ? row.hitProfile.filter(p => p && p.length >= 2).map(p => [p[0], p[1]])
+          : null;
         byId.set(row.id, {
           id: row.id,
           role,
@@ -41,6 +44,9 @@ export class PictureCatalog {
           w: row.w > 0 ? row.w : 0,
           h: row.h > 0 ? row.h : 0,
           pivot: Array.isArray(row.pivot) && row.pivot.length >= 2 ? row.pivot : [0, 0],
+          visibleEndX: row.visibleEndX > 0 ? row.visibleEndX : 0,
+          hitProfile: profile && profile.length ? profile : null,
+          axis: typeof row.axis === "number" ? row.axis : null,
           image,
           ok: false,
           failed: false,
@@ -132,7 +138,19 @@ export class PictureCatalog {
 
   variants() {
     const rows = this._meta && Array.isArray(this._meta.variants) ? this._meta.variants : [];
-    return rows.filter(row => row && row.coma && row.nucleus && row.tail);
+    const out = [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || typeof row !== "object") continue;
+      // Comet rows name a coma, a nucleus, and a tail. Any other catalog
+      // lists a variant by id, so a new row is visible with no code change.
+      if (row.coma || row.nucleus || row.tail) {
+        if (row.coma && row.nucleus && row.tail) out.push(row);
+        continue;
+      }
+      if (row.id) out.push(row);
+    }
+    return out;
   }
 
   /** Manifest order. Includes a picture that has not decoded yet. */

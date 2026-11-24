@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. Step 3 (Flagship) and the Debris Reef beds are in v9.12.0. The hot-meteor streak is still code. The rest is not started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. Galaxy 7's pulsar jets, neutron cores, Forge sky, and pulsar radar pip are in v9.11.0. Step 3 (Flagship) and the Debris Reef beds are in v9.12.0. Star, system, nebula, cluster, and galaxy stay code-painted. The hot-meteor streak is still code. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -258,19 +258,19 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Size:** morsel about 10 CSS / 30 device px.
   - **Asset px:** 128×128.
   - **Owner:** `SpaceDust`.
-  - **Asset:** `assets/dust/manifest.json`.
+  - **Asset:** `assets/dust/index.json`.
 
 - [x] **Junk.** Done in v9.10.0. `SpaceRock` blits `assets/rocks/pebble-1.png` through `pebble-4.png`. One look in five is a cluster of three or four pebbles plus a dust wisp. The rest are one pebble. Sway stays small so the upper-left light stays put. No gold edge: the disc was removed in v9.8.1.
   - **Size:** morsel about 8 CSS / 24 device px. Big catch about 42 CSS / 126 device px.
   - **Asset px:** 256×256.
   - **Owner:** `SpaceRock`.
-  - **Asset:** `assets/rocks/manifest.json`.
+  - **Asset:** `assets/rocks/index.json`.
 
 - [x] **Meteor.** Done in v9.10.0 for the body. `SpaceRock` draws one pebble. The hot entry streak (`tailFor(..., hot)`) and the leading glow (`heatFor`) are still code, so a shower meteor still reads as hot. No gold edge.
   - **Size:** morsel about 8 CSS / 25 device px. Big catch about 45 CSS / 135 device px. Streak about 6–10 radii long.
   - **Asset px:** 256×256 body. The streak is not a picture yet.
   - **Owner:** `SpaceRock` for the body. The streak stays in `js/art/comets.js` and `js/art/rocks.js` until it has a painting.
-  - **Asset:** `assets/rocks/manifest.json`.
+  - **Asset:** `assets/rocks/index.json`.
 
 - [x] **Comet body and tail.** Done in v9.10.0. `Comet` draws the coma and nucleus. `CometTail` blits the painted plume and still aims from the comet's own world step. Cyan or silver comes from the seed. `CometSparkle` adds a few motes along a moving plume. Comet finds use the same plume. No gold edge.
   - **Size:** head about 14 CSS / 42 device px as a morsel. Tail about 9 head-radii long.
@@ -296,11 +296,11 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Owner:** `Star`.
   - **Asset:** `star.webp`, 12 × (body, gold-edge). The stellar-birth event (`living-world.js` 654) uses this same sheet.
 
-- [ ] **Neutron star.** `js/art/stars.js` 18–30. One shape: a bright core, a glow, a tilted ring. Colour follows `e.color`. Extent 3.1.
-  - **Size:** about 100 CSS / 290 device px across the glow when it is the big catch (Neutron Forge signature).
-  - **Asset px:** 512×512.
+- [x] **Neutron star.** Done in v9.11.0. `NeutronStar` blits `assets/neutron`. The Lighthouse is the cool core, the Ember Pulsar is the ember core, and play-field `neutron` food uses the seed. A later row in the index is drawn with no code change. `STAR_PAINTERS.neutron` is gone. No tint. A missing picture draws nothing. A bite leaves that same painting.
+  - **Size:** a Forge landmark core is about 7 hole-radii across, ring included.
+  - **Asset px:** 256×256.
   - **Owner:** `NeutronStar`.
-  - **Asset:** `neutron.webp`, body and gold-edge. One shape, not one file per seed.
+  - **Asset:** `assets/neutron/index.json`.
 
 - [ ] **Star system.** `js/art/stars.js` 85. 8 looks. A sun, orbit lines, small worlds. Extent 2.5.
   - **Size:** big catch about 80 CSS / 230 device px.
@@ -363,10 +363,10 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 - [ ] **World scenery still painted in code.** `js/worlds.js` 733–1006.
   - Reefs are paintings (Debris Reef, v9.12.0, `ReefBed`, `assets/reef`). The old glow disc and `lmSprite("reef")` are gone. Rock clusters on the reef are still the v9.10 pebbles.
-  - One river of painted wisps (Comet Current, v9.10.0, `CurrentStream`). The flagship wreck is a painting (v9.12.0). The other scenery below is still code.
+  - One river of painted wisps (Comet Current, v9.10.0, `CurrentStream`). The flagship wreck is a painting (v9.12.0). The Forge jets are paintings (v9.11.0). The other scenery below is still code.
   - Cradle rings and the young sun (Planet Nursery).
   - Aurora ribbons (Void Rift).
-  - Pulsar beams (Neutron Forge).
+  - Pulsar beams (Neutron Forge, v9.11.0, `PulsarBeam`). Two opposing paintings, rotated about the pivot. Flare scales the cross-width. Not a code cone.
   - Meadow buds and specks (Star Meadow).
   - **Size:** landmarks are a large fraction of the view, often 100–300 CSS / 300–900 device px.
   - **Asset px:** one painted plate per biome mechanic, 1024 on the long side, plus a short streak strip for the river.
@@ -438,11 +438,11 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 ### Canvas UI
 
-- [x] **Minimap.** Done in v9.10.0 as `RadarInstrument`. The bezel, the player pip, edible and too-big pips, and the current ribbon are paintings. Landmark markers in other galaxies are the same pips. v9.12.0 gives Debris Reef and the Ruined Armada their own landmark pips (`landmark-reef`, `landmark-flagship`). No rects, no square blips, no river strokes.
+- [x] **Minimap.** Done in v9.10.0 as `RadarInstrument`. The bezel, the player pip, edible and too-big pips, and the current ribbon are paintings. No rects, no square blips, no river strokes. v9.11.0 gives `pip-edible` and `pip-big` their own roles, looked up with `idsByRole`, and draws the Neutron Forge pulsar landmark with `landmark-pulsar`. v9.12.0 adds `landmark-reef` and `landmark-flagship`, chosen by `landmarkRole`. The Forge minimap does not stroke beam lines.
   - **Size:** about 104 CSS px.
   - **Asset px:** bezel 256×256, current 256×96, player 48×48, pips 32×32.
   - **Owner:** `RadarInstrument`.
-  - **Asset:** `assets/hud/radar/manifest.json`.
+  - **Asset:** `assets/hud/radar/index.json`.
 
 - [x] **Off-screen arrows.** Done in v9.10.0 as `EdgeCue`. A painted mote points at the nearest off-screen edible, a power-up, or a landmark. No triangle and no chevron. The find's soft edge wash (`drawDiscoveryCue`) is still code.
   - **Asset:** `assets/current/current-mote-1.png` and `current-mote-2.png`.
@@ -505,9 +505,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** `PLANET_PAINTERS` is gone. Met. `tools/oo-manifest.cjs` fails while a planet painter still fills.
    - **Test:** `tools/oo-manifest.cjs`.
 
-7. **Star, neutron, star system.**
+7. **Star, neutron, star system.** Neutron is done in v9.11.0 (`NeutronStar`, `tools/v911-g7-forge.cjs`). `STAR_PAINTERS.neutron` is gone. Star and system are still code, so `STAR_PAINTERS` is not gone yet.
    - **Done when:** `STAR_PAINTERS` is gone.
-   - **Test:** `tools/oo-star.cjs`.
+   - **Test:** `tools/oo-star.cjs` for the star and the system. Neutron: `tools/v911-g7-forge.cjs`.
 
 8. **Nebula, cluster, galaxy body.**
    - **Done when:** `DEEPSKY_PAINTERS` is gone and `kit.js` has no callers.

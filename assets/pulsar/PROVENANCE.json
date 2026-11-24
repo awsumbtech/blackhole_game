@@ -1,0 +1,84 @@
+{
+ "pack": "vast-g7-neutron-forge-v1",
+ "version": "1.0.0",
+ "folder": "assets/pulsar",
+ "files": [
+  {
+   "file": "pulsar-beam-cool.png",
+   "sha256": "b1da068a09e0b7890f6bb0a6ddc1f0cda2644e570e1e3a1a6c483edf47f78a28",
+   "prompt": "Game asset, soft painterly digital painting of a luminous pulsar jet beam: starting from a small bright pale ice-blue point near the left edge at mid-height, a beam of pale ice-blue and silver-white plasma light streams to the right, gradually fanning outward and softening, with organic twisting plasma filaments and wisps along it, fading gracefully and completely into darkness well before the right edge. Soft feathered organic edges, no hard straight cone edges, no lens flare, no star spikes. Horizontal, vertically centered, with dark empty margins above and below. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/pulsar-beam-cool.jpg",
+   "raw_sha256": "361bc6e4320e50bdc38d7c472c1bfa8b07c103d6c2148eaf3b19d9a89e7fbf9e",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "aspect_ratio": "16:9",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix floor 0.03 -> head (raw 64,361) mapped to pivot [64, 128], uniform scale 0.7862 (fit: x extent at a>0.03, y extent at smoothed a>0.12) -> long smoothstep alpha fade over right 45% + 6% border fade",
+    "raw_head": [
+     64,
+     361
+    ],
+    "scale": 0.7862
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "b1da068a09e0b7890f6bb0a6ddc1f0cda2644e570e1e3a1a6c483edf47f78a28",
+   "part": "ab"
+  },
+  {
+   "file": "pulsar-beam-ember.png",
+   "sha256": "f43159564bba268243f1e4a9617ca1418169fbd3a3d2eb765f175562f082ac45",
+   "prompt": "Game asset, soft painterly digital painting of a warm ember pulsar jet: from a small glowing molten-gold point near the left edge at mid-height, a jet of warm peach-amber and molten-gold plasma energy flows to the right, widening softly like a flame-lit plume with swirling organic plasma wisps and a few tiny drifting ember sparks, dissolving smoothly into darkness before the right edge. Soft feathered organic edges, no straight cone edges, no lens flare, no star spikes. Horizontal, vertically centered, dark empty margins above and below. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/pulsar-beam-ember.jpg",
+   "raw_sha256": "a6526539cb18f0d1f8ff32f05f2b6ae211021ac565f9b1c090845c59b1597c3a",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "aspect_ratio": "16:9",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "black-unmix floor 0.03 -> head (raw 46,377) mapped to pivot [64, 128], uniform scale 0.5701 (fit: x extent at a>0.03, y extent at smoothed a>0.12) -> long smoothstep alpha fade over right 45% + 6% border fade",
+    "raw_head": [
+     46,
+     377
+    ],
+    "scale": 0.5701
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "coordinator_fix": "Coordinator QA pass: applied smooth alpha-only cosine^1.5 right-tail taper from x=480 to x=767 (zeroing RGB where alpha=0) to remove abrupt vertical raw-canvas cutoff.",
+   "final_sha256": "f43159564bba268243f1e4a9617ca1418169fbd3a3d2eb765f175562f082ac45",
+   "part": "ab"
+  },
+  {
+   "file": "../backdrop_forge.jpg",
+   "sha256": "7bbb411e20b7e0cd5bbef9072ec935c7c800e266025604bd00ea34558d8d966e",
+   "prompt": "Soft painterly realism digital painting of a dark forge-like space sky for a mobile game background, portrait. Deep dark violet space with cool violet cosmic dust clouds and painterly nebula depth, a restrained faint distant ember-crimson glow deep in one lower region of the nebula, sparse tiny distant stars. Overall dark and calm, low contrast. Absolutely no diagonal light beam, no straight stripe, no searchlight shaft, no planets, no suns, no pulsars, no ships, no text, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/backdrop_forge.jpg",
+   "raw_sha256": "a586247b6efb5100187c568606964e88eda61d0a95905f914e9006511d33e315",
+   "raw_size": [
+    720,
+    1280
+   ],
+   "aspect_ratio": "9:16",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "centre crop 591x1280 -> lanczos 780x1688, uniform exposure x0.75 (all channels equally, no hue change), JPEG q92 4:4:4"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "7bbb411e20b7e0cd5bbef9072ec935c7c800e266025604bd00ea34558d8d966e",
+   "part": "ab"
+  }
+ ]
+}
