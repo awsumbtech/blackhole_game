@@ -9,13 +9,18 @@ import { Theme } from "./Theme.js";
 export class CometTail {
   static TAU = Math.PI * 2;
   static CAP = 64;
-  static SLICES = 17;
+  static SLICES = 64;
   static MIN_GAP = 1.5;
   // Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
   // last heading. FOLLOW is how much of the new heading is taken in one frame.
   static HOLD = 0.06;
   static FOLLOW = 0.7;
-  static OVERLAP = 1.05;
+  // Chord-width match. A wider overlap lights the joint under screen, and
+  // 64 slices make the outer bend smaller than a pixel of filtering.
+  static PAD_PX = 0;
+  // Last source column that still holds paint. The rest of the 512-wide
+  // picture is empty, and drawing it only stretched a blank tip.
+  static INK = { "tail-cyan": 431, "tail-silver": 457 };
 
   static wrap(a) {
     a = (a + Math.PI) % CometTail.TAU;
@@ -38,6 +43,8 @@ export class CometTail {
     this.span = 0;
     this.wobble = ang * 2.3 + 1.1;
     this.at = { x: 0, y: 0, ang: 0 };
+    this.q0 = { x: 0, y: 0, ang: 0 };
+    this.q1 = { x: 0, y: 0, ang: 0 };
   }
 
   /** Forget the last world position. A teleport must not aim the tail. */
@@ -145,11 +152,14 @@ export class CometTail {
     return this._ribbon(ctx, x, y, spr, len, a, r, !!still);
   }
 
-  /** A painted plume the caller already resolved. +x trails along the path. */
-  drawPainted(ctx, x, y, spr, len, alpha, still = false) {
+  /**
+   * A painted plume the caller already resolved. +x trails along the path.
+   * `r` sizes the billow. Omit it and the length is read as 7.2 radii.
+   */
+  drawPainted(ctx, x, y, spr, len, alpha, still = false, r = len / 7.2) {
     if (!spr || !spr.ok || !(len > 0) || !(alpha > 0)) return false;
-    const r = len / 7.2;
-    return this._ribbon(ctx, x, y, spr, len, alpha, r, !!still);
+    const radius = r > 0 ? r : len / 7.2;
+    return this._ribbon(ctx, x, y, spr, len, alpha, radius, !!still);
   }
 
   _plume(s) {
@@ -256,80 +266,128 @@ export class CometTail {
     out.ang = Math.atan2(dy, dx);
   }
 
+  /** Source columns that still hold paint. The pivot stays the head. */
+  _inkEnd(spr) {
+    const known = CometTail.INK[spr.id];
+    const end = known > 0 ? known : spr.w * 0.84;
+    const pivot = spr.pivot[0];
+    return Math.max(pivot + 8, Math.min(spr.w, end));
+  }
+
+  /**
+   * Draw-space point `dist` behind the head. Negative dist is the short
+   * lead-in in front of the pivot. Billow is a function of distance only,
+   * so the two slices that share a vertex land on the same point.
+   */
+  _along(dist, x, y, reach, r, still, out) {
+    let tang;
+    let px;
+    let py;
+    if (!(dist > 0) || this.count < 2) {
+      tang = this.ang;
+      const c = Math.cos(tang);
+      const s = Math.sin(tang);
+      px = x + c * dist;
+      py = y + s * dist;
+    } else {
+      this._place(dist, this.at);
+      tang = this.at.ang;
+      px = x + (this.at.x - this.sx);
+      py = y + (this.at.y - this.sy);
+    }
+    let amp = 0;
+    if (!still && dist > 0 && reach > 0) {
+      const t = dist < reach ? dist / reach : 1;
+      amp = Math.sin(this.phase - t * 4.5 + this.wobble) * Math.pow(t, 1.6) * r * 0.25;
+    }
+    const c = Math.cos(tang);
+    const s = Math.sin(tang);
+    out.x = px - s * amp;
+    out.y = py + c * amp;
+    out.ang = tang;
+  }
+
   _ribbon(ctx, x, y, spr, len, alpha, r, still) {
     if (!spr || !spr.ok || !(len > 0) || !(alpha > 0) || !(spr.w > 0) || !(spr.h > 0)) return false;
     const sw0 = spr.w;
     const sh0 = spr.h;
     const pivotX = spr.pivot[0];
     const ay = spr.pivot[1] / sh0;
+    const srcEnd = this._inkEnd(spr);
     let active = len;
-    let curved = false;
     if (this.count >= 2) {
       const recorded = this._length();
       if (recorded > 0.5) {
         const grown = Math.max(r * 2.2, recorded * 1.15);
         active = Math.min(len, grown);
-        curved = true;
       }
     }
     if (!(active > 0.4)) return false;
     this.span = len;
 
     const N = CometTail.SLICES;
+    const reach = ((srcEnd - pivotX) / sw0) * active;
     const baseH = active * (sh0 / sw0);
-    let any = false;
-    // Head slice first. Angle checks keep the draw closest to the head, and
-    // when several slices share that image's shape the earliest one wins.
+    let scale = 1;
+    if (ctx.getTransform) {
+      const m = ctx.getTransform();
+      const s = Math.hypot(m.a, m.b);
+      if (s > 1e-6) scale = s;
+    }
+    const pad = CometTail.PAD_PX > 0 ? CometTail.PAD_PX / scale : 0;
+    let headSlice = 0;
     for (let i = 0; i < N; i++) {
-      const t = i / (N - 1);
-      const sx0 = sw0 * i / N;
-      const sx1 = i === N - 1 ? sw0 : sw0 * (i + 1) / N;
+      const sx0 = srcEnd * i / N;
+      const sx1 = srcEnd * (i + 1) / N;
+      if (sx0 <= pivotX && pivotX < sx1) headSlice = i;
+    }
+
+    let any = false;
+    // The slice that holds the pivot is drawn first, so the draw nearest
+    // the head is that chord and carries the trailing angle.
+    for (let n = 0; n < N; n++) {
+      const i = n === 0 ? headSlice : (n <= headSlice ? n - 1 : n);
+      const tMid = (i + 0.5) / N;
+      const sx0 = srcEnd * i / N;
+      const sx1 = srcEnd * (i + 1) / N;
       const sww = sx1 - sx0;
       if (!(sww > 0)) continue;
-      const nom = (sww / sw0) * active;
-      const drawW = nom * CometTail.OVERLAP;
-      const pad = nom * ((CometTail.OVERLAP - 1) * 0.5);
-      const dLeft = ((sx0 - pivotX) / sw0) * active;
-      const dAnchor = dLeft > 0 ? dLeft : 0;
-      let ax;
-      let ayw;
-      let ang;
-      if (!curved) {
-        ang = this.ang;
-        ax = x + Math.cos(ang) * dAnchor;
-        ayw = y + Math.sin(ang) * dAnchor;
-      } else if (dAnchor <= 0) {
-        ang = this.ang;
-        ax = x;
-        ayw = y;
-      } else {
-        this._place(dAnchor, this.at);
-        ax = x + (this.at.x - this.sx);
-        ayw = y + (this.at.y - this.sy);
-        ang = this.at.ang;
-      }
-      if (i > 0 && !still && dAnchor > 0) {
-        const amp = Math.sin(this.phase - t * 4.5 + this.wobble) * Math.pow(t, 1.6) * r * 0.25;
-        ax += -Math.sin(ang) * amp;
-        ayw += Math.cos(ang) * amp;
-      }
-      const taper = 1 - 0.58 * Math.pow(t, 1.2);
+      const d0 = ((sx0 - pivotX) / sw0) * active;
+      const d1 = ((sx1 - pivotX) / sw0) * active;
+      this._along(d0, x, y, reach, r, still, this.q0);
+      this._along(d1, x, y, reach, r, still, this.q1);
+      const dx = this.q1.x - this.q0.x;
+      const dy = this.q1.y - this.q0.y;
+      const segLen = Math.hypot(dx, dy);
+      if (!(segLen > 1e-4)) continue;
+      const taper = 1 - 0.45 * Math.pow(tMid, 1.15);
       const drawH = baseH * taper;
       let fade = 1;
-      if (t > 0.72) {
-        const u = (t - 0.72) / 0.28;
-        fade = 1 - u * u * 0.62;
+      if (tMid > 0.78) {
+        const u = (tMid - 0.78) / 0.22;
+        fade = 1 - u * u * 0.45;
       }
       const a = alpha * fade;
-      if (!(a > 0.015) || !(drawW > 0) || !(drawH > 0)) continue;
-      const destX = (dLeft > 0 ? 0 : dLeft) - pad;
-      const destY = -ay * drawH;
+      if (!(a > 0.015) || !(drawH > 0)) continue;
       ctx.save();
-      ctx.translate(ax, ayw);
-      ctx.rotate(ang);
       ctx.globalCompositeOperation = "screen";
       ctx.globalAlpha = a;
-      if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, destX, destY, drawW, drawH)) any = true;
+      if (i === headSlice) {
+        // The pivot slice is the draw nearest the head. It uses the smoothed
+        // trailing angle so a turn does not borrow an older chord.
+        const span = Math.max(1e-4, d1 - d0);
+        const drawW = span + pad;
+        ctx.translate(x, y);
+        ctx.rotate(this.ang);
+        if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, d0 - pad / 2, -ay * drawH, drawW, drawH)) any = true;
+      } else {
+        const drawW = segLen + pad;
+        if (drawW > 0) {
+          ctx.translate((this.q0.x + this.q1.x) / 2, (this.q0.y + this.q1.y) / 2);
+          ctx.rotate(Math.atan2(dy, dx));
+          if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, -drawW / 2, -ay * drawH, drawW, drawH)) any = true;
+        }
+      }
       ctx.restore();
     }
     return any;

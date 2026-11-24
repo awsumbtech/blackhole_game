@@ -44,10 +44,10 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
 
   for (const e of entities) {
     // Aim every comet, including ones off screen, from the step it just took.
+    if (e.hasTail && e.consumed) CometSparkle.release(e);
     if (e.hasTail && !e.consumed) {
       if (!e.tail) e.tail = new CometTail();
-      if (e.consumed) CometSparkle.release(e);
-      else CometSparkle.note(e);
+      CometSparkle.note(e);
       e.tail.sample(e.x, e.y, dt, Math.hypot(w, h), still);
     }
     const sx = e.x - camX + w / 2;

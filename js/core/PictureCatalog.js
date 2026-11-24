@@ -187,7 +187,21 @@ export class PictureCatalog {
    */
   blitSlice(ctx, spr, sx, sy, sw, sh, x, y, w, h) {
     if (!spr || !spr.ok || !(sw > 0) || !(sh > 0) || !(w > 0) || !(h > 0)) return false;
-    ctx.drawImage(spr.image, sx, sy, sw, sh, x, y, w, h);
+    const img = spr.image;
+    const iw = img && img.naturalWidth > 0 ? img.naturalWidth : spr.w;
+    const ih = img && img.naturalHeight > 0 ? img.naturalHeight : spr.h;
+    if (!(iw > 0) || !(ih > 0)) return false;
+    let x0 = sx;
+    let y0 = sy;
+    let rw = sw;
+    let rh = sh;
+    if (x0 < 0) { rw += x0; x0 = 0; }
+    if (y0 < 0) { rh += y0; y0 = 0; }
+    if (x0 >= iw || y0 >= ih) return false;
+    if (x0 + rw > iw) rw = iw - x0;
+    if (y0 + rh > ih) rh = ih - y0;
+    if (!(rw > 0) || !(rh > 0)) return false;
+    ctx.drawImage(img, x0, y0, rw, rh, x, y, w, h);
     return true;
   }
 }

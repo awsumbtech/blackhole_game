@@ -99,7 +99,7 @@ async function level(page, biome, tier, galaxy) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
     const prev = new Map();
@@ -218,7 +218,7 @@ async function finds(page) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
     const stat = {
@@ -292,7 +292,7 @@ async function zoomStill(page) {
       }
       const hit = near.filter(d => d.dd <= best + (4 * dpr) ** 2);
       if (!hit.length || best > cap) return null;
-      hit.sort((a, b) => b.w / b.h - a.w / a.h);
+      hit.sort((a, b) => (b.w / b.h - a.w / a.h) || (a.dd - b.dd));
       return hit[0].ang;
     };
     window.__tailDraws.length = 0;

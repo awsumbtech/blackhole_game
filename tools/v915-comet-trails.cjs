@@ -46,7 +46,8 @@ function filesGate() {
   const release = releaseAgrees("9.15.0");
   const cat = fs.readFileSync("js/core/PictureCatalog.js", "utf8");
   const slice = /blitSlice\s*\(\s*ctx\s*,\s*spr\s*,\s*sx\s*,\s*sy\s*,\s*sw\s*,\s*sh\s*,\s*x\s*,\s*y\s*,\s*w\s*,\s*h\s*\)/.test(cat)
-    && cat.indexOf("ctx.drawImage(spr.image, sx, sy, sw, sh, x, y, w, h)") >= 0;
+    && cat.indexOf("ctx.drawImage(img, x0, y0, rw, rh, x, y, w, h)") >= 0
+    && cat.indexOf("if (!(rw > 0) || !(rh > 0)) return false;") >= 0;
   const tail = fs.readFileSync("js/core/CometTail.js", "utf8");
   const spark = fs.readFileSync("js/core/CometSparkle.js", "utf8");
   const render = fs.readFileSync("js/render.js", "utf8");
@@ -485,7 +486,161 @@ async function main() {
       guard: guard === false && guard2 === false && drewSlice === true && bag.length === 1,
       ok: guard === false && guard2 === false && drewSlice === true && bag.length === 1
     };
+    const oob = Theme.comets.blitSlice(c, spr, 9000, 0, 20, 20, 0, 0, 20, 20);
+    out.slice.oob = oob === false;
+    out.slice.ok = out.slice.ok && oob === false;
     out.catalog = PictureCatalog.prototype.blitSlice === Theme.comets.blitSlice;
+
+    // A missing tail picture draws nothing and does not throw.
+    const spriteOf = Theme.comets.sprite.bind(Theme.comets);
+    Theme.comets.sprite = (id) => (String(id).indexOf("tail") >= 0 ? null : spriteOf(id));
+    const bare = new CometTail(0.3);
+    bare.aimed = true;
+    let threw = false;
+    let drewMissing = true;
+    try {
+      drewMissing = bare.drawComet(c, 16, 16, 8, 1, "", 8, 1, 0, true, 0);
+    } catch (err) {
+      threw = true;
+    }
+    Theme.comets.sprite = spriteOf;
+    out.missing = { drew: drewMissing, threw, ok: drewMissing === false && !threw };
+
+    // Real pixels at 2 device px per world unit. Joints stay inside the
+    // painting's own texture, and a tight bend does not open a dark wedge.
+    const seam = (() => {
+      const dpr = 2;
+      const lumOf = (data, i) => 0.2 * data[i] + 0.7 * data[i + 1] + 0.1 * data[i + 2];
+      const med = (arr) => {
+        const a = arr.slice().sort((p, q) => p - q);
+        const m = a.length >> 1;
+        return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+      };
+      const pix = (img, W, H, x, y) => {
+        x = Math.round(x); y = Math.round(y);
+        if (x < 0 || y < 0 || x >= W || y >= H) return { l: 0, a: 0 };
+        const i = (y * W + x) * 4;
+        return { l: lumOf(img, i), a: img[i + 3] };
+      };
+      const N = CometTail.SLICES;
+      const srcEnd = CometTail.INK["tail-cyan"];
+      const sw0 = 512;
+      const pivot = 48;
+
+      const straight = document.createElement("canvas");
+      straight.width = 900; straight.height = 420;
+      const sg = straight.getContext("2d", { willReadFrequently: true });
+      sg.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const hx = 70, hy = 110, rr = 8;
+      const line = new CometTail(0);
+      for (let i = 0; i <= 110; i++) line.sample(-i * 1.8, 0, 1, 1e6, true);
+      line.drawComet(sg, hx, hy, rr, 1, "", rr, 1.8, 0, true, 0);
+      const simg = sg.getImageData(0, 0, straight.width, straight.height).data;
+      const active = rr * line._plume(Math.max(line.speed, 1.8));
+      const reach = ((srcEnd - pivot) / sw0) * active;
+      const headX = hx * dpr, headY = hy * dpr;
+      let half = 0;
+      for (let dy = 0; dy < 80; dy++) {
+        if (pix(simg, straight.width, straight.height, headX + 40 * dpr, headY + dy).a < 28) break;
+        half = dy;
+      }
+      const off = Math.max(3, Math.round(half * 0.5));
+      const errs = [];
+      const signed = [];
+      let joints = 0;
+      for (let i = 1; i < N; i++) {
+        const dist = ((srcEnd * i / N - pivot) / sw0) * active;
+        if (dist < reach * 0.14 || dist > reach * 0.70) continue;
+        joints++;
+        const x = headX + dist * dpr;
+        for (const y of [headY, headY + off, headY - off]) {
+          const here = pix(simg, straight.width, straight.height, x, y);
+          const neigh = [];
+          for (let k = -6; k <= 6; k++) neigh.push(pix(simg, straight.width, straight.height, x + k, y).l);
+          const m = med(neigh);
+          if (!(m > 12)) continue;
+          const e = (here.l - m) / m;
+          errs.push(Math.abs(e));
+          signed.push(e);
+        }
+      }
+      errs.sort((a, b) => a - b);
+      signed.sort((a, b) => a - b);
+      const straightOut = {
+        joints, half,
+        max: +errs[errs.length - 1].toFixed(4),
+        med: +errs[errs.length >> 1].toFixed(4),
+        signedMed: +signed[signed.length >> 1].toFixed(4)
+      };
+
+      const bent = document.createElement("canvas");
+      bent.width = 900; bent.height = 800;
+      const bg = bent.getContext("2d", { willReadFrequently: true });
+      bg.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const R = 48;
+      const curveTail = new CometTail(0);
+      for (let i = 0; i <= 100; i++) {
+        const th = (i / 100) * Math.PI / 2;
+        curveTail.sample(R * Math.sin(th), R * (1 - Math.cos(th)), 1, 1e6, true);
+      }
+      const cx = 260, cy = 300;
+      curveTail.drawComet(bg, cx, cy, rr, 1, "", rr, curveTail.speed, 0, true, 0);
+      const bimg = bg.getImageData(0, 0, bent.width, bent.height).data;
+      const activeB = Math.min(rr * curveTail._plume(curveTail.speed), Math.max(rr * 2.2, curveTail._length() * 1.15));
+      const ink = ((srcEnd - pivot) / sw0) * activeB;
+      const samples = [];
+      const cc = { x: 0, y: R };
+      const head = { x: R, y: R };
+      for (let s = 0; s <= 48; s++) {
+        const dist = ink * (0.16 + 0.62 * (s / 48));
+        const p = { x: 0, y: 0, ang: 0 };
+        if (!curveTail.pointAt(dist, p)) continue;
+        const ox = p.x - cc.x, oy = p.y - cc.y;
+        const ol = Math.hypot(ox, oy) || 1;
+        const nx = ox / ol, ny = oy / ol;
+        const dx = (cx + (p.x - head.x)) * dpr;
+        const dy = (cy + (p.y - head.y)) * dpr;
+        let edge = 0;
+        for (let k = 1; k < 40; k++) {
+          if (pix(bimg, bent.width, bent.height, dx + nx * k, dy + ny * k).a < 22) break;
+          edge = k;
+        }
+        const band = Math.max(2, Math.round(edge * 0.62));
+        samples.push({
+          mid: pix(bimg, bent.width, bent.height, dx, dy),
+          outer: pix(bimg, bent.width, bent.height, dx + nx * band, dy + ny * band),
+          inner: pix(bimg, bent.width, bent.height, dx - nx * band, dy - ny * band)
+        });
+      }
+      let minA = 255, zeros = 0;
+      const aerrs = [];
+      for (let i = 0; i < samples.length; i++) {
+        const row = samples[i];
+        if (row.outer.a < minA) minA = row.outer.a;
+        if (row.outer.a === 0) zeros++;
+        for (const key of ["mid", "outer", "inner"]) {
+          const neigh = [];
+          for (let k = -5; k <= 5; k++) {
+            const j = i + k;
+            if (j >= 0 && j < samples.length) neigh.push(samples[j][key].l);
+          }
+          const m = med(neigh);
+          if (m > 12) aerrs.push(Math.abs(row[key].l - m) / m);
+        }
+      }
+      aerrs.sort((a, b) => a - b);
+      const arcOut = {
+        n: samples.length, minA, zeros,
+        max: +aerrs[aerrs.length - 1].toFixed(4),
+        med: +aerrs[aerrs.length >> 1].toFixed(4)
+      };
+      const ok = straightOut.joints >= 20
+        && straightOut.max <= 0.05 && straightOut.med <= 0.02 && Math.abs(straightOut.signedMed) <= 0.02
+        && arcOut.zeros === 0 && arcOut.minA >= 12
+        && arcOut.max <= 0.08 && arcOut.med <= 0.02;
+      return { straight: straightOut, arc: arcOut, ok };
+    })();
+    out.seam = seam;
 
     // Live Galaxy 2: a real comet is driven around the same quarter turn.
     const bh = window.__bh;
@@ -605,7 +760,7 @@ async function main() {
 
     out.ok = out.curve.ok && out.straight.ok && out.speed.ok && out.consume.ok
       && out.respawn.ok && out.still.ok && out.spark.ok && out.zoom.ok
-      && out.slice.ok && out.live.ok && out.release.ok;
+      && out.slice.ok && out.missing.ok && out.seam.ok && out.live.ok && out.release.ok;
     return out;
   });
 

@@ -7,7 +7,7 @@ import { Theme } from "./Theme.js";
 export class CometSparkle {
   static CAP = 128;
   static PER = 6;
-  static slots = Array.from({ length: 128 }, () => (
+  static slots = Array.from({ length: this.CAP }, () => (
     { on: false, e: null, x: 0, y: 0, vx: 0, vy: 0, life: 1, age: 0, which: 0 }
   ));
   static stampOf = new WeakMap();
