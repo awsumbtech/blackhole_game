@@ -180,4 +180,14 @@ export class PictureCatalog {
     ctx.drawImage(spr.image, x - ax * w, y - ay * h, w, h);
     return true;
   }
+
+  /**
+   * One source rectangle of a painting. The caller sets alpha and rotation.
+   * This only calls drawImage. No tint and no second canvas.
+   */
+  blitSlice(ctx, spr, sx, sy, sw, sh, x, y, w, h) {
+    if (!spr || !spr.ok || !(sw > 0) || !(sh > 0) || !(w > 0) || !(h > 0)) return false;
+    ctx.drawImage(spr.image, sx, sy, sw, sh, x, y, w, h);
+    return true;
+  }
 }

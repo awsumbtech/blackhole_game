@@ -2,6 +2,15 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.15.0 — Fluid curved comet trails (Nov 24 2026)
+
+A comet's tail follows the path that comet actually flew. The black hole, the HUD, and the save are the same.
+
+- The painted plume is sliced along a fixed world-space path, so a river bend, an orbit, or the hole's pull leaves a curve. A resting comet keeps a short soft wisp. A fast current gets a long stream.
+- Being eaten fades the trail. A respawn drops the path instead of stretching a line across the view. Reduce Motion holds the billow still and spawns no sparkles.
+- Sparkles ride that same wake. Comet finds use the same curve.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.15.0`.
+
 ## v9.14.0 — Galaxy 5 painted aurora (Nov 24 2026)
 
 Void Rift's feeding ribbon is a chain of painted wisps, about 15% presence, wide enough to sit on the corridor. The black hole, the HUD, the sky file, and the save are the same.
