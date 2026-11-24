@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { Browser } = require("./lib/browser.cjs");
+const { releaseAgrees } = require("./lib/release.cjs");
 const { chromium } = Browser.playwrightCore();
 
 const PORT = process.argv[2] || "8765";
@@ -119,8 +120,9 @@ function filesGate() {
   const worlds = fs.readFileSync("js/worlds.js", "utf8");
   const radar = fs.readFileSync("js/core/RadarInstrument.js", "utf8");
   const missing = PRECACHE.filter(p => sw.indexOf(p) < 0);
-  const cache = /CACHE_NAME = "blackhole-v9\.13\.0"/.test(sw);
-  const version = /const VERSION = "9\.13\.0"/.test(game);
+  const release = releaseAgrees("9.13.0");
+  const cache = release.ok;
+  const version = release.ok;
   const meadowDraw = worlds.slice(worlds.indexOf('"Star Meadow"(ctx'), worlds.indexOf('"Neutron Forge"(ctx'));
   const reefDraw = worlds.slice(worlds.indexOf('"Debris Reef"(ctx'), worlds.indexOf('"Comet Current"(ctx'));
   const armadaDraw = worlds.slice(worlds.indexOf('"Ruined Armada"(ctx'), worlds.indexOf('"Void Rift"(ctx'));
@@ -169,7 +171,7 @@ function filesGate() {
   const ok = !missing.length && cache && version && !hashMiss.length && !provMiss.length
     && geomOk && fieldOk && roleOk && meadowClean && others
     && owners.every(o => o.classes === 1 && !o.looseFn && !o.looseState && !o.procedural);
-  return { ok, missing, cache, version, hashMiss, provMiss, geomOk, fieldOk, roleOk, meadowClean, others, owners };
+  return { ok, missing, cache, version, release, hashMiss, provMiss, geomOk, fieldOk, roleOk, meadowClean, others, owners };
 }
 
 function isAbortNoise(text) {
@@ -219,7 +221,7 @@ async function scene(page) {
     while (!(Theme.meadow.ready && Theme.radar.ready) && performance.now() - t0 < 15000) {
       await new Promise(r => setTimeout(r, 40));
     }
-    Object.assign(bh.dev.cfg, { galaxy: 6, biome: "Star Meadow", tier: 5, depth: 1, zen: false, wisp: false });
+    Object.assign(bh.dev.cfg, { galaxy: 6, biome: "Star Meadow", tier: 7, depth: 1, zen: false, wisp: false });
     bh.dev.enter();
     s.paused = true;
     s.settings.reduceMotion = true;
@@ -246,13 +248,31 @@ async function scene(page) {
       s.camX = s.playerX;
       s.camY = s.playerY;
     }
+    const span = Math.min(s.viewW, s.viewH);
+    let framed = null;
     for (const e of s.entities) {
-      if (!e.bloom) continue;
+      if (!e || !e.bloom || e.type !== "star") continue;
+      framed = e;
+      break;
+    }
+    if (framed) {
+      framed.x = s.playerX + span * 0.2;
+      framed.y = s.playerY - span * 0.12;
+      framed.vx = 0;
+      framed.vy = 0;
+      framed.consuming = false;
+      framed._spawnAlpha = 1;
+      framed.bloom.t = framed.bloom.dur * 0.12;
+      framed.radius = Math.max(framed.radius, s.radius * 0.72);
+    }
+    window.__g6framed = !!(framed && framed.bloom);
+    for (const e of s.entities) {
+      if (!e || !e.bloom || e === framed) continue;
       e._spawnAlpha = 1;
       e.bloom.t = Math.min(e.bloom.t, e.bloom.dur * 0.35);
     }
     const entities = await import("/js/entities.js");
-    const far = Math.min(s.viewW, s.viewH) * 0.28;
+    const far = span * 0.34;
     const edible = entities.createEntity(entities.typeById("dust"), s.playerX + far * 0.45, s.playerY - far * 0.2, 1);
     edible.radius = Math.max(2, s.radius * 0.22);
     edible.depthT = 1;
@@ -304,7 +324,8 @@ async function scene(page) {
       bloomStroke: window.__g6.bloomStroke,
       budArc: window.__g6.budArc,
       devHidden,
-      devText: badge ? badge.textContent : ""
+      devText: badge ? badge.textContent : "",
+      framed: !!window.__g6framed
     };
   });
 }
@@ -422,7 +443,7 @@ async function main() {
   g6.consoleErrors = page._logs.slice();
   if (page._errs.length || page._logs.length) fail.push({ ok: false, reason: "galaxy 6 console or page errors", errors: page._errs, logs: page._logs });
   if (g6.biome !== "Star Meadow") fail.push({ ok: false, reason: "not Star Meadow", g6 });
-  if (!g6.field || !g6.halo || !g6.pip || !g6.sky || !g6.bezel) fail.push({ ok: false, reason: "galaxy 6 paintings missing", g6 });
+  if (!g6.field || !g6.halo || !g6.pip || !g6.sky || !g6.bezel || !g6.framed) fail.push({ ok: false, reason: "galaxy 6 paintings missing", g6 });
   if (!g6.pipEdible || !g6.pipBig) fail.push({ ok: false, reason: "shared radar pips missing", g6 });
   if (g6.meadowGlow || g6.bloomStroke || g6.budArc) fail.push({ ok: false, reason: "galaxy 6 still drew a meadow glow or a bloom stroke", g6 });
   if (!g6.devHidden) fail.push({ ok: false, reason: "DEV pill was visible", g6 });

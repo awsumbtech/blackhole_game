@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { Browser } = require("./lib/browser.cjs");
+const { releaseAgrees } = require("./lib/release.cjs");
 const { chromium } = Browser.playwrightCore();
 
 const PORT = process.argv[2] || "8765";
@@ -118,8 +119,9 @@ function filesGate() {
   const game = fs.readFileSync("js/game.js", "utf8");
   const worlds = fs.readFileSync("js/worlds.js", "utf8");
   const missing = PRECACHE.filter(p => sw.indexOf(p) < 0);
-  const cache = /CACHE_NAME = "blackhole-v9\.12\.0"/.test(sw);
-  const version = /const VERSION = "9\.12\.0"/.test(game);
+  const release = releaseAgrees("9.12.0");
+  const cache = release.ok;
+  const version = release.ok;
   const reefDraw = worlds.slice(worlds.indexOf('"Debris Reef"(ctx'), worlds.indexOf('"Comet Current"(ctx'));
   const armadaDraw = worlds.slice(worlds.indexOf('"Ruined Armada"(ctx'), worlds.indexOf('"Void Rift"(ctx'));
   const owners = ["js/core/ReefBed.js", "js/core/Flagship.js", "js/core/RadarInstrument.js"].map(ownerGate);
@@ -153,7 +155,7 @@ function filesGate() {
     && armadaDraw.indexOf("present") >= 0 && armadaDraw.indexOf("createRadialGradient") < 0
     && armadaDraw.indexOf("createLinearGradient") < 0 && armadaDraw.indexOf("fillRect") < 0
     && owners.every(o => o.classes === 1 && !o.looseFn && !o.looseState && !o.procedural);
-  return { ok, missing, cache, version, hashMiss, provMiss, owners, reefClean: reefDraw.indexOf("lmSprite") < 0 };
+  return { ok, missing, cache, version, release, hashMiss, provMiss, owners, reefClean: reefDraw.indexOf("lmSprite") < 0 };
 }
 
 async function launch() {
