@@ -10,17 +10,18 @@ export class CometTail {
   static TAU = Math.PI * 2;
   static CAP = 64;
   static SLICES = 64;
+  // Short wisps use fewer, wider slices so a joint is never a subpixel.
+  // A real bend keeps enough slices to stay smooth.
+  static MIN_SLICE = 3.6;
+  static MIN_CURVE = 34;
   static MIN_GAP = 1.5;
   // Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
   // last heading. FOLLOW is how much of the new heading is taken in one frame.
   static HOLD = 0.06;
   static FOLLOW = 0.7;
-  // Chord-width match. A wider overlap lights the joint under screen, and
-  // 64 slices make the outer bend smaller than a pixel of filtering.
-  static PAD_PX = 0;
-  // Last source column that still holds paint. The rest of the 512-wide
-  // picture is empty, and drawing it only stretched a blank tip.
-  static INK = { "tail-cyan": 431, "tail-silver": 457 };
+  // Device pixels added to a chord when a rotated joint needs it.
+  // Left at 0 unless a measured hairline asks for a fraction of a pixel.
+  static PAD_PX = 0.5;
 
   static wrap(a) {
     a = (a + Math.PI) % CometTail.TAU;
@@ -45,6 +46,9 @@ export class CometTail {
     this.at = { x: 0, y: 0, ang: 0 };
     this.q0 = { x: 0, y: 0, ang: 0 };
     this.q1 = { x: 0, y: 0, ang: 0 };
+    this.vx = new Float64Array(CometTail.SLICES + 1);
+    this.vy = new Float64Array(CometTail.SLICES + 1);
+    this.slices = 0;
   }
 
   /** Forget the last world position. A teleport must not aim the tail. */
@@ -266,12 +270,30 @@ export class CometTail {
     out.ang = Math.atan2(dy, dx);
   }
 
-  /** Source columns that still hold paint. The pivot stays the head. */
+  /** Painted columns from the manifest. Missing value uses the whole picture. */
   _inkEnd(spr) {
-    const known = CometTail.INK[spr.id];
-    const end = known > 0 ? known : spr.w * 0.84;
-    const pivot = spr.pivot[0];
-    return Math.max(pivot + 8, Math.min(spr.w, end));
+    const raw = spr.inkEndPx > 0 ? spr.inkEndPx : spr.w;
+    if (!(raw > 1)) return spr.w > 1 ? spr.w : 1;
+    return raw < spr.w ? raw : spr.w;
+  }
+
+  /** Fewer slices on a short or straight wisp. A bend keeps a silky count. */
+  _countSlices(active, reach) {
+    let curved = false;
+    if (this.count >= 3 && reach > 2) {
+      this._place(Math.min(reach * 0.18, 4), this.q0);
+      this._place(reach * 0.82, this.q1);
+      curved = Math.abs(CometTail.wrap(this.q1.ang - this.q0.ang)) > 0.45;
+    }
+    const minW = CometTail.MIN_SLICE > 0.4 ? CometTail.MIN_SLICE : 2.6;
+    let n = Math.ceil(active / minW);
+    if (curved) {
+      const floor = CometTail.MIN_CURVE > 8 ? CometTail.MIN_CURVE : 36;
+      if (n < floor) n = floor;
+    }
+    if (n < 4) n = 4;
+    if (n > CometTail.SLICES) n = CometTail.SLICES;
+    return n;
   }
 
   /**
@@ -325,41 +347,53 @@ export class CometTail {
     if (!(active > 0.4)) return false;
     this.span = len;
 
-    const N = CometTail.SLICES;
     const reach = ((srcEnd - pivotX) / sw0) * active;
+    const N = this._countSlices(active, reach);
+    this.slices = N;
     const baseH = active * (sh0 / sw0);
-    let scale = 1;
-    if (ctx.getTransform) {
+    let pad = 0;
+    if (CometTail.PAD_PX > 0 && ctx.getTransform) {
       const m = ctx.getTransform();
       const s = Math.hypot(m.a, m.b);
-      if (s > 1e-6) scale = s;
+      if (s > 1e-6) pad = CometTail.PAD_PX / s;
     }
-    const pad = CometTail.PAD_PX > 0 ? CometTail.PAD_PX / scale : 0;
     let headSlice = 0;
     for (let i = 0; i < N; i++) {
       const sx0 = srcEnd * i / N;
       const sx1 = srcEnd * (i + 1) / N;
       if (sx0 <= pivotX && pivotX < sx1) headSlice = i;
     }
+    const hc = Math.cos(this.ang);
+    const hs = Math.sin(this.ang);
+    for (let i = 0; i <= N; i++) {
+      const sx = srcEnd * i / N;
+      const dist = ((sx - pivotX) / sw0) * active;
+      if (i <= headSlice + 1) {
+        this.vx[i] = x + hc * dist;
+        this.vy[i] = y + hs * dist;
+      } else {
+        this._along(dist, x, y, reach, r, still, this.q0);
+        this.vx[i] = this.q0.x;
+        this.vy[i] = this.q0.y;
+      }
+    }
 
     let any = false;
-    // The slice that holds the pivot is drawn first, so the draw nearest
-    // the head is that chord and carries the trailing angle.
     for (let n = 0; n < N; n++) {
       const i = n === 0 ? headSlice : (n <= headSlice ? n - 1 : n);
-      const tMid = (i + 0.5) / N;
       const sx0 = srcEnd * i / N;
       const sx1 = srcEnd * (i + 1) / N;
       const sww = sx1 - sx0;
       if (!(sww > 0)) continue;
-      const d0 = ((sx0 - pivotX) / sw0) * active;
-      const d1 = ((sx1 - pivotX) / sw0) * active;
-      this._along(d0, x, y, reach, r, still, this.q0);
-      this._along(d1, x, y, reach, r, still, this.q1);
-      const dx = this.q1.x - this.q0.x;
-      const dy = this.q1.y - this.q0.y;
+      const x0 = this.vx[i];
+      const y0 = this.vy[i];
+      const x1 = this.vx[i + 1];
+      const y1 = this.vy[i + 1];
+      const dx = x1 - x0;
+      const dy = y1 - y0;
       const segLen = Math.hypot(dx, dy);
       if (!(segLen > 1e-4)) continue;
+      const tMid = (i + 0.5) / N;
       const taper = 1 - 0.45 * Math.pow(tMid, 1.15);
       const drawH = baseH * taper;
       let fade = 1;
@@ -368,26 +402,27 @@ export class CometTail {
         fade = 1 - u * u * 0.45;
       }
       const a = alpha * fade;
-      if (!(a > 0.015) || !(drawH > 0)) continue;
+      let drawW = segLen + pad;
+      let ang = Math.atan2(dy, dx);
+      let mx = (x0 + x1) / 2;
+      let my = (y0 + y1) / 2;
+      let destX = -drawW / 2;
+      if (i === headSlice) {
+        const d0 = ((sx0 - pivotX) / sw0) * active;
+        const span = ((sx1 - pivotX) / sw0) * active - d0;
+        drawW = (span > 1e-4 ? span : segLen) + pad;
+        ang = this.ang;
+        mx = x;
+        my = y;
+        destX = d0 - pad / 2;
+      }
+      if (!(a > 0.015) || !(drawW > 0) || !(drawH > 0)) continue;
       ctx.save();
+      ctx.translate(mx, my);
+      ctx.rotate(ang);
       ctx.globalCompositeOperation = "screen";
       ctx.globalAlpha = a;
-      if (i === headSlice) {
-        // The pivot slice is the draw nearest the head. It uses the smoothed
-        // trailing angle so a turn does not borrow an older chord.
-        const span = Math.max(1e-4, d1 - d0);
-        const drawW = span + pad;
-        ctx.translate(x, y);
-        ctx.rotate(this.ang);
-        if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, d0 - pad / 2, -ay * drawH, drawW, drawH)) any = true;
-      } else {
-        const drawW = segLen + pad;
-        if (drawW > 0) {
-          ctx.translate((this.q0.x + this.q1.x) / 2, (this.q0.y + this.q1.y) / 2);
-          ctx.rotate(Math.atan2(dy, dx));
-          if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, -drawW / 2, -ay * drawH, drawW, drawH)) any = true;
-        }
-      }
+      if (Theme.comets.blitSlice(ctx, spr, sx0, 0, sww, sh0, destX, -ay * drawH, drawW, drawH)) any = true;
       ctx.restore();
     }
     return any;

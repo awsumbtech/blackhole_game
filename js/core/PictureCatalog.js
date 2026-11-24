@@ -49,6 +49,7 @@ export class PictureCatalog {
           axis: typeof row.axis === "number" ? row.axis : null,
           ringRadiusPx: row.ringRadiusPx > 0 ? row.ringRadiusPx : 0,
           sizePx: row.sizePx > 0 ? row.sizePx : 0,
+          inkEndPx: Number.isFinite(row.inkEndPx) && row.inkEndPx > 0 ? row.inkEndPx : 0,
           image,
           ok: false,
           failed: false,
@@ -195,13 +196,35 @@ export class PictureCatalog {
     let y0 = sy;
     let rw = sw;
     let rh = sh;
-    if (x0 < 0) { rw += x0; x0 = 0; }
-    if (y0 < 0) { rh += y0; y0 = 0; }
+    let dx = x;
+    let dy = y;
+    let dw = w;
+    let dh = h;
+    if (x0 < 0) {
+      const cut = -x0 / rw;
+      dx += dw * cut;
+      dw *= 1 - cut;
+      rw += x0;
+      x0 = 0;
+    }
+    if (y0 < 0) {
+      const cut = -y0 / rh;
+      dy += dh * cut;
+      dh *= 1 - cut;
+      rh += y0;
+      y0 = 0;
+    }
     if (x0 >= iw || y0 >= ih) return false;
-    if (x0 + rw > iw) rw = iw - x0;
-    if (y0 + rh > ih) rh = ih - y0;
-    if (!(rw > 0) || !(rh > 0)) return false;
-    ctx.drawImage(img, x0, y0, rw, rh, x, y, w, h);
+    if (x0 + rw > iw) {
+      dw *= (iw - x0) / rw;
+      rw = iw - x0;
+    }
+    if (y0 + rh > ih) {
+      dh *= (ih - y0) / rh;
+      rh = ih - y0;
+    }
+    if (!(rw > 0) || !(rh > 0) || !(dw > 0) || !(dh > 0)) return false;
+    ctx.drawImage(img, x0, y0, rw, rh, dx, dy, dw, dh);
     return true;
   }
 }

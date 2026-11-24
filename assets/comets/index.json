@@ -11,8 +11,8 @@
     { "id": "nucleus-2", "role": "nucleus", "file": "comet-nucleus-2.png", "w": 128, "h": 128, "pivot": [64, 64] },
     { "id": "coma-cyan", "role": "coma", "file": "comet-coma-cyan.png", "w": 256, "h": 256, "pivot": [128, 128] },
     { "id": "coma-silver", "role": "coma", "file": "comet-coma-silver.png", "w": 256, "h": 256, "pivot": [128, 128] },
-    { "id": "tail-cyan", "role": "tail", "file": "comet-tail-cyan.png", "w": 512, "h": 160, "pivot": [48, 80] },
-    { "id": "tail-silver", "role": "tail", "file": "comet-tail-silver.png", "w": 512, "h": 160, "pivot": [48, 80] },
+    { "id": "tail-cyan", "role": "tail", "file": "comet-tail-cyan.png", "w": 512, "h": 160, "pivot": [48, 80], "inkEndPx": 431 },
+    { "id": "tail-silver", "role": "tail", "file": "comet-tail-silver.png", "w": 512, "h": 160, "pivot": [48, 80], "inkEndPx": 457 },
     { "id": "sparkle-1", "role": "sparkle", "file": "comet-sparkle-1.png", "w": 64, "h": 64, "pivot": [32, 32] },
     { "id": "sparkle-2", "role": "sparkle", "file": "comet-sparkle-2.png", "w": 64, "h": 64, "pivot": [32, 32] }
   ]

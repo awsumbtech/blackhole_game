@@ -46,8 +46,14 @@ function filesGate() {
   const release = releaseAgrees("9.15.0");
   const cat = fs.readFileSync("js/core/PictureCatalog.js", "utf8");
   const slice = /blitSlice\s*\(\s*ctx\s*,\s*spr\s*,\s*sx\s*,\s*sy\s*,\s*sw\s*,\s*sh\s*,\s*x\s*,\s*y\s*,\s*w\s*,\s*h\s*\)/.test(cat)
-    && cat.indexOf("ctx.drawImage(img, x0, y0, rw, rh, x, y, w, h)") >= 0
-    && cat.indexOf("if (!(rw > 0) || !(rh > 0)) return false;") >= 0;
+    && cat.indexOf("ctx.drawImage(img, x0, y0, rw, rh, dx, dy, dw, dh)") >= 0
+    && cat.indexOf("if (!(rw > 0) || !(rh > 0) || !(dw > 0) || !(dh > 0)) return false;") >= 0;
+  const index = JSON.parse(fs.readFileSync("assets/comets/index.json", "utf8"));
+  const inkRow = (id) => (index.sprites || []).find(s => s && s.id === id);
+  const inkOk = inkRow("tail-cyan") && inkRow("tail-cyan").inkEndPx === 431
+    && inkRow("tail-silver") && inkRow("tail-silver").inkEndPx === 457
+    && cat.indexOf("inkEndPx") >= 0
+    && fs.readFileSync("js/core/CometTail.js", "utf8").indexOf("static INK") < 0;
   const tail = fs.readFileSync("js/core/CometTail.js", "utf8");
   const spark = fs.readFileSync("js/core/CometSparkle.js", "utf8");
   const render = fs.readFileSync("js/render.js", "utf8");
@@ -59,9 +65,9 @@ function filesGate() {
     && render.indexOf("e.consuming ? e.consumeProgress : 0") >= 0
     && finds.indexOf("f.tail.sample(f.x, f.y, dt, Math.hypot(vw, vh), reduceMotion)") >= 0
     && finds.indexOf("reduceMotion)") >= 0;
-  const ok = release.ok && slice && wired
+  const ok = release.ok && slice && inkOk && wired
     && owners.every(o => o.classes === 1 && !o.looseFn && !o.looseState && !o.procedural);
-  return { ok, release, slice, wired, owners };
+  return { ok, release, slice, inkOk, wired, owners };
 }
 
 function wrap(a) {
@@ -506,8 +512,8 @@ async function main() {
     Theme.comets.sprite = spriteOf;
     out.missing = { drew: drewMissing, threw, ok: drewMissing === false && !threw };
 
-    // Real pixels at 2 device px per world unit. Joints stay inside the
-    // painting's own texture, and a tight bend does not open a dark wedge.
+    // Real pixels at 2 device px per world unit. Floor and ceiling samples
+    // at every slice joint, plus a short wisp against one unsliced stamp.
     const seam = (() => {
       const dpr = 2;
       const lumOf = (data, i) => 0.2 * data[i] + 0.7 * data[i + 1] + 0.1 * data[i + 2];
@@ -517,128 +523,191 @@ async function main() {
         return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
       };
       const pix = (img, W, H, x, y) => {
-        x = Math.round(x); y = Math.round(y);
-        if (x < 0 || y < 0 || x >= W || y >= H) return { l: 0, a: 0 };
-        const i = (y * W + x) * 4;
+        const xi = Math.round(x), yi = Math.round(y);
+        if (xi < 0 || yi < 0 || xi >= W || yi >= H) return { l: 0, a: 0 };
+        const i = (yi * W + xi) * 4;
         return { l: lumOf(img, i), a: img[i + 3] };
       };
-      const N = CometTail.SLICES;
-      const srcEnd = CometTail.INK["tail-cyan"];
-      const sw0 = 512;
-      const pivot = 48;
+      const corners = (x, y) => [
+        [Math.floor(x), Math.floor(y)],
+        [Math.ceil(x), Math.ceil(y)]
+      ];
+      const extremes = (img, W, H, points, tx, ty) => {
+        let dip = 0, spike = 0, n = 0;
+        for (const pt of points) {
+          for (const [cx, cy] of corners(pt.x, pt.y)) {
+            const neigh = [];
+            for (let k = -8; k <= 8; k++) {
+              if (Math.abs(k) <= 1) continue;
+              neigh.push(pix(img, W, H, cx + tx * k, cy + ty * k).l);
+            }
+            const m = med(neigh);
+            if (!(m > 16)) continue;
+            const e = (pix(img, W, H, cx, cy).l - m) / m;
+            if (-e > dip) dip = -e;
+            if (e > spike) spike = e;
+            n++;
+          }
+        }
+        return { dip, spike, n };
+      };
+      const inkSpr = Theme.comets.sprite("tail-cyan");
+      const srcEnd = inkSpr.inkEndPx;
+      const sw0 = inkSpr.w;
+      const pivot = inkSpr.pivot[0];
+      const sh = inkSpr.h;
+      const rr = 8;
 
+      const th = Math.PI / 6;
       const straight = document.createElement("canvas");
-      straight.width = 900; straight.height = 420;
+      straight.width = 1100; straight.height = 800;
       const sg = straight.getContext("2d", { willReadFrequently: true });
       sg.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const hx = 70, hy = 110, rr = 8;
-      const line = new CometTail(0);
-      for (let i = 0; i <= 110; i++) line.sample(-i * 1.8, 0, 1, 1e6, true);
+      const line = new CometTail(th + Math.PI);
+      for (let i = 0; i <= 120; i++) line.sample(Math.cos(th) * i * 1.8, Math.sin(th) * i * 1.8, 1, 1e6, true);
+      const hx = 320, hy = 240;
       line.drawComet(sg, hx, hy, rr, 1, "", rr, 1.8, 0, true, 0);
       const simg = sg.getImageData(0, 0, straight.width, straight.height).data;
       const active = rr * line._plume(Math.max(line.speed, 1.8));
       const reach = ((srcEnd - pivot) / sw0) * active;
-      const headX = hx * dpr, headY = hy * dpr;
+      const tx = Math.cos(line.ang), ty = Math.sin(line.ang);
+      const pxu = -ty, pyu = tx;
       let half = 0;
-      for (let dy = 0; dy < 80; dy++) {
-        if (pix(simg, straight.width, straight.height, headX + 40 * dpr, headY + dy).a < 28) break;
-        half = dy;
+      const midX = (hx + tx * reach * 0.4) * dpr, midY = (hy + ty * reach * 0.4) * dpr;
+      for (let s = 1; s < 60; s++) {
+        if (pix(simg, straight.width, straight.height, midX + pxu * s, midY + pyu * s).a < 24) break;
+        half = s;
       }
-      const off = Math.max(3, Math.round(half * 0.5));
-      const errs = [];
-      const signed = [];
-      let joints = 0;
-      for (let i = 1; i < N; i++) {
-        const dist = ((srcEnd * i / N - pivot) / sw0) * active;
-        if (dist < reach * 0.14 || dist > reach * 0.70) continue;
-        joints++;
-        const x = headX + dist * dpr;
-        for (const y of [headY, headY + off, headY - off]) {
-          const here = pix(simg, straight.width, straight.height, x, y);
-          const neigh = [];
-          for (let k = -6; k <= 6; k++) neigh.push(pix(simg, straight.width, straight.height, x + k, y).l);
-          const m = med(neigh);
-          if (!(m > 12)) continue;
-          const e = (here.l - m) / m;
-          errs.push(Math.abs(e));
-          signed.push(e);
-        }
+      const off = Math.max(4, Math.round(half * 0.4));
+      const rotPts = [];
+      const Ns = line.slices;
+      for (let i = 1; i < Ns; i++) {
+        const dist = ((srcEnd * i / Ns - pivot) / sw0) * active;
+        if (dist < reach * 0.2 || dist > reach * 0.62) continue;
+        const x = (hx + tx * dist) * dpr, y = (hy + ty * dist) * dpr;
+        rotPts.push({ x, y }, { x: x + pxu * off, y: y + pyu * off }, { x: x - pxu * off, y: y - pyu * off });
       }
-      errs.sort((a, b) => a - b);
-      signed.sort((a, b) => a - b);
-      const straightOut = {
-        joints, half,
-        max: +errs[errs.length - 1].toFixed(4),
-        med: +errs[errs.length >> 1].toFixed(4),
-        signedMed: +signed[signed.length >> 1].toFixed(4)
+      const rotRaw = extremes(simg, straight.width, straight.height, rotPts, tx, ty);
+      const rot = {
+        slices: Ns, joints: rotPts.length, half,
+        dip: +rotRaw.dip.toFixed(4), spike: +rotRaw.spike.toFixed(4), n: rotRaw.n
       };
 
       const bent = document.createElement("canvas");
-      bent.width = 900; bent.height = 800;
+      bent.width = 1100; bent.height = 1000;
       const bg = bent.getContext("2d", { willReadFrequently: true });
       bg.setTransform(dpr, 0, 0, dpr, 0, 0);
       const R = 48;
       const curveTail = new CometTail(0);
       for (let i = 0; i <= 100; i++) {
-        const th = (i / 100) * Math.PI / 2;
-        curveTail.sample(R * Math.sin(th), R * (1 - Math.cos(th)), 1, 1e6, true);
+        const a = (i / 100) * Math.PI / 2;
+        curveTail.sample(R * Math.sin(a), R * (1 - Math.cos(a)), 1, 1e6, true);
       }
-      const cx = 260, cy = 300;
+      const cx = 340, cy = 400;
       curveTail.drawComet(bg, cx, cy, rr, 1, "", rr, curveTail.speed, 0, true, 0);
       const bimg = bg.getImageData(0, 0, bent.width, bent.height).data;
       const activeB = Math.min(rr * curveTail._plume(curveTail.speed), Math.max(rr * 2.2, curveTail._length() * 1.15));
       const ink = ((srcEnd - pivot) / sw0) * activeB;
-      const samples = [];
-      const cc = { x: 0, y: R };
-      const head = { x: R, y: R };
-      for (let s = 0; s <= 48; s++) {
-        const dist = ink * (0.16 + 0.62 * (s / 48));
+      const Nb = curveTail.slices;
+      let dip = 0, spike = 0, minA = 255, zeros = 0, nArc = 0, joints = 0;
+      for (let i = 1; i < Nb; i++) {
+        const dist = ((srcEnd * i / Nb - pivot) / sw0) * activeB;
+        if (dist < ink * 0.18 || dist > ink * 0.68) continue;
         const p = { x: 0, y: 0, ang: 0 };
         if (!curveTail.pointAt(dist, p)) continue;
-        const ox = p.x - cc.x, oy = p.y - cc.y;
-        const ol = Math.hypot(ox, oy) || 1;
-        const nx = ox / ol, ny = oy / ol;
-        const dx = (cx + (p.x - head.x)) * dpr;
-        const dy = (cy + (p.y - head.y)) * dpr;
+        joints++;
+        const ol = Math.hypot(p.x, p.y - R) || 1;
+        const nx = p.x / ol, ny = (p.y - R) / ol;
+        const dx = (cx + (p.x - R)) * dpr, dy = (cy + (p.y - R)) * dpr;
         let edge = 0;
-        for (let k = 1; k < 40; k++) {
-          if (pix(bimg, bent.width, bent.height, dx + nx * k, dy + ny * k).a < 22) break;
+        for (let k = 1; k < 36; k++) {
+          if (pix(bimg, bent.width, bent.height, dx + nx * k, dy + ny * k).a < 20) break;
           edge = k;
         }
-        const band = Math.max(2, Math.round(edge * 0.62));
-        samples.push({
-          mid: pix(bimg, bent.width, bent.height, dx, dy),
-          outer: pix(bimg, bent.width, bent.height, dx + nx * band, dy + ny * band),
-          inner: pix(bimg, bent.width, bent.height, dx - nx * band, dy - ny * band)
-        });
-      }
-      let minA = 255, zeros = 0;
-      const aerrs = [];
-      for (let i = 0; i < samples.length; i++) {
-        const row = samples[i];
-        if (row.outer.a < minA) minA = row.outer.a;
-        if (row.outer.a === 0) zeros++;
-        for (const key of ["mid", "outer", "inner"]) {
-          const neigh = [];
-          for (let k = -5; k <= 5; k++) {
-            const j = i + k;
-            if (j >= 0 && j < samples.length) neigh.push(samples[j][key].l);
+        const band = Math.max(2, Math.round(edge * 0.5));
+        const outer = pix(bimg, bent.width, bent.height, dx + nx * band, dy + ny * band);
+        if (outer.a < minA) minA = outer.a;
+        if (outer.a === 0) zeros++;
+        const tangX = Math.cos(p.ang), tangY = Math.sin(p.ang);
+        const spots = [
+          { x: dx, y: dy },
+          { x: dx + nx * band, y: dy + ny * band },
+          { x: dx - nx * band, y: dy - ny * band }
+        ];
+        for (const pt of spots) {
+          for (const [sx, sy] of corners(pt.x, pt.y)) {
+            const neigh = [];
+            for (let k = -6; k <= 6; k++) {
+              if (Math.abs(k) <= 1) continue;
+              neigh.push(pix(bimg, bent.width, bent.height, sx + tangX * k, sy + tangY * k).l);
+            }
+            const m = med(neigh);
+            if (!(m > 16)) continue;
+            const e = (pix(bimg, bent.width, bent.height, sx, sy).l - m) / m;
+            if (-e > dip) dip = -e;
+            if (e > spike) spike = e;
+            nArc++;
           }
-          const m = med(neigh);
-          if (m > 12) aerrs.push(Math.abs(row[key].l - m) / m);
         }
       }
-      aerrs.sort((a, b) => a - b);
-      const arcOut = {
-        n: samples.length, minA, zeros,
-        max: +aerrs[aerrs.length - 1].toFixed(4),
-        med: +aerrs[aerrs.length >> 1].toFixed(4)
+      const arc = {
+        slices: Nb, joints, minA, zeros, n: nArc,
+        dip: +dip.toFixed(4), spike: +spike.toFixed(4)
       };
-      const ok = straightOut.joints >= 20
-        && straightOut.max <= 0.05 && straightOut.med <= 0.02 && Math.abs(straightOut.signedMed) <= 0.02
-        && arcOut.zeros === 0 && arcOut.minA >= 12
-        && arcOut.max <= 0.08 && arcOut.med <= 0.02;
-      return { straight: straightOut, arc: arcOut, ok };
+
+      const restC = document.createElement("canvas");
+      restC.width = 800; restC.height = 400;
+      const rg = restC.getContext("2d", { willReadFrequently: true });
+      rg.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const restTail = new CometTail(0);
+      const rx = 80, ry = 110;
+      restTail.drawComet(rg, rx, ry, rr, 1, "", rr, 0, 0, true, 0);
+      const imgS = rg.getImageData(0, 0, restC.width, restC.height).data;
+      rg.setTransform(1, 0, 0, 1, 0, 0);
+      rg.clearRect(0, 0, restC.width, restC.height);
+      rg.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const actR = rr * 2.7;
+      const baseH = actR * (sh / sw0);
+      const py = inkSpr.pivot[1] / sh;
+      rg.save();
+      rg.translate(rx, ry);
+      rg.globalCompositeOperation = "screen";
+      rg.globalAlpha = 0.42;
+      rg.drawImage(inkSpr.image, 0, 0, srcEnd, sh, ((0 - pivot) / sw0) * actR, -py * baseH, (srcEnd / sw0) * actR, baseH);
+      rg.restore();
+      const imgR = rg.getImageData(0, 0, restC.width, restC.height).data;
+      const reachR = ((srcEnd - pivot) / sw0) * actR;
+      const x0 = Math.round((rx + reachR * 0.18) * dpr);
+      const x1 = Math.round((rx + reachR * 0.55) * dpr);
+      let sumS = 0, sumRef = 0, ns = 0, nr = 0;
+      for (let y = 0; y < restC.height; y++) {
+        for (let x = x0; x < x1; x++) {
+          const i = (y * restC.width + x) * 4;
+          if (imgS[i + 3] > 16) { sumS += lumOf(imgS, i); ns++; }
+          if (imgR[i + 3] > 16) { sumRef += lumOf(imgR, i); nr++; }
+        }
+      }
+      const meanS = ns ? sumS / ns : 0;
+      const meanRef = nr ? sumRef / nr : 1;
+      const rpts = [];
+      for (let i = 1; i < restTail.slices; i++) {
+        const dist = ((srcEnd * i / restTail.slices - pivot) / sw0) * actR;
+        if (dist < reachR * 0.22 || dist > reachR * 0.55) continue;
+        rpts.push({ x: (rx + dist) * dpr, y: ry * dpr });
+      }
+      const restJ = extremes(imgS, restC.width, restC.height, rpts, 1, 0);
+      const rest = {
+        slices: restTail.slices,
+        diff: +((Math.abs(meanS - meanRef) / meanRef).toFixed(4)),
+        dip: +restJ.dip.toFixed(4),
+        spike: +restJ.spike.toFixed(4)
+      };
+      const ok = rot.n >= 20 && rot.dip <= 0.05 && rot.spike <= 0.05
+        && arc.joints >= 8 && arc.zeros === 0 && arc.minA >= 12
+        && arc.dip <= 0.05 && arc.spike <= 0.08
+        && rest.slices >= 4 && rest.slices < 20
+        && rest.diff <= 0.05 && rest.dip <= 0.05;
+      return { rot, arc, rest, ok };
     })();
     out.seam = seam;
 
@@ -772,7 +841,7 @@ async function main() {
   if (!result.ok) fail.push({ reason: "play", result });
   if (errs.length) fail.push({ reason: "console", errs });
   const ok = fail.length === 0 && files.ok;
-  const text = JSON.stringify({ ok, files: { ok: files.ok, release: files.release, slice: files.slice, wired: files.wired, owners: files.owners }, result, errs, shot }, null, 2);
+  const text = JSON.stringify({ ok, files: { ok: files.ok, release: files.release, slice: files.slice, inkOk: files.inkOk, wired: files.wired, owners: files.owners }, result, errs, shot }, null, 2);
   console.log(text);
   process.exit(ok ? 0 : 1);
 }
