@@ -61,7 +61,10 @@ function staticChecks() {
   }
   const mechanics = worlds.indexOf("return W.flare > 0 ? 0.13 : 0.075") >= 0
     && worlds.indexOf('W.biome === "Neutron Forge" && W.inBeam ? 1.5 : 1') >= 0
-    && data.indexOf("spin: 0.0019") >= 0;
+    && worlds.indexOf("PulsarBeam.containsPoint") >= 0
+    && data.indexOf("spin: 0.0019") >= 0
+    && data.indexOf('beam: "beam-cool"') >= 0
+    && data.indexOf('core: "core-ember"') >= 0;
   const retired = forge.indexOf("createRadialGradient") < 0
     && forge.indexOf("arc(") < 0
     && forge.indexOf("PulsarBeam") >= 0
@@ -86,15 +89,20 @@ function hook() {
   const proto = CanvasRenderingContext2D.prototype;
   const origDraw = proto.drawImage;
   const origAdd = CanvasGradient.prototype.addColorStop;
-  const bag = { src: [], forge: [] };
+  const origArc = proto.arc;
+  const bag = { src: [], forge: [], beamArc: 0 };
   window.__g7 = bag;
-  window.__g7reset = () => { bag.src.length = 0; bag.forge.length = 0; };
+  window.__g7reset = () => { bag.src.length = 0; bag.forge.length = 0; bag.beamArc = 0; };
   proto.drawImage = function (img) {
     if (img && img instanceof HTMLImageElement) {
       const src = img.currentSrc || img.src || "";
       if (src) bag.src.push(src);
     }
     return origDraw.apply(this, arguments);
+  };
+  proto.arc = function (x, y, r) {
+    if (this.canvas && this.canvas.id === "game" && r > 400) bag.beamArc++;
+    return origArc.apply(this, arguments);
   };
   CanvasGradient.prototype.addColorStop = function (offset, color) {
     const c = String(color);
@@ -177,6 +185,7 @@ async function scene(page) {
     place("neutron", 70, -40, Math.max(8, s.radius * 0.55), 0);
     place("neutron", -64, 86, Math.max(8, s.radius * 0.7), 1);
     place("dust", -24, 30, Math.max(4, s.radius * 0.16), 3);
+    place("junk", 96, 36, s.radius * 1.35, 6);
     for (let i = 0; i < 8; i++) {
       const living = await import("/js/living-world.js");
       living.updateLivingWorld(s, 1, 1);
@@ -216,8 +225,10 @@ async function scene(page) {
       coolCore: needle("neutron-cool"),
       emberCore: needle("neutron-ember"),
       pip: needle("radar-pip-pulsar"),
+      pipBig: needle("radar-pip-big"),
       bezel: needle("radar-bezel"),
       forgeGradients: window.__g7.forge.length,
+      beamArc: window.__g7.beamArc,
       hole: lum(center) + 20 < lum(disk),
       center: lum(center),
       disk: lum(disk),
@@ -370,6 +381,148 @@ async function emberDown() {
   return { ok, reason: ok ? "sibling pngs still draw" : "a missing beam hid its siblings", result, pageErrors };
 }
 
+async function beamFootprint() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await boot(page);
+  const result = await page.evaluate(async () => {
+    const { Theme } = await import("/js/core/Theme.js");
+    const { PulsarBeam } = await import("/js/core/PulsarBeam.js");
+    const t0 = performance.now();
+    while (!Theme.pulsar.ready && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const length = 1500;
+    const b0 = 1000;
+    const inner = 0.03 * b0;
+    const dists = [0.25 * b0, 0.65 * b0, 1.15 * b0];
+    const lumOf = (img, x, y) => {
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.drawImage(img, 0, 0);
+      const ix = Math.round(x);
+      const iy = Math.round(y);
+      if (ix < 0 || iy < 0 || ix >= c.width || iy >= c.height) return 0;
+      const p = g.getImageData(ix, iy, 1, 1).data;
+      return (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255 * (p[3] / 255);
+    };
+    const probe = (id, halfWidth) => {
+      PulsarBeam._shown = -1;
+      const scale = PulsarBeam.widthScale(halfWidth, 400);
+      const spr = Theme.pulsar.sprite(id);
+      const lay = PulsarBeam.layout(spr, length, scale);
+      const end = spr.visibleEndX;
+      const pulsar = { x: 0, y: 0, ang: 0.4, beam: id, variant: 0 };
+      const misses = [];
+      const check = (dist, lat, expectIn, label) => {
+        const u = dist / length;
+        const half = PulsarBeam.profileHalf(spr, Math.max(0, Math.min(1, u))) * lay.drawH;
+        const lx = dist;
+        const ly = half * lat;
+        const c = Math.cos(pulsar.ang);
+        const s = Math.sin(pulsar.ang);
+        const x = lx * c - ly * s;
+        const y = lx * s + ly * c;
+        const inside = PulsarBeam.containsPoint(pulsar, x, y, halfWidth, length, 0, 0, 1, inner);
+        const sx = spr.pivot[0] + (dist / length) * (end - spr.pivot[0]);
+        const sy = spr.pivot[1] + ((half * lat) / lay.drawH) * spr.h;
+        const lum = lumOf(spr.image, sx, sy);
+        const bright = lum >= 0.08;
+        const ok = inside === expectIn && bright === expectIn;
+        if (!ok) misses.push({ label, dist, lat, inside, expectIn, lum: +lum.toFixed(3), bright });
+      };
+      for (const dist of dists) check(dist, 0.4, true, "in");
+      check(0.65 * b0, 1.6, false, "side");
+      check(1.55 * b0, 0, false, "tip");
+      const back = PulsarBeam.containsPoint(pulsar, -Math.cos(pulsar.ang) * (0.65 * b0), -Math.sin(pulsar.ang) * (0.65 * b0), halfWidth, length, 0, 0, 1, inner);
+      if (!back) misses.push({ label: "opposite", inside: false });
+      return { id, scale: +scale.toFixed(3), end, misses };
+    };
+    const rest = ["beam-cool", "beam-ember"].map(id => probe(id, 0.075));
+    const flare = ["beam-cool", "beam-ember"].map(id => probe(id, 0.13));
+    const ok = rest.every(r => !r.misses.length) && flare.every(r => !r.misses.length);
+    return { ok, rest, flare };
+  });
+  const pageErrors = page._errs.filter(e => e.indexOf("console:") !== 0);
+  await browser.close();
+  const ok = !!(result.ok && !pageErrors.length);
+  return { ok, reason: ok ? "painted footprint matches inBeam" : "beam footprint and inBeam disagree", result, pageErrors };
+}
+
+async function biteNeutron(page) {
+  return page.evaluate(async () => {
+    const bh = window.__bh;
+    const s = bh.state;
+    const entities = await import("/js/entities.js");
+    const { Theme } = await import("/js/core/Theme.js");
+    const t0 = performance.now();
+    while (!Theme.neutron.ready && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    Object.assign(bh.dev.cfg, { galaxy: 7, biome: "Neutron Forge", tier: 6, depth: 1, zen: false, wisp: false });
+    bh.dev.enter();
+    bh.dev.frozen = true;
+    s.paused = true;
+    bh.debris.clear();
+    const e = entities.createEntity(entities.typeById("neutron"), s.playerX, s.playerY, 1);
+    e.radius = 12;
+    e.seed = 1;
+    e.look = -1;
+    e.depthT = 1;
+    e._spawnAlpha = 1;
+    e.vx = 0;
+    e.vy = 0;
+    s.radius = e.radius / (s.eatRatio || 0.88) + 6;
+    s.anchorSmooth = s.radius;
+    const reach = s.radius + e.radius * 0.4;
+    e.x = s.playerX + reach * 0.9;
+    e.y = s.playerY;
+    s.entities.push(e);
+    const before = s.mass;
+    bh.feeding.update(1);
+    const pieces = bh.debris.pieces.filter(p => p.on && p.frame && p.frame.image);
+    const srcs = pieces.map(p => p.frame.image.currentSrc || p.frame.image.src || "");
+    return {
+      eaten: !s.entities.includes(e),
+      mass: s.mass > before,
+      pieces: pieces.length,
+      neutron: srcs.some(u => u.indexOf("neutron-") >= 0),
+      ready: Theme.neutron.ready,
+      hasCool: Theme.neutron.has("core-cool")
+    };
+  });
+}
+
+async function neutronBite() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await boot(page);
+  const painted = await biteNeutron(page);
+  const pageErrors = page._errs.filter(e => e.indexOf("console:") !== 0);
+  await browser.close();
+  const ok = !!(painted.eaten && painted.mass && painted.pieces >= 1 && painted.neutron && !pageErrors.length);
+  return { ok, reason: ok ? "neutron bite leaves painted debris" : "neutron bite did not leave painted debris", painted, pageErrors };
+}
+
+async function neutronBiteAborted() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.route("**/assets/neutron/*.png", route => route.abort());
+  await boot(page);
+  const bare = await biteNeutron(page);
+  const pageErrors = page._errs.filter(e => e.indexOf("console:") !== 0);
+  const consoleErrors = page._errs.filter(e => e.indexOf("console:") === 0 && e.indexOf("neutron-") < 0 && e.indexOf("Failed to load resource") < 0);
+  await browser.close();
+  const ok = !!(bare.eaten && bare.mass && bare.pieces === 0 && !bare.neutron && bare.ready && !bare.hasCool && !pageErrors.length && !consoleErrors.length);
+  return {
+    ok,
+    reason: ok ? "a missing neutron painting leaves no debris" : "aborting neutron art still drew debris or threw",
+    bare, pageErrors, consoleErrors
+  };
+}
+
 async function main() {
   const fail = [];
   const stat = staticChecks();
@@ -385,7 +538,8 @@ async function main() {
   g7.pageErrors = pageErrors;
   g7.consoleErrors = consoleErrors;
   const drawn = g7.biome === "Neutron Forge" && g7.backdrop && g7.coolBeam && g7.emberBeam
-    && g7.coolCore && g7.emberCore && g7.pip && g7.bezel && g7.hole && !g7.forgeGradients
+    && g7.coolCore && g7.emberCore && g7.pip && g7.pipBig && g7.bezel && g7.hole
+    && !g7.forgeGradients && !g7.beamArc
     && g7.ready.pulsar && g7.ready.neutron && g7.ready.radar;
   if (!drawn || pageErrors.length || consoleErrors.length) {
     fail.push({ ok: false, reason: "galaxy 7 did not render the paintings cleanly", g7 });
@@ -399,8 +553,14 @@ async function main() {
   if (!extra.ok) fail.push(extra);
   const sibling = await emberDown();
   if (!sibling.ok) fail.push(sibling);
+  const footprint = await beamFootprint();
+  if (!footprint.ok) fail.push(footprint);
+  const bite = await neutronBite();
+  if (!bite.ok) fail.push(bite);
+  const biteAbort = await neutronBiteAborted();
+  if (!biteAbort.ok) fail.push(biteAbort);
 
-  const result = { ok: fail.length === 0, stat, g7, extra, sibling, shot: SHOT, fail };
+  const result = { ok: fail.length === 0, stat, g7, extra, sibling, footprint, bite, biteAbort, shot: SHOT, fail };
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.ok ? 0 : 1);
 }

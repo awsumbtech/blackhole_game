@@ -63,6 +63,14 @@ export class NeutronStar {
     return at >= 0 ? at : 0;
   }
 
+  /** Named core id, otherwise the pulsar's variant index. */
+  static landmarkIndex(p, fallback) {
+    const ids = this.ids();
+    if (p && p.core && ids.indexOf(p.core) >= 0) return ids.indexOf(p.core);
+    if (p && (p.variant === 0 || p.variant > 0)) return p.variant;
+    return fallback || 0;
+  }
+
   /** Bite pieces are the same painting. Missing art leaves no pieces. */
   static debrisFrames(e) {
     const spr = Theme.neutron.sprite(this.idFor(e));
@@ -77,8 +85,10 @@ export class NeutronStar {
   /**
    * Centre the painting on (x, y). `r` is the core radius. `index` picks the
    * variant. `breath` (0..1) is the calm pulse; omit it to hold still.
+   * `ang` turns a landmark so its baked polar jets (manifest `axis`) track
+   * the sweeping beam. Food omits `ang` and stays as painted.
    */
-  static paint(ctx, x, y, r, alpha, index, breath) {
+  static paint(ctx, x, y, r, alpha, index, breath, ang) {
     if (!(alpha > 0) || !(r > 0)) return false;
     const id = this.idAt(index);
     if (!id) return false;
@@ -93,6 +103,7 @@ export class NeutronStar {
     const d = rr * this.SPAN;
     ctx.save();
     ctx.translate(x, y);
+    if (typeof ang === "number" && typeof spr.axis === "number") ctx.rotate(ang - spr.axis);
     ctx.globalAlpha = a;
     Theme.neutron.blit(ctx, spr, 0, 0, d, d);
     ctx.restore();
@@ -114,8 +125,8 @@ export class NeutronStar {
       if (!(r > 0)) continue;
       if (Math.abs(x - camX) > vw * 0.5 + r * 6) continue;
       if (Math.abs(y - camY) > vh * 0.5 + r * 6) continue;
-      const index = (p.variant === 0 || p.variant > 0) ? p.variant : i;
-      if (this.paint(ctx, x, y, r, cover, index, breath)) any = true;
+      const index = this.landmarkIndex(p, i);
+      if (this.paint(ctx, x, y, r, cover, index, breath, p.ang || 0)) any = true;
     }
     return any;
   }

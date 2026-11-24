@@ -238,6 +238,7 @@ const SETUP = {
     ringSpots(r, L.spots[0], b0 * L.spots[1], b0 * L.spots[2]).forEach(([x, y], i) => {
       const P = L.pulsars[i];
       W.pulsars.push({ x, y, ang: r() * TAU, spin: (i ? -1 : 1) * L.spin, variant: i,
+        beam: P.beam || "", core: P.core || "",
         art: { type: "neutron", color: P.color, seed: 99 + i, variant: 0, look: i, radius: b0 * 0.012 },
         rgb: P.rgb });
       W.lms.push(landmark(setName(P.name), "pulsar", x, y, b0 * L.lmR, P.rgb));
@@ -605,15 +606,13 @@ const UPDATE = {
   "Neutron Forge"(state, dt, wdt) {
     W.inBeam = false;
     const hw = beamHalfWidth();
+    const len = wx(W.b0 * 1.5);
+    const inner = wx(W.b0 * 0.03);
+    // Same clock as the sweep. Pause never reaches here; slow-mo shrinks wdt.
+    PulsarBeam.widthScale(hw, wdt);
     for (const p of W.pulsars) {
       p.ang += p.spin * wdt;
-      const dx = state.playerX - px(p.x), dy = state.playerY - py(p.y);
-      const d = hypot(dx, dy);
-      if (d < wx(W.b0 * 0.03) || d > wx(W.b0 * 1.5)) continue;
-      let diff = Math.atan2(dy, dx) - p.ang;
-      diff = ((diff % Math.PI) + Math.PI * 1.5) % Math.PI - Math.PI / 2;   // two opposite beams
-      // Angular half-width, widened a little so the beam is a fair target
-      if (Math.abs(diff) < hw + state.radius / Math.max(d, 1)) W.inBeam = true;
+      if (PulsarBeam.containsPoint(p, state.playerX, state.playerY, hw, len, W.ox, W.oy, W.f, inner)) W.inBeam = true;
     }
     W.beamA += ((W.inBeam ? 1 : 0) - W.beamA) * Math.min(1, 0.08 * dt);
     if (W.inBeam) state.worldHint?.("beam_first", "Inside the beam: everything you eat counts 50% more.", 3600);
@@ -911,7 +910,7 @@ const DRAW = {
   },
 
   "Neutron Forge"(ctx, state, fx, vw, vh) {
-    const len = wx(W.b0 * 1.6);
+    const len = wx(W.b0 * 1.5);
     const breath = fx.reduceMotion ? 0.5 : fx.breath;
     PulsarBeam.draw(ctx, W.pulsars, AM, beamHalfWidth(), len, W.ox, W.oy, W.f, state.camX, state.camY, vw, vh);
     NeutronStar.landmarks(ctx, W.pulsars, AM, breath, W.ox, W.oy, W.f, state.camX, state.camY, vw, vh);
