@@ -1,0 +1,43 @@
+{
+ "pack": "vast-g2-comet-current",
+ "version": "1.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "total_generations": 23,
+ "total_rerolls": 0,
+ "folder": "assets/dust",
+ "files": [
+  {
+   "file": "dust-wisp-1.png",
+   "sha256": "0f03c4f00473333c9310e218bfcd2924832d76fe0b9cc45efa6304aa65a287b5",
+   "prompt": "Game asset, soft painterly digital painting: a small soft cosmic dust filament, a gently curving wisp of faint warm-grey and dusty lavender mineral dust with tiny sunlit golden and white grains glinting along it, airy and translucent, feathered soft ends, no hard edges, no straight lines. Small, centered, occupying the middle half of the frame with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/dust-wisp-1.jpg",
+   "raw_sha256": "18e3118b03e81727ed004a4ebf2516cef2dfd360cd0825291e09b4d1a76e110d",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1657,
+    "scale_y": 0.1657,
+    "offset": [
+     7,
+     28
+    ],
+    "content": [
+     114,
+     72
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  }
+ ]
+}

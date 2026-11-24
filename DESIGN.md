@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.9.0** (ships, planets, and moons come from art manifests)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.9.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.10.0** (Galaxy 2 and the shared pebble, dust, current, edge, and radar paintings come from art manifests)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.10.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -82,8 +82,8 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
   - **Icons:** regenerate with `python3 tools/make-icons.py`.
 - **v9 art (every type its own little painting).** Brian: "the space dust looks like mobs", "planets and meteors need different graphics for everything".
   - **Looks:** each type has a set of looks (`LOOKS` in art.js); `lookOf(e)` takes `e.look` if >= 0, else the seed. Types in `OWN` paint their own palette, so their cache key is `type||look|variant` (planet keeps variant for rings/moon). One look always paints the same.
-  - **Dust** is never a round blob: a faint drift of gas carrying grains and glints (silicate grit, ice glints, carbon soot, pink gas wisp). **Grit & pebbles:** low-poly lit chips, gravel handfuls, ice flakes, glassy basalt, rust. **Asteroids** (`meteor` type): lumpy potatoes and contact binaries in stony, iron (metal sheen), carbon and rusty tones, lit craters. **Meteors** are shower rocks with `e.hot = 1` (set in living-world `streamEvent`): a glowing entry streak (`tailFor(.., hot)`) and a heated leading edge (`heatFor`), both rotated to the velocity and fading as it slows. No meteor showers at tier 0 (a Dust Drift stands in; see tier gating in §7c).
-  - **Comets:** dark icy nucleus, cyan / C2-green / white coma, soft sunward jets, warm dust tail + blue ion tail. **Moons:** grey maria, icy cracked (Europa), volcanic (Io), dark dusty (Callisto), bright tiger-striped, rusty with one big crater. **Planets:** 10 archetypes (`planetPalette`): rocky, ocean, desert, ice, lava, banded gas giant with a storm, ice giant, ringed, cloud-wrapped, exotic; 30 looks. Atmosphere halo is thicker on the lit side and the limb glow is hidden by night.
+  - **v9.10.0 paintings.** Dust, grit, meteors and comets are pictures (`SpaceDust`, `SpaceRock`, `Comet`, `CometTail`, `CometSparkle`). A comet is cyan or silver from its seed, never a tint. Pebble clusters are a few of the four painted rocks plus a dust wisp; loose pebbles and meteors are one rock, swayed only a little so the upper-left light stays put. Galaxy 2's river is `CurrentStream` (soft wisps and flow motes). Edge arrows and the radar are `EdgeCue` and `RadarInstrument`. A hot meteor still has its entry streak and leading glow. The hole, the HUD, and the save are unchanged.
+  - **Moons and planets** are the v9.9.0 paintings on `Body`: the types named in `assets/moons` and `assets/planets`. Rings are painted layers.
   - **Stars** by spectral type (`SPECTRA`, M to B, spots on cool stars); the Cradle sun is pinned to `look: 0` (G). **Systems:** sun by type, tilted orbits, little lit worlds, sometimes a companion star or a belt. **Nebulae:** emission, blue reflection, planetary ring, dark pillars (only where the glow is), supernova filaments. **Clusters:** globular or open. **Galaxies:** spiral, barred, elliptical, irregular, edge-on.
   - **Light:** always upper left (`LX, LY`). Rocks sway (sin of rotation, ±0.35 rad) instead of spinning so their light stays put. `shade()` gives a curved terminator; `facets()` lights chips.
   - **Back layers** use 8 looks per type; an object merging forward keeps the look it had in the haze.
@@ -378,7 +378,15 @@ js/core/
   Inflow.js             v9.5 motes and impact burst (v9.7: the circling grain cloud, nIn, is off)
   Backdrop.js           v9.7 painted galaxy sky (one JPG per biome, no parallax)
   DebrisField.js        v9.7 pieces of the eaten sprite, only while a bite is in flight
-  CometTail.js          aims a comet's existing tail sprite behind its own travel in the world
+  CometTail.js          aims a comet's painted plume behind its own travel
+  Comet.js              coma + nucleus from assets/comets
+  CometSparkle.js       pooled ice-dust motes along a moving plume
+  SpaceRock.js          pebbles and pebble clusters from assets/rocks
+  SpaceDust.js          dust filaments from assets/dust
+  CurrentStream.js      Galaxy 2 river wisps and flow motes
+  EdgeCue.js            painted off-screen direction
+  RadarInstrument.js    painted radar dial
+  PictureCatalog.js     one folder of named paintings
   HudControls.js        v9.5.2 controls bar (pause, sound, volume, stats, restart) + calm restart confirm
   DevMode.js            hidden play-test sandbox (v9.3): panel, save suspension + snapshot restore
 js/art.js               thin index: same exports as before (spriteFor, drawBlackHoleArt, heatFor, tailFor...)
@@ -451,6 +459,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 - **v9.5 Inflow:** event-driven light around the hole (`js/core/Inflow.js`, §3): spiralling accretion inflow with speed-stretched streaks, rising motes, and a radial streak burst + warm bloom on tier-up / big swallow, synced to a new low soft swell (§7d exception). Pooled, allocation-free, quality-scaled, still under Reduce Motion.
 - **v9.5.2 Touch pass:** 44 px bar controls and a 44 px volume touch area, Restart moved to the far right with a calm confirm, larger GALAXY/SCALE labels, settings toggles 44 px (and the Breathing guide "Off" no longer clipped). New `HudControls` class (§4b).
 - **v9.6 Flagship:** the Ruined Armada Flagship is redrawn as a detailed hi-res capital wreck (`js/core/Flagship.js`, §3), painted once into a cached sprite over ~30 frames, then a single blit. Frame cost unchanged (~0.9 ms high quality).
+- **v9.10.0 Galaxy 2 painted overhaul (Nov 23 2026):** Comets, pebble clusters, loose rocks, dust, the Comet Current, edge cues, and the radar are paintings. `Theme` also loads `assets/comets`, `rocks`, `dust`, `current`, and `hud/radar`, with the same timeout, backoff, and online retry as the ship and body indexes. A bite of those types leaves the painted piece. The gold disc, the too-big ring, and the arrival disc stay gone. The black hole, the HUD bars, and the save are unchanged. Cache `blackhole-v9.10.0`.
 - **v9.9.0 Art manifests (Nov 16 2026):** Ships, planets, and moons are named by manifests under `assets/`. `Theme` loads the indexes and never rejects into boot: a missing or hanging index is timed out and retried with backoff, and again when the network comes back. A craft spawned while the ship index was missing picks its class once the catalog is ready. The three index files are in the service worker precache. A new ship or planet is an image plus a manifest entry. The hard-coded ship class list and the planet painters are gone. Ship tier bands live in the ship index, so capital stays at tier 8+ if another class is added. The courier and test-crystal are test entries: they draw when asked for, they are not on the random ladder, and they are not preloaded in play. `Body` blits painted layers (back ring, body, front ring) for a planet or a moon. Ready depends only on those layers; missing debris draws nothing and the body can still be eaten. A bite can use that type's painted debris frames. Based on v9.8.1: the gold disc, the too-big ring, and the arrival disc stay gone for every object, including planets and moons. A ship still draws its painted `liveEdge` / `wreckEdge`. `FlagshipLight` still names the flagship's rim colour until that landmark is a sheet. Cache `blackhole-v9.9.0`.
 - **v9.8.1 No gold disc, no too-big ring (Nov 16 2026):** the filled gold disc is gone for every object type, and the stroked too-big ring is gone for every object type, including ships. The warm arrival disc on food merging in from a back layer is gone as well. The hazy-to-sharp merge stays, and so does the full-screen "world opens" pulse. Nothing replaces the removed discs or the ring. A ship's painted `liveEdge` / `wreckEdge` stays. The too-big cue is removed pending an art-object replacement. Big Appetite still adds 60% to a big catch and still brings a ship's gold edge in sooner (0.72 instead of 0.82). Cache `blackhole-v9.8.1`.
 - **v9.8.0 Ships are painted sheets (Nov 15 2026):** `Ship` draws one craft from `assets/ships/<class>.webp`. `SpriteSheet` loads the picture and its JSON and draws a named frame, centred. The nose in the art faces right. Facing left is a vertical flip (`ctx.scale(1, -1)`). A wreck still tumbles, an eaten ship still breaks into four plates, and the engine glow still breathes. The big-catch gold edge is the `liveEdge` or `wreckEdge` frame, with the same breath-then-steady timing. `paintShip` and `drawShip` are deleted. Until a sheet has decoded, that ship is not drawn. A failed load tries again after a few seconds. The five sheets are not precached. Cache `blackhole-v9.8.0`.
@@ -487,8 +496,10 @@ js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayC
                     RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
                     GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Backdrop,
                     DebrisField, GoldenVeil, Flagship, DevMode, HudControls,
-                    Theme, ArtManifest, BodyCatalog, ShipCatalog, Body, FlagshipLight
-js/art.js + js/art/ painterly sprites by kind (dust, rocks, comets, stars, deepsky), hole, rival, kit; planets and moons are js/core/Body.js
+                    Theme, ArtManifest, BodyCatalog, ShipCatalog, Body, FlagshipLight,
+                    PictureCatalog, Comet, CometSparkle, SpaceRock, SpaceDust,
+                    CurrentStream, EdgeCue, RadarInstrument
+js/art.js + js/art/ painterly sprites by kind (stars, deepsky), hole, rival, kit; comets, dust and rocks are js/core pictures; planets and moons are js/core/Body.js
 js/data/            plain data: worlds (mechanics, landmark layouts), objects (types), biomes
 js/tiers.js         scale ladder         js/worlds.js       per-galaxy mechanics & landmarks
 js/entities.js      entity factory, biome picking   js/living-world.js gravity, spawning, gentle events (CFG)

@@ -8,6 +8,14 @@ export { Inflow } from "./Inflow.js";
 export { Backdrop } from "./Backdrop.js";
 export { DebrisField } from "./DebrisField.js";
 export { CometTail } from "./CometTail.js";
+export { Comet } from "./Comet.js";
+export { CometSparkle } from "./CometSparkle.js";
+export { SpaceRock } from "./SpaceRock.js";
+export { SpaceDust } from "./SpaceDust.js";
+export { CurrentStream } from "./CurrentStream.js";
+export { EdgeCue } from "./EdgeCue.js";
+export { RadarInstrument } from "./RadarInstrument.js";
+export { PictureCatalog } from "./PictureCatalog.js";
 export { GoldenVeil } from "./GoldenVeil.js";
 // sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.
 export { HudControls, HUD_TAP } from "./HudControls.js";

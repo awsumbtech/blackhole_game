@@ -8,6 +8,11 @@
 import { spriteFor, tailFor, heatFor, setArtQuality, beginArtFrame } from "../js/art.js";
 import { createEntity, typeById } from "../js/entities.js";
 import { blurFor } from "../js/depth.js";
+import { Theme } from "../js/core/Theme.js";
+import { Comet } from "../js/core/Comet.js";
+import { CometTail } from "../js/core/CometTail.js";
+import { SpaceDust } from "../js/core/SpaceDust.js";
+import { SpaceRock } from "../js/core/SpaceRock.js";
 const P = new URLSearchParams(location.search);
 const type = P.get("type") || "dust", px = +(P.get("px") || 24), n = +(P.get("n") || 12), cols = +(P.get("cols") || 4);
 const hot = P.has("hot"), blur = +(P.get("blur") || 0);
@@ -21,6 +26,7 @@ let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
 for (let i = 0; i < 120; i++) { g.fillStyle = `rgba(200,210,255,${0.1 + rnd() * 0.3})`; g.fillRect(rnd() * W, rnd() * H, 1, 1); }
 g.fillStyle = "#9aa"; g.fillText(`${type} r=${px}px q=${P.get("q") || "high"}${hot ? " hot" : ""}${blur ? " blur" + blur : ""}`, 6, H - 6);
 let seed = +(P.get("seed") || 1);
+await Theme.start();
 for (let i = 0; i < n; i++) {
   beginArtFrame();
   const t = typeById(type), e = createEntity(t, 0, 0, 1);
@@ -30,17 +36,27 @@ for (let i = 0; i < n; i++) {
   e.look = i; e._artBase = null; e._sp = null;
   const x = (i % cols + 0.5) * cell, y = (Math.floor(i / cols) + 0.5) * cell;
   if (e.hot) {
-    const tt = tailFor(e.color, px * dpr, false, true), len = px * 8, hg = px * 1.6;
-    g.save(); g.translate(x, y); g.rotate(-2.5 + Math.PI); g.globalAlpha = 0.85; g.drawImage(tt.c, px * 0.2, -hg / 2, len, hg); g.restore(); g.globalAlpha = 1;
-  } else if (e.hasTail) {
-    const tt = tailFor(e.color, px * dpr, false), ang = 0.6, len = px * 6, hg = px * 2.4;
-    g.save(); g.translate(x, y); g.rotate(ang + 0.12); g.globalAlpha = 0.9; g.drawImage(tt.c, 0, -hg / 2, len, hg);
-    if (type === "comet") { g.rotate(-0.12); const it = tailFor(e.color, px * dpr, true); g.drawImage(it.c, 0, -px * 0.6, len * 1.35, px * 1.2); }
-    g.restore(); g.globalAlpha = 1;
+    const tt = tailFor(e.color, px * dpr, false, true);
+    if (tt) {
+      const len = px * 8, hg = px * 1.6;
+      g.save(); g.translate(x, y); g.rotate(-2.5 + Math.PI); g.globalAlpha = 0.85; g.drawImage(tt.c, px * 0.2, -hg / 2, len, hg); g.restore(); g.globalAlpha = 1;
+    }
   }
-  const sp = spriteFor(e, px * dpr); const d = sp.k * px;
-  if (blur) { const bl = blurFor(sp.c, blur), pd = d * (1 + 2 * bl._pad); g.globalAlpha = 0.6; g.drawImage(bl, x - pd / 2, y - pd / 2, pd, pd); g.globalAlpha = 1; }
-  else g.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
+  if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor") {
+    if (e.type === "comet") {
+      const tail = new CometTail(0.6);
+      tail.aimed = true;
+      tail.drawComet(g, x, y, px, 1, e.color, px * dpr, 0.8, Comet.variant(e));
+      Comet.for(e).draw(g, x, y, px, 1);
+    } else if (e.type === "dust") SpaceDust.for(e).draw(g, x, y, px, 1);
+    else SpaceRock.for(e).draw(g, x, y, px, 1);
+  } else {
+    const sp = spriteFor(e, px * dpr); const d = sp.k * px;
+    if (sp.c) {
+      if (blur) { const bl = blurFor(sp.c, blur), pd = d * (1 + 2 * bl._pad); g.globalAlpha = 0.6; g.drawImage(bl, x - pd / 2, y - pd / 2, pd, pd); g.globalAlpha = 1; }
+      else g.drawImage(sp.c, x - d / 2, y - d / 2, d, d);
+    }
+  }
   if (e.hot) { const hs = heatFor(px * dpr), hd = hs.k * px; g.save(); g.globalCompositeOperation = "lighter"; g.translate(x, y); g.rotate(-2.5); g.globalAlpha = 0.9; g.drawImage(hs.c, -hd / 2, -hd / 2, hd, hd); g.restore(); }
 }
 window.done = true;

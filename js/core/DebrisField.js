@@ -13,8 +13,11 @@
 
 import { spriteFor } from "../art.js";
 import { shadowRadius } from "../art/hole.js";
-import { Ship } from "./Ship.js";
 import { Body } from "./Body.js";
+import { Comet } from "./Comet.js";
+import { Ship } from "./Ship.js";
+import { SpaceDust } from "./SpaceDust.js";
+import { SpaceRock } from "./SpaceRock.js";
 
 const CAP = 18;
 const PER_BITE = 4;
@@ -253,6 +256,29 @@ export class DebrisField {
     }
   }
 
+  /**
+   * Rocks, dust and comets leave the painted piece itself. No mask cut,
+   * no generated shape. Missing art leaves no pieces; the bite still lands.
+   */
+  _spawnPainted(e, base, still, shadowR, zoom) {
+    const frames = e.type === "comet" ? Comet.debrisFrames(e)
+      : e.type === "dust" ? SpaceDust.debrisFrames(e)
+      : SpaceRock.debrisFrames(e);
+    if (!frames || !frames.length) return;
+    const item = Math.max(1, e.radius * 2);
+    const minW = 6 / zoom;
+    const n = Math.min(PER_BITE, frames.length);
+    for (let i = 0; i < n; i++) {
+      const rel = frames[i].relSize > 0 ? frames[i].relSize : 1;
+      const dw = Math.max(minW, item * rel);
+      const p = this._free();
+      this._arm(p, base + (i - (n - 1) / 2) * 0.36, dw, dw, still, shadowR, false);
+      p.frame = frames[i];
+      const u = n === 1 ? 0 : i / (n - 1);
+      p.travel = still ? TURN_MIN * 0.45 : TURN_MIN + (TURN_MAX - TURN_MIN) * u;
+    }
+  }
+
   /** Start pieces on the rim at the eaten item's angle. The entity can go. */
   spawn(e) {
     const state = this.state;
@@ -266,6 +292,10 @@ export class DebrisField {
     }
     if (e.type === "planet" || e.type === "moon") {
       this._spawnListed(e, base, still, shadowR, zoom);
+      return;
+    }
+    if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor") {
+      this._spawnPainted(e, base, still, shadowR, zoom);
       return;
     }
     const px = Math.max(8, e.radius * zoom * (this.dpr || 1));

@@ -6,7 +6,8 @@
 //   quality.js  quality + size buckets + cache registry
 //   kit.js      colour, path and shading helpers
 //   sprites.js  sprite cache, looks, painter table
-//   dust / rocks / comets / planets / stars / deepsky.js  one painter set each
+//   dust / rocks / comets   dust, junk, meteor and comet are js/core pictures
+//   stars.js  deepsky.js    painters still used for those kinds
 //   hole.js     the player's hole (disk, ring, arc, reveal fx); rival.js  rival holes
 
 export { setArtQuality, getArtQuality } from "./art/quality.js";

@@ -1,0 +1,130 @@
+{
+ "pack": "vast-g2-comet-current",
+ "version": "1.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "total_generations": 23,
+ "total_rerolls": 0,
+ "folder": "assets/rocks",
+ "files": [
+  {
+   "file": "pebble-1.png",
+   "sha256": "5514d98ec46b830880b981ee17ada2d622474af565521bd4dca0e98c62c40539",
+   "prompt": "Game asset, soft painterly realism digital painting: a single small craggy space pebble, a lumpy grey-brown stony asteroid fragment with rich painted texture, many small craters, rough mineral grain and chipped facets painted organically (not low-poly). Strong directional light from the upper-left: warm-white rim highlight on the upper-left edge, cool indigo-navy shadow on the lower-right. Centered, fills about 65 percent of the frame, wide empty margin. Isolated on pure solid black #000000 background. No glow, no text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/pebble-1.jpg",
+   "raw_sha256": "7fb3cb75f4394fe21a394f390bd0eda59bb4498f4d7bff89ecf7dedb182d5a3b",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3033,
+    "scale_y": 0.3033,
+    "offset": [
+     17,
+     21
+    ],
+    "content": [
+     222,
+     214
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "pebble-2.png",
+   "sha256": "7a91907019db90e7647a3515f7c451481f50c0856d9171b849a56438b9474c94",
+   "prompt": "Game asset, soft painterly realism digital painting: a single icy space rock, a jagged wedge of dark slate rock with frosted pale-blue ice crystals packed into its crevices and a thin rime of frost on its ridges, rich painted surface detail. Lit from the upper-left with a crisp cool white rim light, deep navy shadow lower-right. Organic painterly forms, not low-poly. Centered, fills about 65 percent of the frame, wide empty margin. Isolated on pure solid black #000000 background. No glow, no text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/pebble-2.jpg",
+   "raw_sha256": "2872392a04ef711e09dc2661d0ee4b5147d7c8207e050fff20c211cde36f7415",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3066,
+    "scale_y": 0.3066,
+    "offset": [
+     18,
+     17
+    ],
+    "content": [
+     220,
+     222
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "pebble-3.png",
+   "sha256": "a7fa47ab314373b1956d850fb28a59a45b0d63a99f568efe712dd0e9c97ddb66",
+   "prompt": "Game asset, soft painterly realism digital painting: a single elongated space rock shaped like a lumpy bean, dark charcoal-black carbonaceous stone with rusty iron-red and ochre mineral speckles, a couple of deep impact craters and fine rubble texture, painted organically (not low-poly). Lit from the upper-left with a warm golden-white rim highlight on the upper-left edge, cool indigo shadow on the lower-right. Centered, slightly tilted, fills about 65 percent of the frame, wide empty margin. Isolated on pure solid black #000000 background. No glow, no text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/pebble-3.jpg",
+   "raw_sha256": "ee71aa5309da2aa4365e5e50f943feb8e2ab3f87fe8ebea7800588fa03aee8f9",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3194,
+    "scale_y": 0.3194,
+    "offset": [
+     17,
+     32
+    ],
+    "content": [
+     222,
+     191
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "pebble-4.png",
+   "sha256": "885f44af935c7585f25bb570e3468bfe45b62f093738602535897a75575c69e7",
+   "prompt": "Game asset, soft painterly realism digital painting: a single small rounded space boulder made of pale bluish-grey ice and packed snow mixed with darker gravel, smooth wind-worn shape with a few shallow pockmarks and a translucent glassy ice patch, rich painted texture. Lit from the upper-left with a bright icy-white rim light, soft violet-navy shadow on the lower-right. Organic painterly forms, not low-poly. Centered, fills about 60 percent of the frame, wide empty margin. Isolated on pure solid black #000000 background. No glow, no text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/pebble-4.jpg",
+   "raw_sha256": "98a788f87174260b83206d93727d65e2e165e0ca1fbc393987c5928b9f6c25da",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3333,
+    "scale_y": 0.3333,
+    "offset": [
+     17,
+     23
+    ],
+    "content": [
+     222,
+     210
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  }
+ ]
+}

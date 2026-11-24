@@ -32,9 +32,10 @@ const HOOK = () => {
     return origRot.call(this, ang);
   };
   proto.drawImage = function (img) {
-    if (img && img.width >= 16 && img.height > 0 && img.width / img.height >= 2.5) {
+    const src = img && (img.currentSrc || img.src || "");
+    if (typeof src === "string" && src.indexOf("comet-tail") >= 0) {
       const m = this.getTransform();
-      bag.push({ ang: Math.atan2(m.b, m.a), x: m.e, y: m.f, w: img.width, h: img.height });
+      bag.push({ ang: Math.atan2(m.b, m.a), x: m.e, y: m.f, w: img.naturalWidth || img.width, h: img.naturalHeight || img.height });
     }
     return origDraw.apply(this, arguments);
   };

@@ -1,0 +1,8 @@
+{
+  "kind": "dust",
+  "version": 1,
+  "format": "painted dust filaments. No tint.",
+  "sprites": [
+    { "id": "wisp-1", "role": "wisp", "file": "dust-wisp-1.png", "w": 128, "h": 128, "pivot": [64, 64] }
+  ]
+}

@@ -1,24 +1,25 @@
 // ─── CometTail ───
 // One job: aim a comet's tail behind that comet's own travel in the world.
 // The player, the camera and the zoom are not part of the step.
-// The pictures are the ones already painted (tailFor, or a find's own tail).
+// The picture is the painted plume for that comet (or a find's painted tail).
+// +x of the painting is the plume, so the rotation is the trailing angle.
 // This file does not draw a new shape.
 
-import { tailFor } from "../art.js";
-
-const TAU = Math.PI * 2;
-// Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
-// last heading. FOLLOW is how much of the new heading is taken in one frame.
-const HOLD = 0.06;
-const FOLLOW = 0.7;
-
-function wrap(a) {
-  a = (a + Math.PI) % TAU;
-  if (a < 0) a += TAU;
-  return a - Math.PI;
-}
+import { Theme } from "./Theme.js";
 
 export class CometTail {
+  static TAU = Math.PI * 2;
+  // Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
+  // last heading. FOLLOW is how much of the new heading is taken in one frame.
+  static HOLD = 0.06;
+  static FOLLOW = 0.7;
+
+  static wrap(a) {
+    a = (a + Math.PI) % CometTail.TAU;
+    if (a < 0) a += CometTail.TAU;
+    return a - Math.PI;
+  }
+
   constructor(ang = 0) {
     this.ang = ang;
     this.have = false;
@@ -52,46 +53,42 @@ export class CometTail {
     const step = Math.hypot(dx, dy);
     const frames = dt > 0 ? dt : 0;
     if (step > limit) return;
-    if (step < HOLD * frames || frames === 0) return;
+    if (step < CometTail.HOLD * frames || frames === 0) return;
     const target = Math.atan2(-dy, -dx);
     if (!this.aimed) {
       this.ang = target;
       this.aimed = true;
       return;
     }
-    const take = 1 - Math.pow(1 - FOLLOW, frames);
-    this.ang += wrap(target - this.ang) * take;
+    const take = 1 - Math.pow(1 - CometTail.FOLLOW, frames);
+    this.ang += CometTail.wrap(target - this.ang) * take;
   }
 
   /**
-   * The food comet: the cached dust tail, a little off-axis as before, and
-   * the straight ion tail on the trailing angle. `speed` only sets the length.
+   * Food comet. `variant` is 0 cyan or 1 silver. The plume's head pivot sits
+   * on the comet. `speed` only sets the length. No code ribbon, no ion stroke.
    */
-  drawComet(ctx, x, y, r, alpha, color, rpx, speed) {
-    const t = tailFor(color, rpx);
-    const len = r * (5 + Math.min(4, speed * 3));
-    const hgt = r * 2.4;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this.ang);
-    ctx.globalAlpha = alpha * 0.9;
-    ctx.rotate(0.12);
-    ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);
-    ctx.rotate(-0.12);
-    ctx.globalAlpha = alpha * 0.8;
-    const it = tailFor(color, rpx, true);
-    ctx.drawImage(it.c, 0, -r * 0.6, len * 1.35, r * 1.2);
-    ctx.restore();
+  drawComet(ctx, x, y, r, alpha, color, rpx, speed, variant = 0) {
+    const rows = Theme.comets.variants();
+    if (!rows.length || !(alpha > 0) || !(r > 0)) return false;
+    const row = rows[((variant % rows.length) + rows.length) % rows.length];
+    const spr = Theme.comets.sprite(row.tail);
+    if (!spr) return false;
+    const len = r * (14.0 + Math.min(5.0, (speed || 0) * 3.2));
+    return this.drawPainted(ctx, x, y, spr, len, alpha * 0.92);
   }
 
-  /** Blit a tail picture the caller already has. +x of the picture is the trailing end. */
-  drawSprite(ctx, x, y, sprite, w, h, alpha, composite) {
+  /** A painted plume the caller already resolved. +x trails along this.ang. */
+  drawPainted(ctx, x, y, spr, len, alpha) {
+    if (!spr || !spr.ok || !(len > 0) || !(alpha > 0)) return false;
+    const h = len * (spr.h / spr.w);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(this.ang);
+    ctx.globalCompositeOperation = "screen";
     ctx.globalAlpha = alpha;
-    if (composite) ctx.globalCompositeOperation = composite;
-    ctx.drawImage(sprite, 0, -h / 2, w, h);
+    Theme.comets.blit(ctx, spr, 0, 0, len, h);
     ctx.restore();
+    return true;
   }
 }

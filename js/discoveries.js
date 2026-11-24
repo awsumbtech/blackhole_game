@@ -6,6 +6,7 @@
 // leaning that way are the only cues. Nothing flashes, nothing is timed.
 
 import { CometTail } from "./core/CometTail.js";
+import { Theme } from "./core/Theme.js";
 
 const TAU = Math.PI * 2;
 
@@ -121,7 +122,6 @@ export function updateDiscoveries(state, dt, onFound) {
 // v8.1: each find gets its own painted sprite (cached once per find), a unique
 // glyph from its id: petals, rings, facets or a comet head. Drawn rotated slowly.
 const findSprites = new Map();
-let tailSprite = null;
 function hashId(id) { let h = 7; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return h; }
 function findSprite(def) {
   let c = findSprites.get(def.id);
@@ -180,19 +180,6 @@ function findSprite(def) {
   findSprites.set(def.id, c);
   return c;
 }
-function tail() {
-  if (tailSprite) return tailSprite;
-  const L = 256, H = 48;
-  tailSprite = document.createElement("canvas");
-  tailSprite.width = L; tailSprite.height = H;
-  const g = tailSprite.getContext("2d");
-  const lg = g.createLinearGradient(0, 0, L, 0);
-  lg.addColorStop(0, "rgba(255, 255, 255, 0.7)");
-  lg.addColorStop(1, "rgba(255, 255, 255, 0)");
-  g.fillStyle = lg;
-  g.beginPath(); g.moveTo(0, H / 2 - 10); g.quadraticCurveTo(L * 0.4, H / 2 - 8, L, H / 2); g.quadraticCurveTo(L * 0.4, H / 2 + 8, 0, H / 2 + 10); g.fill();
-  return tailSprite;
-}
 
 /** World-space draw (inside the camera transform, like the wisp). */
 export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) {
@@ -210,7 +197,9 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) 
     const fade = Math.min(1, f.age / 90);
     const tw = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(time * 0.0021 + f.at);
     if (f.def.kind === "comet") {
-      f.tail.drawSprite(ctx, x, y, tail(), r * 7, r * 1.4, 0.6 * fade, "lighter");
+      const tails = Theme.comets.idsByRole("tail");
+      const spr = tails.length ? Theme.comets.sprite(tails[hashId(f.def.id) % tails.length]) : null;
+      if (spr) f.tail.drawPainted(ctx, x, y, spr, r * 7.2, 0.55 * fade);
     }
     const sp = findSprite(f.def), d = r * 8.3 * (0.96 + 0.04 * tw);
     const rot = reduceMotion ? 0.4 : time * 0.0003 + f.at;

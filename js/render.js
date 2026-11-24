@@ -6,13 +6,19 @@ import { Body } from "./core/Body.js";
 // All canvas drawing. Starfield, nebula, entities, black hole, effects, boundary.
 
 import { spriteFor, tailFor, heatFor, drawBlackHoleArt, getArtQuality } from "./art.js";
+import { Comet } from "./core/Comet.js";
+import { CometSparkle } from "./core/CometSparkle.js";
 import { CometTail } from "./core/CometTail.js";
+import { EdgeCue } from "./core/EdgeCue.js";
+import { RadarInstrument } from "./core/RadarInstrument.js";
+import { SpaceDust } from "./core/SpaceDust.js";
+import { SpaceRock } from "./core/SpaceRock.js";
 const hypot = (x, y) => Math.sqrt(x * x + y * y);   // 2-arg Math.hypot without the varargs cost
 
 const TAU = Math.PI * 2;
 
-// Radar mark for something still too big to eat: soft rose, warm amber in the soft palette.
-// The stroked ring that used this colour was removed in v9.8.1.
+// The painted radar pip does not recolour. These stay so the soft-palette
+// hook still has a home; nothing reads them into a fill any more.
 let TOO_BIG_RGB = "240, 130, 140", TOO_BIG_DOT = "rgba(240, 130, 140, 0.8)";
 // A ship's painted gold edge starts once you're 82% of the way to its size.
 let BIG_HALO_FROM = 0.82;
@@ -33,18 +39,21 @@ const ROTATES = { junk: true, meteor: true, craft: true };
 export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time, eatRatio = 0.88, zoom = 1, dpr = 1, breath = 0.5, hx = w / 2, hy = h / 2, still = false, dt = 1) {
   const pxScale = zoom * dpr;
   const twinkle = 0.9 + breath * 0.1;
+  CometSparkle.begin(dt, still);
 
   for (const e of entities) {
     // Aim every comet, including ones off screen, from the step it just took.
     if (e.hasTail && !e.consumed) {
       if (!e.tail) e.tail = new CometTail();
+      if (e.consuming) CometSparkle.release(e);
+      else CometSparkle.note(e);
       e.tail.sample(e.x, e.y, dt, Math.hypot(w, h));
     }
     const sx = e.x - camX + w / 2;
     const sy = e.y - camY + h / 2;
 
     // Culling (margin covers coronas and comet tails)
-    const margin = e.radius * (e.hasTail ? 9 : 3.2) + 20;
+    const margin = e.hasTail ? e.radius * 21 + 24 : e.radius * 3.2 + 20;
     if (sx < -margin || sx > w + margin || sy < -margin || sy > h + margin) continue;
 
     if (e.powerup) {
@@ -76,7 +85,10 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     const rpx = e.radius * pxScale;
 
     if (e.hasTail && e.tail) {
-      e.tail.drawComet(ctx, sx, sy, r, alpha, e.color, rpx, hypot(e.vx, e.vy));
+      const speed = hypot(e.vx, e.vy);
+      e.tail.drawComet(ctx, sx, sy, r, alpha, e.color, rpx, speed, Comet.variant(e));
+      if (!e.consuming) CometSparkle.spawn(e, e.tail.ang, speed, r);
+      CometSparkle.draw(ctx, e, camX, camY, w, h, alpha);
     }
 
     // v9: a meteor entering hot: a glowing entry streak behind it (cools as it slows)
@@ -86,12 +98,14 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
       heat = Math.min(1, speed / (e.baseSpeed || 1) * 0.9) * (still ? 0.6 : 1);
       if (heat > 0.05) {
         const t = tailFor(e.color, rpx, false, true);
-        hang = Math.atan2(e.vy, e.vx);
-        const len = r * (6 + Math.min(4, speed * 4)), hgt = r * 1.6;
-        ctx.globalAlpha = alpha * 0.85 * heat;
-        ctx.translate(sx, sy); ctx.rotate(hang + Math.PI);
-        ctx.drawImage(t.c, r * 0.2, -hgt / 2, len, hgt);
-        ctx.rotate(-hang - Math.PI); ctx.translate(-sx, -sy);
+        if (t && t.c) {
+          hang = Math.atan2(e.vy, e.vx);
+          const len = r * (6 + Math.min(4, speed * 4)), hgt = r * 1.6;
+          ctx.globalAlpha = alpha * 0.85 * heat;
+          ctx.translate(sx, sy); ctx.rotate(hang + Math.PI);
+          ctx.drawImage(t.c, r * 0.2, -hgt / 2, len, hgt);
+          ctx.rotate(-hang - Math.PI); ctx.translate(-sx, -sy);
+        }
       }
     }
 
@@ -114,6 +128,15 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
         bodyAlpha = alpha * (0.6 + 0.4 * q) * q;
       }
       Body.for(e).draw(ctx, sx, sy, e.radius, bodyAlpha);
+    } else if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor") {
+      let bodyAlpha = alpha;
+      if (e.depthT < 1) {
+        const q = e.depthT * e.depthT * (3 - 2 * e.depthT);
+        bodyAlpha = alpha * (0.6 + 0.4 * q) * q;
+      }
+      if (e.type === "comet") Comet.for(e).draw(ctx, sx, sy, r, bodyAlpha);
+      else if (e.type === "dust") SpaceDust.for(e).draw(ctx, sx, sy, r, bodyAlpha);
+      else SpaceRock.for(e).draw(ctx, sx, sy, r, bodyAlpha);
     } else {
     const sp = spriteFor(e, rpx);
     let d = sp.k * r;
@@ -303,92 +326,10 @@ export function drawRipples(ctx, ripples, w, h, camX, camY, zoom = 1) {
 }
 
 // ─── MINIMAP ───
+// The dial is RadarInstrument. This function is the attachment Scene already calls.
 
-/**
- * v5 local radar: centred on you, shows what's around (about 2.6 view-widths),
- * a faint frame for what's on screen, and a fading trail of where you've been.
- * overlay(ctx, originX, originY, scale) draws landmarks in world coordinates.
- */
-const TRAIL_STYLES = new Map();
-function trailStyle(a) {
-  const k = a.toFixed(3);
-  let v = TRAIL_STYLES.get(k);
-  if (!v) TRAIL_STYLES.set(k, v = `rgba(150, 155, 255, ${k})`);
-  return v;
-}
-export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, playerRadius = 0, eatRatio = 0.88, overlay = null, extra = {}) {
-  const mapSize = 96;
-  const r = mapSize / 2;
-  const cx = w - r - 16;
-  const cy = h - r - 16;
-  const scale = r / range;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, TAU);
-  ctx.fillStyle = "rgba(4, 6, 16, 0.7)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(110, 114, 255, 0.16)";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.clip();
-
-  // Soft range rings
-  ctx.strokeStyle = "rgba(110, 114, 255, 0.07)";
-  ctx.beginPath(); ctx.arc(cx, cy, r * 0.33, 0, TAU); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, r * 0.66, 0, TAU); ctx.stroke();
-
-  // What's on screen
-  if (extra.viewW) {
-    const vw = extra.viewW * scale, vh = extra.viewH * scale;
-    ctx.strokeStyle = "rgba(200, 205, 255, 0.10)";
-    ctx.strokeRect(cx - vw / 2, cy - vh / 2, vw, vh);
-  }
-
-  const ox = cx - playerX * scale, oy = cy - playerY * scale;
-  if (overlay) overlay(ctx, ox, oy, scale, { cx, cy, r });
-
-  // Trail of where you've been (oldest faintest)
-  const trail = extra.trail;
-  if (trail && trail.length > 1) {
-    ctx.lineWidth = 1.2;
-    ctx.lineCap = "round";
-    for (let i = 1; i < trail.length; i++) {
-      const a = i / trail.length;
-      ctx.strokeStyle = trailStyle(a * 0.4);
-      ctx.beginPath();
-      ctx.moveTo(ox + trail[i - 1].x * scale, oy + trail[i - 1].y * scale);
-      ctx.lineTo(ox + trail[i].x * scale, oy + trail[i].y * scale);
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.moveTo(ox + trail[trail.length - 1].x * scale, oy + trail[trail.length - 1].y * scale);
-    ctx.lineTo(cx, cy);
-    ctx.stroke();
-  }
-
-  for (const e of entities) {
-    const ex = ox + e.x * scale;
-    const ey = oy + e.y * scale;
-    if ((ex - cx) * (ex - cx) + (ey - cy) * (ey - cy) > r * r) continue;
-    if (e.powerup) {
-      ctx.fillStyle = e.color;
-      ctx.fillRect(ex - 1.5, ey - 1.5, 3, 3);
-    } else if (playerRadius <= e.radius * eatRatio) {
-      ctx.fillStyle = TOO_BIG_DOT;
-      const s2 = Math.min(4, 1.5 + e.radius * scale);
-      ctx.fillRect(ex - s2 / 2, ey - s2 / 2, s2, s2);
-    } else {
-      ctx.fillStyle = e._mc || e.color + "88";
-      ctx.fillRect(ex - 0.5, ey - 0.5, 1.5, 1.5);
-    }
-  }
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3, 0, TAU);
-  ctx.fillStyle = "#8a8dff";
-  ctx.fill();
-  ctx.restore();
+export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, playerRadius = 0, eatRatio = 0.88, overlay = null) {
+  RadarInstrument.draw(ctx, w, h, playerX, playerY, entities, range, playerRadius, eatRatio, overlay);
 }
 
 // ─── EDGE INDICATORS ───
@@ -398,39 +339,8 @@ export function drawMinimap(ctx, w, h, playerX, playerY, entities, range, player
 // Screen-space. Shows the nearest few off-screen edible objects, plus power-ups.
 // Nearest 6 kept by insertion into fixed slots (no per-frame arrays or sort).
 // Ties keep first-seen order, same as the old stable sort.
-const EDGE_N = 6, edgeE = new Array(EDGE_N), edgeD = new Float64Array(EDGE_N), edgeSX = new Float64Array(EDGE_N), edgeSY = new Float64Array(EDGE_N);
 export function drawEdgeIndicators(ctx, entities, w, h, camX, camY, playerRadius, zoom = 1, eatRatio = 0.88) {
-  const margin = 20;
-  let n = 0;
-  for (const e of entities) {
-    if (e.consuming) continue;
-    const sx = (e.x - camX) * zoom + w / 2;
-    const sy = (e.y - camY) * zoom + h / 2;
-    if (sx > -10 && sx < w + 10 && sy > -10 && sy < h + 10) continue;
-    if (!e.powerup && playerRadius <= e.radius * eatRatio) continue;
-    const d = e.powerup ? -1 : hypot(sx - w / 2, sy - h / 2);
-    if (n === EDGE_N && d >= edgeD[EDGE_N - 1]) continue;
-    let j = n < EDGE_N ? n++ : EDGE_N - 1;
-    while (j > 0 && edgeD[j - 1] > d) { edgeE[j] = edgeE[j - 1]; edgeD[j] = edgeD[j - 1]; edgeSX[j] = edgeSX[j - 1]; edgeSY[j] = edgeSY[j - 1]; j--; }
-    edgeE[j] = e; edgeD[j] = d; edgeSX[j] = sx; edgeSY[j] = sy;
-  }
-
-  for (let i = 0; i < n; i++) {
-    const e = edgeE[i], sx = edgeSX[i], sy = edgeSY[i];
-    edgeE[i] = null;
-    const arrowSize = e.powerup ? 8 : 5;
-    const angle = Math.atan2(sy - h / 2, sx - w / 2);
-    const edgeX = w / 2 + Math.cos(angle) * (w / 2 - margin);
-    const edgeY = h / 2 + Math.sin(angle) * (h / 2 - margin);
-    const cosA = Math.cos(angle), sinA = Math.sin(angle);
-    ctx.beginPath();
-    ctx.moveTo(edgeX + cosA * arrowSize, edgeY + sinA * arrowSize);
-    ctx.lineTo(edgeX - cosA * arrowSize - sinA * arrowSize * 0.6, edgeY - sinA * arrowSize + cosA * arrowSize * 0.6);
-    ctx.lineTo(edgeX - cosA * arrowSize + sinA * arrowSize * 0.6, edgeY - sinA * arrowSize - cosA * arrowSize * 0.6);
-    ctx.closePath();
-    ctx.fillStyle = e.powerup ? e.color : e._ec || e.color + "55";
-    ctx.fill();
-  }
+  EdgeCue.marks(ctx, entities, w, h, camX, camY, playerRadius, zoom, eatRatio);
 }
 
 // ─── CURSOR ───

@@ -1,0 +1,156 @@
+{
+ "pack": "vast-g2-comet-current",
+ "version": "1.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "total_generations": 23,
+ "total_rerolls": 0,
+ "folder": "assets/hud/radar",
+ "files": [
+  {
+   "file": "radar-bezel.png",
+   "sha256": "9bd4bcb7d628020ae584874c5e244be751f070eac462ec5734176532ee812379",
+   "prompt": "Game UI asset, crisp painted top-down view of a circular astronomical radar dial: a round dark smoky glass disc in deep indigo-navy with a subtle glossy reflection highlight in the upper-left, framed by a thin polished metallic rim in soft periwinkle-violet (#8a8dff) and silver. Inside the glass, three delicate hairline concentric range rings in faint periwinkle, and fine small tick marks at the four cardinal points (top, right, bottom, left) plus tiny minor ticks around the rim edge. Elegant, minimal, no letters, no numbers, no needle, no text. Perfectly centered circle filling about 85 percent of the square frame, isolated on pure solid black #000000 background.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/radar-bezel.jpg",
+   "raw_sha256": "25eeab9f489d436b06e85a8358556f8c1f8a18622711534e03e11844dfc79194",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "method": "circular cutout (centre/radius from painted disc) - rim opaque, glass alpha 0.72 + painted line opacity",
+    "raw_center": [
+     512.5,
+     504.5
+    ],
+    "raw_R": 443.5,
+    "raw_rim_inner": 407,
+    "interior_median": 0.259
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "radar-current.png",
+   "sha256": "1491cf68d95fdec6f5621082f760f0a04d47b41b0a8930520eebdab8c119f7cd",
+   "prompt": "Game asset, soft painterly digital painting: a short horizontal soft luminous stream band for a minimap, a gently curving glowing ribbon of soft periwinkle-blue and ice-cyan light with a slightly brighter core and soft hazy edges, a few tiny flowing particles, fading softly to nothing at the left and right ends, feathered top and bottom. Simple, readable, organic curve, no hard edges, no straight tubes. Fully contained with wide empty dark margins on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/radar-current.jpg",
+   "raw_sha256": "7d5aaa177c764d09069b536b4eef1623a36c31591f7b8dd21158f02cc4758925",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.185,
+    "scale_y": 0.185,
+    "offset": [
+     10,
+     21
+    ],
+    "content": [
+     236,
+     54
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "radar-player.png",
+   "sha256": "08537743fc4c849d428c19c63c9de69f4a458b3c7f992885d34aaca2628fe152",
+   "prompt": "Game UI asset, soft painterly digital painting: a single small glowing player marker pip, a round warm golden-white luminous orb with a hot pale-gold center and a soft amber-orange halo glowing around it, like a tiny sun or the accretion glow of a black hole, gentle painterly bloom, no rays, no spikes, no lens flare. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/radar-player.jpg",
+   "raw_sha256": "538a6ba758b77ae285027c3b4d3df1d3df7e846be93e49aca393fd62b53e5d37",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1053,
+    "scale_y": 0.1053,
+    "offset": [
+     4,
+     4
+    ],
+    "content": [
+     39,
+     40
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "radar-pip-edible.png",
+   "sha256": "deca4625f07bd44be70584db441486cba4764a99150b150e822376f86bae4e3e",
+   "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing round pip of cool ice-cyan light, a bright pale aqua core with a soft luminous turquoise halo like a frozen droplet catching light, simple and readable, no rays, no spikes. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/radar-pip-edible.jpg",
+   "raw_sha256": "2e848075aab422f33635d657f703f46fcc670f3d8724d47551e084c2e81dd5b9",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.0952,
+    "scale_y": 0.0952,
+    "offset": [
+     3,
+     3
+    ],
+    "content": [
+     26,
+     26
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "radar-pip-big.png",
+   "sha256": "2678044aa0b4845ea8dbc678ee181af8636591b10adab90e70567786aa4effc1",
+   "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing warning pip, a round ember of luminous warm coral-red and amber light with a bright peach core and a soft coral halo, simple and readable, like a hot glowing coal seen from far away, no rays, no spikes. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/radar-pip-big.jpg",
+   "raw_sha256": "9aac5fa41a817d55bb019419cf21447860e51b672f7655365f8f6122e7dc545a",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1171,
+    "scale_y": 0.1171,
+    "offset": [
+     3,
+     3
+    ],
+    "content": [
+     26,
+     26
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  }
+ ]
+}
