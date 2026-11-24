@@ -1,0 +1,124 @@
+{
+ "pack": "vast-g1-g4-reef-armada-v1",
+ "version": "1.0.0",
+ "folder": "assets/flagship",
+ "files": [
+  {
+   "file": "flagship-hull-1.png",
+   "sha256": "7236a23bf84a60b3c0813acefe32e7c0a39eb55573f72c02b92c4793aeaa3f82",
+   "prompt": "Game asset, soft painterly realism sci-fi illustration: side profile view of a grand ruined capital starship wreck, long sleek wedge-shaped hull with the pointed nose facing right, weathered grey gunmetal and slate hull plating, broken dorsal armor plates peeled open, torn structural ribs exposed, rows of radiator vanes, and a large fractured circular habitat ring encircling the mid-aft hull with a broken gap in it. Subtle lighting from the upper-left, deep shadows lower-right, no glowing lights. Entire ship fully visible, horizontally centered, wide empty margin all around. Isolated on a pure solid black #000000 background. No text, no stars, no debris field, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/flagship-hull-1.jpg",
+   "raw_sha256": "f94d3b999f399e53a039447010041538cc393e18e6a19cc9a66c7db09e26608e",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "aspect_ratio": "16:9",
+   "rerolls_used": 0,
+   "processing": {
+    "scale": 1.5021,
+    "offset": [
+     143,
+     233
+    ],
+    "content": [
+     1762,
+     557
+    ],
+    "method": "rembg isnet-general-use mask -> fill only holes <4000px (ring interior stays open) -> drop specks -> near-black pockets (5px mean max(RGB)<0.012, >600px) cut out -> open 1px -> erode 2px defringe -> 1px AA -> premultiplied lanczos fit",
+    "pocket_px_removed_raw": 0
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "7236a23bf84a60b3c0813acefe32e7c0a39eb55573f72c02b92c4793aeaa3f82",
+   "part": "ab"
+  },
+  {
+   "file": "flagship-hull-2.png",
+   "sha256": "ebb4d9c5ead273db6cbf3d44190c53eb1fa1a803ad141dce3f0641efd9b4d217",
+   "prompt": "Game asset, soft painterly realism sci-fi illustration: side profile of a different ruined flagship battleship wreck, a long angular hull with a splintered broken bow pointing right, scorched weathered slate-steel and tarnished bronze hull panels, blast holes, and two broken concentric ring struts arcing around the aft section with snapped spokes. Subtle lighting from the upper-left, shadowed underside, no glowing lights. Entire ship fully visible, horizontally centered, wide empty margin all around. Isolated on a pure solid black #000000 background. No text, no stars, no debris cloud, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/flagship-hull-2.jpg",
+   "raw_sha256": "72316124e1cb46da64359b3d209a450d92239fa7bdb69c1039e63612623dbe88",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "aspect_ratio": "16:9",
+   "rerolls_used": 0,
+   "processing": {
+    "scale": 1.7057,
+    "offset": [
+     143,
+     218
+    ],
+    "content": [
+     1762,
+     587
+    ],
+    "method": "rembg isnet-general-use mask -> fill only holes <4000px (ring interior stays open) -> drop specks -> near-black pockets (5px mean max(RGB)<0.012, >600px) cut out -> open 1px -> erode 2px defringe -> 1px AA -> premultiplied lanczos fit",
+    "pocket_px_removed_raw": 11187
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "ebb4d9c5ead273db6cbf3d44190c53eb1fa1a803ad141dce3f0641efd9b4d217",
+   "part": "ab"
+  },
+  {
+   "file": "flagship-ember.png",
+   "sha256": "2f9dacae1d3fae7461e83c12d053aa1e22fb0f1d10510302ca66f97eb1c57680",
+   "prompt": "Game asset glow layer, soft painterly digital painting of light only: scattered warm molten amber and orange glowing reactor breach embers and small clusters of flickering warm yellow-orange window lights arranged along one long horizontal line across the middle of the frame, from the left edge area to the right edge area, plus a soft warm ember haze along that central horizontal spine and one larger brighter orange breach glow slightly left of center. Only glowing lights and soft glow haze, no ship, no hull, no metal, no solid objects, no stars. The glows stay within the central horizontal band, with wide empty dark margins above, below and at the far left and right. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/flagship-ember.jpg",
+   "raw_sha256": "a9f9e1d81964eccf568582d3b5732c61f4c0455748a86d37a232e0a28e51df8e",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "aspect_ratio": "16:9",
+   "rerolls_used": 0,
+   "processing": {
+    "scale": 1.3766,
+    "offset": [
+     143,
+     272
+    ],
+    "content": [
+     1762,
+     479
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox fit (premultiplied lanczos) -> smoothstep edge alpha fade 6%"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "2f9dacae1d3fae7461e83c12d053aa1e22fb0f1d10510302ca66f97eb1c57680",
+   "part": "ab"
+  },
+  {
+   "file": "../backdrop_armada.jpg",
+   "sha256": "e0d18507747d35e3a47960b5b649255a29184f9236da701c08d58d4a4a873635",
+   "prompt": "Soft painterly realism digital painting of a moody dark space sky for a mobile game background, portrait. Bruised deep violet and dark plum space with faint distant clouds of warm ochre cosmic dust drifting softly through it, painterly nebula depth, sparse tiny distant stars. Overall dark, moody and calm, low contrast. Absolutely no diagonal light beam, no straight stripe, no searchlight shaft, no planets, no suns, no spaceships or wreckage, no text, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/backdrop_armada.jpg",
+   "raw_sha256": "329e04da6d739d5156bad3d7b3f7ef46d1e03c00cef20564a43765b565c24eac",
+   "raw_size": [
+    720,
+    1280
+   ],
+   "aspect_ratio": "9:16",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "centre crop 591x1280 -> lanczos 780x1688, uniform exposure x0.60 (all channels equally, no hue change), JPEG q92 4:4:4"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "e0d18507747d35e3a47960b5b649255a29184f9236da701c08d58d4a4a873635",
+   "part": "ab"
+  }
+ ]
+}

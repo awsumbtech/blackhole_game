@@ -1,0 +1,9 @@
+{
+  "kind": "reef",
+  "version": 1,
+  "format": "painted reef beds for Debris Reef. Soft screen blend. A new bed is another sprite with role bed. No tint.",
+  "sprites": [
+    { "id": "reef-bed-1", "role": "bed", "file": "reef-bed-1.png", "w": 512, "h": 512, "pivot": [256, 256] },
+    { "id": "reef-bed-2", "role": "bed", "file": "reef-bed-2.png", "w": 512, "h": 512, "pivot": [256, 256] }
+  ]
+}

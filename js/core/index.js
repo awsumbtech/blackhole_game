@@ -22,6 +22,7 @@ export { GoldenVeil } from "./GoldenVeil.js";
 // sky.js and backdrop.js were removed in v9.7; Backdrop and GoldenVeil own the sky.
 export { HudControls, HUD_TAP } from "./HudControls.js";
 export { Flagship } from "./Flagship.js";
+export { ReefBed } from "./ReefBed.js";
 export { SpriteSheet } from "./SpriteSheet.js";
 export { Ship } from "./Ship.js";
 export { ShipCatalog } from "./ShipCatalog.js";

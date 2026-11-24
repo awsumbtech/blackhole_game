@@ -83,13 +83,22 @@ export class RadarInstrument {
   }
 
   /**
-   * Role for a landmark kind. Pulsars use their own pip. Other kinds keep
-   * the edible and big pips they already had.
+   * Role for a landmark kind. Forge, reef, and flagship each have a painted
+   * pip. Every other kind stays on the edible pip. No sprite id is named here.
    */
   static landmarkRole(kind) {
     if (kind === "pulsar") return "landmark-pulsar";
-    if (kind === "flagship") return "pip-big";
+    if (kind === "reef") return "landmark-reef";
+    if (kind === "flagship") return "landmark-flagship";
     return "pip-edible";
+  }
+
+  /**
+   * One painted landmark pip for a manifest role. The caller sets alpha.
+   * A role that has not decoded yet draws nothing.
+   */
+  static drawLandmarkPip(ctx, x, y, role, size) {
+    return this.mark(ctx, x, y, size, role, ctx.globalAlpha);
   }
 
   /** One painted landmark mark, looked up by role. A missing pip draws nothing. */

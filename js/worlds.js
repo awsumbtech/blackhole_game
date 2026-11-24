@@ -10,13 +10,12 @@ import { EdgeCue } from "./core/EdgeCue.js";
 import { NeutronStar } from "./core/NeutronStar.js";
 import { PulsarBeam } from "./core/PulsarBeam.js";
 import { RadarInstrument } from "./core/RadarInstrument.js";
+import { ReefBed } from "./core/ReefBed.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
-import { FlagshipLight } from "./core/FlagshipLight.js";
 import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
 import { spawnFood, spawnScaled, pullRange } from "./living-world.js";
 import { spriteFor, getArtQuality, rng } from "./art.js";
-import { MERGE_FRAMES } from "./depth.js";
 import { fitType } from "./tiers.js";
 import { MECHANICS, SET_PREFIX, LAYOUTS } from "./data/worlds.js";
 export { MECHANICS };   // the codex reads it from here
@@ -51,7 +50,7 @@ const px = v => W.ox + v * W.f;
 const py = v => W.oy + v * W.f;
 const B0K = 100;            // a set spans ~100 hole radii (at the tier's start)
 const SET_KEYS = ["b0", "ox", "oy", "lms", "reefs", "rivers", "cradle", "aurora", "meadows", "pulsars", "flagship", "grid", "setNo"];
-const FLAGSHIP = new Flagship();   // v9.6: one painter + sprite cache for every Flagship
+const FLAGSHIP = new Flagship();   // one painted wreck for every Ruined Armada set
 let AM = 1;                 // alpha multiplier while drawing older (receding) sets
 function setName(n) {
   if (!W.tierNo) return n;
@@ -109,6 +108,7 @@ function pointOn(pts, t) {
 
 // ─── Init ───
 export function initWorlds(state) {
+  if (W) ReefBed.releaseWorld(W);
   const biome = state.biome.name;
   const r = rng(state.galaxy * 7919 + 13);
   W = {
@@ -141,7 +141,10 @@ export function onWorldTier(state) {
   const snap = {};
   for (const k of SET_KEYS) snap[k] = W[k];
   W.old.unshift(snap);
-  if (W.old.length > 2) W.old.pop();
+  if (W.old.length > 2) {
+    const dropped = W.old.pop();
+    ReefBed.releaseList(dropped && dropped.reefs);
+  }
   W.setNo = (W.setNo || 0) + 1;
   W.hint.lm = null; W.hint.last = null;
   buildSet(state);
@@ -162,6 +165,7 @@ const SETUP = {
       const haze = (state.tier || 0) === 0;
       const reef = { x, y, r: b0 * (L.reefR[0] + r() * L.reefR[1]), want: L.want, regrow: 0, haze, born: W.timer || 0 };
       W.reefs.push(reef);
+      ReefBed.attach(reef);
       W.lms.push(landmark(setName(L.names[i]), "reef", x, y, reef.r, L.rgb));
       for (let k = 0; k < (haze ? 0 : L.rocks); k++) {
         const a = r() * TAU, d = Math.sqrt(r()) * reef.r * 0.85;
@@ -424,7 +428,10 @@ function maintainSet(state, dt) {
     const R = state.radius * B0K;
     buildSet(state, state.playerX + Math.cos(a) * R * 0.5, state.playerY + Math.sin(a) * R * 0.5);
   }
-  if (W.same.length > SAME_TIER_KEEP) W.same.length = SAME_TIER_KEEP;
+  if (W.same.length > SAME_TIER_KEEP) {
+    for (let i = SAME_TIER_KEEP; i < W.same.length; i++) ReefBed.releaseList(W.same[i] && W.same[i].reefs);
+    W.same.length = SAME_TIER_KEEP;
+  }
   W.setCool = 150;
   W.travelSets = (W.travelSets || 0) + 1;
 }
@@ -768,12 +775,7 @@ function lmSprite(kind) {
   const r = lmRng(kind.length * 131);
   g.globalCompositeOperation = "lighter";
   const blob = (x, y, rr, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(${col}, ${a})`); gr.addColorStop(1, `rgba(${col}, 0)`); g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); };
-  if (kind === "reef") {
-    // a soft teal bed with a few glints
-    for (let i = 0; i < 14; i++) blob((r() - 0.5) * h, (r() - 0.5) * h, h * (0.25 + r() * 0.3), i % 2 ? "80, 200, 180" : "110, 150, 230", 0.12);
-    // v8.3: no tendrils (they read as wriggling "snakes" in galaxy 1); just a few soft glints
-    for (let i = 0; i < 9; i++) blob((r() - 0.5) * h * 0.9, (r() - 0.5) * h * 0.9, S * 0.02, "220, 255, 240", 0.35);
-  } else if (kind === "meadow") {
+  if (kind === "meadow") {
     // one soft field. The old seventy blossoms read as specks.
     blob(0, 0, h * 0.9, "255, 205, 110", 0.16);
   }
@@ -815,14 +817,7 @@ function onScreen(state, x, y, r, vw, vh) {
 
 const DRAW = {
   "Debris Reef"(ctx, state, fx, vw, vh) {
-    for (const rf of W.reefs) {
-      const x = px(rf.x), y = py(rf.y), r = wx(rf.r);
-      if (!onScreen(state, x, y, r * 1.4, vw, vh)) continue;
-      const q = rf.haze ? 0.3 : smooth(((W.timer || 0) - rf.born) / MERGE_FRAMES);
-      drawGlow(ctx, "90, 200, 180", x, y, r * 1.45, (0.1 + fx.breath * 0.03) * q);
-      ctx.globalAlpha = AM * (0.75 + fx.breath * 0.15) * q;
-      ctx.drawImage(lmSprite("reef"), x - r * 1.4, y - r * 1.4, r * 2.8, r * 2.8);
-    }
+    ReefBed.drawSet(ctx, W.reefs, W, state, fx, vw, vh, AM);
   },
 
   "Comet Current"(ctx, state, fx) {
@@ -851,19 +846,7 @@ const DRAW = {
   },
 
   "Ruined Armada"(ctx, state, fx, vw, vh) {
-    const fl = W.flagship;
-    const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
-    // v9.6: the hi-res Flagship (core/Flagship.js) paints over a few frames as you
-    // arrive, then fades in; until then nothing pops in on screen
-    const sp = FLAGSHIP.sprite(fl.art.look, FlagshipLight.get(), getArtQuality() !== "high", state.mode !== "zen");   // Zen: no ring loop
-    if (!onScreen(state, x, y, s * 1.6, vw, vh)) return;
-    const rot = fl.rot + (fx.reduceMotion ? 0 : fx.time * 0.000004);
-    if (!sp) return;
-    // It sits back from play, hazed; it clears a little as you come close (never fully)
-    const near = smooth(1 - (hypot(state.playerX - x, state.playerY - y) - s * 1.2) / (s * 3));
-    const fade = smooth((performance.now() - sp.born) / 1200);
-    const breath = fx.reduceMotion ? 0.5 : fx.breath;
-    FLAGSHIP.draw(ctx, sp, x, y, s, rot, AM * fade * (0.4 + near * 0.14), AM * fade * (0.42 + breath * 0.18));
+    FLAGSHIP.present(ctx, W.flagship, W, state, fx, vw, vh, AM);
   },
 
   "Void Rift"(ctx, state, fx) {
@@ -993,19 +976,18 @@ let lastFD = 0;
 /** For tests/debug: nearest mechanic feature, in view radii */
 export function worldsFeature(state) { if (!W) return null; lastFD = featureDist(state) / viewR(state); return lastFD; }
 /**
- * Slice-painted sprites currently in view. The Flagship is the one: it stays
- * null until the slices finish, then fades in for 1.2 s on the wall clock.
- * Ready means the sprite exists and that fade has finished (now > born + 1.3 s).
+ * Painted landmarks currently in view. The Flagship used to slice-paint;
+ * ready now means its hull picture is in the catalog. The fade still runs
+ * on its own clock and does not hold this.
  */
 export function slicePaintReady(state) {
-  const now = performance.now();
   const pending = [];
   if (W && W.flagship) {
     const fl = W.flagship;
     const x = px(fl.x), y = py(fl.y), s = wx(fl.size);
     if (onScreen(state, x, y, s * 1.6, state.viewW, state.viewH)) {
-      const sp = FLAGSHIP.peek(fl.art.look, FlagshipLight.get(), getArtQuality() !== "high", state.mode !== "zen");
-      if (!sp.ready || !(now > sp.born + 1300)) pending.push({ name: "flagship", born: sp.born, now });
+      const sp = FLAGSHIP.slicePaintReady(fl.art.look, state.mode !== "zen");
+      if (!sp.ready) pending.push({ name: "flagship", born: sp.born, now: sp.now });
     }
   }
   return { ready: pending.length === 0, pending };

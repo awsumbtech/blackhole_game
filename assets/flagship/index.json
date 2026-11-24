@@ -1,0 +1,10 @@
+{
+  "kind": "flagship",
+  "version": 1,
+  "format": "painted capital wreck. Nose is +x. Hull variants use role hull (first is the primary hero). The ember overlay uses role ember and shares the hull pivot. No tint.",
+  "sprites": [
+    { "id": "flagship-hull-1", "role": "hull", "file": "flagship-hull-1.png", "w": 2048, "h": 1024, "pivot": [1024, 512] },
+    { "id": "flagship-hull-2", "role": "hull", "file": "flagship-hull-2.png", "w": 2048, "h": 1024, "pivot": [1024, 512] },
+    { "id": "flagship-ember", "role": "ember", "file": "flagship-ember.png", "w": 2048, "h": 1024, "pivot": [1024, 512] }
+  ]
+}
