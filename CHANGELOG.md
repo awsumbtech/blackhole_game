@@ -2,6 +2,17 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.14.0 — Galaxy 5 painted aurora (Nov 24 2026)
+
+Void Rift's feeding ribbon is a chain of painted wisps, about 15% presence, wide enough to sit on the corridor. The black hole, the HUD, the sky file, and the save are the same.
+
+- `assets/backdrop_void.jpg` is unchanged. It was already the approved midnight-indigo sky.
+- `AuroraRift` blits `assets/aurora/aurora-wisp-subtle-1.png` and `aurora-wisp-subtle-2.png` along the ribbon. Height is `1.95 ×` the corridor (`b0 * 0.045`) so the visible silk matches that width. Screen blend at `0.15`, `1.45×` while a void gift is boosting. The two code strokes are gone.
+- A missing wisp uses the first decoded sibling. If every wisp is missing, nothing is drawn. Food still appears and drifts along the ribbon.
+- The Void Rift minimap ribbon is `0.18`. Comet Current rivers stay `0.35`.
+- Placement, feeding, and the void gift are unchanged. Galaxies 1–4, 6, and 7 stay as they are.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.14.0`.
+
 ## v9.13.0 — Galaxy 6 painted overhaul (Nov 24 2026)
 
 Star Meadow's sky, fields, and growing-bud rings are paintings, about a fifth of the old glow. The black hole, the HUD, and the save are the same.

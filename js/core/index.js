@@ -25,6 +25,7 @@ export { Flagship } from "./Flagship.js";
 export { ReefBed } from "./ReefBed.js";
 export { MeadowField } from "./MeadowField.js";
 export { BloomHalo } from "./BloomHalo.js";
+export { AuroraRift } from "./AuroraRift.js";
 export { SpriteSheet } from "./SpriteSheet.js";
 export { Ship } from "./Ship.js";
 export { ShipCatalog } from "./ShipCatalog.js";

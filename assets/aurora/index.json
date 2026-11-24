@@ -1,0 +1,9 @@
+{
+  "kind": "aurora",
+  "version": 1,
+  "format": "painted Void Rift wisps along +x. Screen blend. Chain along the ribbon. No tint, no code ribbon.",
+  "sprites": [
+    { "id": "aurora-wisp-subtle-1", "role": "wisp", "file": "aurora-wisp-subtle-1.png", "w": 512, "h": 160, "pivot": [256, 80] },
+    { "id": "aurora-wisp-subtle-2", "role": "wisp", "file": "aurora-wisp-subtle-2.png", "w": 512, "h": 160, "pivot": [256, 80] }
+  ]
+}

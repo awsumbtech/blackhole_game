@@ -13,6 +13,7 @@ import { RadarInstrument } from "./core/RadarInstrument.js";
 import { ReefBed } from "./core/ReefBed.js";
 import { MeadowField } from "./core/MeadowField.js";
 import { BloomHalo } from "./core/BloomHalo.js";
+import { AuroraRift } from "./core/AuroraRift.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
 import { Flagship } from "./core/Flagship.js";
 import { typeById } from "./entities.js";
@@ -805,25 +806,10 @@ const DRAW = {
     FLAGSHIP.present(ctx, W.flagship, W, state, fx, vw, vh, AM);
   },
 
-  "Void Rift"(ctx, state, fx) {
-    const au = W.aurora, f = W.f;
-    const glowK = W.boost > 0 ? 1.6 : 1;
-    ctx.save();
-    ctx.translate(W.ox, W.oy);
-    ctx.scale(f, f);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    // A readable feeding line, not a bright column. The hole stays the bright thing.
+  "Void Rift"(ctx, state, fx, vw, vh) {
+    // Painted ribbon. The corridor width stays b0 * 0.045; the wisps fill it.
     const wide = W.b0 * 0.045;
-    ctx.globalAlpha = AM;
-    ctx.strokeStyle = `rgba(80, 190, 170, ${0.035 * glowK})`;
-    ctx.lineWidth = wide;
-    ctx.stroke(au.path);
-    ctx.strokeStyle = `rgba(180, 245, 225, ${0.05 * glowK})`;
-    ctx.lineWidth = Math.max(1.2 / (fx.zoom * f), wide * 0.08);
-    ctx.stroke(au.path);
-    ctx.restore();
+    AuroraRift.draw(ctx, W.aurora, wide, AM, W.boost, fx ? fx.time : 0, W.ox, W.oy, W.f, state, vw, vh, fx ? fx.reduceMotion : false);
   },
 
   "Star Meadow"(ctx, state, fx, vw, vh) {
@@ -894,7 +880,7 @@ export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   const ox = cx + W.ox * sc, oy = cy + W.oy * sc;
   const k = f * sc;
   for (const rv of W.rivers) RadarInstrument.ribbon(ctx, rv.pts, ox, oy, k, rim, 0.35);
-  if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.35);
+  if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.18);
   for (const lm of W.lms) {
     let x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
     const role = RadarInstrument.landmarkRole(lm.kind);
