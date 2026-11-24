@@ -8,9 +8,12 @@
 //
 // Screen space, hashed (no per-object state), pre-blurred cached sprites.
 
-import { ShipCatalog } from "./core/ShipCatalog.js";
 import { Body } from "./core/Body.js";
+import { Comet } from "./core/Comet.js";
 import { Ship } from "./core/Ship.js";
+import { ShipCatalog } from "./core/ShipCatalog.js";
+import { SpaceDust } from "./core/SpaceDust.js";
+import { SpaceRock } from "./core/SpaceRock.js";
 import { tier } from "./tiers.js";
 import { createEntity, typeById } from "./entities.js";
 import { spriteFor } from "./art.js";
@@ -138,6 +141,18 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       }
       if (e.type === "planet" || e.type === "moon") {
           Body.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
+        continue;
+      }
+      if (e.type === "dust") {
+        SpaceDust.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
+        continue;
+      }
+      if (e.type === "junk" || e.type === "meteor") {
+        SpaceRock.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
+        continue;
+      }
+      if (e.type === "comet") {
+        Comet.for(e).draw(ctx, sx, sy, rad, a * (0.75 + 0.2 * r3));
         continue;
       }
       const sp = spriteFor(e, rad * dpr);

@@ -5,6 +5,9 @@
 // grows with you. Everything is seeded by galaxy number, so a reload mid-galaxy
 // finds the same reefs, rivers and pulsars.
 
+import { CurrentStream } from "./core/CurrentStream.js";
+import { EdgeCue } from "./core/EdgeCue.js";
+import { RadarInstrument } from "./core/RadarInstrument.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
 import { FlagshipLight } from "./core/FlagshipLight.js";
 import { Flagship } from "./core/Flagship.js";
@@ -347,6 +350,9 @@ export function updateWorlds(state, dt, worldDt) {
   if (upd) upd(state, dt, worldDt);
 
   updateLandmarks(state, dt);
+  if (W.biome === "Comet Current") {
+    CurrentStream.update(W, worldDt, !!(state.settings && state.settings.reduceMotion), flowAt);
+  }
 }
 
 // ─── v5.1: landmarks follow you through the edgeless world ───
@@ -819,19 +825,11 @@ const DRAW = {
   },
 
   "Comet Current"(ctx, state, fx) {
-    const f = W.f, lite = getArtQuality() !== "high";
+    const cover = AM * (W.boost > 0 ? 1.08 : 1);
     ctx.save();
     ctx.translate(W.ox, W.oy);
-    ctx.scale(f, f);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    for (const rv of W.rivers) {
-      // One quiet ribbon. The wide shafts and the crossing dashes were the loudest thing in the frame.
-      ctx.globalAlpha = AM;
-      ctx.strokeStyle = W.boost > 0 ? "rgba(170, 220, 255, 0.07)" : "rgba(160, 210, 245, 0.045)";
-      ctx.lineWidth = rv.w * 0.07;
-      ctx.stroke(rv.path);
-    }
+    ctx.scale(W.f, W.f);
+    CurrentStream.draw(ctx, W.rivers, cover > 1 ? 1 : cover);
     ctx.restore();
   },
 
@@ -984,16 +982,7 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
     const ex = px + cx * k, ey = py + cy * k;
     const a = hint.a * (0.7 + breath * 0.3);
     ctx.save();
-    drawGlow(ctx, lm.rgb, ex, ey, 30, 0.35 * a);
-    ctx.globalAlpha = 0.6 * a;
-    ctx.translate(ex, ey);
-    ctx.rotate(ang);
-    ctx.beginPath();
-    ctx.moveTo(-4, -6); ctx.lineTo(4, 0); ctx.lineTo(-4, 6);
-    ctx.strokeStyle = `rgba(${lm.rgb}, 1)`;
-    ctx.lineWidth = 1.6;
-    ctx.lineCap = "round";
-    ctx.stroke();
+    EdgeCue.draw(ctx, ex, ey, ang, 0.55 * a, 0);
     ctx.restore();
     ctx.save();
     ctx.globalAlpha = 0.5 * a;
@@ -1006,72 +995,30 @@ export function drawWorldsOverlay(ctx, state, w, h, breath) {
   }
 }
 
-/** Minimap overlay: called with the map centre and world->map scale. */
-function polyline(ctx, pts, ox, oy, k) {
-  if (!pts.length) return;
-  ctx.moveTo(ox + pts[0][0] * k, oy + pts[0][1] * k);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(ox + pts[i][0] * k, oy + pts[i][1] * k);
-}
+/** Minimap overlay: painted current wisps and landmark pips inside the glass. */
 export function drawWorldsMinimap(ctx, cx, cy, sc, time, rim = null) {
   if (!W) return;
   const f = W.f;
-  cx += W.ox * sc; cy += W.oy * sc;
-  ctx.save();
-  ctx.lineCap = "round";
-  for (const rv of W.rivers) {
-    ctx.beginPath();
-    polyline(ctx, rv.pts, cx, cy, f * sc);
-    ctx.strokeStyle = "rgba(150, 215, 255, 0.4)";
-    ctx.lineWidth = Math.max(1.5, rv.w * f * sc * 1.2);
-    ctx.stroke();
-  }
-  if (W.aurora) {
-    ctx.beginPath();
-    polyline(ctx, W.aurora.pts, cx, cy, f * sc);
-    ctx.strokeStyle = "rgba(130, 240, 200, 0.45)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
+  const ox = cx + W.ox * sc, oy = cy + W.oy * sc;
+  const k = f * sc;
+  for (const rv of W.rivers) RadarInstrument.ribbon(ctx, rv.pts, ox, oy, k, rim, 0.5);
+  if (W.aurora) RadarInstrument.ribbon(ctx, W.aurora.pts, ox, oy, k, rim, 0.4);
   for (const p of W.pulsars) {
-    const x = cx + p.x * f * sc, y = cy + p.y * f * sc, L = W.b0 * 1.6 * f * sc;
-    ctx.strokeStyle = p._mm || (p._mm = `rgba(${p.rgb}, 0.35)`);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - Math.cos(p.ang) * L, y - Math.sin(p.ang) * L);
-    ctx.lineTo(x + Math.cos(p.ang) * L, y + Math.sin(p.ang) * L);
-    ctx.stroke();
+    RadarInstrument.mark(ctx, cx + p.x * f * sc, cy + p.y * f * sc, 8, "pip-big", 0.7);
   }
   for (const lm of W.lms) {
     let x = cx + lm.x * f * sc, y = cy + lm.y * f * sc;
-    // v5.1: landmarks beyond radar range sit on the rim, pointing the way
     if (rim) {
       const dx = x - rim.cx, dy = y - rim.cy, d = hypot(dx, dy);
       if (d > rim.r - 4) {
-        const k = (rim.r - 4) / d;
-        ctx.globalAlpha = lm.visited ? 0.3 : 0.6;
-        ctx.fillStyle = lm._mm || (lm._mm = `rgba(${lm.rgb}, 1)`);
-        ctx.beginPath(); ctx.arc(rim.cx + dx * k, rim.cy + dy * k, 1.8, 0, TAU); ctx.fill();
+        const kk = (rim.r - 4) / d;
+        RadarInstrument.mark(ctx, rim.cx + dx * kk, rim.cy + dy * kk, 7, "pip-edible", lm.visited ? 0.4 : 0.7);
         continue;
       }
     }
-    ctx.globalAlpha = lm.visited ? 0.55 : 0.9;
-    ctx.strokeStyle = ctx.fillStyle = lm._mm || (lm._mm = `rgba(${lm.rgb}, 1)`);
-    ctx.lineWidth = 1;
-    if (lm.kind === "reef" || lm.kind === "meadow") {
-      ctx.beginPath(); ctx.arc(x, y, Math.max(2.5, lm.r * f * sc), 0, TAU); ctx.stroke();
-    } else if (lm.kind === "cradle") {
-      ctx.beginPath(); ctx.arc(x, y, 2.6, 0, TAU); ctx.fill();
-      ctx.globalAlpha = 0.3;
-      ctx.beginPath(); ctx.arc(x, y, Math.max(4, lm.r * f * sc * 0.75), 0, TAU); ctx.stroke();
-    } else if (lm.kind === "flagship" || lm.kind === "line") {
-      ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x + 3, y); ctx.lineTo(x, y + 3); ctx.lineTo(x - 3, y); ctx.closePath(); ctx.fill();
-    } else if (lm.kind === "pulsar") {
-      ctx.beginPath(); ctx.arc(x, y, 2.2, 0, TAU); ctx.fill();
-    } else if (lm.kind === "river" || lm.kind === "aurora") {
-      ctx.beginPath(); ctx.arc(x, y, 1.8, 0, TAU); ctx.fill();
-    }
+    const size = lm.kind === "flagship" || lm.kind === "cradle" ? 9 : 7;
+    RadarInstrument.mark(ctx, x, y, size, lm.kind === "flagship" ? "pip-big" : "pip-edible", lm.visited ? 0.5 : 0.9);
   }
-  ctx.restore();
 }
 
 let lastFD = 0;

@@ -1,8 +1,9 @@
 // The art theme. The root is `assets` today. Another folder can replace it
-// by setting Theme.root before start. Ships, planets, and moons each have
-// an index under that root.
+// by setting Theme.root before start. Ships, planets, moons, comets, rocks,
+// dust, the current, and the radar each have an index under that root.
 
 import { BodyCatalog } from "./BodyCatalog.js";
+import { PictureCatalog } from "./PictureCatalog.js";
 import { ShipCatalog } from "./ShipCatalog.js";
 
 export class Theme {
@@ -10,6 +11,11 @@ export class Theme {
   static ships = ShipCatalog;
   static planets = new BodyCatalog("planets");
   static moons = new BodyCatalog("moons");
+  static comets = new PictureCatalog("comets");
+  static rocks = new PictureCatalog("rocks");
+  static dust = new PictureCatalog("dust");
+  static current = new PictureCatalog("current");
+  static radar = new PictureCatalog("hud/radar");
   static ready = false;
   static TIMEOUT_MS = 6000;
   static RETRY_MS = 2000;
@@ -78,7 +84,12 @@ export class Theme {
         Promise.all([
           ShipCatalog.load(root, ms),
           this.planets.load(root, ms),
-          this.moons.load(root, ms)
+          this.moons.load(root, ms),
+          this.comets.load(root, ms),
+          this.rocks.load(root, ms),
+          this.dust.load(root, ms),
+          this.current.load(root, ms),
+          this.radar.load(root, ms)
         ]),
         new Promise((_, reject) => {
           timer = setTimeout(() => reject(new Error("theme timeout")), ms);
@@ -89,6 +100,8 @@ export class Theme {
       if (timer) clearTimeout(timer);
       if (this._raceTimer === timer) this._raceTimer = 0;
     }
-    this.ready = ShipCatalog.ready && this.planets.ready && this.moons.ready;
+    this.ready = ShipCatalog.ready && this.planets.ready && this.moons.ready
+      && this.comets.ready && this.rocks.ready && this.dust.ready
+      && this.current.ready && this.radar.ready;
   }
 }

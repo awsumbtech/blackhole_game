@@ -1,0 +1,11 @@
+{
+  "kind": "current",
+  "version": 1,
+  "format": "wisps and motes painted along +x. Rotate to aim. No tint.",
+  "sprites": [
+    { "id": "wisp-1", "file": "current-wisp-1.png", "w": 512, "h": 160, "pivot": [256, 80] },
+    { "id": "wisp-2", "file": "current-wisp-2.png", "w": 512, "h": 160, "pivot": [256, 80] },
+    { "id": "mote-1", "file": "current-mote-1.png", "w": 128, "h": 64, "pivot": [64, 32] },
+    { "id": "mote-2", "file": "current-mote-2.png", "w": 128, "h": 64, "pivot": [64, 32] }
+  ]
+}

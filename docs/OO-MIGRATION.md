@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. The rest is not started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. The hot-meteor streak is still code. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -192,7 +192,7 @@ These are objects. They stay. The picture work inside them is section B.
 - `Inflow` (`js/core/Inflow.js` 46–70) builds streak, dot, and bloom canvases in the module.
 - `Flagship` (`js/core/Flagship.js` layout 47, class 115, paint 168) lays out and paints a capital wreck in code, then caches it. `FlagshipLight` (`js/core/FlagshipLight.js`) is the rim colour it still asks for. The Flagship step replaces both.
 - `DebrisField` composites sprites through mask images today. After step 15 it only draws the pre-cut shard frames from each type's sheet, with no runtime mask.
-- `CometTail` is a real object. It still blits a code-painted tail from `art/comets.js`.
+- `CometTail` aims the painted plume. It does not draw a shape. `CometSparkle` owns the motes on that plume.
 - `Scene`, `Player`, `Feeding`, `Camera`, `GameLoop`, `Hud`, `ScreenFlow`, `ZenSession`, `CollapseFlow`, `PlayControls`, `Menus`, `Lifecycle`, `Settings`, `PerfMonitor`, `Growth`, `Galaxy`, `GalaxyFlow`, `Fx`, `DevMode`, `Display`, `ScreenOverlay` are classes. They are not in the conversion list except where they call a loose painter.
 
 ---
@@ -254,29 +254,29 @@ Sizes use the phone formula at the top. "Big-catch frame" means the artist paint
 
 Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
-- [ ] **Dust.** `js/art/dust.js`. 8 looks. Soft specks. Extent 1.6.
+- [x] **Dust.** Done in v9.10.0. `SpaceDust` (`js/core/SpaceDust.js`) blits `assets/dust/dust-wisp-1.png`. The dust painter is gone. A bite uses that painting. No tint.
   - **Size:** morsel about 10 CSS / 30 device px.
-  - **Asset px:** 64×64.
-  - **Owner:** `Dust`.
-  - **Asset:** `dust.webp`, 8 frames. Not a big catch.
+  - **Asset px:** 128×128.
+  - **Owner:** `SpaceDust`.
+  - **Asset:** `assets/dust/manifest.json`.
 
-- [ ] **Junk.** `js/art/rocks.js` junk painter. 10 looks. Tumbles (a sway, not a spin). Extent 1.3.
+- [x] **Junk.** Done in v9.10.0. `SpaceRock` blits `assets/rocks/pebble-1.png` through `pebble-4.png`. One look in five is a cluster of three or four pebbles plus a dust wisp. The rest are one pebble. Sway stays small so the upper-left light stays put. No gold edge: the disc was removed in v9.8.1.
   - **Size:** morsel about 8 CSS / 24 device px. Big catch about 42 CSS / 126 device px.
   - **Asset px:** 256×256.
-  - **Owner:** `Junk`.
-  - **Asset:** `junk.webp`, 10 looks × (body, gold-edge). Junk is a big catch at the first tiers (`tiers.js` 14–16).
+  - **Owner:** `SpaceRock`.
+  - **Asset:** `assets/rocks/manifest.json`.
 
-- [ ] **Meteor.** `js/art/rocks.js`. 12 looks. Tumbles. Hot entry streak when `e.hot` (`render.js` 83–97, `heatFor` in `rocks.js` 33). Extent 1.4.
+- [x] **Meteor.** Done in v9.10.0 for the body. `SpaceRock` draws one pebble. The hot entry streak (`tailFor(..., hot)`) and the leading glow (`heatFor`) are still code, so a shower meteor still reads as hot. No gold edge.
   - **Size:** morsel about 8 CSS / 25 device px. Big catch about 45 CSS / 135 device px. Streak about 6–10 radii long.
-  - **Asset px:** 256×256 body, streak on the same sheet.
-  - **Owner:** `Meteor`.
-  - **Asset:** `meteor.webp`, 12 looks × (body, gold-edge, hot streak).
+  - **Asset px:** 256×256 body. The streak is not a picture yet.
+  - **Owner:** `SpaceRock` for the body. The streak stays in `js/art/comets.js` and `js/art/rocks.js` until it has a painting.
+  - **Asset:** `assets/rocks/manifest.json`.
 
-- [ ] **Comet body and tail.** Body `js/art/comets.js`. 6 looks. Tail `CometTail.drawComet` `js/core/CometTail.js` 64–79, pictures from `tailFor` in `comets.js` (dust tail, ion tail, and a hot streak). Extent 2.3. The tail aims from the comet's own world step.
-  - **Size:** head about 14 CSS / 42 device px as a morsel, about 70 CSS / 210 device px as a big catch. Tail about 5–9 head-radii long.
-  - **Asset px:** 256×256 head, tail 512×128.
-  - **Owner:** `Comet`. It keeps a `CometTail`, which becomes a frame index instead of a code blit.
-  - **Asset:** `comet.webp`, 6 looks × (head, gold-edge, dust tail, ion tail).
+- [x] **Comet body and tail.** Done in v9.10.0. `Comet` draws the coma and nucleus. `CometTail` blits the painted plume and still aims from the comet's own world step. Cyan or silver comes from the seed. `CometSparkle` adds a few motes along a moving plume. Comet finds use the same plume. No gold edge.
+  - **Size:** head about 14 CSS / 42 device px as a morsel. Tail about 9 head-radii long.
+  - **Asset px:** nucleus 128×128, coma 256×256, tail 512×160, sparkle 64×64.
+  - **Owner:** `Comet`, `CometTail`, `CometSparkle`.
+  - **Asset:** `assets/comets/manifest.json`.
 
 - [x] **Moon.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 42 CSS / 126 device px.
@@ -363,7 +363,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 - [ ] **World scenery still painted in code.** `js/worlds.js` 733–1006.
   - Reefs and rock haze.
-  - One river ribbon and slow streaks (Comet Current).
+  - One river of painted wisps (Comet Current, v9.10.0, `CurrentStream`). The other scenery below is still code.
   - Cradle rings and the young sun (Planet Nursery).
   - Aurora ribbons (Void Rift).
   - Pulsar beams (Neutron Forge).
@@ -438,14 +438,15 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 ### Canvas UI
 
-- [ ] **Minimap.** `js/render.js` 340–420. A 96 CSS px circle, dots, a trail of where you have been, a view rectangle.
-  - **Size:** 96 CSS / 288 device px.
-  - **Asset px:** a 256×256 frame. Dots can stay 4×4 pictures.
-  - **Owner:** `Minimap`.
+- [x] **Minimap.** Done in v9.10.0 as `RadarInstrument`. The bezel, the player pip, edible and too-big pips, and the current ribbon are paintings. Landmark markers in other galaxies are the same pips. No rects, no square blips, no river strokes.
+  - **Size:** about 104 CSS px.
+  - **Asset px:** bezel 256×256, current 256×96, player 48×48, pips 32×32.
+  - **Owner:** `RadarInstrument`.
+  - **Asset:** `assets/hud/radar/manifest.json`.
 
-- [ ] **Off-screen arrows.** `js/render.js` 422–457. Up to 6 chevrons for things you cannot eat yet.
-  - **Asset:** `arrow.png`, 32×32, tinted by the object's colour in the sheet (a few colours, not a runtime tint).
-  - **Owner:** `EdgeArrows`.
+- [x] **Off-screen arrows.** Done in v9.10.0 as `EdgeCue`. A painted mote points at the nearest off-screen edible, a power-up, or a landmark. No triangle and no chevron. The find's soft edge wash (`drawDiscoveryCue`) is still code.
+  - **Asset:** `assets/current/current-mote-1.png` and `current-mote-2.png`.
+  - **Owner:** `EdgeCue`.
 
 - [ ] **Thumbstick.** `js/core/ScreenOverlay.js` 70–97. A ring and a knob, 56 CSS px of travel (`input.js` 6).
   - **Asset:** `stick-ring.png`, `stick-knob.png`, 128×128.
@@ -492,13 +493,13 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** the Armada landmark matches the new sheet and no longer builds a canvas over many frames.
    - **Test:** `tools/oo-flagship.cjs`.
 
-4. **Junk, dust, meteor.** Three small classes, one sheet each. Meteor includes the hot streak. Junk and meteor include the gold-edge frame.
-   - **Done when:** those types no longer have a painter entry.
-   - **Test:** `tools/oo-rocks.cjs`.
+4. **Junk, dust, meteor.** Done in v9.10.0. `SpaceDust` and `SpaceRock` blit the manifests. The dust and junk painters are gone. A meteor body is a pebble. The hot streak and `heatFor` are still code.
+   - **Done when:** those types no longer have a painter entry. Met for the bodies. The hot streak remains.
+   - **Test:** `tools/v910-g2-art.cjs`.
 
-5. **Comet.** Body, tail frames, gold-edge. `CometTail` only picks a frame and an angle.
-   - **Done when:** `tailFor` is gone and the tail still sits behind the comet's own world step.
-   - **Test:** `tools/oo-comet.cjs`, plus the existing world-step check from `tools/v973-tails.cjs` still passes.
+5. **Comet.** Done in v9.10.0. `Comet` and `CometTail` blit the paintings. The tail still sits behind the comet's own world step (`tools/v973-tails.cjs`). `tailFor` remains only for the hot-meteor streak.
+   - **Done when:** the comet dust and ion tails are gone and the plume still follows the comet. Met.
+   - **Test:** `tools/v910-g2-art.cjs`, plus `tools/v973-tails.cjs`.
 
 6. **Moon and planet.** Done in v9.9.0 with the manifest. `Body` blits the layers for both. Dropping the ring layers removes the ring. `PLANET_PAINTERS` is gone.
    - **Done when:** `PLANET_PAINTERS` is gone. Met. `tools/oo-manifest.cjs` fails while a planet painter still fills.

@@ -1,10 +1,11 @@
 // ─── CometTail ───
 // One job: aim a comet's tail behind that comet's own travel in the world.
 // The player, the camera and the zoom are not part of the step.
-// The pictures are the ones already painted (tailFor, or a find's own tail).
+// The picture is the painted plume for that comet (or a find's painted tail).
+// +x of the painting is the plume, so the rotation is the trailing angle.
 // This file does not draw a new shape.
 
-import { tailFor } from "../art.js";
+import { Theme } from "./Theme.js";
 
 const TAU = Math.PI * 2;
 // Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
@@ -64,24 +65,27 @@ export class CometTail {
   }
 
   /**
-   * The food comet: the cached dust tail, a little off-axis as before, and
-   * the straight ion tail on the trailing angle. `speed` only sets the length.
+   * Food comet. `variant` is 0 cyan or 1 silver. The plume's head pivot sits
+   * on the comet. `speed` only sets the length. No code ribbon, no ion stroke.
    */
-  drawComet(ctx, x, y, r, alpha, color, rpx, speed) {
-    const t = tailFor(color, rpx);
-    const len = r * (5 + Math.min(4, speed * 3));
-    const hgt = r * 2.4;
+  drawComet(ctx, x, y, r, alpha, color, rpx, speed, variant = 0) {
+    const spr = Theme.comets.sprite(variant ? "tail-silver" : "tail-cyan");
+    if (!spr || !(alpha > 0) || !(r > 0)) return false;
+    const len = r * (9.2 + Math.min(3.6, (speed || 0) * 2.4));
+    return this.drawPainted(ctx, x, y, spr, len, alpha * 0.92);
+  }
+
+  /** A painted plume the caller already resolved. +x trails along this.ang. */
+  drawPainted(ctx, x, y, spr, len, alpha) {
+    if (!spr || !spr.ok || !(len > 0) || !(alpha > 0)) return false;
+    const h = len * (spr.h / spr.w);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(this.ang);
-    ctx.globalAlpha = alpha * 0.9;
-    ctx.rotate(0.12);
-    ctx.drawImage(t.c, 0, -hgt / 2, len, hgt);
-    ctx.rotate(-0.12);
-    ctx.globalAlpha = alpha * 0.8;
-    const it = tailFor(color, rpx, true);
-    ctx.drawImage(it.c, 0, -r * 0.6, len * 1.35, r * 1.2);
+    ctx.globalAlpha = alpha;
+    Theme.comets.blit(ctx, spr, 0, 0, len, h);
     ctx.restore();
+    return true;
   }
 
   /** Blit a tail picture the caller already has. +x of the picture is the trailing end. */
