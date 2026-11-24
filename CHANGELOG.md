@@ -2,6 +2,17 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.12.0 — Galaxy 1 and Galaxy 4 painted overhaul (Nov 24 2026)
+
+Debris Reef and the Ruined Armada landmark are paintings. The black hole, the HUD, and the save are the same.
+
+- `ReefBed` blits `assets/reef/reef-bed-1.png` and `reef-bed-2.png` with a soft screen blend. Which bed is manifest order (`role: "bed"`). Haze, the merge fade, and the breath are the same. A missing picture draws nothing.
+- `Flagship` blits `assets/flagship`. `flagship-hull-1` is the primary hero, `flagship-hull-2` the darker wreck, and `flagship-ember.png` is a luminous overlay on the same pivot, nose `+x`. The slice-paint generator is gone. Fade, near-haze, and the slow tumble stay. A missing ember still draws the hull.
+- The Debris Reef and Ruined Armada minimap marks are `radar-pip-reef.png` and `radar-pip-flagship.png`. Edible and too-big pips keep their own roles. Other galaxies' minimap marks are unchanged.
+- `backdrop_reef.jpg` and `backdrop_armada.jpg` are the new skies. `Backdrop.js` is unchanged.
+- Reef placement, regrowth, rock spawning, bump physics, and meteor reseeding are unchanged. Flagship placement, size, brittle hulls, and the Ship flotilla are unchanged. Galaxies 2, 3, 5, 6, and 7 are unchanged.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.12.0`.
+
 ## v9.10.0 — Galaxy 2 painted overhaul (Nov 23 2026)
 
 Comets, grit, dust, the Comet Current, the edge cues, and the radar are paintings. The black hole, the HUD, and the save are the same.

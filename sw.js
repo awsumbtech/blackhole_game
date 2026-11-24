@@ -2,7 +2,7 @@
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
 // Bump on each release so phones drop the old offline copy.
-const CACHE_NAME = "blackhole-v9.10.0";
+const CACHE_NAME = "blackhole-v9.12.0";
 const ASSETS = [
   "./",
   "./index.html",
@@ -52,6 +52,7 @@ const ASSETS = [
   "./js/core/GoldenVeil.js",
   "./js/core/HudControls.js",
   "./js/core/Flagship.js",
+  "./js/core/ReefBed.js",
   "./js/core/SpriteSheet.js",
   "./js/core/Ship.js",
   "./js/core/ShipCatalog.js",
@@ -122,6 +123,15 @@ const ASSETS = [
   "./assets/hud/radar/radar-player.png",
   "./assets/hud/radar/radar-pip-edible.png",
   "./assets/hud/radar/radar-pip-big.png",
+  "./assets/hud/radar/radar-pip-reef.png",
+  "./assets/hud/radar/radar-pip-flagship.png",
+  "./assets/reef/index.json",
+  "./assets/reef/reef-bed-1.png",
+  "./assets/reef/reef-bed-2.png",
+  "./assets/flagship/index.json",
+  "./assets/flagship/flagship-hull-1.png",
+  "./assets/flagship/flagship-hull-2.png",
+  "./assets/flagship/flagship-ember.png",
   "./assets/backdrop_reef.jpg",
   "./assets/backdrop_current.jpg",
   "./assets/backdrop_nursery.jpg",

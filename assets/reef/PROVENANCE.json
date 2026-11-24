@@ -1,0 +1,91 @@
+{
+ "pack": "vast-g1-g4-reef-armada-v1",
+ "version": "1.0.0",
+ "folder": "assets/reef",
+ "files": [
+  {
+   "file": "reef-bed-1.png",
+   "sha256": "ce681184251861a581b42853997716f5e5991e2cb0739c5225261c75a7d32a34",
+   "prompt": "Game asset, soft painterly realism digital painting: a soft luminous cosmic mineral reef bed seen from above, a rounded organic cloud of glowing teal and cyan nebula dust with subtle faceted crystalline specks and tiny sparkling mineral glints scattered through it, billowy soft cloud texture, brightest in the middle (pale teal, not white) and fading smoothly into darkness on all sides. No tendrils, no snake shapes, no hard ring, no rocks, no lens flare. Centered, fully contained with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/reef-bed-1.jpg",
+   "raw_sha256": "109986f0de07dd53dd9ba587003a7f01ff66899c7cbf8d90812e0287d480a0e7",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "scale": 0.6925,
+    "offset": [
+     15,
+     16
+    ],
+    "content": [
+     482,
+     480
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox fit (premultiplied lanczos) -> smoothstep edge alpha fade 10%"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "ce681184251861a581b42853997716f5e5991e2cb0739c5225261c75a7d32a34",
+   "part": "ab"
+  },
+  {
+   "file": "reef-bed-2.png",
+   "sha256": "c42594346c4457b2148d442faba3a738d904d1c17ff45954c4a5c0549c3554e0",
+   "prompt": "Game asset, soft painterly realism digital painting: a luminous patch of teal-emerald cosmic mineral haze, an irregular lopsided cloud shaped like a soft underwater reef bed glowing in sea-green and emerald teal, with scattered faint glittering mica flakes and gentle curling nebula wisps along its edges, soft and dreamy, fading gradually into darkness all around. No tendrils, no rings, no rocks, no star spikes. Centered, fully contained with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/reef-bed-2.jpg",
+   "raw_sha256": "dede2db675c83c74c2087ada77768f6859572bb67f5aaab9ce1b013f4d0e6aec",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "aspect_ratio": "1:1",
+   "rerolls_used": 0,
+   "processing": {
+    "scale": 0.6055,
+    "offset": [
+     15,
+     53
+    ],
+    "content": [
+     482,
+     406
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox fit (premultiplied lanczos) -> smoothstep edge alpha fade 10%"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "c42594346c4457b2148d442faba3a738d904d1c17ff45954c4a5c0549c3554e0",
+   "part": "ab"
+  },
+  {
+   "file": "../backdrop_reef.jpg",
+   "sha256": "3813dae66778ac604f60d59157790f473f40a6941ae2c8de3a2fe42cff9b876e",
+   "prompt": "Soft painterly realism digital painting of a calm deep-space night sky for a mobile game background, portrait. Very dark deep teal-slate space filled with quiet, faint distant dust veils and soft painterly nebula wisps in muted teal and slate blue, sparse tiny pinpoint distant stars scattered unevenly. Overall very dark and calm, low contrast, no bright areas. Absolutely no diagonal light beam, no straight stripe, no searchlight shaft, no planets, no suns, no ships, no rocks in the foreground, no text, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:11-19:20)",
+   "raw": "_raw/part_ab/backdrop_reef.jpg",
+   "raw_sha256": "721fd3da528a5ebe908f786c27dc371a5bd356f9d48e3fc26e8744bb429a1f1d",
+   "raw_size": [
+    720,
+    1280
+   ],
+   "aspect_ratio": "9:16",
+   "rerolls_used": 0,
+   "processing": {
+    "method": "centre crop 591x1280 -> lanczos 780x1688, uniform exposure x0.85 (all channels equally, no hue change), JPEG q92 4:4:4"
+   },
+   "processed": "2026-11-23T19:20:01-05:00",
+   "license": "Original AI-generated artwork created for the Vast project by the owner's Grok Bot agent; no third-party source or reference images used.",
+   "final_sha256": "3813dae66778ac604f60d59157790f473f40a6941ae2c8de3a2fe42cff9b876e",
+   "part": "ab"
+  }
+ ]
+}

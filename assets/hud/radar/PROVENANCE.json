@@ -151,6 +151,78 @@
    },
    "processed": "2026-11-23T18:45:36-05:00",
    "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "radar-pip-reef.png",
+   "sha256": "261355473ce2920de301237a6d39c9108e7fe75106eb315ee06678c5a3047473",
+   "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing radar landmark pip shaped like a small luminous ring of sea-teal and aqua mineral light around a bright pale aqua glowing center dot, like a tiny coral-reef atoll glowing in the dark, simple and readable, no rays, no spikes. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:15-19:25)",
+   "raw": "_raw/part_de/radar-pip-reef.jpg",
+   "raw_sha256": "7dbbb12a834fb96656a0dc485fe1052e90907c3b22fca35136b1a9658720b47c",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "raw_bbox": [
+     300,
+     274,
+     729,
+     717
+    ],
+    "scale": 0.05869,
+    "offset": [
+     3,
+     3
+    ],
+    "content": [
+     25,
+     26
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox crop -> premultiplied lanczos -> edge opacity fade 0.12"
+   },
+   "processed": "2026-11-23T19:17:21-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation.",
+   "final_sha256": "261355473ce2920de301237a6d39c9108e7fe75106eb315ee06678c5a3047473",
+   "part": "de"
+  },
+  {
+   "file": "radar-pip-flagship.png",
+   "sha256": "80b539c7b9f0d875cadb446d53c00a8a82fab6a51bb34192022980f336cb8f95",
+   "prompt": "Game UI asset, soft painterly digital painting: a single tiny glowing radar landmark beacon pip shaped like a small faceted diamond (rhombus standing on its point) of tarnished silver and warm violet light, with soft glowing facets and a bright pale lilac-white center, like a distant wreck beacon, simple and readable, no rays, no spikes. Small, centered, occupying the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~19:15-19:25)",
+   "raw": "_raw/part_de/radar-pip-flagship.jpg",
+   "raw_sha256": "a61c7c47ae49f48fcd5b4df66558cc00229550d3bf4b23d38dcd44a5da8dc5de",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "raw_bbox": [
+     374,
+     328,
+     654,
+     668
+    ],
+    "scale": 0.07647,
+    "offset": [
+     5,
+     3
+    ],
+    "content": [
+     21,
+     26
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) -> bbox crop -> premultiplied lanczos -> edge opacity fade 0.12"
+   },
+   "processed": "2026-11-23T19:17:21-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation.",
+   "final_sha256": "80b539c7b9f0d875cadb446d53c00a8a82fab6a51bb34192022980f336cb8f95",
+   "part": "de"
   }
  ]
 }

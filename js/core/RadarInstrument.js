@@ -40,9 +40,7 @@ export class RadarInstrument {
       const dx = ex - cx, dy = ey - cy;
       if (dx * dx + dy * dy > reach) continue;
       const tooBig = !e.powerup && playerRadius <= e.radius * eatRatio;
-      const pips = cat.idsByRole("pip");
-      const id = tooBig ? (pips[1] || pips[0]) : pips[0];
-      const spr = id ? cat.sprite(id) : null;
+      const spr = this._role(cat, tooBig ? "pip-big" : "pip-edible");
       if (!spr) continue;
       const s = tooBig ? 7 : 5;
       ctx.globalAlpha = tooBig ? 0.9 : 0.8;
@@ -82,6 +80,19 @@ export class RadarInstrument {
       Theme.radar.blit(ctx, spr, 0, 0, drawW, drawH);
       ctx.restore();
     }
+  }
+
+  /**
+   * One painted landmark pip for a manifest role (`landmark-reef`,
+   * `landmark-flagship`). The caller sets alpha. A role that has not
+   * decoded yet draws nothing.
+   */
+  static drawLandmarkPip(ctx, x, y, role, size) {
+    if (!(size > 0) || !(ctx.globalAlpha > 0)) return false;
+    const spr = this._role(Theme.radar, role);
+    if (!spr) return false;
+    Theme.radar.blit(ctx, spr, x, y, size, size);
+    return true;
   }
 
   /** One painted landmark or pulsar mark. */

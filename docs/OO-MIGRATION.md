@@ -2,7 +2,7 @@
 
 Docs only. This is the checklist for Brian's direction: every behaviour is an object, and every visual is a real picture that object draws. No code-painted sprites, no code-drawn effects, and no code tints or gradients.
 
-Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. The hot-meteor streak is still code. The rest is not started.
+Live tree this list was taken from: `e93b0f2` (v9.7.3). Step 1 (Ship and SpriteSheet) is in v9.8.0. In v9.8.1 the gold disc (B20, step 9) and the too-big ring (B21, step 10) were removed, not converted to pictures. Step 2 (art manifests) and step 6 (moon and planet) are in v9.9.0. Step 4 (dust, junk, meteor) and step 5 (comet), plus the Galaxy 2 river, the edge cues, and the radar, are in v9.10.0. Step 3 (Flagship) and the Debris Reef beds are in v9.12.0. The hot-meteor streak is still code. The rest is not started.
 
 Checkboxes stay open until that item's PR lands on `main`. Each conversion is its own PR, based on `main`, not stacked on the one before it.
 
@@ -190,7 +190,7 @@ Loose functions, module-level `let`/`Map`s, and god-functions. A file that alrea
 These are objects. They stay. The picture work inside them is section B.
 
 - `Inflow` (`js/core/Inflow.js` 46–70) builds streak, dot, and bloom canvases in the module.
-- `Flagship` (`js/core/Flagship.js` layout 47, class 115, paint 168) lays out and paints a capital wreck in code, then caches it. `FlagshipLight` (`js/core/FlagshipLight.js`) is the rim colour it still asks for. The Flagship step replaces both.
+- `Flagship` (`js/core/Flagship.js`) blits `assets/flagship` as of v9.12.0. It does not paint a canvas and it does not tint. `FlagshipLight` still names a colour for `Galaxy` and does not tint the hull.
 - `DebrisField` composites sprites through mask images today. After step 15 it only draws the pre-cut shard frames from each type's sheet, with no runtime mask.
 - `CometTail` aims the painted plume. It does not draw a shape. `CometSparkle` owns the motes on that plume.
 - `Scene`, `Player`, `Feeding`, `Camera`, `GameLoop`, `Hud`, `ScreenFlow`, `ZenSession`, `CollapseFlow`, `PlayControls`, `Menus`, `Lifecycle`, `Settings`, `PerfMonitor`, `Growth`, `Galaxy`, `GalaxyFlow`, `Fx`, `DevMode`, `Display`, `ScreenOverlay` are classes. They are not in the conversion list except where they call a loose painter.
@@ -243,12 +243,12 @@ Sizes use the phone formula at the top. "Big-catch frame" means the artist paint
   - **Owner:** `Ship`.
   - **Asset:** one sheet per class. Rows: 8 looks. Columns: live, wreck, live gold-edge, wreck gold-edge, 4 break plates, engine glow. The gold edge is the big-catch frame. `Ship` draws it when `bigFish` and the player is past `BIG_HALO_FROM`. Nearly-fits pulses the opacity of that frame on the breath. Fits draws it steady and a little brighter. No second image is generated in code.
 
-- [ ] **Flagship.** `js/core/Flagship.js`: `layout` is 47, the class starts at 115, and `paint` is 168. One capital wreck, 4 hull colours, time-sliced onto a canvas, then one blit. It is a landmark, not food.
-  - **Looks:** 4.
-  - **Size:** `flagship.size` is 0.16 of the set (`js/data/worlds.js`). On screen it is a large wreck, often 80–140 CSS / 240–420 device px.
-  - **Asset px:** 1024×512.
-  - **Owner:** `Flagship` (already a class).
-  - **Asset:** `flagship.webp`, 4 looks. No gold-edge frame (it is not eaten as a big catch).
+- [x] **Flagship.** Done in v9.12.0. `Flagship` blits `assets/flagship/flagship-hull-1.png` and `flagship-hull-2.png` (role `hull`, manifest order, so the first file is the primary hero) plus `flagship-ember.png` (role `ember`) on the same pivot. Nose is `+x`. The slice-paint generator is gone. Fade, near-haze, and the slow tumble stay. A missing picture draws nothing. A missing ember still draws the hull. It is a landmark, not food.
+  - **Looks:** one per hull row. Two ship with this pack. A third hull is another index row.
+  - **Size:** `flagship.size` is 0.16 of the set (`js/data/worlds.js`). On screen it is a large wreck.
+  - **Asset px:** 2048×1024, pivot `[1024, 512]`.
+  - **Owner:** `Flagship` (the same class).
+  - **Asset:** `assets/flagship/index.json`. No gold-edge frame (it is not eaten as a big catch).
 
 ### Worlds you eat
 
@@ -362,8 +362,8 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Asset:** `rival.webp`, two frames. Step 17.
 
 - [ ] **World scenery still painted in code.** `js/worlds.js` 733–1006.
-  - Reefs and rock haze.
-  - One river of painted wisps (Comet Current, v9.10.0, `CurrentStream`). The other scenery below is still code.
+  - Reefs are paintings (Debris Reef, v9.12.0, `ReefBed`, `assets/reef`). The old glow disc and `lmSprite("reef")` are gone. Rock clusters on the reef are still the v9.10 pebbles.
+  - One river of painted wisps (Comet Current, v9.10.0, `CurrentStream`). The flagship wreck is a painting (v9.12.0). The other scenery below is still code.
   - Cradle rings and the young sun (Planet Nursery).
   - Aurora ribbons (Void Rift).
   - Pulsar beams (Neutron Forge).
@@ -438,7 +438,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
 
 ### Canvas UI
 
-- [x] **Minimap.** Done in v9.10.0 as `RadarInstrument`. The bezel, the player pip, edible and too-big pips, and the current ribbon are paintings. Landmark markers in other galaxies are the same pips. No rects, no square blips, no river strokes.
+- [x] **Minimap.** Done in v9.10.0 as `RadarInstrument`. The bezel, the player pip, edible and too-big pips, and the current ribbon are paintings. Landmark markers in other galaxies are the same pips. v9.12.0 gives Debris Reef and the Ruined Armada their own landmark pips (`landmark-reef`, `landmark-flagship`). No rects, no square blips, no river strokes.
   - **Size:** about 104 CSS px.
   - **Asset px:** bezel 256×256, current 256×96, player 48×48, pips 32×32.
   - **Owner:** `RadarInstrument`.
@@ -489,9 +489,9 @@ The test named in each step does not exist yet. The PR adds it. On the parent co
    - **Done when:** adding a test ship and a test planet needs only an image plus a manifest entry, with zero code changes. Met by the probe ship and the test-gem planet in that test.
    - **Test:** `tools/oo-manifest.cjs`. Fails while those class lists still live in code or a planet painter still fills. Passes when a new entry in the manifest is drawn and the code lists are gone.
 
-3. **Flagship.** Same loader. `Flagship` blits its sheet instead of painting one.
-   - **Done when:** the Armada landmark matches the new sheet and no longer builds a canvas over many frames.
-   - **Test:** `tools/oo-flagship.cjs`.
+3. **Flagship.** Done in v9.12.0, with the Debris Reef beds in the same pass. `Flagship` blits `assets/flagship`. `ReefBed` blits `assets/reef`. Neither builds a canvas. A third hull or a third bed is an index row.
+   - **Done when:** the Armada landmark and the reef beds are the paintings, and the slice painter is gone. Met.
+   - **Test:** `tools/v912-g1-g4-art.cjs`.
 
 4. **Junk, dust, meteor.** Done in v9.10.0. `SpaceDust` and `SpaceRock` blit the manifests. The dust and junk painters are gone. A meteor body is a pebble. The hot streak and `heatFor` are still code.
    - **Done when:** those types no longer have a painter entry. Met for the bodies. The hot streak remains.
