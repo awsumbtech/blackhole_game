@@ -1,0 +1,248 @@
+{
+ "pack": "vast-g2-comet-current",
+ "version": "1.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "total_generations": 23,
+ "total_rerolls": 0,
+ "folder": "assets/comets",
+ "files": [
+  {
+   "file": "comet-nucleus-1.png",
+   "sha256": "0c350de64ae6f9760e52315bba58e93d376d2941e6e8cb2313d69020a1f301c1",
+   "prompt": "Game asset, soft painterly realism digital painting: a single comet nucleus, a craggy irregular potato-shaped chunk of dirty ice and dark frozen rock with rich painted surface detail, pits, small craters and frosted ridges. Strong directional light from the upper-left gives a bright frosty pale-blue rim on the upper-left edge, deep navy shadow on the lower-right. No glow, no halo, no coma, no jets: just the solid rock. Centered, fills about 70 percent of the frame, wide empty margin on all sides. Isolated on a pure solid black #000000 background. No text, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-nucleus-1.jpg",
+   "raw_sha256": "24ca67bd242b0f4cf2c50d4df4804583ffb4ca522d2e21ac35e2e037c3aaf27b",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1545,
+    "scale_y": 0.1545,
+    "offset": [
+     8,
+     10
+    ],
+    "content": [
+     112,
+     108
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-nucleus-2.png",
+   "sha256": "14b370adbc0bacf61999264c9ecb1044300967e9c7ad6d2354933b9a5737d46e",
+   "prompt": "Game asset, soft painterly realism digital painting: a single small comet head, an angular elongated craggy shard of grey-brown rock veined with pale turquoise frozen ice crystals, detailed painted fractures and crater pits. Lit from the upper-left with a crisp pale cyan-white rim light, lower-right side in deep cool shadow. Solid opaque rock only: no glow, no halo, no haze, no jets. Centered, fills about 70 percent of the frame, wide empty margin all around. Isolated on a pure solid black #000000 background. No text, no frame.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-nucleus-2.jpg",
+   "raw_sha256": "4db1c29b9ab956e9cf5f76ec21dd95d34f229b771a77bd6d53b9e882fe6958cd",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1453,
+    "scale_y": 0.1453,
+    "offset": [
+     16,
+     8
+    ],
+    "content": [
+     96,
+     112
+    ],
+    "method": "rembg u2net mask -> fill holes -> largest component -> erode 3px (defringe) -> 1.2px AA"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-coma-cyan.png",
+   "sha256": "ae3815f6815dedc5a6690362fae0f8c531445b075a65cda1eb25381667066aec",
+   "prompt": "Game asset, soft painterly digital painting of an empty comet coma halo only: a soft organic luminous cloud of ice-cyan and teal glowing gas and fine dust, slightly lopsided and billowy with wispy painterly texture and faint swirling filaments, brightest near the center (pale cyan, not pure white) and fading smoothly and gently into darkness. No solid rock, no nucleus, no jets, no rays, no spikes, no lens flare, not a flat radial gradient. Centered, fully contained with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-coma-cyan.jpg",
+   "raw_sha256": "b703d4826e34b448adf0012a797270a91b6e1bb3a59ad21968cf3f9dd9a2840d",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3207,
+    "scale_y": 0.3207,
+    "offset": [
+     10,
+     15
+    ],
+    "content": [
+     236,
+     226
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-coma-silver.png",
+   "sha256": "57a65fc2baa0555a1c5c3fab01e6d273d12f08a673fce99bbda543cb512766d3",
+   "prompt": "Game asset, soft painterly digital painting of an empty comet coma halo only: a soft luminous silvery ice-blue haze with warm pale-gold dusty highlights on one side, rounded but irregular and cloudlike, painterly brushwork with delicate curling vapor wisps and tiny glinting dust grains, brightest in the middle with a soft silver glow, fading smoothly to darkness. No solid rock, no nucleus, no jets, no star spikes, no lens flare. Centered, fully contained with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-coma-silver.jpg",
+   "raw_sha256": "0a15be1fd442aa11cd0ab2889d18ef3da416989531b1392fc8bcf251ef56c5d7",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3194,
+    "scale_y": 0.3194,
+    "offset": [
+     10,
+     11
+    ],
+    "content": [
+     236,
+     233
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-tail-cyan.png",
+   "sha256": "57b44a6a29095ac58aba2b98fc85f994487540d73af13c3896e7113cba47aefc",
+   "prompt": "Game asset, soft painterly realism digital painting of a comet tail only (no comet head): a lush organic luminous plume of ice-cyan and teal gas and dust that starts bright and dense near the left edge, vertically centered, and streams to the right, gently curving and widening while feathering into wavy filaments with tiny glowing ice particles, fading completely into darkness before the right edge. Wavy and feathered like smoke, absolutely no straight lines, no straight beams, no ribbons. Stays inside the frame with dark empty margins above and below. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-tail-cyan.jpg",
+   "raw_sha256": "2e657b49af96feb81426edfa35b45e84ca6f241073e0823c70485403ef5f86ac",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "rotate_deg": 7.84,
+    "scale_x": 0.3942,
+    "scale_y": 0.307,
+    "offset": [
+     14,
+     8
+    ],
+    "content": [
+     473,
+     144
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-tail-silver.png",
+   "sha256": "7a332de7b1808758732dbc93d6e3916be06120fa9d7d280b13ea3302e4967b9f",
+   "prompt": "Game asset, soft painterly realism digital painting of a comet tail only (no comet head): a graceful luminous plume of silvery ice-blue vapor interlaced with warm pale-gold dust streamers, starting dense and bright near the left edge, vertically centered, then sweeping to the right in a gentle S-curve, splitting into two soft feathered strands (a silvery gas tail and a curving golden dust tail) sprinkled with tiny glinting particles, dissolving completely into darkness before the right edge. Smoky, organic, curving, no straight lines, no beams, no ribbons. Compact vertically with dark empty margins above and below. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-tail-silver.jpg",
+   "raw_sha256": "b677ffebdb052891eccf72fab1891a101fd1ad565a90c497041a419bcefdded0",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "rotate_deg": 20.58,
+    "scale_x": 0.3958,
+    "scale_y": 0.3044,
+    "offset": [
+     14,
+     8
+    ],
+    "content": [
+     471,
+     144
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-sparkle-1.png",
+   "sha256": "e349d1c9d05bca5afdee3b286d1617a67689af93c02b9d595c7ba06daba74beb",
+   "prompt": "Game asset, soft painterly digital painting: a single small drifting ice-dust sparkle, a tiny soft glowing point of pale ice-blue light with a gentle diffuse painterly halo and a few faint scattered glittering frost specks around it, delicate and subtle, no hard star spikes, no lens flare cross. Small and centered occupying only the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-sparkle-1.jpg",
+   "raw_sha256": "b224f8f145b90c87d1f113eeaced5c8d09139923704d0638ca81919c0a7bd9b6",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1207,
+    "scale_y": 0.1207,
+    "offset": [
+     2,
+     2
+    ],
+    "content": [
+     60,
+     60
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.02)/(1-0.02), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "comet-sparkle-2.png",
+   "sha256": "9b16e9cb4ee883a9841bfe7c9435a4d7e041cd7ad9d7df7cd96241f71a4b9102",
+   "prompt": "Game asset, soft painterly digital painting: a loose little cluster of four drifting frozen dust glints in a short curved trail, soft glowing pale white and faint cyan ice specks of different sizes, each with a hazy painterly glow, delicate, no hard star spikes, no cross flares. Small, occupying only the middle third, with a very wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/comet-sparkle-2.jpg",
+   "raw_sha256": "49fda61e69d7f9626c3ccc70147abcbd60f7ba796259d765cf4a67b83acb9f67",
+   "raw_size": [
+    1024,
+    1024
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1038,
+    "scale_y": 0.1038,
+    "offset": [
+     3,
+     8
+    ],
+    "content": [
+     58,
+     48
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  }
+ ]
+}

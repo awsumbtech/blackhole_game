@@ -1,0 +1,150 @@
+{
+ "pack": "vast-g2-comet-current",
+ "version": "1.0.0",
+ "tools": [
+  "_tools/process.py",
+  "_tools/qa_sheets.py",
+  "_tools/build_meta.py"
+ ],
+ "total_generations": 23,
+ "total_rerolls": 0,
+ "folder": "assets/current",
+ "files": [
+  {
+   "file": "current-wisp-1.png",
+   "sha256": "e07e5c68ff9606964152ca10e366f3f9146b002fba8e698a100aa259a30b2d3e",
+   "prompt": "Game asset, soft painterly digital painting: a horizontal soft luminous cosmic current wisp flowing left to right, a long gently undulating band of glowing ice-blue and pale-violet gas with fine silky streaming filaments and a few tiny drifting motes, thicker and brighter in the middle, thinning and feathering out to nothing at both the left and right ends, soft feathered top and bottom edges. Gentle wave, not a straight beam, no hard edges. Fully contained in the frame, wide empty dark margins on all four sides. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/current-wisp-1.jpg",
+   "raw_sha256": "414c15a3bb434d8b7807f6ab17f0a6da0aedfd784768af8cb2af512d3ccbaed8",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.3791,
+    "scale_y": 0.3791,
+    "offset": [
+     20,
+     27
+    ],
+    "content": [
+     472,
+     105
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "current-wisp-2.png",
+   "sha256": "5ca0574d160f0f9d7abcb63979af033ad464edadda240c16b751e842af5e021e",
+   "prompt": "Game asset, soft painterly digital painting: a horizontal braided cosmic current flowing to the right, two or three thin intertwining ribbons of luminous pale-violet and soft ice-blue vapor twisting gently around each other like a slow river eddy, with faint sparkling ice dust caught in the flow, emerging from nothing at the left end and dissolving to nothing at the right end, soft feathered top and bottom. Organic curves, no straight beams, no hard edges. Fully contained with wide empty dark margins on all four sides. Isolated on pure solid black #000000 background. No text, no stars.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/current-wisp-2.jpg",
+   "raw_sha256": "928de91ae86e995aa8e170ba47f9a935e4d4f57eba5fc80f9b3db158e020a731",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.4587,
+    "scale_y": 0.4587,
+    "offset": [
+     20,
+     11
+    ],
+    "content": [
+     472,
+     137
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "current-mote-1.png",
+   "sha256": "fafcb3a651103daee95a18753a5764049aceddefe51e9d054e7a62b5bbfff051",
+   "prompt": "Game asset, soft painterly digital painting: one small drifting directional ice mote, a soft glowing pale ice-blue droplet of light at the right with a short soft comet-like streak of luminous vapor trailing behind it to the left, so it clearly points and moves to the right. Gentle, low-contrast, delicate, soft feathered edges, no hard triangle, no arrow shape, no spikes. Small, centered, with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/current-mote-1.jpg",
+   "raw_sha256": "8df80dc18844d3efb6b6b032ff6a72c3b85d47118c84c51cbdf85feb0f7b9723",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1891,
+    "scale_y": 0.1891,
+    "offset": [
+     7,
+     15
+    ],
+    "content": [
+     114,
+     34
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "current-mote-2.png",
+   "sha256": "e36add4a6bb89ab7913f9f46becbefa4c06d9b3fa52a8a7bece18dd0b4e4f6ec",
+   "prompt": "Game asset, soft painterly digital painting: a small directional dust wisp moving to the right, a soft rounded chevron-like puff of pale lavender and silver dust made of two curved feathery strokes converging toward a soft glowing point on the right side, with a few tiny glittering grains trailing behind on the left. Soft, organic, low-contrast, no hard edges, no geometric triangle. Small, centered, with a wide empty pure black margin on all sides. Isolated on pure solid black #000000 background. No text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/current-mote-2.jpg",
+   "raw_sha256": "d09ad11bde12427960ec16371f622ea5abade62fabce3ef126200a3a903d216e",
+   "raw_size": [
+    1280,
+    720
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "scale_x": 0.1983,
+    "scale_y": 0.1983,
+    "offset": [
+     7,
+     4
+    ],
+    "content": [
+     114,
+     56
+    ],
+    "method": "black-unmix (a=(max(RGB)-0.03)/(1-0.03), RGB un-premultiplied) + edge opacity fade"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation."
+  },
+  {
+   "file": "../backdrop_current.jpg",
+   "sha256": "1d905c5a86b08c0e9128cd86641623bf3d5bc71653fd899cc2902ee5b70da76d",
+   "prompt": "Mobile game background, tall portrait, soft painterly realism digital painting of calm deep space: very dark deep-navy and midnight-indigo sky, extremely subtle soft nebula clouds in muted dark blue and faint violet drifting organically in large soft shapes, a gentle sense of depth, sparse fine pale stars of varying tiny sizes and a few faint distant dust lanes curving softly. Overall very dark and low-contrast so bright foreground objects pop. Absolutely no diagonal stripes, no light beams, no straight bands, no planets, no bright objects in the center, no text.",
+   "tool": "Grok Bot GenerateImage (cursor.studio)",
+   "generated": "2026-11-23 (America/New_York, ~18:40-18:50)",
+   "raw": "_raw/backdrop-current-v2.jpg",
+   "raw_sha256": "c7f70f9c89c370d697fa7ec38daebe6a3a4e7a4cfe940cfcb6d1f15de3140930",
+   "raw_size": [
+    720,
+    1280
+   ],
+   "rerolls_used": 0,
+   "processing": {
+    "method": "centre crop 591x1280 -> lanczos 780x1688, uniform exposure x0.80 (all channels, no hue change), JPEG q92 4:4:4"
+   },
+   "processed": "2026-11-23T18:45:36-05:00",
+   "licence": "Original generation for Brian Awsumb / Vast. No third-party art, no reference images, no Kenmi art. Not a recolour, tint or hue shift of any other asset; every file is its own painted generation.",
+   "pack_file": "backdrop-current-v2.jpg"
+  }
+ ]
+}

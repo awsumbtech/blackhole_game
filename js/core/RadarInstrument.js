@@ -5,9 +5,8 @@
 
 import { Theme } from "./Theme.js";
 
-const TAU = Math.PI * 2;
-
 export class RadarInstrument {
+  static TAU = Math.PI * 2;
   /**
    * Screen space. `overlay(ctx, ox, oy, scale, rim)` draws world marks in
    * map pixels. The rim disc is the glass, not a stroke.
@@ -20,14 +19,14 @@ export class RadarInstrument {
     const glass = r * 0.84;
     const scale = glass / (range > 1 ? range : 1);
     const cat = Theme.radar;
-    const bezel = cat.sprite("bezel");
+    const bezel = this._role(cat, "bezel");
     ctx.save();
     if (bezel) {
       ctx.globalAlpha = 0.96;
       cat.blit(ctx, bezel, cx, cy, map, map);
     }
     ctx.beginPath();
-    ctx.arc(cx, cy, glass, 0, TAU);
+    ctx.arc(cx, cy, glass, 0, this.TAU);
     ctx.clip();
 
     const ox = cx - playerX * scale;
@@ -41,15 +40,16 @@ export class RadarInstrument {
       const dx = ex - cx, dy = ey - cy;
       if (dx * dx + dy * dy > reach) continue;
       const tooBig = !e.powerup && playerRadius <= e.radius * eatRatio;
-      const id = tooBig ? "pip-big" : "pip-edible";
-      const spr = cat.sprite(id);
+      const pips = cat.idsByRole("pip");
+      const id = tooBig ? (pips[1] || pips[0]) : pips[0];
+      const spr = id ? cat.sprite(id) : null;
       if (!spr) continue;
       const s = tooBig ? 7 : 5;
       ctx.globalAlpha = tooBig ? 0.9 : 0.8;
       cat.blit(ctx, spr, ex, ey, s, s);
     }
 
-    const player = cat.sprite("player");
+    const player = this._role(cat, "player");
     if (player) {
       ctx.globalAlpha = 1;
       cat.blit(ctx, player, cx, cy, 11, 11);
@@ -59,7 +59,7 @@ export class RadarInstrument {
 
   /** A soft current ribbon along a polyline, in the caller's pixel space. */
   static ribbon(ctx, pts, ox, oy, k, rim, alpha) {
-    const spr = Theme.radar.sprite("current");
+    const spr = this._role(Theme.radar, "ribbon");
     if (!spr || !pts || pts.length < 2 || !(k > 0)) return;
     const drawW = 28;
     const drawH = drawW * (spr.h / spr.w);
@@ -91,5 +91,15 @@ export class RadarInstrument {
     ctx.globalAlpha = alpha > 0 ? alpha : 0.85;
     Theme.radar.blit(ctx, spr, x, y, size, size);
     return true;
+  }
+
+  /** First decoded picture of a role, in index order. */
+  static _role(cat, role) {
+    const ids = cat.idsByRole(role);
+    for (let i = 0; i < ids.length; i++) {
+      const spr = cat.sprite(ids[i]);
+      if (spr) return spr;
+    }
+    return null;
   }
 }

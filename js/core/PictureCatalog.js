@@ -1,18 +1,23 @@
-// One folder of named paintings. The manifest lists files, sizes and pivots.
-// Pictures are blitted with drawImage. Nothing here is drawn, tinted or recoloured.
-// A failed load leaves the catalog unready so Theme can retry. A later success
-// replaces the index. A failed retry keeps the previous good index.
+// One folder of named paintings. The index lists files, roles, sizes and pivots.
+// Each picture loads on its own. A missing sibling does not hide the ones that
+// decoded, and a failed picture tries again with backoff. Nothing here is
+// drawn, tinted or recoloured.
 
 export class PictureCatalog {
+  static NONE = [];
   constructor(folder) {
     this.folder = folder;
     this.byId = new Map();
     this.order = [];
+    this._byRole = new Map();
     this.ready = false;
+    this._meta = null;
+    this._root = "assets";
+    this._gen = 0;
   }
 
   async load(root, timeoutMs = 6000) {
-    const url = `${root}/${this.folder}/manifest.json`;
+    const url = `${root}/${this.folder}/index.json`;
     try {
       const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
         ? { signal: AbortSignal.timeout(timeoutMs) }
@@ -23,70 +28,125 @@ export class PictureCatalog {
       const rows = Array.isArray(meta.sprites) ? meta.sprites : [];
       const byId = new Map();
       const order = [];
-      const pending = [];
+      const byRole = new Map();
       for (const row of rows) {
         if (!row || !row.id || !row.file) continue;
         const image = new Image();
         image.decoding = "async";
-        const spr = {
+        const role = row.role || "";
+        byId.set(row.id, {
           id: row.id,
+          role,
           file: row.file,
           w: row.w > 0 ? row.w : 0,
           h: row.h > 0 ? row.h : 0,
           pivot: Array.isArray(row.pivot) && row.pivot.length >= 2 ? row.pivot : [0, 0],
           image,
-          ok: false
-        };
-        byId.set(row.id, spr);
+          ok: false,
+          failed: false,
+          tries: 0,
+          retry: 0
+        });
         order.push(row.id);
-        pending.push(new Promise((resolve, reject) => {
-          let settled = false;
-          const ok = () => {
-            if (settled) return;
-            settled = true;
-            if (!image.naturalWidth) { reject(new Error(row.file)); return; }
-            spr.ok = true;
-            if (!(spr.w > 0)) spr.w = image.naturalWidth;
-            if (!(spr.h > 0)) spr.h = image.naturalHeight;
-            resolve();
-          };
-          const bad = () => {
-            if (settled) return;
-            settled = true;
-            reject(new Error(row.file));
-          };
-          image.onload = ok;
-          image.onerror = bad;
-          image.src = `${root}/${this.folder}/${row.file}`;
-          if (image.complete) {
-            if (image.naturalWidth) ok();
-            else bad();
-          }
-        }));
+        let list = byRole.get(role);
+        if (!list) { list = []; byRole.set(role, list); }
+        list.push(row.id);
       }
       if (!order.length) throw new Error("empty");
-      let timer = 0;
-      await Promise.race([
-        Promise.all(pending),
-        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("images")), timeoutMs); })
-      ]).finally(() => { if (timer) clearTimeout(timer); });
+      this._cancelRetries();
+      this._gen++;
+      const gen = this._gen;
+      this._root = root;
+      this._meta = meta;
       this.byId = byId;
       this.order = order;
+      this._byRole = byRole;
+      await Promise.all(order.map(id => this._attempt(byId.get(id), gen, timeoutMs)));
       this.ready = true;
     } catch {
       if (!this.ready) {
+        this._cancelRetries();
         this.byId = new Map();
         this.order = [];
+        this._byRole = new Map();
+        this._meta = null;
       }
     }
   }
 
+  _cancelRetries() {
+    for (const spr of this.byId.values()) {
+      if (spr.retry) { clearTimeout(spr.retry); spr.retry = 0; }
+    }
+  }
+
+  /** One attempt. Always settles. A failure schedules its own retry. */
+  _attempt(spr, gen, timeoutMs) {
+    return new Promise(resolve => {
+      if (gen !== this._gen) { resolve(); return; }
+      const image = new Image();
+      image.decoding = "async";
+      spr.image = image;
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        if (gen !== this._gen) { resolve(); return; }
+        spr.ok = !!ok;
+        spr.failed = !ok;
+        if (ok) {
+          if (!(spr.w > 0)) spr.w = image.naturalWidth;
+          if (!(spr.h > 0)) spr.h = image.naturalHeight;
+          if (spr.retry) { clearTimeout(spr.retry); spr.retry = 0; }
+        } else {
+          this._scheduleRetry(spr, gen);
+        }
+        resolve();
+      };
+      const timer = setTimeout(() => finish(false), timeoutMs);
+      image.onload = () => { clearTimeout(timer); finish(image.naturalWidth > 0); };
+      image.onerror = () => { clearTimeout(timer); finish(false); };
+      image.src = `${this._root}/${this.folder}/${spr.file}`;
+      if (image.complete) {
+        clearTimeout(timer);
+        finish(image.naturalWidth > 0);
+      }
+    });
+  }
+
+  _scheduleRetry(spr, gen) {
+    if (gen !== this._gen) return;
+    if (spr.retry) clearTimeout(spr.retry);
+    spr.tries++;
+    const wait = Math.min(30000, 2000 * Math.pow(2, spr.tries - 1));
+    spr.retry = setTimeout(() => {
+      spr.retry = 0;
+      if (gen !== this._gen || spr.ok) return;
+      this._attempt(spr, gen, 6000);
+    }, wait);
+  }
+
   names() { return this.order.slice(); }
 
-  sprite(id) {
-    if (!this.ready) return null;
+  meta() { return this._meta; }
+
+  variants() {
+    const rows = this._meta && Array.isArray(this._meta.variants) ? this._meta.variants : [];
+    return rows.filter(row => row && row.coma && row.nucleus && row.tail);
+  }
+
+  /** Manifest order. Includes a picture that has not decoded yet. */
+  idsByRole(role) {
+    return this._byRole.get(role) || PictureCatalog.NONE;
+  }
+
+  has(id) {
     const spr = this.byId.get(id);
-    return spr && spr.ok ? spr : null;
+    return !!(spr && spr.ok && spr.image && spr.image.naturalWidth);
+  }
+
+  sprite(id) {
+    return this.has(id) ? this.byId.get(id) : null;
   }
 
   /**

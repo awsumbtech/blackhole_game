@@ -53,7 +53,7 @@ export function drawEntities(ctx, entities, w, h, camX, camY, playerRadius, time
     const sy = e.y - camY + h / 2;
 
     // Culling (margin covers coronas and comet tails)
-    const margin = e.radius * (e.hasTail ? 9 : 3.2) + 20;
+    const margin = e.hasTail ? e.radius * 21 + 24 : e.radius * 3.2 + 20;
     if (sx < -margin || sx > w + margin || sy < -margin || sy > h + margin) continue;
 
     if (e.powerup) {

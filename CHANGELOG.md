@@ -12,7 +12,7 @@ Comets, grit, dust, the Comet Current, the edge cues, and the radar are painting
 - `CurrentStream` replaces Galaxy 2's stroked river with wide hushed wisps (about 14–20% opacity, screen blend) and motes that follow the current. Reduce Motion freezes the motes. `assets/backdrop_current.jpg` is the calm sky with no diagonal stripe.
 - `EdgeCue` replaces the flat edge triangles and the landmark chevron in every galaxy. `RadarInstrument` replaces the radar's rects, rings, square blips, and the river tubes. Landmarks in other galaxies are small painted pips.
 - A bite of a rock, a dust mote, or a comet leaves that painted piece in the debris field. A hot meteor still has its entry streak and its heated leading edge.
-- `Theme.start` loads the five new indexes and still never rejects into boot. A missing index is retried with backoff and when the network returns. An entity spawned while the index is down can still be eaten, and it draws once the pictures arrive. The new files are in the service worker precache.
+- The five painted indexes are `index.json` (`assets/comets`, `rocks`, `dust`, `current`, `hud/radar`). A picture that fails to decode retries on its own and does not hide the rest of its folder. `Theme` still loads them with the same timeout, backoff, and online retry, and still never rejects into boot.
 - The gold disc, the too-big ring, and the arrival disc stay gone. Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.10.0`.
 
 ## v9.9.0 — Art manifests (Nov 16 2026)

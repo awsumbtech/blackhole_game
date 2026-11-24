@@ -1,12 +1,8 @@
-// One comet head. The seed picks cyan or silver. The coma and the nucleus
-// are paintings. This class does not fill, stroke, tint or build a canvas.
+// One comet head. The seed picks a row from the comet index variants.
+// The coma and the nucleus are paintings. This class does not fill, stroke,
+// tint or build a canvas.
 
 import { Theme } from "./Theme.js";
-
-const VARIANT = [
-  { coma: "coma-cyan", nucleus: "nucleus-1", tail: "tail-cyan" },
-  { coma: "coma-silver", nucleus: "nucleus-2", tail: "tail-silver" }
-];
 
 export class Comet {
   static owned = new WeakMap();
@@ -19,20 +15,29 @@ export class Comet {
     return s;
   }
 
-  /** 0 cyan, 1 silver. Stable for the life of the entity. */
+  /** Index into the catalog variants. Stable for the life of the entity. */
   static variant(e) {
-    return ((e && e.seed) >>> 0) & 1;
+    const n = Theme.comets.variants().length;
+    if (!n) return 0;
+    return ((e && e.seed) >>> 0) % n;
   }
 
-  static look(e) { return VARIANT[Comet.variant(e)]; }
+  static look(e) {
+    const rows = Theme.comets.variants();
+    if (!rows.length) return null;
+    return rows[Comet.variant(e)];
+  }
 
   static tailSprite(e) {
-    return Theme.comets.sprite(Comet.look(e).tail);
+    const look = Comet.look(e);
+    return look ? Theme.comets.sprite(look.tail) : null;
   }
 
   /** Nucleus paintings for a bite. No coma: the glow would read as a flash. */
   static debrisFrames(e) {
-    const spr = Theme.comets.sprite(Comet.look(e).nucleus);
+    const look = Comet.look(e);
+    if (!look) return null;
+    const spr = Theme.comets.sprite(look.nucleus);
     if (!spr) return null;
     const image = spr.image;
     const frame = (rel) => ({
@@ -48,6 +53,7 @@ export class Comet {
   draw(ctx, x, y, r, alpha) {
     if (!(alpha > 0) || !(r > 0)) return false;
     const look = Comet.look(this.e);
+    if (!look) return false;
     const coma = Theme.comets.sprite(look.coma);
     const nucleus = Theme.comets.sprite(look.nucleus);
     if (!coma || !nucleus) return false;

@@ -16,11 +16,11 @@ const ORIGIN = `http://127.0.0.1:${PORT}`;
 const SHOT_DIR = path.join("docs", "shots", "v9.10.0");
 
 const INDEXES = [
-  ["comets", "**/assets/comets/manifest.json"],
-  ["rocks", "**/assets/rocks/manifest.json"],
-  ["dust", "**/assets/dust/manifest.json"],
-  ["current", "**/assets/current/manifest.json"],
-  ["radar", "**/assets/hud/radar/manifest.json"]
+  ["comets", "**/assets/comets/index.json"],
+  ["rocks", "**/assets/rocks/index.json"],
+  ["dust", "**/assets/dust/index.json"],
+  ["current", "**/assets/current/index.json"],
+  ["radar", "**/assets/hud/radar/index.json"]
 ];
 
 function hook() {
@@ -292,6 +292,130 @@ async function sourceGate(page) {
   });
 }
 
+
+async function extraFromIndex() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.route("**/assets/comets/index.json", async route => {
+    const res = await route.fetch();
+    const json = await res.json();
+    json.sprites = json.sprites.concat([
+      { id: "coma-extra", role: "coma", file: "comet-coma-extra.png", w: 256, h: 256, pivot: [128, 128] },
+      { id: "nucleus-extra", role: "nucleus", file: "comet-nucleus-extra.png", w: 128, h: 128, pivot: [64, 64] },
+      { id: "tail-extra", role: "tail", file: "comet-tail-extra.png", w: 512, h: 160, pivot: [48, 80] }
+    ]);
+    json.variants = json.variants.concat([
+      { coma: "coma-extra", nucleus: "nucleus-extra", tail: "tail-extra" }
+    ]);
+    await route.fulfill({ json });
+  });
+  const alias = (from, to) => page.route(from, route => route.continue({ url: `${ORIGIN}${to}` }));
+  await alias("**/assets/comets/comet-coma-extra.png", "/assets/comets/comet-coma-cyan.png");
+  await alias("**/assets/comets/comet-nucleus-extra.png", "/assets/comets/comet-nucleus-1.png");
+  await alias("**/assets/comets/comet-tail-extra.png", "/assets/comets/comet-tail-cyan.png");
+  await page.route("**/assets/rocks/index.json", async route => {
+    const res = await route.fetch();
+    const json = await res.json();
+    json.sprites = json.sprites.concat([
+      { id: "pebble-5", role: "pebble", file: "pebble-5.png", w: 256, h: 256, pivot: [128, 128] }
+    ]);
+    await route.fulfill({ json });
+  });
+  await alias("**/assets/rocks/pebble-5.png", "/assets/rocks/pebble-1.png");
+  await boot(page);
+  const result = await page.evaluate(async () => {
+    const { Theme } = await import("/js/core/Theme.js");
+    const { Comet } = await import("/js/core/Comet.js");
+    const { CometTail } = await import("/js/core/CometTail.js");
+    const { SpaceRock } = await import("/js/core/SpaceRock.js");
+    const entities = await import("/js/entities.js");
+    const t0 = performance.now();
+    while (!(Theme.comets.ready && Theme.rocks.ready) && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const variants = Theme.comets.variants();
+    const pebbles = Theme.rocks.idsByRole("pebble");
+    if (variants.length < 3 || pebbles.indexOf("pebble-5") < 0) {
+      return { ok: false, reason: "extra index rows were not read", n: variants.length, pebbles: pebbles.slice() };
+    }
+    const comet = entities.createEntity(entities.typeById("comet"), 0, 0, 1);
+    comet.seed = 2;
+    comet.radius = 12;
+    const rock = entities.createEntity(entities.typeById("junk"), 0, 0, 1);
+    rock.seed = pebbles.indexOf("pebble-5");
+    rock.look = 0;
+    rock.radius = 10;
+    const bag = [];
+    const orig = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (img) {
+      if (img && (img.src || img.currentSrc)) bag.push(img.src || img.currentSrc);
+      return orig.apply(this, arguments);
+    };
+    const c = document.createElement("canvas").getContext("2d");
+    const drewComet = Comet.for(comet).draw(c, 40, 40, 12, 1);
+    const tail = new CometTail(0.4);
+    tail.aimed = true;
+    const drewTail = tail.drawComet(c, 40, 40, 12, 1, "", 12, 1, Comet.variant(comet));
+    const drewRock = SpaceRock.for(rock).draw(c, 80, 40, 10, 1);
+    CanvasRenderingContext2D.prototype.drawImage = orig;
+    const src = bag.join("\n");
+    const ok = !!(drewComet && drewTail && drewRock
+      && src.indexOf("comet-tail-extra") >= 0
+      && src.indexOf("comet-coma-extra") >= 0
+      && src.indexOf("pebble-5") >= 0);
+    return {
+      ok,
+      reason: ok ? "extra rows drawn" : "extra rows were not drawn",
+      drewComet, drewTail, drewRock,
+      variant: Comet.variant(comet),
+      pebble: SpaceRock.pebbleId(rock)
+    };
+  });
+  const pageErrors = page._errs.slice();
+  await browser.close();
+  return { ok: !!(result.ok && !pageErrors.length), result, pageErrors };
+}
+
+async function onePngDown() {
+  const browser = await launch();
+  const page = await newPage(browser, 1);
+  await page.route("**/assets/comets/comet-tail-silver.png", route => route.abort());
+  await boot(page);
+  const result = await page.evaluate(async () => {
+    const { Theme } = await import("/js/core/Theme.js");
+    const { Comet } = await import("/js/core/Comet.js");
+    const { CometTail } = await import("/js/core/CometTail.js");
+    const entities = await import("/js/entities.js");
+    const t0 = performance.now();
+    while (!Theme.comets.ready && performance.now() - t0 < 15000) {
+      await new Promise(r => setTimeout(r, 40));
+    }
+    const ids = ["nucleus-1", "nucleus-2", "coma-cyan", "coma-silver", "tail-cyan", "sparkle-1", "sparkle-2"];
+    const has = {};
+    for (const id of ids) has[id] = Theme.comets.has(id);
+    const missing = ids.filter(id => !has[id]);
+    const silverTail = Theme.comets.has("tail-silver");
+    const cyan = entities.createEntity(entities.typeById("comet"), 0, 0, 1);
+    cyan.seed = 0;
+    cyan.radius = 12;
+    const silver = entities.createEntity(entities.typeById("comet"), 0, 0, 1);
+    silver.seed = 1;
+    silver.radius = 12;
+    const c = document.createElement("canvas").getContext("2d");
+    const drewCyan = Comet.for(cyan).draw(c, 30, 30, 12, 1);
+    const tail = new CometTail(0.2);
+    tail.aimed = true;
+    const drewCyanTail = tail.drawComet(c, 30, 30, 12, 1, "", 12, 1, Comet.variant(cyan));
+    const drewSilverHead = Comet.for(silver).draw(c, 90, 30, 12, 1);
+    const ok = Theme.comets.ready && !missing.length && !silverTail && drewCyan && drewCyanTail && drewSilverHead;
+    return { ok, ready: Theme.comets.ready, has, silverTail, drewCyan, drewCyanTail, drewSilverHead, missing };
+  });
+  const pageErrors = page._errs.slice();
+  await browser.close();
+  const ok = !!(result.ok && !pageErrors.length);
+  return { ok, reason: ok ? "sibling pngs still draw" : "a missing png hid its siblings", result, pageErrors };
+}
+
 async function reveal(page) {
   await page.evaluate(() => {
     for (const id of ["splash", "title-screen", "intro-screen"]) {
@@ -367,7 +491,12 @@ async function main() {
   if (SHOTS) await clean.screenshot({ path: path.join(SHOT_DIR, "clean-load.png") });
   await cleanBrowser.close();
 
-  const result = { ok: fail.length === 0, out, gate, g2, g1, dev, fail };
+  const extra = await extraFromIndex();
+  if (!extra.ok) fail.push(extra);
+  const sibling = await onePngDown();
+  if (!sibling.ok) fail.push(sibling);
+
+  const result = { ok: fail.length === 0, out, gate, g2, g1, dev, extra, sibling, fail };
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.ok ? 0 : 1);
 }

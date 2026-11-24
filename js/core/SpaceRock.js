@@ -5,20 +5,19 @@
 import { Theme } from "./Theme.js";
 import { SpaceDust } from "./SpaceDust.js";
 
-const SLOTS = [
-  { x: -0.08, y: -0.12, s: 2.45 },
-  { x: 0.62, y: 0.16, s: 1.7 },
-  { x: -0.5, y: 0.52, s: 1.38 },
-  { x: 0.28, y: -0.58, s: 1.05 }
-];
-
-function mix(n) {
-  n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
-  return (n ^ (n >>> 15)) >>> 0;
-}
-
 export class SpaceRock {
+  static SLOTS = [
+    { x: -0.08, y: -0.12, s: 2.45 },
+    { x: 0.62, y: 0.16, s: 1.7 },
+    { x: -0.5, y: 0.52, s: 1.38 },
+    { x: 0.28, y: -0.58, s: 1.05 }
+  ];
   static owned = new WeakMap();
+
+  static mix(n) {
+    n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+    return (n ^ (n >>> 15)) >>> 0;
+  }
 
   constructor(e) { this.e = e; this._lay = null; }
 
@@ -35,21 +34,27 @@ export class SpaceRock {
     return (look % 5) === 1;
   }
 
+  static pebbleIds() { return Theme.rocks.idsByRole("pebble"); }
+
   static pebbleId(e) {
-    return "pebble-" + (1 + ((e.seed >>> 0) % 4));
+    const ids = SpaceRock.pebbleIds();
+    if (!ids.length) return "";
+    return ids[(e.seed >>> 0) % ids.length];
   }
 
-  /** Built once per entity. Not touched from the draw hot path after that. */
+  /** Built once per entity, once the pebble list is known. */
   layout() {
     if (this._lay) return this._lay;
+    const ids = SpaceRock.pebbleIds();
+    if (!ids.length) return null;
     const s = this.e.seed >>> 0;
     const n = 3 + (s & 1);
     const lay = new Array(n);
     for (let i = 0; i < n; i++) {
-      const h = mix(s ^ Math.imul(i + 1, 0x9e3779b1));
-      const slot = SLOTS[i];
+      const h = SpaceRock.mix(s ^ Math.imul(i + 1, 0x9e3779b1));
+      const slot = SpaceRock.SLOTS[i];
       lay[i] = {
-        id: "pebble-" + (1 + ((h >>> 16) % 4)),
+        id: ids[(h >>> 16) % ids.length],
         x: slot.x + ((h & 255) / 255 - 0.5) * 0.16,
         y: slot.y + (((h >>> 8) & 255) / 255 - 0.5) * 0.16,
         s: slot.s,
@@ -73,6 +78,7 @@ export class SpaceRock {
     });
     if (SpaceRock.isCluster(e)) {
       const lay = SpaceRock.for(e).layout();
+      if (!lay) return null;
       const out = [];
       for (let i = 0; i < lay.length && out.length < 4; i++) {
         const spr = cat.sprite(lay[i].id);
@@ -90,6 +96,8 @@ export class SpaceRock {
     if (!(alpha > 0) || !(r > 0)) return false;
     const sway = Math.sin(this.e.rotation || 0) * 0.22;
     if (SpaceRock.isCluster(this.e)) return this._cluster(ctx, x, y, r, alpha, sway);
+    const id = SpaceRock.pebbleId(this.e);
+    if (!id) return false;
     const spr = Theme.rocks.sprite(SpaceRock.pebbleId(this.e));
     if (!spr) return false;
     const d = r * (this.e.type === "meteor" ? 2.9 : 2.7);
@@ -104,6 +112,7 @@ export class SpaceRock {
 
   _cluster(ctx, x, y, r, alpha, sway) {
     const lay = this.layout();
+    if (!lay) return false;
     const cat = Theme.rocks;
     let any = false;
     ctx.save();

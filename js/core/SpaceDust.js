@@ -14,10 +14,14 @@ export class SpaceDust {
     return s;
   }
 
-  static sprite() { return Theme.dust.sprite("wisp-1"); }
+  static spriteFor(seed) {
+    const ids = Theme.dust.idsByRole("wisp");
+    if (!ids.length) return null;
+    return Theme.dust.sprite(ids[(seed >>> 0) % ids.length]);
+  }
 
-  static debrisFrames() {
-    const spr = SpaceDust.sprite();
+  static debrisFrames(e) {
+    const spr = SpaceDust.spriteFor(e ? e.seed : 0);
     if (!spr) return null;
     const image = spr.image;
     const frame = (rel) => ({
@@ -28,7 +32,7 @@ export class SpaceDust {
 
   /** A companion wisp for a pebble cluster. Angle is the caller's. */
   static blot(ctx, x, y, size, alpha, ang) {
-    const spr = SpaceDust.sprite();
+    const spr = SpaceDust.spriteFor(0);
     if (!spr || !(alpha > 0) || !(size > 0)) return false;
     ctx.save();
     ctx.translate(x, y);
@@ -41,7 +45,7 @@ export class SpaceDust {
 
   draw(ctx, x, y, r, alpha) {
     if (!(alpha > 0) || !(r > 0)) return false;
-    const spr = SpaceDust.sprite();
+    const spr = SpaceDust.spriteFor(this.e.seed);
     if (!spr) return false;
     const ang = ((this.e.seed >>> 0) % 360) * (Math.PI / 180);
     const d = r * 3.4;

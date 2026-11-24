@@ -276,7 +276,7 @@ Extents are from `js/art/sprites.js` 55–68. Look counts from line 45.
   - **Size:** head about 14 CSS / 42 device px as a morsel. Tail about 9 head-radii long.
   - **Asset px:** nucleus 128×128, coma 256×256, tail 512×160, sparkle 64×64.
   - **Owner:** `Comet`, `CometTail`, `CometSparkle`.
-  - **Asset:** `assets/comets/manifest.json`.
+  - **Asset:** `assets/comets/index.json`.
 
 - [x] **Moon.** Done in v9.9.0. `Body` (`js/core/Body.js`) blits the layers from `assets/moons/<type>/v1/`. `js/art/planets.js` is gone. Types come from `assets/moons/manifest.json` (six painted bodies: grey-cratered, icy-cracked, volcanic, dark-dusty, bright-icy, rusty). A bite can use that type's painted debris frames. Missing debris is optional and draws nothing; the body can still be eaten. No gold-edge frame: the disc was removed in v9.8.1, not converted.
   - **Size:** big catch about 42 CSS / 126 device px.

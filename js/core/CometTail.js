@@ -7,19 +7,19 @@
 
 import { Theme } from "./Theme.js";
 
-const TAU = Math.PI * 2;
-// Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
-// last heading. FOLLOW is how much of the new heading is taken in one frame.
-const HOLD = 0.06;
-const FOLLOW = 0.7;
-
-function wrap(a) {
-  a = (a + Math.PI) % TAU;
-  if (a < 0) a += TAU;
-  return a - Math.PI;
-}
-
 export class CometTail {
+  static TAU = Math.PI * 2;
+  // Per frame-time (dt 1 = one 60Hz frame). A slower step than this keeps the
+  // last heading. FOLLOW is how much of the new heading is taken in one frame.
+  static HOLD = 0.06;
+  static FOLLOW = 0.7;
+
+  static wrap(a) {
+    a = (a + Math.PI) % CometTail.TAU;
+    if (a < 0) a += CometTail.TAU;
+    return a - Math.PI;
+  }
+
   constructor(ang = 0) {
     this.ang = ang;
     this.have = false;
@@ -53,15 +53,15 @@ export class CometTail {
     const step = Math.hypot(dx, dy);
     const frames = dt > 0 ? dt : 0;
     if (step > limit) return;
-    if (step < HOLD * frames || frames === 0) return;
+    if (step < CometTail.HOLD * frames || frames === 0) return;
     const target = Math.atan2(-dy, -dx);
     if (!this.aimed) {
       this.ang = target;
       this.aimed = true;
       return;
     }
-    const take = 1 - Math.pow(1 - FOLLOW, frames);
-    this.ang += wrap(target - this.ang) * take;
+    const take = 1 - Math.pow(1 - CometTail.FOLLOW, frames);
+    this.ang += CometTail.wrap(target - this.ang) * take;
   }
 
   /**
@@ -69,8 +69,11 @@ export class CometTail {
    * on the comet. `speed` only sets the length. No code ribbon, no ion stroke.
    */
   drawComet(ctx, x, y, r, alpha, color, rpx, speed, variant = 0) {
-    const spr = Theme.comets.sprite(variant ? "tail-silver" : "tail-cyan");
-    if (!spr || !(alpha > 0) || !(r > 0)) return false;
+    const rows = Theme.comets.variants();
+    if (!rows.length || !(alpha > 0) || !(r > 0)) return false;
+    const row = rows[((variant % rows.length) + rows.length) % rows.length];
+    const spr = Theme.comets.sprite(row.tail);
+    if (!spr) return false;
     const len = r * (14.0 + Math.min(5.0, (speed || 0) * 3.2));
     return this.drawPainted(ctx, x, y, spr, len, alpha * 0.92);
   }
@@ -87,16 +90,5 @@ export class CometTail {
     Theme.comets.blit(ctx, spr, 0, 0, len, h);
     ctx.restore();
     return true;
-  }
-
-  /** Blit a tail picture the caller already has. +x of the picture is the trailing end. */
-  drawSprite(ctx, x, y, sprite, w, h, alpha, composite) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(this.ang);
-    ctx.globalAlpha = alpha;
-    if (composite) ctx.globalCompositeOperation = composite;
-    ctx.drawImage(sprite, 0, -h / 2, w, h);
-    ctx.restore();
   }
 }

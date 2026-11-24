@@ -262,7 +262,7 @@ export class DebrisField {
    */
   _spawnPainted(e, base, still, shadowR, zoom) {
     const frames = e.type === "comet" ? Comet.debrisFrames(e)
-      : e.type === "dust" ? SpaceDust.debrisFrames()
+      : e.type === "dust" ? SpaceDust.debrisFrames(e)
       : SpaceRock.debrisFrames(e);
     if (!frames || !frames.length) return;
     const item = Math.max(1, e.radius * 2);

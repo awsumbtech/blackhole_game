@@ -197,7 +197,8 @@ export function drawDiscoveries(ctx, state, vw, vh, time, reduceMotion, dt = 1) 
     const fade = Math.min(1, f.age / 90);
     const tw = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin(time * 0.0021 + f.at);
     if (f.def.kind === "comet") {
-      const spr = Theme.comets.sprite((hashId(f.def.id) & 1) ? "tail-silver" : "tail-cyan");
+      const tails = Theme.comets.idsByRole("tail");
+      const spr = tails.length ? Theme.comets.sprite(tails[hashId(f.def.id) % tails.length]) : null;
       if (spr) f.tail.drawPainted(ctx, x, y, spr, r * 7.2, 0.55 * fade);
     }
     const sp = findSprite(f.def), d = r * 8.3 * (0.96 + 0.04 * tw);
