@@ -2,7 +2,7 @@
 // (so edits show up right away); the cache is only the offline fallback.
 // Paths are relative so it works at the site root or in a subfolder.
 // Bump on each release so phones drop the old offline copy.
-const CACHE_NAME = "blackhole-v9.10.0";
+const CACHE_NAME = "blackhole-v9.11.0";
 const ASSETS = [
   "./",
   "./index.html",
@@ -48,6 +48,8 @@ const ASSETS = [
   "./js/core/CurrentStream.js",
   "./js/core/EdgeCue.js",
   "./js/core/RadarInstrument.js",
+  "./js/core/PulsarBeam.js",
+  "./js/core/NeutronStar.js",
   "./js/core/PictureCatalog.js",
   "./js/core/GoldenVeil.js",
   "./js/core/HudControls.js",
@@ -100,6 +102,8 @@ const ASSETS = [
   "./assets/dust/index.json",
   "./assets/current/index.json",
   "./assets/hud/radar/index.json",
+  "./assets/pulsar/index.json",
+  "./assets/neutron/index.json",
   "./assets/comets/comet-nucleus-1.png",
   "./assets/comets/comet-nucleus-2.png",
   "./assets/comets/comet-coma-cyan.png",
@@ -122,6 +126,11 @@ const ASSETS = [
   "./assets/hud/radar/radar-player.png",
   "./assets/hud/radar/radar-pip-edible.png",
   "./assets/hud/radar/radar-pip-big.png",
+  "./assets/hud/radar/radar-pip-pulsar.png",
+  "./assets/pulsar/pulsar-beam-cool.png",
+  "./assets/pulsar/pulsar-beam-ember.png",
+  "./assets/neutron/neutron-cool.png",
+  "./assets/neutron/neutron-ember.png",
   "./assets/backdrop_reef.jpg",
   "./assets/backdrop_current.jpg",
   "./assets/backdrop_nursery.jpg",

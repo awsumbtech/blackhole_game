@@ -16,6 +16,7 @@ import { shadowRadius } from "../art/hole.js";
 import { Body } from "./Body.js";
 import { Comet } from "./Comet.js";
 import { Ship } from "./Ship.js";
+import { NeutronStar } from "./NeutronStar.js";
 import { SpaceDust } from "./SpaceDust.js";
 import { SpaceRock } from "./SpaceRock.js";
 
@@ -263,6 +264,7 @@ export class DebrisField {
   _spawnPainted(e, base, still, shadowR, zoom) {
     const frames = e.type === "comet" ? Comet.debrisFrames(e)
       : e.type === "dust" ? SpaceDust.debrisFrames(e)
+      : e.type === "neutron" ? NeutronStar.debrisFrames(e)
       : SpaceRock.debrisFrames(e);
     if (!frames || !frames.length) return;
     const item = Math.max(1, e.radius * 2);
@@ -294,7 +296,7 @@ export class DebrisField {
       this._spawnListed(e, base, still, shadowR, zoom);
       return;
     }
-    if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor") {
+    if (e.type === "comet" || e.type === "dust" || e.type === "junk" || e.type === "meteor" || e.type === "neutron") {
       this._spawnPainted(e, base, still, shadowR, zoom);
       return;
     }

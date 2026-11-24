@@ -1,6 +1,6 @@
-// Stars, star systems and neutron stars.
+// Stars and star systems. Neutron cores are NeutronStar paintings.
 
-import { TAU, light, rgba, css, mx3, K0, K1, pick, shade, sphereClip, softBlob, speck } from "./kit.js";
+import { TAU, css, mx3, K0, K1, pick, shade, sphereClip, softBlob, speck } from "./kit.js";
 import { quality } from "./quality.js";
 
 // Spectral types: core, limb, corona colours; glow = corona strength; spots
@@ -15,21 +15,6 @@ const SPECTRA = {
 const SPEC_OF = ["G", "K", "G", "M", "K", "F", "G", "A", "K", "B", "M", "G"];
 
 export const STAR_PAINTERS = {
-  neutron(g, R, e) {
-    const gl = g.createRadialGradient(0, 0, 0, 0, 0, R * 3.1);
-    gl.addColorStop(0, "rgba(255, 255, 255, 1)");
-    gl.addColorStop(0.18, light(e.color, 0.4, 0.8));
-    gl.addColorStop(0.45, rgba(e.color, 0.22));
-    gl.addColorStop(1, rgba(e.color, 0));
-    g.fillStyle = gl;
-    g.beginPath(); g.arc(0, 0, R * 3.1, 0, TAU); g.fill();
-    g.beginPath();
-    g.ellipse(0, 0, R * 1.9, R * 0.55, -0.4, 0, TAU);
-    g.strokeStyle = light(e.color, 0.3, 0.28);
-    g.lineWidth = Math.max(0.6, R * 0.12);
-    g.stroke();
-  },
-
   // Stars by spectral type: red dwarfs with spots to blue-white giants
   star(g, R, e, r, v, look) {
     const S = SPECTRA[SPEC_OF[look % SPEC_OF.length]], hi = quality === "high";

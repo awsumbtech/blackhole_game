@@ -12,6 +12,7 @@ import { Body } from "./core/Body.js";
 import { Comet } from "./core/Comet.js";
 import { Ship } from "./core/Ship.js";
 import { ShipCatalog } from "./core/ShipCatalog.js";
+import { NeutronStar } from "./core/NeutronStar.js";
 import { SpaceDust } from "./core/SpaceDust.js";
 import { SpaceRock } from "./core/SpaceRock.js";
 import { tier } from "./tiers.js";
@@ -153,6 +154,10 @@ function walk(ctx, L, k, w, h, holePx, dpr, a, cb) {
       }
       if (e.type === "comet") {
         Comet.for(e).draw(ctx, sx, sy, rad, a * (0.75 + 0.2 * r3));
+        continue;
+      }
+      if (e.type === "neutron") {
+        NeutronStar.for(e).draw(ctx, sx, sy, rad, a * (0.8 + 0.2 * r3));
         continue;
       }
       const sp = spriteFor(e, rad * dpr);

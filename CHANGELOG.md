@@ -2,6 +2,16 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.11.0 — Galaxy 7 painted overhaul (Nov 24 2026)
+
+Neutron Forge's sky, pulsar jets, and neutron cores are paintings. The black hole, the HUD, the wisp, and the save are the same.
+
+- `assets/backdrop_forge.jpg` is the dark violet Forge sky. `Backdrop` is unchanged.
+- `PulsarBeam` draws the two opposing jets from `assets/pulsar`, rotated about each picture's pivot. The visible tip is the bonus reach (`1.5` of the set), and the +50% hitbox is that same painted footprint, including the flare. The old pie-slice gradient is gone. Spin and flare timing are unchanged.
+- `NeutronStar` draws the cool and ember cores for the Lighthouse, the Ember Pulsar, and `neutron` food. `STAR_PAINTERS.neutron` is gone. Star, system, nebula, cluster, and galaxy stay painted in code.
+- The Forge radar landmark uses `radar-pip-pulsar.png`. Edible and big pips have their own roles and are looked up by role. Beam diameter lines are not drawn on the minimap.
+- `Theme` loads the pulsar and neutron indexes with the same per-image retry as the other catalogs. One failed PNG does not hide its siblings. Cache name is `blackhole-v9.11.0`.
+
 ## v9.10.0 — Galaxy 2 painted overhaul (Nov 23 2026)
 
 Comets, grit, dust, the Comet Current, the edge cues, and the radar are paintings. The black hole, the HUD, and the save are the same.
