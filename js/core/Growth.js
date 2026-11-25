@@ -5,7 +5,6 @@
 import { tier, tierIndexForR, tierName } from "../tiers.js";
 import { startMerge, layerName, MERGE_FRAMES } from "../depth.js";
 import { spawnFood } from "../living-world.js";
-import { REVEAL_FRAMES } from "./Camera.js";
 
 export class Growth {
   /**
@@ -24,7 +23,13 @@ export class Growth {
   check() {
     const state = this.state, h = this.hooks;
     const t = tierIndexForR(state.radius);
-    if (t <= state.tier) return;
+    if (t <= state.tier) {
+      h.step?.consider();
+      return;
+    }
+    // The tier-up reveal is the ceremony. A third that would land on this
+    // same moment is skipped, and a running ease lets go of the camera.
+    h.step?.cancel();
     state.tier = t;
     state.bestTier = Math.max(state.bestTier || 0, t);
     h.camera.beginReveal(!!state.settings.reduceMotion);
@@ -94,5 +99,3 @@ export class Growth {
     ctx.fillRect(0, 0, w, h);
   }
 }
-
-export { REVEAL_FRAMES };

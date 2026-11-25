@@ -30,6 +30,9 @@ export const RULES = {
   NOTE_LEVEL: 0.045,     // a music note at its peak
   NOTE_EVERY: [9, 7.5, 6.5, 5.5],   // seconds between music notes, by layer (<= 11 notes/min)
   BITE_LEVEL: 0.05,
+  GROWTH_LEVEL: 0.012,   // v9.16 growth-step chime, quieter than a bite (bites use 0.7–1.0 of BITE_LEVEL)
+  GROWTH_ATTACK: 0.45,   // s, gentle fade-in, well above MIN_ATTACK
+  GROWTH_RELEASE: 3.4,   // s, long release
   SWELL_LEVEL: 0.07,     // v9.5 impact swell peak (sub + its two harmonics), before the Effects slider
   SWELL_ATTACK: 0.06,    // s, slow enough to never click, quick enough to land with the burst
   SWELL_LOWPASS: 190,    // Hz, the swell carries nothing above this
@@ -252,6 +255,14 @@ export function playDenied() { blip(note(0, -1), { attack: 0.03, decay: 0.35, vo
 export function playClick() { blip(note(5), { attack: 0.02, decay: 0.12, vol: 0.012 }); }
 export function playNearGoal() { blip(note(4), { attack: 0.2, decay: 1.5, vol: 0.018 }); }
 export function playTierChime() { [0, 5].forEach((d, i) => blip(note(d, -1), { start: i * 0.5, attack: 0.3, decay: 2.5, vol: 0.03 })); }
+/**
+ * v9.16 growth step: one sine in the bite register, slower and quieter than a bite.
+ * No second voice and no glide, so nothing beats. The effects bus still owns mute and level.
+ */
+export function playGrowthChime() {
+  playGrowthChime.plays = (playGrowthChime.plays || 0) + 1;
+  blip(note(0), { attack: RULES.GROWTH_ATTACK, decay: RULES.GROWTH_RELEASE, vol: RULES.GROWTH_LEVEL });
+}
 
 // ─── v9.5 IMPACT SWELL: a low, soft "felt" swell under the tier-up / big-swallow burst ───
 // Root two octaves down (48-65 Hz) with its exact 2nd and 3rd harmonics: three sines

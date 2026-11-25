@@ -822,9 +822,12 @@ async function main() {
     const sw = await (await fetch("/sw.js")).text();
     const version = (game.match(/const VERSION = "([^"]+)"/) || [])[1];
     const cache = (sw.match(/const CACHE_NAME = "([^"]+)"/) || [])[1];
+    const p = String(version || "").split(".").map(Number);
+    const ge = p.length === 3 && p.every(n => Number.isFinite(n))
+      && (p[0] > 9 || (p[0] === 9 && (p[1] > 15 || (p[1] === 15 && p[2] >= 0))));
     out.release = {
       version, cache,
-      ok: version === "9.15.0" && cache === "blackhole-v9.15.0"
+      ok: ge && cache === "blackhole-v" + version
     };
 
     out.ok = out.curve.ok && out.straight.ok && out.speed.ok && out.consume.ok
