@@ -232,6 +232,7 @@ export class ScreenFlow {
   // Then the first-launch intro and drift-in play, into a newborn dust-only start.
   startCompletelyOver() {
     const state = this.state, game = this.game;
+    game.growthStep.reset();
     if (state.mode === "zen") game.zen.restore();
     if (ui.isStatsOpen()) ui.closeStats();
     state.paused = false;

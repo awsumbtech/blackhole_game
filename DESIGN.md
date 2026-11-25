@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.15.0** (comet trails follow the path a comet actually flew, on top of the v9.14.0 Void Rift aurora, the v9.13.0 Star Meadow, the v9.12.0 reef and flagship, the v9.11.0 Neutron Forge, and the v9.10.0 Galaxy 2 pictures)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.15.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.16.0** (a quiet growth step at each third of a tier, on top of the v9.15.0 comet trails, the v9.14.0 Void Rift aurora, the v9.13.0 Star Meadow, the v9.12.0 reef and flagship, the v9.11.0 Neutron Forge, and the v9.10.0 Galaxy 2 pictures)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.16.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -142,6 +142,7 @@ Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `ma
 - **Scale-tier ladder** (`js/tiers.js`, `TIER_STEP = 2.6`): Space Dust → Grit & Pebbles → Asteroids → Comets & Ice → Moons → Planets → Giant Worlds → Stars → Star Systems → Nebulae → Star Clusters → Galaxies → Galaxy Groups → Cosmic Web (and on). Each step is 2.6× the hole radius.
 - **Continuous journey.** Each galaxy starts again as fine dust around you, but your size is carried over: the **previous peak is the floor**. A regular galaxy gives about one tier, a breather about half a tier.
 - **Tier reveal.** The camera slowly pulls back (~2.5s) while you keep moving. A soft chime plays and a quiet line names the new scale. The music adds one layer per tier, up to six.
+- **Growth step (v9.16.0, `GrowthStep` in `js/core/GrowthStep.js`).** At one third and two thirds of the way from a tier's start radius to the next tier line, play one quiet camera ease-back of about 1.2s and one soft chime. The ease is a raised cosine: it leaves and comes back, with no snap and no shake. The tier-up reveal above is unchanged. No caption, no hint, no new food, and no change to spawns, pacing, or progression. Each third fires once per tier (a dip back across the line does not play it again), in every galaxy and every tier. A collapse rebirth or a full start-over clears those marks. A galaxy hop in the same run does not. It does not fire during the intro, birth, collapse, Zen, or while a tier-up reveal is running; if a third would land on that reveal, skip it. Reduce Motion plays the chime and does not move the camera. The chime is one sine, quieter than an eat note, with a slow attack and a long release, on the effects bus so mute and volume still apply.
 - **No edges.** Objects spawn in a band just outside the view and recycle at about 2 view radii, keeping a steady density (~25–40 visible, ~60 nearby).
 - Radar is centred on you, with a trail and rim markers for out-of-range landmarks.
 - Pacing (v5.1): regular galaxies take ~3–5 min, breathers ~70s. **Brian likes these durations; keep them.** v6 made bites bigger and retuned gains per galaxy (`MEATY.byBiome` in `js/core/Feeding.js`) so bot clear times match v5.2 within ~10% (bot baseline: Reef 174s, Comet 267s, Nursery 93s, Armada 255s, Void 213s, Meadow 82s). v6 bot result: Reef 176s, Comet 253s, Nursery 97s, Armada 268s, Void 200s, Meadow 85s. Breathers and Armada are bite-ceiling-bound (`MEATY.capBiome`). Re-run the bot after any pacing change (it can start at any galaxy by seeding a save with that galaxy and floorMass).
@@ -457,6 +458,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
+- **v9.16.0 Quiet growth step (Nov 25 2026):** Between tier-ups the hole barely changes size on screen, and the first reveal was the first moment that felt like growing. `GrowthStep` (`js/core/GrowthStep.js`) watches the radius. At one third and two thirds of the span from the tier line to the next, it plays one soft chime and asks `Camera` for a 1.2s ease-back that returns. No caption, no hint, no new food. Spawns, pacing, and the tier ladder stay as they are. A third is spent once per tier, so a bounce does not replay it, and the same thirds apply in every galaxy. Intro, birth, collapse, Zen, and a running tier-up reveal stay quiet; a third that would land on the reveal is skipped. Reduce Motion is the chime alone. The chime is one low sine on the effects bus, under the eat notes. `tools/v9160-growth-step.cjs` blocks CI. Cache `blackhole-v9.16.0`.
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (removed in v9) (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
 - **Joystick:** the floating thumbstick became the default.
 - **v3.0 Calm & Themed:** Zen default, telegraphed events, Void Gift, biome rhythm with breathers, breathing pulse, codex.
@@ -510,7 +512,7 @@ css/game.css        all styling         icons/  icon.svg, icon-192.png, icon-512
 js/game.js          boot only (~140 lines); systems in js/core/ (map in §7e)
 js/core/            GameLoop, Scene, ScreenFlow, ZenSession, CollapseFlow, PlayControls, Feeding, Player,
                     RunTracker, Galaxy, Hud, ScreenOverlay, PerfMonitor, Settings, Menus, Lifecycle,
-                    GameState, Display, breath + Camera, Growth, GalaxyFlow, Fx, Inflow, Backdrop,
+                    GameState, Display, breath + Camera, Growth, GrowthStep, GalaxyFlow, Fx, Inflow, Backdrop,
                     DebrisField, GoldenVeil, Flagship, ReefBed, MeadowField, BloomHalo, AuroraRift, PulsarBeam, NeutronStar, DevMode, HudControls,
                     Theme, ArtManifest, BodyCatalog, ShipCatalog, Body, FlagshipLight,
                     PictureCatalog, Comet, CometSparkle, SpaceRock, SpaceDust,

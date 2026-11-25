@@ -17,13 +17,13 @@ import { tierName, massForR, rForTier, TIERS } from "./tiers.js";
 import { shadowRadius } from "./art/hole.js";
 import { Theme } from "./core/Theme.js";
 import {
-  Camera, Fx, GalaxyFlow, Growth, DevMode, Inflow, Backdrop, DebrisField, GoldenVeil,
+  Camera, Fx, GalaxyFlow, Growth, GrowthStep, DevMode, Inflow, Backdrop, DebrisField, GoldenVeil,
   createState, Display, Hud, Player, Feeding, MEATY, RunTracker, Galaxy, PerfMonitor, Settings,
   ScreenFlow, ZenSession, CollapseFlow, PlayControls, Menus, Lifecycle, ScreenOverlay, Scene, GameLoop
 } from "./core/index.js";
 
 const $ = id => document.getElementById(id);
-const VERSION = "9.15.0";
+const VERSION = "9.16.0";
 
 const display = new Display($("game"), $("game-container"));
 const state = createState();
@@ -49,9 +49,11 @@ const game = {
   zoomTarget: () => camera.zoomTarget(display.w, display.h),
   updateCameraScale: (snap = false) => camera.updateScale(display.w, display.h, snap),
 };
+game.growthStep = new GrowthStep(state, { audio, camera });
 game.growth = new Growth(state, {
   camera,
   audio,
+  step: game.growthStep,
   hint: (k, m, ms) => game.hud.hint(k, m, ms),
   onWorldTier,
   onGrowth: (t, merged) => { impact(1); wispReact(state, merged ? "merge" : "tier"); },   // v9.2 Growth Witness, v9.5 impact
@@ -134,7 +136,7 @@ if (DEV) window.__bh = { meaty: MEATY,
   state, input, fireEvent: id => fireEvent(state, id), events: activeEventInfo,
   perf: () => game.perf.report(), layers: () => layersInfo(state), worlds: worldsInfo, resetPerf: () => game.perf.reset(), art: artStats, wisp: wispInfo, openLogbook: () => state.openLogbook(), finds: () => discoveriesInfo(state),
   density: densityInfo, music: audio.musicInfo, phrase: audio.phraseInfo, feature: () => worldsFeature(state),
-  camera, growth: game.growth, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, debris, display,
+  camera, growth: game.growth, growthStep: game.growthStep, collapse: game.collapse, screens: game.screens, galaxyFlow: game.galaxyFlow, fx, dev, inflow, impact, backdrop, golden, debris, display,
   scene: game.scene, slicePaintReady: () => slicePaintReady(state),
   feeding: game.feeding, shadowRadius,
   worldTier: () => onWorldTier(state),

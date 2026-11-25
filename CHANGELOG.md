@@ -2,6 +2,16 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.16.0 — Quiet growth step (Nov 25 2026)
+
+A calm beat between tier-ups, so growing feels like something before the first reveal. Nothing else in the run changes.
+
+- At one third and two thirds of the way from a tier's start to the next tier line, the camera eases back for about 1.2 seconds and one soft chime plays. The ease leaves and comes back gently. No snap, no shake.
+- No caption, no hint, no new food, and no change to spawns, pacing, or how fast you grow. Each third happens once per tier, in every galaxy. It stays quiet during the intro, birth, collapse, Zen, and a tier-up reveal.
+- Reduce Motion plays the chime and leaves the camera still.
+- The chime is one quiet sine, with a slow attack and a long release, under the eat notes. Mute and the effects volume still apply.
+- Owner: `GrowthStep` in `js/core/GrowthStep.js`. Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.16.0`.
+
 ## v9.15.0 — Fluid curved comet trails (Nov 24 2026)
 
 A comet's tail follows the path that comet actually flew. The black hole, the HUD, and the save are the same.
