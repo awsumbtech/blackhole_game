@@ -34,7 +34,8 @@ export class GrowthStep {
     if (s.mode === "zen") return false;
     if (s.transitioning) return false;
     if (s.reveal) return false;
-    if (s.screen === "collapse") return false;
+    // The collapse screen is already excluded above (it is not "play").
+    // The confirm card stays on screen "play", so it is checked on its own.
     const ask = document.getElementById("collapse");
     if (ask && !ask.classList.contains("hidden")) return false;
     return true;
@@ -77,8 +78,21 @@ export class GrowthStep {
     // One ease at a time. The next third waits until this one has returned.
     if (this.state.easeBack) return;
     const mark = prev + 1;
-    this.ack.set(tier, mark);
+    // A jump that crosses both thirds plays the first one only. The later
+    // mark is spent, so the next frame does not add a second chime.
+    this.ack.set(tier, reached);
     this.play(tier, mark);
+  }
+
+  /**
+   * A new run starts clean: collapse rebirth and "start completely over".
+   * A galaxy hop in the same run does not call this.
+   */
+  reset() {
+    this.ack.clear();
+    this.based.clear();
+    this.events.length = 0;
+    this.cancel();
   }
 
   /** Drop a running ease. Does not spend or refund a third. */

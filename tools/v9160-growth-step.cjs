@@ -289,6 +289,71 @@ async function logic(page) {
     if ((audio.playGrowthChime.plays || 0) !== playsRm + 1) fail.push("reduce motion did not trigger the chime");
     if (s.tierBanner && s.tierBanner.age === 0 && s.reveal) fail.push("reduce motion started a reveal");
 
+    // One check that jumps both thirds plays a single step and spends the other mark.
+    s.settings.reduceMotion = false;
+    enter(7, 5);
+    const t5 = line(5);
+    const third5 = t5.a + t5.span / 3;
+    const two5 = t5.a + 2 * t5.span / 3;
+    setR(third5 - 1);
+    bh.growth.check();
+    const playsJump = audio.playGrowthChime.plays || 0;
+    const eventsJump = step.events.length;
+    setR(two5 + 1);
+    if (tiers.tierIndexForR(s.radius) !== 5) fail.push("jump probe left tier 5");
+    bh.growth.check();
+    if (step.events.length !== eventsJump + 1) fail.push("jump fired " + (step.events.length - eventsJump) + " steps");
+    if ((audio.playGrowthChime.plays || 0) !== playsJump + 1) fail.push("jump double-chimed");
+    if (step.ack.get(5) !== 2) fail.push("jump did not acknowledge the skipped mark");
+    bh.growth.check();
+    if (step.events.length !== eventsJump + 1) fail.push("skipped mark fired on the next check");
+    if ((audio.playGrowthChime.plays || 0) !== playsJump + 1) fail.push("skipped mark chimed on the next check");
+    bh.camera.updateScale(bh.display.w, bh.display.h, true);
+
+    // Ease in progress, then a dev collapse and rebirth. Tier 0 can fire again.
+    enter(4, 3);
+    s.settings.reduceMotion = false;
+    const two3 = t3.a + 2 * t3.span / 3;
+    setR(two3 + 0.8);
+    if (tiers.tierIndexForR(s.radius) !== 3) fail.push("pre-collapse ease left tier 3");
+    bh.camera.updateScale(bh.display.w, bh.display.h, true);
+    bh.growth.check();
+    if (!s.easeBack) fail.push("ease did not start before collapse");
+    bh.camera.updateAnchor(10);
+    bh.camera.updateScale(bh.display.w, bh.display.h, false);
+    if (!s.easeBack || !(s.zoom < s.easeBack.rest * 0.995)) fail.push("ease had not moved the zoom");
+    bh.dev.h.collapse();
+    const yes = document.getElementById("btn-collapse-yes");
+    if (!yes) fail.push("collapse confirm missing");
+    else yes.click();
+    if (s.screen !== "collapse") fail.push("dev collapse did not run");
+    bh.collapse.startNewRun();
+    if (s.easeBack) fail.push("ease still set after rebirth, before birth");
+    if (step.ack.size || step.based.size || step.events.length) fail.push("marks survived the new run");
+    const skip = document.getElementById("btn-skip-intro");
+    if (skip) skip.click();
+    if (!(s.birth > 0)) fail.push("rebirth did not enter birth");
+    if (s.easeBack) fail.push("ease resumed at the start of birth");
+    const zBirth = s.zoom;
+    let easedInBirth = false;
+    for (let i = 0; i < 40; i++) {
+      bh.camera.updateAnchor(1);
+      bh.camera.updateScale(bh.display.w, bh.display.h, false);
+      if (s.easeBack || s.zoom < zBirth * 0.99) easedInBirth = true;
+    }
+    if (easedInBirth) fail.push("zoom changed by an ease during birth");
+    s.birth = 0;
+    const thirdBorn = t0.a + t0.span / 3;
+    setR(thirdBorn - 0.05);
+    bh.growth.check();
+    const playsBorn = audio.playGrowthChime.plays || 0;
+    setR(thirdBorn + 0.05);
+    if (tiers.tierIndexForR(s.radius) !== 0) fail.push("reborn probe left tier 0");
+    bh.growth.check();
+    const reborn = step.events.filter(e => e.tier === 0 && e.mark === 1);
+    if (reborn.length !== 1 || !reborn[0].chime) fail.push("tier 0 did not fire at 1/3 after rebirth");
+    if ((audio.playGrowthChime.plays || 0) !== playsBorn + 1) fail.push("reborn 1/3 did not chime");
+
     return {
       ok: fail.length === 0,
       fail,

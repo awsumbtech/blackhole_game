@@ -84,6 +84,7 @@ export class CollapseFlow {
   // very first beginning (void, a few lines, the birth), then play.
   startNewRun() {
     const state = this.state, game = this.game;
+    game.growthStep.reset();
     game.galaxy.init(state.galaxy);
     save(state);
     const a = state.asc;
