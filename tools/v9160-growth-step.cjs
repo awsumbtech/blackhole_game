@@ -302,6 +302,15 @@ async function logic(page) {
   });
 }
 
+function hasFfmpeg() {
+  try {
+    execFileSync("ffmpeg", ["-version"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function proof(page) {
   fs.mkdirSync(ART, { recursive: true });
   const dir = path.join(ART, "v9160-frames");
@@ -392,7 +401,7 @@ async function main() {
     const sec2 = out.twoThirds.frames / 60;
     if (!(sec2 >= 1 && sec2 <= 1.4)) fail.push({ reason: "two-thirds duration", twoThirds: out.twoThirds, sec2 });
     if (page._errs.length) fail.push({ reason: "pageerror", errs: page._errs.slice(0, 5) });
-    if (fail.length === 0) {
+    if (fail.length === 0 && hasFfmpeg()) {
       const proofPage = await newPage(browser);
       try {
         await boot(proofPage);
@@ -400,6 +409,8 @@ async function main() {
       } finally {
         await proofPage.context().close();
       }
+    } else if (fail.length === 0) {
+      shot = { skipped: "ffmpeg is not installed; the behavior checks still ran" };
     }
   } catch (err) {
     fail.push({ reason: "threw", err: String(err && err.stack || err).slice(0, 800) });
