@@ -78,6 +78,7 @@ export class ScreenFlow {
     state.camMul = ScreenFlow.TITLE_ZOOM;
     game.input.setEnabled(false);
     document.body.classList.add("on-title");
+    document.body.classList.remove("hint-front");
     ScreenFlow.el("newgame-confirm").classList.add("hidden");
     game.hud.clear();
     const depthTxt = state.asc.run.cleared ? `Run depth ${state.asc.run.cleared} · ` : "";
@@ -111,6 +112,7 @@ export class ScreenFlow {
     this.steered = false;
     this.steerHint = "";
     this.stopSteerWatch();
+    document.body.classList.remove("hint-front");
     state.screen = "intro";
     state.drift = null;
     state.birth = 0;
@@ -337,6 +339,7 @@ export class ScreenFlow {
     const state = this.state, game = this.game;
     this.introTimers.forEach(clearTimeout); this.introTimers = [];
     this.stopSteerWatch();
+    document.body.classList.remove("hint-front");
     ["pause-menu", "collapse", "newgame-confirm", "hint-toast"].forEach(id => ScreenFlow.el(id).classList.add("hidden"));
     if (ui.isStatsOpen()) ui.closeStats();
     if (state.mode === "zen") game.zen.restore();

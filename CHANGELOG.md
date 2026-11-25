@@ -2,6 +2,18 @@
 
 All notable changes to Black Hole: Galaxy Eater. Saves carry forward through every version.
 
+## v9.16.1 — Loop friction (Nov 25 2026)
+
+The birth, the hints, and a rebirth are quieter to start. The birth animation and its length are the same.
+
+- Steering works from the first moment of birth, including Start Over and a rebirth after collapse. It used to be ignored for the whole birth (2.83–3.53 s) even while food was already being eaten.
+- The steer hint appears when birth starts, above the fading intro, and hides once you have steered (including follow-finger). It used to arrive 2.4–2.6 s after play had already started. The galaxy line waits until that hint has been up for 2.5 s. The pill never takes the press.
+- The old "Zen mode is on… Tap Zen below" hint is gone. That toggle has not existed since v7.
+- Hints wait their turn. Each one stays at least 2.5 s before the next replaces it. Duplicates are dropped. The queue holds three. A direct tap (restart, an in-progress restart, almost there) shows immediately.
+- The intro Skip button is at least 44 px tall (it was 59×38).
+- A rebirth after collapse skips the title wordmark. The first launch of a fresh save still shows it. The three lines are unchanged. That cut is the wordmark's 3.4 s hold plus the 300 ms gap after it.
+- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.16.1`.
+
 ## v9.16.0 — Quiet growth step (Nov 25 2026)
 
 A calm beat between tier-ups, so growing feels like something before the first reveal. Nothing else in the run changes.
@@ -11,18 +23,6 @@ A calm beat between tier-ups, so growing feels like something before the first r
 - Reduce Motion plays the chime and leaves the camera still.
 - The chime is one quiet sine, with a slow attack and a long release, under the eat notes. Mute and the effects volume still apply.
 - Owner: `GrowthStep` in `js/core/GrowthStep.js`. Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.16.0`.
-
-## v9.15.1 — Loop friction (Nov 25 2026)
-
-The birth, the hints, and a rebirth are quieter to start. The birth animation and its length are the same.
-
-- Steering works from the first moment of birth, including Start Over and a rebirth after collapse. It used to be ignored for the whole birth (2.83–3.53 s) even while food was already being eaten.
-- The steer hint appears when birth starts, above the fading intro, and hides once you have steered (including follow-finger). It used to arrive 2.4–2.6 s after play had already started. The galaxy line waits until that hint has been up for 2.5 s.
-- The old "Zen mode is on… Tap Zen below" hint is gone. That toggle has not existed since v7.
-- Hints wait their turn. Each one stays at least 2.5 s before the next replaces it. Duplicates are dropped. The queue holds three. Nothing else waits.
-- The intro Skip button is at least 44 px tall (it was 59×38).
-- A rebirth after collapse skips the title wordmark. The first launch of a fresh save still shows it. The three lines are unchanged. That cut is the wordmark's 3.4 s hold plus the 300 ms gap after it.
-- Saves are unchanged (SAVE_VERSION 9). Cache name is `blackhole-v9.15.1`.
 
 ## v9.15.0 — Fluid curved comet trails (Nov 24 2026)
 

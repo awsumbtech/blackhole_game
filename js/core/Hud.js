@@ -2,7 +2,7 @@
 // The DOM heads-up display: galaxy, scale, biome, progress, goal stars, and the
 // hint toast. One-time hints are remembered in state.seenHints. A new toast
 // waits until the one on screen has been up for at least 2.5s. Duplicates are
-// dropped and the queue stays short. Nothing else in the game waits on it.
+// dropped and the queue stays short. A direct tap can jump the queue.
 
 import { tierName } from "../tiers.js";
 import { starsFor } from "../ascension.js";
@@ -112,6 +112,7 @@ export class Hud {
     this.currentKey = "";
     this.shownAt = 0;
     if (this.toast) this.toast.classList.add("hidden");
+    document.body.classList.remove("hint-front");
   }
 
   advance() {

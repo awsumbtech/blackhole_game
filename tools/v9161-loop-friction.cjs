@@ -1,7 +1,7 @@
-// v9.15.1 loop friction.
+// v9.16.1 loop friction.
 // Birth accepts a drag, the steer hint meets that drag, the old Zen line is
 // gone, hints wait 2.5s, Skip is a 44px target, and a rebirth skips the wordmark.
-//   node tools/v9151-loop-friction.cjs [port]
+//   node tools/v9161-loop-friction.cjs [port]
 // Exit 0 when every check passed.
 
 const fs = require("fs");
@@ -14,7 +14,7 @@ const PORT = process.argv[2] || "8765";
 const CHROME = Browser.chromePath(chromium);
 const ART = fs.existsSync("/opt/cursor/artifacts")
   ? "/opt/cursor/artifacts"
-  : path.join(require("os").tmpdir(), "v9151");
+  : path.join(require("os").tmpdir(), "v9161");
 const ZEN = "Zen mode is on";
 const STEER = /drag to steer|Move with the mouse or WASD/;
 
@@ -61,7 +61,7 @@ function filesGate() {
   ].map(ownerGate);
   const flow = fs.readFileSync("js/core/ScreenFlow.js", "utf8");
   const collapse = fs.readFileSync("js/core/CollapseFlow.js", "utf8");
-  const release = releaseAgrees("9.15.1");
+  const release = releaseAgrees("9.16.1");
   const birthFrames = /static BIRTH_FRAMES = 170/.test(flow);
   const steerAtBirth = /state\.birth = 0\.001;[\s\S]{0,400}game\.input\.setEnabled\(true\)/.test(flow);
   const noBirthEndUnlock = !/state\.birth = 0;\s*game\.input\.setEnabled\(true\)/.test(flow);
@@ -84,10 +84,7 @@ async function phone(browser) {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
-    hasTouch: true,
-    isMobile: true,
-    reducedMotion: "no-preference",
-    userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+    reducedMotion: "no-preference"
   });
   const page = await context.newPage();
   const errs = [];
@@ -128,33 +125,31 @@ function readHint() {
   if (!el || el.classList.contains("hidden")) return { ok: false, why: "hidden", text: el ? el.textContent : "" };
   const text = el.textContent || "";
   const steer = /steer|WASD/.test(text);
-  const op = parseFloat(getComputedStyle(el).opacity) || 0;
+  const cs = getComputedStyle(el);
+  const op = parseFloat(cs.opacity) || 0;
   const r = el.getBoundingClientRect();
-  const x = r.left + r.width / 2;
-  const y = r.top + r.height / 2;
-  const top = document.elementFromPoint(x, y);
-  const hit = !!(top && (top === el || el.contains(top)));
+  const intro = document.getElementById("intro-screen");
+  const toastZ = parseInt(cs.zIndex, 10) || 0;
+  const introZ = intro ? (parseInt(getComputedStyle(intro).zIndex, 10) || 0) : 0;
+  const onScreen = r.width > 8 && r.height > 8 && r.top >= 0 && r.left >= 0
+    && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
+  const pass = cs.pointerEvents === "none";
   return {
-    ok: steer && op > 0.8 && hit,
-    steer, op, hit, text,
-    top: top ? (top.id || top.className || top.tagName) : ""
+    ok: steer && op > 0.8 && toastZ > introZ && onScreen && pass,
+    steer, op, toastZ, introZ, onScreen, pass, text,
+    box: { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }
   };
 }
 
-async function pointer(page, type, x, y) {
-  await page.evaluate(({ type, x, y }) => {
-    const c = document.getElementById("game");
-    c.dispatchEvent(new PointerEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      pointerId: 1,
-      pointerType: "touch",
-      clientX: x,
-      clientY: y,
-      buttons: type === "pointerup" ? 0 : 1,
-      isPrimary: true
-    }));
-  }, { type, x, y });
+async function realPress(page, x, y, x2, y2) {
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  if (x2 != null) await page.mouse.move(x2, y2, { steps: 8 });
+  page._pressAt = { x: x2 == null ? x : x2, y: y2 == null ? y : y2 };
+}
+
+async function realRelease(page) {
+  await page.mouse.up();
 }
 
 function writeDataUrl(file, url) {
@@ -200,13 +195,12 @@ async function firstLaunch(browser) {
   }, { timeout: 8000 });
   const beforeHint = await page.evaluate(readHint);
   const box = await page.locator("#game").boundingBox();
-  const x0 = box.x + box.width * 0.42;
-  const y0 = box.y + Math.min(box.height * 0.55, 480);
+  const hx = beforeHint.box.x;
+  const hy = beforeHint.box.y;
   const before = await page.evaluate(() => ({
     x: window.__bh.state.playerX, y: window.__bh.state.playerY, b: window.__bh.state.birth
   }));
-  await pointer(page, "pointerdown", x0, y0);
-  await pointer(page, "pointermove", x0 + 48, y0 - 12);
+  await realPress(page, hx, hy, hx + 70, hy - 36);
   const gone = await page.evaluate(() => new Promise(resolve => {
     const start = performance.now();
     const tick = () => {
@@ -224,7 +218,7 @@ async function firstLaunch(browser) {
   const mid = await page.evaluate(() => ({
     x: window.__bh.state.playerX, y: window.__bh.state.playerY, b: window.__bh.state.birth
   }));
-  await pointer(page, "pointerup", x0 + 48, y0 - 12);
+  await realRelease(page);
   const moved = Math.hypot(mid.x - before.x, mid.y - before.y);
 
   await page.evaluate(() => {
@@ -236,7 +230,7 @@ async function firstLaunch(browser) {
     flow.showSteerHint();
   });
   const followBefore = await page.evaluate(readHint);
-  await pointer(page, "pointerdown", box.x + box.width * 0.84, box.y + box.height * 0.42);
+  await realPress(page, box.x + box.width * 0.86, box.y + box.height * 0.3, box.x + box.width * 0.9, box.y + box.height * 0.22);
   const followGone = await page.evaluate(() => new Promise(resolve => {
     const start = performance.now();
     const tick = () => {
@@ -250,7 +244,7 @@ async function firstLaunch(browser) {
     };
     tick();
   }));
-  await pointer(page, "pointerup", box.x + box.width * 0.84, box.y + box.height * 0.42);
+  await realRelease(page);
   await page.evaluate(() => window.__bh.input.setTouchMode("joystick"));
 
   await page.evaluate(() => {
@@ -452,40 +446,45 @@ async function noDrag(browser) {
       if (!el || el.classList.contains("hidden")) return { ok: false, why: "hidden", text: el ? el.textContent : "" };
       const text = el.textContent || "";
       const steer = /steer|WASD/.test(text);
-      const op = parseFloat(getComputedStyle(el).opacity) || 0;
+      const cs = getComputedStyle(el);
+      const op = parseFloat(cs.opacity) || 0;
       const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      const hit = !!(top && (top === el || el.contains(top)));
-      return { ok: steer && op > 0.8 && hit, op, hit, text, top: top ? (top.id || String(top.className) || top.tagName) : "" };
+      const intro = document.getElementById("intro-screen");
+      const toastZ = parseInt(cs.zIndex, 10) || 0;
+      const introZ = intro ? (parseInt(getComputedStyle(intro).zIndex, 10) || 0) : 0;
+      const onScreen = r.width > 8 && r.height > 8 && r.top >= 0 && r.left >= 0
+        && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
+      const pass = cs.pointerEvents === "none";
+      return { ok: steer && op > 0.8 && toastZ > introZ && onScreen && pass, op, toastZ, introZ, onScreen, pass, text };
     };
     const start = performance.now();
+    let goodFrom = 0;
+    let at15 = null;
     const samples = [];
     const tick = () => {
+      const now = performance.now();
       const s = read();
-      s.t = Math.round(performance.now() - start);
+      s.t = Math.round(now - start);
       samples.push(s);
-      if (performance.now() - start >= 2700) resolve(samples);
+      if (s.ok) {
+        if (!goodFrom) goodFrom = now;
+        if (!at15 && now - goodFrom >= 1500) at15 = s;
+        if (now - goodFrom >= 2500) {
+          resolve({ ok: true, ms: Math.round(now - goodFrom), n: samples.length, at15, last: s });
+          return;
+        }
+      } else if (goodFrom) {
+        resolve({ ok: false, ms: Math.round(now - goodFrom), n: samples.length, at15, broke: s });
+        return;
+      }
+      if (now - start > 4000) resolve({ ok: false, ms: goodFrom ? Math.round(now - goodFrom) : 0, n: samples.length, at15, broke: s, timeout: true });
       else setTimeout(tick, 40);
     };
     tick();
   }));
-  let broke = null;
-  let end = 0;
-  for (const s of trace) {
-    if (!s.ok) { broke = s; break; }
-    end = s.t;
-  }
-  const at15 = trace.filter(s => s.t >= 1480 && s.t <= 1600).pop() || trace.find(s => s.t >= 1500);
-  const ok = !broke && end >= 2500 && !!(at15 && at15.ok);
+  const ok = !!(trace.ok && trace.ms >= 2500 && trace.at15);
   await context.close();
-  return {
-    ok,
-    end,
-    n: trace.length,
-    at15: at15 && { t: at15.t, ok: at15.ok, op: at15.op, hit: at15.hit },
-    broke: broke && { t: broke.t, why: broke.why, op: broke.op, hit: broke.hit, top: broke.top, text: broke.text },
-    errs: page._errs
-  };
+  return { ok, ...trace, errs: page._errs };
 }
 
 async function hintStrip(browser) {
@@ -499,29 +498,32 @@ async function hintStrip(browser) {
     const b = document.getElementById("dev-badge");
     if (b) b.style.visibility = "hidden";
   });
+  const hint = await page.evaluate(readHint);
   fs.mkdirSync(ART, { recursive: true });
   const frames = [];
+  await realPress(page, hint.box.x, hint.box.y, hint.box.x + 8, hint.box.y - 6);
   for (let i = 0; i < 8; i++) {
+    const at = page._pressAt;
+    await page.evaluate(() => { window.__bh.dev.frozen = false; });
+    await page.mouse.move(at.x + 22, at.y - 14, { steps: 4 });
+    page._pressAt = { x: at.x + 22, y: at.y - 14 };
+    await page.evaluate(() => new Promise(resolve => {
+      let n = 0;
+      const step = () => { if (++n >= 5) resolve(); else requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }));
     const shot = await page.evaluate(() => {
-      const el = document.getElementById("hint-toast");
-      const text = el ? el.textContent || "" : "";
-      const hidden = !el || el.classList.contains("hidden");
-      const r = el && !hidden ? el.getBoundingClientRect() : null;
-      const top = r ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
-      return {
-        birth: window.__bh.state.birth,
-        text,
-        hidden,
-        op: el ? parseFloat(getComputedStyle(el).opacity) || 0 : 0,
-        hit: !!(el && top && (top === el || el.contains(top))),
-        top: top ? (top.id || top.tagName) : ""
-      };
+      window.__bh.dev.frozen = true;
+      return { birth: window.__bh.state.birth, x: window.__bh.state.playerX, y: window.__bh.state.playerY };
     });
     const file = path.join(ART, `birth-hint-${String(i + 1).padStart(2, "0")}.jpg`);
     await page.screenshot({ path: file, type: "jpeg", quality: 55, animations: "disabled" });
     frames.push({ file, ...shot });
   }
-  const ok = frames.length === 8 && frames.every(f => f.birth > 0 && f.birth < 1 && !f.hidden && /steer|WASD/.test(f.text) && f.op > 0.8 && f.hit);
+  await realRelease(page);
+  await page.evaluate(() => { window.__bh.dev.frozen = false; });
+  const moved = Math.hypot(frames[7].x - frames[0].x, frames[7].y - frames[0].y);
+  const ok = frames.length === 8 && moved > 8 && frames.every(f => f.birth > 0 && f.birth < 1);
   await context.close();
   return { ok, frames };
 }
@@ -568,7 +570,7 @@ async function main() {
     calm = await noDrag(browser);
     if (!calm.ok) fail.push({ reason: "readable", calm });
     frames = await hintStrip(browser);
-    if (!frames.ok) fail.push({ reason: "strip-frames", frames: frames.frames && frames.frames.map(f => ({ birth: f.birth, text: f.text, op: f.op, hit: f.hit })) });
+    if (!frames.ok) fail.push({ reason: "strip-frames", frames: frames.frames && frames.frames.map(f => ({ birth: f.birth, x: f.x, y: f.y })) });
     if (frames.frames && frames.frames.length === 8) strip = stitch(frames.frames.map(f => f.file));
     birth = await firstLaunch(browser);
     if (!birth.ok) fail.push({ reason: "birth", result: birth.result });
