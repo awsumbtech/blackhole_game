@@ -6,9 +6,7 @@ import * as audio from "../audio.js";
 import * as zen from "../zen.js";
 import { save, load } from "../save.js";
 import { BREATH_MS } from "./breath.js";
-import { TITLE_ZOOM } from "./ScreenFlow.js";
-
-const $ = id => document.getElementById(id);
+import { ScreenFlow } from "./ScreenFlow.js";
 
 export class ZenSession {
   constructor(game) {
@@ -17,9 +15,11 @@ export class ZenSession {
     this.snap = null;
   }
 
+  el(id) { return document.getElementById(id); }
+
   /** Wire the title's Zen button. */
   bind() {
-    $("btn-title-zen").addEventListener("click", () => {
+    this.el("btn-title-zen").addEventListener("click", () => {
       audio.playClick();
       zen.openPicker(min => { audio.playClick(); this.start(min); }, () => audio.playClick());
     });
@@ -36,9 +36,9 @@ export class ZenSession {
     state.zen = { dur: min * 3600, t: 0, wound: false, ending: false, min };
     game.galaxy.init(zg);
     state.densityK = zen.zenDensity(0);
-    $("zen-arc").classList.remove("hidden");
+    this.el("zen-arc").classList.remove("hidden");
     zen.setArc(0);
-    state.camMul = TITLE_ZOOM;
+    state.camMul = ScreenFlow.TITLE_ZOOM;
     game.updateCameraScale(true);
     game.screens.startDrift("zen");
   }
@@ -53,7 +53,7 @@ export class ZenSession {
     state.breathPull = zen.zenBreathPull(now, BREATH_MS);
     zen.setArc(p);
     // v7.1 optional "breathe in / out" words (off by default)
-    const cue = $("zen-cue");
+    const cue = this.el("zen-cue");
     if (cue) {
       const on = !!state.settings.zenBreathCue && !z.wound;
       cue.classList.toggle("hidden", !on);
@@ -78,8 +78,8 @@ export class ZenSession {
     z.ending = true;
     game.input.setEnabled(false);
     state.screen = "zenexit";
-    $("zen-arc").classList.add("hidden");
-    $("zen-cue")?.classList.add("hidden");
+    this.el("zen-arc").classList.add("hidden");
+    this.el("zen-cue")?.classList.add("hidden");
     setTimeout(() => {
       audio.stopDrone();
       zen.runExit({
@@ -101,12 +101,12 @@ export class ZenSession {
     state.zen = null;
     state.breathPull = 1;
     document.body.classList.remove("mode-zen");
-    $("zen-arc").classList.add("hidden");
+    this.el("zen-arc").classList.add("hidden");
     state.galaxy = this.snap ? this.snap.galaxy : state.galaxy;
     const resume = this.snap && this.snap.run && this.snap.run.galaxy === state.galaxy ? this.snap.run : null;
     this.snap = null;
     game.galaxy.init(state.galaxy, resume);
-    state.camMul = TITLE_ZOOM;
+    state.camMul = ScreenFlow.TITLE_ZOOM;
     game.updateCameraScale(true);
   }
 }

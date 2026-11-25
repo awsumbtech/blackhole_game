@@ -1,29 +1,37 @@
 // ─── Hud ───
 // The DOM heads-up display: galaxy, scale, biome, progress, goal stars, and the
-// hint toast (one-time hints remembered in state.seenHints).
+// hint toast. One-time hints are remembered in state.seenHints. A new toast
+// waits until the one on screen has been up for at least 2.5s. Duplicates are
+// dropped and the queue stays short. Nothing else in the game waits on it.
 
 import { tierName } from "../tiers.js";
 import { starsFor } from "../ascension.js";
 import { EVENT_INFO } from "../living-world.js";
 import { eventPairText } from "../worlds.js";
 
-const $ = id => document.getElementById(id);
-
 export class Hud {
+  static HOLD_MS = 2500;   // a hint stays at least this long before the next one replaces it
+  static QUEUE_MAX = 3;
+
   constructor(game) {
     this.game = game;
     this.state = game.state;
-    this.galaxy = $("hud-galaxy");
-    this.goal = $("hud-goal");
-    this.mass = $("hud-mass");
-    this.biome = $("hud-biome");
-    this.progressBar = $("hud-progress-bar");
-    this.toast = $("hint-toast");
+    this.galaxy = this.el("hud-galaxy");
+    this.goal = this.el("hud-goal");
+    this.mass = this.el("hud-mass");
+    this.biome = this.el("hud-biome");
+    this.progressBar = this.el("hud-progress-bar");
+    this.toast = this.el("hint-toast");
     this.toastT = 0;
+    this.queue = [];
+    this.current = "";
+    this.shownAt = 0;
     this.wireEventHints();
   }
 
-  /** A one-time hint (key) or a plain one (no key). */
+  el(id) { return document.getElementById(id); }
+
+  /** A one-time hint (key) or a plain one (no key). The seen flag is set now; only the toast waits. */
   hint(key, msg, ms) {
     const state = this.state;
     if (key) {
@@ -34,11 +42,73 @@ export class Hud {
   }
 
   show(msg, ms = 2800) {
+    if (!msg) return;
+    if (msg === this.current) return;
+    for (let i = 0; i < this.queue.length; i++) if (this.queue[i].msg === msg) return;
+    if (!this.current) {
+      this.present(msg, ms);
+      return;
+    }
+    if (this.queue.length >= Hud.QUEUE_MAX) this.queue.shift();
+    this.queue.push({ msg, ms });
+    this.arm();
+  }
+
+  /** Drop a hint the player has already followed (a steer, for example). */
+  dismiss(msg) {
+    if (!msg) return;
+    const next = [];
+    for (let i = 0; i < this.queue.length; i++) if (this.queue[i].msg !== msg) next.push(this.queue[i]);
+    this.queue = next;
+    if (this.current !== msg) return;
+    clearTimeout(this.toastT);
+    this.current = "";
+    this.toast.classList.add("hidden");
+    if (!this.queue.length) return;
+    const item = this.queue.shift();
+    this.present(item.msg, item.ms);
+  }
+
+  present(msg, ms) {
+    this.current = msg;
+    this.shownAt = performance.now();
     const el = this.toast;
     el.textContent = msg;
     el.classList.remove("hidden");
     clearTimeout(this.toastT);
-    this.toastT = setTimeout(() => el.classList.add("hidden"), ms);
+    const hold = Math.max(ms, Hud.HOLD_MS);
+    const wait = this.queue.length ? Math.min(hold, Hud.HOLD_MS) : hold;
+    this.toastT = setTimeout(() => this.advance(), wait);
+  }
+
+  arm() {
+    if (!this.current || !this.queue.length) return;
+    const wait = this.shownAt + Hud.HOLD_MS - performance.now();
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => this.advance(), wait > 0 ? wait : 0);
+  }
+
+  clear() {
+    clearTimeout(this.toastT);
+    this.queue = [];
+    this.current = "";
+    this.shownAt = 0;
+    if (this.toast) this.toast.classList.add("hidden");
+  }
+
+  advance() {
+    const elapsed = performance.now() - this.shownAt;
+    if (this.queue.length && elapsed < Hud.HOLD_MS) {
+      this.toastT = setTimeout(() => this.advance(), Hud.HOLD_MS - elapsed);
+      return;
+    }
+    if (!this.queue.length) {
+      this.current = "";
+      this.toast.classList.add("hidden");
+      return;
+    }
+    const item = this.queue.shift();
+    this.present(item.msg, item.ms);
   }
 
   sync(force = false) {
