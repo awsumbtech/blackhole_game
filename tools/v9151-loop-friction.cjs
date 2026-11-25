@@ -123,6 +123,24 @@ const WATCH = () => {
   else arm();
 };
 
+function readHint() {
+  const el = document.getElementById("hint-toast");
+  if (!el || el.classList.contains("hidden")) return { ok: false, why: "hidden", text: el ? el.textContent : "" };
+  const text = el.textContent || "";
+  const steer = /steer|WASD/.test(text);
+  const op = parseFloat(getComputedStyle(el).opacity) || 0;
+  const r = el.getBoundingClientRect();
+  const x = r.left + r.width / 2;
+  const y = r.top + r.height / 2;
+  const top = document.elementFromPoint(x, y);
+  const hit = !!(top && (top === el || el.contains(top)));
+  return {
+    ok: steer && op > 0.8 && hit,
+    steer, op, hit, text,
+    top: top ? (top.id || top.className || top.tagName) : ""
+  };
+}
+
 async function pointer(page, type, x, y) {
   await page.evaluate(({ type, x, y }) => {
     const c = document.getElementById("game");
@@ -178,47 +196,62 @@ async function firstLaunch(browser) {
 
   await page.waitForFunction(() => {
     const b = window.__bh.state.birth;
-    return b >= 0.22 && b <= 0.4;
+    return b > 0.01 && b < 0.25;
   }, { timeout: 8000 });
-  await page.evaluate(() => {
-    const b = document.getElementById("dev-badge");
-    if (b) b.style.visibility = "hidden";
-  });
-
+  const beforeHint = await page.evaluate(readHint);
   const box = await page.locator("#game").boundingBox();
-  const x0 = box.x + box.width * 0.38;
-  const y0 = box.y + Math.min(box.height * 0.62, 520);
+  const x0 = box.x + box.width * 0.42;
+  const y0 = box.y + Math.min(box.height * 0.55, 480);
   const before = await page.evaluate(() => ({
     x: window.__bh.state.playerX, y: window.__bh.state.playerY, b: window.__bh.state.birth
   }));
   await pointer(page, "pointerdown", x0, y0);
-  fs.mkdirSync(ART, { recursive: true });
-  const frames = [];
-  for (let i = 0; i < 8; i++) {
-    await page.evaluate(() => { window.__bh.dev.frozen = false; });
-    await pointer(page, "pointermove", x0 + 30 + i * 28, y0 + (i % 2 ? 10 : -10));
-    await page.evaluate(() => new Promise(resolve => {
-      let n = 0;
-      const step = () => { if (++n >= 7) resolve(); else requestAnimationFrame(step); };
-      requestAnimationFrame(step);
-    }));
-    const shot = await page.evaluate(() => {
-      window.__bh.dev.frozen = true;
-      const s = window.__bh.state;
-      return { birth: s.birth, x: s.playerX, y: s.playerY };
-    });
-    const file = path.join(ART, `birth-steer-${String(i + 1).padStart(2, "0")}.png`);
-    await page.screenshot({ path: file, type: "png" });
-    frames.push({ file, birth: shot.birth, x: shot.x, y: shot.y });
-  }
-  await page.evaluate(() => { window.__bh.dev.frozen = false; });
-  const mid = frames[frames.length - 1];
-  await pointer(page, "pointerup", x0 + 30 + 7 * 28, y0);
-  await page.waitForFunction(() => {
-    const el = document.getElementById("hint-toast");
-    return el.classList.contains("hidden") || !/steer|WASD/.test(el.textContent || "");
-  }, { timeout: 2000 });
+  await pointer(page, "pointermove", x0 + 48, y0 - 12);
+  const gone = await page.evaluate(() => new Promise(resolve => {
+    const start = performance.now();
+    const tick = () => {
+      const el = document.getElementById("hint-toast");
+      const text = el ? el.textContent || "" : "";
+      const hidden = !el || el.classList.contains("hidden") || !/steer|WASD/.test(text);
+      const ms = performance.now() - start;
+      if (hidden) resolve({ ms, text, hidden: true });
+      else if (ms > 300) resolve({ ms, text, hidden: false });
+      else setTimeout(tick, 20);
+    };
+    tick();
+  }));
+  await page.waitForTimeout(700);
+  const mid = await page.evaluate(() => ({
+    x: window.__bh.state.playerX, y: window.__bh.state.playerY, b: window.__bh.state.birth
+  }));
+  await pointer(page, "pointerup", x0 + 48, y0 - 12);
   const moved = Math.hypot(mid.x - before.x, mid.y - before.y);
+
+  await page.evaluate(() => {
+    const flow = window.__bh.screens;
+    window.__bh.input.setTouchMode("follow");
+    flow.steered = false;
+    flow.firstPlayStart = true;
+    flow.introKind = "fresh";
+    flow.showSteerHint();
+  });
+  const followBefore = await page.evaluate(readHint);
+  await pointer(page, "pointerdown", box.x + box.width * 0.84, box.y + box.height * 0.42);
+  const followGone = await page.evaluate(() => new Promise(resolve => {
+    const start = performance.now();
+    const tick = () => {
+      const el = document.getElementById("hint-toast");
+      const text = el ? el.textContent || "" : "";
+      const hidden = !el || el.classList.contains("hidden") || !/steer|WASD/.test(text);
+      const ms = performance.now() - start;
+      if (hidden) resolve({ ms, hidden: true, text });
+      else if (ms > 300) resolve({ ms, hidden: false, text });
+      else setTimeout(tick, 20);
+    };
+    tick();
+  }));
+  await pointer(page, "pointerup", box.x + box.width * 0.84, box.y + box.height * 0.42);
+  await page.evaluate(() => window.__bh.input.setTouchMode("joystick"));
 
   await page.evaluate(() => {
     const dev = window.__bh.dev;
@@ -266,14 +299,20 @@ async function firstLaunch(browser) {
   rebirth.dur = rebirth.birthAt - rebirth.introAt;
 
   const savedMs = first.dur - rebirth.dur;
-  const steerDuringBirth = moved > 8 && frames.length === 8 && frames.every(f => f.birth > 0 && f.birth < 1) && before.b >= 0.2 && before.b < 0.5;
+  const steerDuringBirth = moved > 8 && mid.b > 0 && before.b > 0 && before.b < 1;
   const hintOk = !hintAtBirth.hidden && STEER.test(hintAtBirth.text) && hintAtBirth.birth > 0 && hintAtBirth.birth < 0.9;
+  const dragOk = !!(beforeHint && beforeHint.ok && gone.hidden && gone.ms <= 300);
+  const followOk = !!(followBefore && followBefore.ok && followGone.hidden && followGone.ms <= 300);
   const result = {
     skip: skip && { w: +skip.width.toFixed(1), h: +skip.height.toFixed(1) },
     mark,
     hintAtBirth,
+    beforeHint,
+    gone,
+    followBefore,
+    followGone,
     first,
-    move: { before, mid, moved: +moved.toFixed(1), frames: frames.map(f => ({ birth: +f.birth.toFixed(3), x: +f.x.toFixed(1), y: +f.y.toFixed(1), w: f.w, h: f.h })) },
+    move: { before, mid, moved: +moved.toFixed(1) },
     rebirth: { dur: rebirth.dur, markOn: rebirth.markOn, line: rebirth.line, introAt: rebirth.introAt, birthAt: rebirth.birthAt },
     savedMs: +savedMs.toFixed(0),
     errs: page._errs
@@ -282,6 +321,8 @@ async function firstLaunch(browser) {
     && mark && /black hole/i.test(mark.text)
     && first.marks > 0 && first.dur > 10000
     && hintOk
+    && dragOk
+    && followOk
     && steerDuringBirth
     && rebirth.markOn === false
     && rebirth.dur > 7000 && rebirth.dur < first.dur - 2500
@@ -289,7 +330,7 @@ async function firstLaunch(browser) {
     && savedMs > 2800 && savedMs < 5000
     && page._errs.length === 0;
   await context.close();
-  return { ok: result.ok, result, frames: frames.map(f => f.file) };
+  return { ok: result.ok, result };
 }
 
 async function secondLaunch(browser) {
@@ -359,22 +400,142 @@ async function secondLaunch(browser) {
   const beta = spans.find(s => s.text.startsWith("Beta"));
   const dupes = spans.filter(s => s.text.startsWith("Alpha")).length;
   const queueOk = !!(alpha && beta && alpha.ms >= 2500 && beta.ms >= 2500 && dupes === 1);
-  const ok = zen.found === false && queueOk && page._errs.length === 0;
+  const units = await page.evaluate(() => {
+    const hud = window.__bh.hud;
+    const seen = window.__bh.state.seenHints;
+    const fail = [];
+    const check = (name, cond) => { if (!cond) fail.push(name); };
+    hud.clear();
+    ["overflow_a", "overflow_b", "overflow_c", "overflow_d", "cleared_key"].forEach(k => delete seen[k]);
+    hud.show("Hold the toast.", 8000);
+    hud.hint("overflow_a", "Once A", 8000);
+    hud.hint("overflow_b", "Once B", 8000);
+    hud.hint("overflow_c", "Once C", 8000);
+    hud.hint("overflow_d", "Once D", 8000);
+    check("queue cap", hud.queue.length === 3);
+    check("dropped oldest", hud.queue.map(q => q.msg).join("|") === "Once B|Once C|Once D");
+    check("unshown keys", !seen.overflow_a && !seen.overflow_b && !seen.overflow_c && !seen.overflow_d);
+    hud.dismiss("Hold the toast.");
+    check("dismiss shows next", hud.current === "Once B" && seen.overflow_b === true);
+    check("rest stay queued", hud.queue.length === 2 && !seen.overflow_d);
+    hud.dismiss("Once D");
+    check("dismiss queued spares seen", !seen.overflow_d && hud.queue.every(q => q.msg !== "Once D") && hud.current === "Once B");
+    hud.clear();
+    delete seen.cleared_key;
+    hud.show("Hold again.", 8000);
+    hud.hint("cleared_key", "Kept for later", 8000);
+    hud.clear();
+    check("clear keeps the key", !seen.cleared_key);
+    hud.hint("cleared_key", "Kept for later", 8000);
+    check("shows after clear", hud.current === "Kept for later" && seen.cleared_key === true);
+    hud.clear();
+    hud.show("Sitting.", 8000);
+    hud.show("Waiting.", 8000);
+    hud.show("Tap now.", 700, { urgent: true });
+    check("urgent shows now", hud.current === "Tap now.");
+    check("urgent jumped the queue", hud.queue.length > 0 && hud.queue[0].msg === "Sitting.");
+    hud.clear();
+    return { ok: fail.length === 0, fail, queue: hud.queue.map(q => q.msg), current: hud.current };
+  });
+  const ok = zen.found === false && queueOk && units.ok && page._errs.length === 0;
   await context.close();
-  return { ok, zen, spans, queueOk, errs: page._errs };
+  return { ok, zen, spans, queueOk, units, errs: page._errs };
+}
+
+async function noDrag(browser) {
+  const { context, page } = await phone(browser);
+  await page.goto(`http://127.0.0.1:${PORT}/?debug`, { waitUntil: "load", timeout: 30000 });
+  await page.waitForFunction(() => window.__bh && window.__bh.state.birth > 0, { timeout: 20000 });
+  const trace = await page.evaluate(() => new Promise(resolve => {
+    const read = () => {
+      const el = document.getElementById("hint-toast");
+      if (!el || el.classList.contains("hidden")) return { ok: false, why: "hidden", text: el ? el.textContent : "" };
+      const text = el.textContent || "";
+      const steer = /steer|WASD/.test(text);
+      const op = parseFloat(getComputedStyle(el).opacity) || 0;
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const hit = !!(top && (top === el || el.contains(top)));
+      return { ok: steer && op > 0.8 && hit, op, hit, text, top: top ? (top.id || String(top.className) || top.tagName) : "" };
+    };
+    const start = performance.now();
+    const samples = [];
+    const tick = () => {
+      const s = read();
+      s.t = Math.round(performance.now() - start);
+      samples.push(s);
+      if (performance.now() - start >= 2700) resolve(samples);
+      else setTimeout(tick, 40);
+    };
+    tick();
+  }));
+  let broke = null;
+  let end = 0;
+  for (const s of trace) {
+    if (!s.ok) { broke = s; break; }
+    end = s.t;
+  }
+  const at15 = trace.filter(s => s.t >= 1480 && s.t <= 1600).pop() || trace.find(s => s.t >= 1500);
+  const ok = !broke && end >= 2500 && !!(at15 && at15.ok);
+  await context.close();
+  return {
+    ok,
+    end,
+    n: trace.length,
+    at15: at15 && { t: at15.t, ok: at15.ok, op: at15.op, hit: at15.hit },
+    broke: broke && { t: broke.t, why: broke.why, op: broke.op, hit: broke.hit, top: broke.top, text: broke.text },
+    errs: page._errs
+  };
+}
+
+async function hintStrip(browser) {
+  const { context, page } = await phone(browser);
+  await page.goto(`http://127.0.0.1:${PORT}/?dev&debug`, { waitUntil: "load", timeout: 30000 });
+  await page.waitForFunction(() => {
+    const b = window.__bh && window.__bh.state.birth;
+    return b > 0.02 && b < 0.2;
+  }, { timeout: 20000 });
+  await page.evaluate(() => {
+    const b = document.getElementById("dev-badge");
+    if (b) b.style.visibility = "hidden";
+  });
+  fs.mkdirSync(ART, { recursive: true });
+  const frames = [];
+  for (let i = 0; i < 8; i++) {
+    const shot = await page.evaluate(() => {
+      const el = document.getElementById("hint-toast");
+      const text = el ? el.textContent || "" : "";
+      const hidden = !el || el.classList.contains("hidden");
+      const r = el && !hidden ? el.getBoundingClientRect() : null;
+      const top = r ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
+      return {
+        birth: window.__bh.state.birth,
+        text,
+        hidden,
+        op: el ? parseFloat(getComputedStyle(el).opacity) || 0 : 0,
+        hit: !!(el && top && (top === el || el.contains(top))),
+        top: top ? (top.id || top.tagName) : ""
+      };
+    });
+    const file = path.join(ART, `birth-hint-${String(i + 1).padStart(2, "0")}.jpg`);
+    await page.screenshot({ path: file, type: "jpeg", quality: 55, animations: "disabled" });
+    frames.push({ file, ...shot });
+  }
+  const ok = frames.length === 8 && frames.every(f => f.birth > 0 && f.birth < 1 && !f.hidden && /steer|WASD/.test(f.text) && f.op > 0.8 && f.hit);
+  await context.close();
+  return { ok, frames };
 }
 
 function stitch(frames) {
-  let PIL;
-  try { PIL = require("child_process"); } catch { return null; }
-  const out = path.join(ART, "birth-steer-strip.png");
+  const { spawnSync } = require("child_process");
+  const out = path.join(ART, "birth-hint-strip.png");
   const py = `
 import sys
 try:
     from PIL import Image
-except Exception as e:
-    sys.stderr.write(str(e))
-    sys.exit(2)
+except Exception:
+    print("SKIP no PIL")
+    sys.exit(0)
 files = sys.argv[1:-1]
 out = sys.argv[-1]
 ims = [Image.open(f).convert("RGB") for f in files]
@@ -386,9 +547,11 @@ for i, im in enumerate(ims):
 strip.save(out)
 print(out, strip.size[0], strip.size[1])
 `;
-  const r = PIL.spawnSync("python3", ["-c", py, ...frames, out], { encoding: "utf8" });
-  if (r.status !== 0) return { ok: false, err: (r.stderr || r.stdout || "").slice(0, 300) };
-  return { ok: true, out, note: (r.stdout || "").trim() };
+  const r = spawnSync("python3", ["-c", py, ...frames, out], { encoding: "utf8" });
+  const note = ((r.stdout || "") + (r.stderr || "")).trim();
+  if (/SKIP no PIL|No module named PIL/.test(note)) return { ok: true, skipped: true, reason: "PIL missing; strip skipped" };
+  if (r.status !== 0) return { ok: true, skipped: true, reason: note.slice(0, 300) };
+  return { ok: true, skipped: false, out, note };
 }
 
 async function main() {
@@ -398,24 +561,31 @@ async function main() {
   const browser = await launch();
   let birth = null;
   let again = null;
+  let calm = null;
   let strip = null;
+  let frames = null;
   try {
+    calm = await noDrag(browser);
+    if (!calm.ok) fail.push({ reason: "readable", calm });
+    frames = await hintStrip(browser);
+    if (!frames.ok) fail.push({ reason: "strip-frames", frames: frames.frames && frames.frames.map(f => ({ birth: f.birth, text: f.text, op: f.op, hit: f.hit })) });
+    if (frames.frames && frames.frames.length === 8) strip = stitch(frames.frames.map(f => f.file));
     birth = await firstLaunch(browser);
     if (!birth.ok) fail.push({ reason: "birth", result: birth.result });
-    if (birth.frames && birth.frames.length === 8) strip = stitch(birth.frames);
     again = await secondLaunch(browser);
     if (!again.ok) fail.push({ reason: "second", again });
   } catch (err) {
-    fail.push({ reason: "throw", err: String(err).slice(0, 500) });
+    fail.push({ reason: "throw", err: String(err).slice(0, 800) });
   }
   await browser.close();
   const ok = fail.length === 0 && files.ok;
   const text = JSON.stringify({
     ok,
     files: { ok: files.ok, release: files.release, birthFrames: files.birthFrames, steerAtBirth: files.steerAtBirth, noZen: files.noZen, wordmark: files.wordmark, hold: files.hold, owners: files.owners },
-    birth: birth && birth.result,
+    calm,
     strip,
-    again: again && { ok: again.ok, zen: again.zen, spans: again.spans, errs: again.errs },
+    birth: birth && birth.result,
+    again: again && { ok: again.ok, zen: again.zen, spans: again.spans, units: again.units, errs: again.errs },
     fail
   }, null, 2);
   console.log(text);

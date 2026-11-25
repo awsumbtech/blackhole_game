@@ -180,7 +180,7 @@ export class Feeding {
     if (!state.nearGoalPlayed && state.mass >= state.targetMass * 0.9) {
       state.nearGoalPlayed = true;
       audio.playNearGoal();
-      game.hud.show("Almost there…", 1800);
+      game.hud.show("Almost there…", 1800, { urgent: true });
     }
 
     if (state.mass >= state.targetMass && !state.transitioning) game.galaxyFlow.complete();

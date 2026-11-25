@@ -21,7 +21,7 @@ export class PlayControls {
       restart: () => { if (state.paused) this.setPaused(false); this.restartGalaxy(); },
       canRestart: () => {
         if (state.screen !== "play" || state.mode === "zen") return false;
-        if (state.transitioning) { game.hud.show("Hang on, drifting on…"); return false; }
+        if (state.transitioning) { game.hud.show("Hang on, drifting on…", 2800, { urgent: true }); return false; }
         return true;
       },
       galaxy: () => state.galaxy,
@@ -89,7 +89,7 @@ export class PlayControls {
     const state = this.state, game = this.game;
     game.galaxy.init(state.galaxy);
     save(state);
-    game.hud.show("Galaxy restarted");
+    game.hud.show("Galaxy restarted", 2800, { urgent: true });
   }
 
   toggleStatsView() {

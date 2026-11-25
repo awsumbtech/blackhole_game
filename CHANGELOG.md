@@ -17,7 +17,7 @@ A calm beat between tier-ups, so growing feels like something before the first r
 The birth, the hints, and a rebirth are quieter to start. The birth animation and its length are the same.
 
 - Steering works from the first moment of birth, including Start Over and a rebirth after collapse. It used to be ignored for the whole birth (2.83–3.53 s) even while food was already being eaten.
-- The steer hint appears when birth starts, and hides once you have steered. It used to arrive 2.4–2.6 s after play had already started.
+- The steer hint appears when birth starts, above the fading intro, and hides once you have steered (including follow-finger). It used to arrive 2.4–2.6 s after play had already started. The galaxy line waits until that hint has been up for 2.5 s.
 - The old "Zen mode is on… Tap Zen below" hint is gone. That toggle has not existed since v7.
 - Hints wait their turn. Each one stays at least 2.5 s before the next replaces it. Duplicates are dropped. The queue holds three. Nothing else waits.
 - The intro Skip button is at least 44 px tall (it was 59×38).

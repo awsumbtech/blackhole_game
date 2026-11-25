@@ -146,6 +146,17 @@ canvas {
 }
 
 .hint-toast.hidden { display: none; }
+/* The birth void is a full-screen layer. While it lifts, the steer line sits
+   above it so it can be read from the first moment, same glass pill. */
+body.hint-front #hint-toast {
+  position: fixed;
+  z-index: 70;
+  left: 50%;
+  bottom: calc(var(--bar-h) + 20px);
+  pointer-events: auto;
+  animation: none;
+  opacity: 1;
+}
 
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }

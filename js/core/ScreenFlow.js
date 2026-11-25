@@ -168,6 +168,7 @@ export class ScreenFlow {
     state.birth += dt / (state.settings.reduceMotion ? 60 : ScreenFlow.BIRTH_FRAMES);
     if (state.birth >= 1) {
       state.birth = 0;
+      document.body.classList.remove("hint-front");
       this.onPlayStart(this.introKind === "reborn" ? "newrun" : "fresh");
     }
   }
@@ -234,6 +235,8 @@ export class ScreenFlow {
       game.hud.show(sn ? "A supernova run! Every bite counts 50% more, all run long." : `Run ${state.asc.runsStarted}. Reborn stronger: your perks travel with you.`, 4500);
       return;
     }
+    // Queued behind whatever is already up, so a steer hint keeps the toast for
+    // at least 2.5s unless the player has already steered it away.
     if (kind === "resume") game.hud.show(`Welcome back! Galaxy ${state.galaxy}: ${state.biome.name}`);
     else game.hud.show(`Galaxy ${state.galaxy}: ${state.biome.name}`);
   }
@@ -246,6 +249,7 @@ export class ScreenFlow {
     this.steerHint = touch
       ? "Touch anywhere and drag to steer. Eat smaller things!"
       : "Move with the mouse or WASD. Eat smaller things!";
+    document.body.classList.add("hint-front");
     this.game.hud.show(this.steerHint, 4000);
     this.watchSteer();
   }
@@ -276,14 +280,19 @@ export class ScreenFlow {
       this.noteSteer();
       return;
     }
-    if (matchMedia("(pointer: coarse)").matches) return;
-    if (input.getMovement().magnitude > 0.12) this.noteSteer();
+    // Follow mode draws no joystick, so getStick() is null. A real touch
+    // still steers through getMovement, and that first steer dismisses the hint.
+    const follow = input.getTouchMode() === "follow";
+    if (follow || !matchMedia("(pointer: coarse)").matches) {
+      if (input.getMovement().magnitude > 0.12) this.noteSteer();
+    }
   }
 
   noteSteer() {
     if (this.steered) return;
     this.steered = true;
     this.stopSteerWatch();
+    document.body.classList.remove("hint-front");
     if (!this.steerHint) return;
     this.game.hud.dismiss(this.steerHint);
     this.steerHint = "";

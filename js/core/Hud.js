@@ -25,32 +25,44 @@ export class Hud {
     this.toastT = 0;
     this.queue = [];
     this.current = "";
+    this.currentMs = 0;
+    this.currentKey = "";
     this.shownAt = 0;
     this.wireEventHints();
   }
 
   el(id) { return document.getElementById(id); }
 
-  /** A one-time hint (key) or a plain one (no key). The seen flag is set now; only the toast waits. */
+  /** A one-time hint (key) or a plain one (no key). The seen flag is set when it is actually shown. */
   hint(key, msg, ms) {
-    const state = this.state;
-    if (key) {
-      if (state.seenHints[key]) return;
-      state.seenHints[key] = true;
-    }
-    this.show(msg, ms);
+    if (key && this.state.seenHints[key]) return;
+    this.show(msg, ms, { key: key || "" });
   }
 
-  show(msg, ms = 2800) {
+  /**
+   * opts.urgent: direct-tap feedback. It shows now and the line it covered
+   * waits its turn behind it. opts.key: a one-time hint, marked seen in present().
+   */
+  show(msg, ms = 2800, opts) {
     if (!msg) return;
+    const urgent = !!(opts && opts.urgent);
+    const key = (opts && opts.key) || "";
+    if (urgent) {
+      if (this.current && this.current !== msg) {
+        this.queue.unshift({ msg: this.current, ms: this.currentMs || 2800, key: "" });
+        while (this.queue.length > Hud.QUEUE_MAX) this.queue.pop();
+      }
+      this.present(msg, ms, "", true);
+      return;
+    }
     if (msg === this.current) return;
     for (let i = 0; i < this.queue.length; i++) if (this.queue[i].msg === msg) return;
     if (!this.current) {
-      this.present(msg, ms);
+      this.present(msg, ms, key, false);
       return;
     }
     if (this.queue.length >= Hud.QUEUE_MAX) this.queue.shift();
-    this.queue.push({ msg, ms });
+    this.queue.push({ msg, ms, key });
     this.arm();
   }
 
@@ -63,21 +75,25 @@ export class Hud {
     if (this.current !== msg) return;
     clearTimeout(this.toastT);
     this.current = "";
+    this.currentKey = "";
     this.toast.classList.add("hidden");
     if (!this.queue.length) return;
     const item = this.queue.shift();
-    this.present(item.msg, item.ms);
+    this.present(item.msg, item.ms, item.key || "", false);
   }
 
-  present(msg, ms) {
+  present(msg, ms, key = "", urgent = false) {
+    if (key) this.state.seenHints[key] = true;
     this.current = msg;
+    this.currentMs = ms;
+    this.currentKey = key || "";
     this.shownAt = performance.now();
     const el = this.toast;
     el.textContent = msg;
     el.classList.remove("hidden");
     clearTimeout(this.toastT);
-    const hold = Math.max(ms, Hud.HOLD_MS);
-    const wait = this.queue.length ? Math.min(hold, Hud.HOLD_MS) : hold;
+    const hold = urgent ? ms : Math.max(ms, Hud.HOLD_MS);
+    const wait = (!urgent && this.queue.length) ? Math.min(hold, Hud.HOLD_MS) : hold;
     this.toastT = setTimeout(() => this.advance(), wait);
   }
 
@@ -92,6 +108,8 @@ export class Hud {
     clearTimeout(this.toastT);
     this.queue = [];
     this.current = "";
+    this.currentMs = 0;
+    this.currentKey = "";
     this.shownAt = 0;
     if (this.toast) this.toast.classList.add("hidden");
   }
@@ -108,7 +126,7 @@ export class Hud {
       return;
     }
     const item = this.queue.shift();
-    this.present(item.msg, item.ms);
+    this.present(item.msg, item.ms, item.key || "", false);
   }
 
   sync(force = false) {
