@@ -8,17 +8,17 @@ import { save } from "../save.js";
 import { ascMods, freshAscRun, dmFor, rollSupernova, milestonesAt } from "../ascension.js";
 import { START_R, massForR, tierName } from "../tiers.js";
 
-const $ = id => document.getElementById(id);
-
 export class CollapseFlow {
   constructor(game) {
     this.game = game;
     this.state = game.state;
   }
 
+  el(id) { return document.getElementById(id); }
+
   bind() {
-    $("btn-collapse-no").addEventListener("click", () => { audio.playClick(); $("collapse").classList.add("hidden"); });
-    $("btn-collapse-yes").addEventListener("click", () => { audio.playClick(); this.doCollapse(); });
+    this.el("btn-collapse-no").addEventListener("click", () => { audio.playClick(); this.el("collapse").classList.add("hidden"); });
+    this.el("btn-collapse-yes").addEventListener("click", () => { audio.playClick(); this.doCollapse(); });
   }
 
   /** The confirm, with a clear breakdown. */
@@ -26,14 +26,14 @@ export class CollapseFlow {
     const state = this.state;
     const r = state.asc.run;
     const dm = dmFor(r, state.ascMods || ascMods(state.asc));
-    $("collapse-sub").textContent = `This run: ${r.cleared} galax${r.cleared === 1 ? "y" : "ies"} deep, up to ${tierName(r.peakTier || 0)}`;
-    $("collapse-break").innerHTML = dm.parts.map(([k, v]) => `<span><i>${k}</i><b>+${v}</b></span>`).join("") +
+    this.el("collapse-sub").textContent = `This run: ${r.cleared} galax${r.cleared === 1 ? "y" : "ies"} deep, up to ${tierName(r.peakTier || 0)}`;
+    this.el("collapse-break").innerHTML = dm.parts.map(([k, v]) => `<span><i>${k}</i><b>+${v}</b></span>`).join("") +
       `<span class="tot"><i>Dark Matter</i><b>+${dm.total}</b></span>`;
     const next = milestonesAt((state.asc.collapses || 0) + 1);
-    $("collapse-mile").innerHTML = next.length
+    this.el("collapse-mile").innerHTML = next.length
       ? `Collapse ${(state.asc.collapses || 0) + 1} also unlocks: ` + next.map(m => `<b>${m.name}</b> (${m.desc})`).join(", ")
       : "";
-    $("collapse").classList.remove("hidden");
+    this.el("collapse").classList.remove("hidden");
   }
 
   doCollapse() {
@@ -56,17 +56,17 @@ export class CollapseFlow {
     state.transitioning = false;
     state.transitionPhase = "";
     state.paused = false;
-    ["collapse", "pause-menu", "collapse-pill"].forEach(id => $(id).classList.add("hidden"));
+    ["collapse", "pause-menu", "collapse-pill"].forEach(id => this.el(id).classList.add("hidden"));
     ui.closeStats?.();
     game.input.setEnabled(false);
     state.screen = "collapse";
     save(state);
     audio.stopDrone();
     audio.playCollapse();
-    const sing = $("singularity");
-    $("sing-title").textContent = `Collapse ${a.collapses}`;
-    $("sing-line").textContent = `+${dm} Dark Matter · ${Math.floor(a.dm)} to spend`;
-    $("sing-mile").innerHTML = unlocked.map(m => `Unlocked: <b>${m.name}</b>. ${m.desc}`).join("<br>");
+    const sing = this.el("singularity");
+    this.el("sing-title").textContent = `Collapse ${a.collapses}`;
+    this.el("sing-line").textContent = `+${dm} Dark Matter · ${Math.floor(a.dm)} to spend`;
+    this.el("sing-mile").innerHTML = unlocked.map(m => `Unlocked: <b>${m.name}</b>. ${m.desc}`).join("<br>");
     sing.style.opacity = "1";
     sing.classList.remove("hidden");
     let gone = false;
@@ -88,6 +88,6 @@ export class CollapseFlow {
     game.galaxy.init(state.galaxy);
     save(state);
     const a = state.asc;
-    game.screens.showIntro({ kind: "reborn", lines: [`Collapse ${a.collapses}.`, a.run.supernova ? "A supernova." : "Reborn.", "Grow."] });
+    game.screens.showIntro({ kind: "reborn", wordmark: false, lines: [`Collapse ${a.collapses}.`, a.run.supernova ? "A supernova." : "Reborn.", "Grow."] });
   }
 }

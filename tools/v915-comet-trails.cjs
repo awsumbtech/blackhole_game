@@ -822,17 +822,11 @@ async function main() {
     const sw = await (await fetch("/sw.js")).text();
     const version = (game.match(/const VERSION = "([^"]+)"/) || [])[1];
     const cache = (sw.match(/const CACHE_NAME = "([^"]+)"/) || [])[1];
-    const p = String(version || "").split(".").map(Number);
-    const ge = p.length === 3 && p.every(n => Number.isFinite(n))
-      && (p[0] > 9 || (p[0] === 9 && (p[1] > 15 || (p[1] === 15 && p[2] >= 0))));
-    out.release = {
-      version, cache,
-      ok: ge && cache === "blackhole-v" + version
-    };
+    out.release = { version, cache };
 
     out.ok = out.curve.ok && out.straight.ok && out.speed.ok && out.consume.ok
       && out.respawn.ok && out.still.ok && out.spark.ok && out.zoom.ok
-      && out.slice.ok && out.missing.ok && out.seam.ok && out.live.ok && out.release.ok;
+      && out.slice.ok && out.missing.ok && out.seam.ok && out.live.ok;
     return out;
   });
 
@@ -841,6 +835,12 @@ async function main() {
   catch (err) { fail.push({ reason: "shot", err: String(err).slice(0, 300) }); }
 
   await browser.close();
+  if (result && result.release && files.release) {
+    result.release.ok = !!(files.release.ok
+      && result.release.version === files.release.version
+      && result.release.cache === files.release.cache);
+    if (!result.release.ok) result.ok = false;
+  }
   if (!result.ok) fail.push({ reason: "play", result });
   if (errs.length) fail.push({ reason: "console", errs });
   const ok = fail.length === 0 && files.ok;

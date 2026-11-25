@@ -39,6 +39,7 @@ jobs:
           node tools/v914-g5-aurora.cjs 8765
           node tools/v915-comet-trails.cjs 8765
           node tools/v9160-growth-step.cjs 8765
+          node tools/v9161-loop-friction.cjs 8765
           # v97-qa skips cleanly when its audit scripts are absent.
           node tools/v97-qa.cjs 8765 8765
       - name: Stop static server

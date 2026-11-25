@@ -46,7 +46,7 @@ export { RunTracker } from "./RunTracker.js";
 export { Galaxy } from "./Galaxy.js";
 export { PerfMonitor } from "./PerfMonitor.js";
 export { Settings } from "./Settings.js";
-export { ScreenFlow, TITLE_ZOOM, TITLE_AFTER_MS } from "./ScreenFlow.js";
+export { ScreenFlow } from "./ScreenFlow.js";
 export { ZenSession } from "./ZenSession.js";
 export { CollapseFlow } from "./CollapseFlow.js";
 export { PlayControls } from "./PlayControls.js";

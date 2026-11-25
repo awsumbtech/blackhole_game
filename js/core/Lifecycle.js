@@ -6,13 +6,13 @@
 
 import * as audio from "../audio.js";
 import { save, load } from "../save.js";
-import { TITLE_AFTER_MS } from "./ScreenFlow.js";
-
-// Audio may only start from an "activation" gesture: touchend/pointerup/click/keydown
-// (touchstart and touch pointerdown don't count on mobile browsers).
-const UNLOCK_EVENTS = ["pointerup", "touchend", "click", "keydown"];
+import { ScreenFlow } from "./ScreenFlow.js";
 
 export class Lifecycle {
+  // Audio may only start from an "activation" gesture: touchend/pointerup/click/keydown
+  // (touchstart and touch pointerdown don't count on mobile browsers).
+  static UNLOCK_EVENTS = ["pointerup", "touchend", "click", "keydown"];
+
   constructor(game) {
     this.game = game;
     this.state = game.state;
@@ -34,7 +34,7 @@ export class Lifecycle {
       }
       game.loop.resync();
       // Back after a long break: greet with the title screen instead of mid-galaxy
-      if (this.hiddenAt && Date.now() - this.hiddenAt > TITLE_AFTER_MS && state.screen === "play" && !state.drift &&
+      if (this.hiddenAt && Date.now() - this.hiddenAt > ScreenFlow.TITLE_AFTER_MS && state.screen === "play" && !state.drift &&
           !state.transitioning) {
         if (state.paused) game.controls.setPaused(false);
         game.screens.showTitle();
@@ -110,8 +110,8 @@ export class Lifecycle {
         audio.init();
         audio.startDrone(state.biome);
       }
-      for (const ev of UNLOCK_EVENTS) window.removeEventListener(ev, initAudio, true);
+      for (const ev of Lifecycle.UNLOCK_EVENTS) window.removeEventListener(ev, initAudio, true);
     };
-    for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, initAudio, true);
+    for (const ev of Lifecycle.UNLOCK_EVENTS) window.addEventListener(ev, initAudio, true);
   }
 }

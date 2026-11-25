@@ -30,8 +30,8 @@ dust, and you become something vast. Every change must strengthen that growth fe
 - **Keep the prestige/Ascension structure:** collapse → Dark Matter → constellation perks, with optional galaxy goals and calm rivals (v9: one loop, one currency, one upgrade screen).
 
 Read this first if you're the bot picking up this game. It records what the game is for, the
-rules it follows, how it works, and how to ship changes. Current version: **v9.16.0** (a quiet growth step at each third of a tier, on top of the v9.15.0 comet trails, the v9.14.0 Void Rift aurora, the v9.13.0 Star Meadow, the v9.12.0 reef and flagship, the v9.11.0 Neutron Forge, and the v9.10.0 Galaxy 2 pictures)
-(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.16.0"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
+rules it follows, how it works, and how to ship changes. Current version: **v9.16.1** (loop-friction cuts on top of the v9.16.0 quiet growth step, the v9.15.0 comet trails, the v9.14.0 Void Rift aurora, the v9.13.0 Star Meadow, the v9.12.0 reef and flagship, the v9.11.0 Neutron Forge, and the v9.10.0 Galaxy 2 pictures)
+(`VERSION` in `js/game.js`, `CACHE_NAME = "blackhole-v9.16.1"` in `sw.js`, `SAVE_VERSION = 9` in `js/save.js`).
 Live: https://awsumbtech.github.io/blackhole_game/ (GitHub Pages, built from `main` / root).
 
 ## 1. Purpose
@@ -363,7 +363,7 @@ js/core/
   Player.js             hole radius from mass, steering + drift, radar trail
   RunTracker.js         galaxy goals + stars, Ascension run time/depth, Hungry Wisp, rivals, finds
   Galaxy.js             init(galaxy, resume, flow): sets up a galaxy; progress()
-  Hud.js                DOM HUD + hint toast (one-time hints), event warnings
+  Hud.js                DOM HUD + hint toast (one at a time, each at least 2.5s), event warnings
   ScreenOverlay.js      tier banner, thumbstick, floaters, combo counter, mouse cursor
   PerfMonitor.js        frame-time ring, auto quality drop, __bh.perf() report
   Settings.js           apply settings, setSetting, quality (art + DPR cap), hole skin filter
@@ -458,6 +458,7 @@ Measured for v7.2 at Galaxy 5 (Void Rift, depth 5), 412×915 at DPR 2, headless 
 
 ## 8. Version history (short; full detail in CHANGELOG.md)
 
+- **v9.16.1 Loop friction (Nov 25 2026):** Measured on a fresh save at 390×844 before the cut: touches were ignored for the whole birth (2.83–3.53 s) even while food was already being eaten; the steer hint arrived 2.4–2.6 s after play started, after the player had already touched; an outdated "Zen mode is on… Tap Zen below to switch it off" hint showed about 7 s into a fresh save's second launch (that toggle has been gone since v7), including over the title and the Zen picker; the toast replaced a hint instantly (a combo hint was visible 0.25 s, and 3 hints showed in the first 6 s); the intro Skip button was 59×38 px. After: steering is on from the start of birth (Start Over and a post-collapse rebirth use the same `endIntro` release). `BIRTH_FRAMES` stays 170, so the birth looks the same. The steer hint shows when birth starts, sits above the fading intro so it can be read immediately, and hides once the player has steered (joystick or follow). The galaxy line waits behind it for at least 2.5 s. The Zen-toggle hint is deleted. Hint queue rule: one toast at a time, each stays at least 2.5 s before the next replaces it, duplicates are dropped, the queue holds 3, and a direct tap (restart, almost there) shows immediately instead of waiting. Skip's padding is 12 px and its height is at least 44 px. A rebirth after collapse skips the title wordmark; the very first launch of a fresh save still shows it, and the three rebirth lines are unchanged. That skip removes the wordmark hold (`INTRO_MARK_MS` 3400) and the 300 ms gap after it. Measured at 390×844: the first launch reaches birth at 13.2 s and still shows the wordmark; a rebirth reaches birth at 9.5 s with no wordmark, 3.7 s saved. `tools/v9161-loop-friction.cjs` is the blocking check. The steer pill never takes the press: it stays pointer-events none, so a touch on the hint still steers. Cache `blackhole-v9.16.1`.
 - **v9.16.0 Quiet growth step (Nov 25 2026):** Between tier-ups the hole barely changes size on screen, and the first reveal was the first moment that felt like growing. `GrowthStep` (`js/core/GrowthStep.js`) watches the radius. At one third and two thirds of the span from the tier line to the next, it plays one soft chime and asks `Camera` for a 1.2s ease-back that returns. No caption, no hint, no new food. Spawns, pacing, and the tier ladder stay as they are. A third is spent once per tier, so a bounce does not replay it, and the same thirds apply in every galaxy. Intro, birth, collapse, Zen, and a running tier-up reveal stay quiet; a third that would land on the reveal is skipped. Reduce Motion is the chime alone. The chime is one low sine on the effects bus, under the eat notes. `tools/v9160-growth-step.cjs` blocks CI. Cache `blackhole-v9.16.0`.
 - **v1–v2:** core eat-and-grow, stardust upgrade shop (removed in v9) (6 upgrades × 5 levels), galaxy summary, stats/records, bigger fish/threats, power-ups (Magnet, Slow-Mo, Double Mass), mid-galaxy saves, PWA fixes.
 - **Joystick:** the floating thumbstick became the default.
